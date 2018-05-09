@@ -1,0 +1,16 @@
+language: python
+python:
+  - "3.6"
+
+before_install:
+  - export PYTHONPATH=./BOUT-dev/tools/pyliblib:$PYTHONPATH
+
+install:
+  - pip install -r requirements.txt
+  - pip install codecov pytest-cov
+
+script:
+  - pytest --cov=./
+
+after_success:
+  - codecov
