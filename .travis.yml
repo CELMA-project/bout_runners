@@ -1,8 +1,16 @@
 language: python
 python:
-  - "3.6"
+  - "3.7"
+
+before_install:
+  - git clone -b next git://github.com/boutproject/BOUT-dev.git
+  - sudo apt-get install mpich2 libmpich2-dev
+  - sudo apt-get install libfftw3-dev libnetcdf-dev libnetcdf-cxx-legacy-dev
 
 install:
+  - cd BOUT-dev
+  - ./configure
+  - make
   - pip install -r requirements.txt
   - pip install codecov pytest-cov
 
