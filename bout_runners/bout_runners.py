@@ -36,13 +36,11 @@ from boututils.options import BOUTOptions
 from boututils.datafile import DataFile
 from boutdata.restart import redistribute, addnoise, resizeZ, resize
 
-#{{{class basic_runner
 # As a child class uses the super function, the class must allow an
 # object as input
 
 
 class basic_runner(object):
-    #{{{docstring
     """
     basic_runner
     ------------
@@ -80,9 +78,7 @@ class basic_runner(object):
     See the doctring of the constructor (__int__) for options.
     See BOUT/examples/bout_runners_example for examples.
     """
-#}}}
 
-#{{{__init__
     def __init__(self,
                  nproc=1,
                  directory="data",
@@ -141,7 +137,6 @@ class basic_runner(object):
                  sort_by=None,
                  make=None,
                  allow_size_modification=False):
-        #{{{docstring
         """
         basic_runner constructor
         ------------------------
@@ -332,7 +327,6 @@ class basic_runner(object):
             Whether or not to allow bout_runners modify nx and ny in
             order to find a valid split of the domain
         """
-        #}}}
 
         # Setting the member data
         self._nproc = nproc
@@ -421,7 +415,6 @@ class basic_runner(object):
         # The run type is going to be written in the run.log file
         self._run_type = "basic"
 
-        #{{{ Set self._additional and self._series_add correctly
         # self._additional must be on a special form (see
         # basic_error_checker).
         if self._additional is not None:
@@ -449,7 +442,6 @@ class basic_runner(object):
                    (isinstance(self._series_add, dict)):
                     # Put self._series_add as an iterable
                     self._series_add = (self._series_add,)
-        #}}}
 
         # Check that nproc is given correctly
         if not isinstance(self._nproc, int):
@@ -458,7 +450,6 @@ class basic_runner(object):
             self._errors.append("TypeError")
             raise TypeError(message)
 
-        #{{{ Set NYPE from NXPE and nproc
         if self._NXPE is not None:
             # Make self._NYPE as an appendable list
             self._NYPE = []
@@ -485,7 +476,6 @@ class basic_runner(object):
                 self._NYPE.append(int(self._nproc / cur_NXPE))
         else:
             self._NYPE = None
-        #}}}
 
         # Check if the instance is set correctly
         self._check_for_basic_instance_error()
@@ -502,9 +492,7 @@ class basic_runner(object):
         # Initialize outputs from execute runs
         self._PBS_id = []
         self._dmp_folders = []
-#}}}
 
-#{{{__del__
     def __del__(self):
         """The destructor will print all the warning and error messages"""
 
@@ -530,16 +518,13 @@ class basic_runner(object):
             print("{} {}".format("\n" * 3, "~" * 69))
             print(("| No WARNINGS detected before instance destruction in "
                    "'bout_runners'. |"))
-#}}}
 
-#{{{execute_runs
     def execute_runs(self,
                      job_dependencies=None,
                      remove_old=False,
                      post_processing_function=None,
                      post_process_after_every_run=False,
                      **kwargs):
-        #{{{docstring
         """
         Makes a run for each of the combination given by the member data.
 
@@ -572,7 +557,6 @@ class basic_runner(object):
         self._PBS_id : sequence (not str)
             A sequence of the PBS ids is returned.
         """
-        #}}}
 
         if self.__class__.__name__ == "PBS_runner":
             # Wait for jobs to finish
@@ -702,9 +686,7 @@ class basic_runner(object):
             self._dmp_folders = (self._dmp_folders,)
 
         return self._dmp_folders, self._PBS_id
-#}}}
 
-#{{{_run_driver
     def _run_driver(self, combination, run_no):
         """
         The machinery which actually performs the runs.
@@ -717,10 +699,7 @@ class basic_runner(object):
         # Print info to the log file for the runs
         self._append_run_log(start, run_no, run_time)
         print("\n")
-#}}}
 
-#{{{ Functions called by the constructor
-#{{{_set_member_data
     def _set_member_data(self, input_parameter):
         """
         Returns the input_parameter as a tuple if it is different than None,
@@ -737,9 +716,7 @@ class basic_runner(object):
                 input_parameter = (input_parameter,)
 
         return input_parameter
-#}}}
 
-#{{{_set_program_name
     def _set_program_name(self, prog_name=None):
         """
         Will set self._program_name and make the program if the
@@ -811,29 +788,22 @@ class basic_runner(object):
                     self._errors.append("RuntimeError")
                     raise RuntimeError(
                         "No make file found in current directory")
-#}}}
 
-#{{{_check_for_basic_instance_error
     def _check_for_basic_instance_error(self):
         """Check if there are any type errors when creating the object"""
 
-        #{{{Check if nproc has the correct type
         if not isinstance(self._nproc, int):
             message = ("nproc is of wrong type\n"
                        "nproc must be given as an int")
             self._errors.append("TypeError")
             raise TypeError(message)
-        #}}}
 
-        #{{{Check if directory has the correct type
         if not isinstance(self._directory, str):
             message = ("directory is of wrong type\n"
                        "directory must be given as a str")
             self._errors.append("TypeError")
             raise TypeError(message)
-        #}}}
 
-        #{{{Check if MXG and MYG has the correct type
         # Check if MXG and MYG is given as a single int
         # One should not be allowed to specify MXG and MYG as an
         # iterable, as MXG is used to find the correct split, and
@@ -846,18 +816,14 @@ class basic_runner(object):
         self._check_for_correct_type(var=check_if_int,
                                      the_type=int,
                                      allow_iterable=False)
-        #}}}
 
-        #{{{Check if BOUT.inp exsists in the self._directory
         # Check if there are any BOUT.inp files in the self._directory
         inp_file = glob.glob(os.path.join(self._directory, "BOUT.inp"))
         if len(inp_file) == 0:
             self._errors.append("RuntimeError")
             raise RuntimeError("No BOUT.inp files found in '{}'".
                                format(self._directory))
-        #}}}
 
-        #{{{Check grid_file are strings, that they exsist, and one can sort
         if self._grid_file is not None:
             # Set a variable which is has length over one if the test fails
             not_found = []
@@ -900,9 +866,7 @@ class basic_runner(object):
                     self._errors.append("RuntimeError")
                     raise RuntimeError(message)
 
-        #}}}
 
-        #{{{Check nx, ny, nz, zperiod, nout, mxstep, separatrix are int/iterable
         check_if_int = (
             (self._nx, "nx"),
             (self._ny, "ny"),
@@ -921,9 +885,7 @@ class basic_runner(object):
         self._check_for_correct_type(var=check_if_int,
                                      the_type=int,
                                      allow_iterable=True)
-        #}}}
 
-        #{{{Check timestep, atol, rtol, zmin/max, dx, dy, dz is Number/iterable
         # Check if the following is a number
         check_if_number = (
             (self._timestep, "timestep"),
@@ -939,9 +901,7 @@ class basic_runner(object):
         self._check_for_correct_type(var=check_if_number,
                                      the_type=Number,
                                      allow_iterable=True)
-        #}}}
 
-        #{{{Check if solver, grid_file, methods and sort_by is str/tuple of str
         # Check if instance is string, or an iterable containing strings
         check_if_string = (
             (self._solver, "solver"),
@@ -964,9 +924,7 @@ class basic_runner(object):
         self._check_for_correct_type(var=check_if_string,
                                      the_type=str,
                                      allow_iterable=True)
-        #}}}
 
-        #{{{Check if solver is set to the correct possibility
         # Check if the solver is possible
         # From /include/bout/solver.hxx
         possible_solvers = (
@@ -990,9 +948,7 @@ class basic_runner(object):
         if self._solver is not None:
             self._check_if_set_correctly(var=(self._solver, "solver"),
                                          possibilities=possible_solvers)
-        #}}}
 
-        #{{{Check if the methods is set to the correct possibility
         # Check if ddx or ddy is possible
         possible_method = [
             "C2",
@@ -1068,9 +1024,7 @@ class basic_runner(object):
             if var[0] is not None:
                 self._check_if_set_correctly(var=var,
                                              possibilities=possible_method)
-        #}}}
 
-        #{{{Check if sort_by is set to the correct possibility
         # Appendable list
         possible_sort_by = []
 
@@ -1150,9 +1104,7 @@ class basic_runner(object):
             if var[0] is not None:
                 self._check_if_set_correctly(var=var,
                                              possibilities=possible_sort_by)
-        #}}}
 
-        #{{{Check if restart is set correctly
         if self._restart is not None:
             if not isinstance(self._restart, str):
                 self._errors.append("TypeError")
@@ -1173,9 +1125,7 @@ class basic_runner(object):
             if var[0] is not None:
                 self._check_if_set_correctly(var=var,
                                              possibilities=possible_method)
-        #}}}
 
-        #{{{Check if restart_from is set correctly
         if self._restart_from is not None:
             # Throw warning if restart is None
             if self._restart is None:
@@ -1189,9 +1139,7 @@ class basic_runner(object):
                 message = ("restart_from must be set as a string or a "
                            "function returning the restart path when set")
                 raise TypeError(message)
-        #}}}
 
-        #{{{Check if redistribute is set correctly
         if self._redistribute is not None:
             # Throw warning if restart is None
             if self._restart is None:
@@ -1215,27 +1163,21 @@ class basic_runner(object):
             # If nproc is set, and this is incompatible with NPES
             if self._nproc != self._redistribute:
                 raise RuntimeError("nproc and redistribute must be equal")
-        #}}}
 
-        #{{{Check if max_proc has the correct type
         if self._restart is not None and self._max_proc is not None:
             if not isinstance(self._max_proc, int):
                 message = ("max_proc is of wrong type\n"
                            "max_proc must be given as an int")
                 self._errors.append("TypeError")
                 raise TypeError(message)
-        #}}}
 
-        #{{{Check if intrp_method has the correct type
         if self._restart is not None and self._intrp_method is not None:
             if not isinstance(self._intrp_method, str):
                 message = ("intrp_method is of wrong type\n"
                            "intrp_method must be given as a string")
                 self._errors.append("TypeError")
                 raise TypeError(message)
-        #}}}
 
-        #{{{Check if add_noise is set correctly
         if self._add_noise is not None:
             # Throw warning if restart is None
             if self._restart is None:
@@ -1270,9 +1212,7 @@ class basic_runner(object):
                            "{None: number_or_none}"
                            )
                 raise TypeError(message)
-        #}}}
 
-        #{{{Check for options set in both member data and in the grid file
         if self._grid_file is not None:
             # Check if the following variables are found in the grid
             # file
@@ -1314,9 +1254,7 @@ class basic_runner(object):
                                        " from the driver if you would "
                                        "like to run with a grid file.")
                             raise TypeError(message.format(var[1]))
-        #}}}
 
-        #{{{If grid files are set: Use nx, ny and nz values in the grid file
         if self._grid_file is not None:
             # Make a dict of appendable lists
             spatial_domain = {"nx": [], "ny": [], "nz": []}
@@ -1341,18 +1279,14 @@ class basic_runner(object):
                 self._ny = spatial_domain["ny"]
             if len_nz != 0:
                 self._nz = spatial_domain["nz"]
-        #}}}
 
-        #{{{Check that nx, ny and nz are of the same length
         if self._nx is not None and self._ny is not None:
             self._check_if_same_len((self._nx, "nx"), (self._ny, "ny"))
         if self._nx is not None and self._nz is not None:
             self._check_if_same_len((self._nx, "nx"), (self._nz, "nz"))
         if self._ny is not None and self._nz is not None:
             self._check_if_same_len((self._ny, "ny"), (self._nz, "nz"))
-        #}}}
 
-        #{{{Check that NXPE and NYPE are of the same length as nx, ny, nz
         if self._nx is not None and self._NXPE is not None:
             self._check_if_same_len((self._nx, "nx"), (self._NXPE, "NXPE"))
         if self._ny is not None and self._NXPE is not None:
@@ -1366,9 +1300,7 @@ class basic_runner(object):
             self._check_if_same_len((self._ny, "ny"), (self._NYPE, "NYPE"))
         if self._nz is not None and self._NYPE is not None:
             self._check_if_same_len((self._nz, "nz"), (self._NYPE, "NYPE"))
-        #}}}
 
-        #{{{Check (zperiod), (zmin, zmax) and (dz) is not set simultaneously
         if (self._zperiod is not None and
                 (self._zmin is not None or self._zmax is not None)):
             self._errors.append("TypeError")
@@ -1383,47 +1315,35 @@ class basic_runner(object):
             self._errors.append("TypeError")
             message = "dz and zperiod cannot be set simultaneously."
             raise TypeError(message)
-        #}}}
 
-        #{{{Check that dz is not set
         # dz is currently set throught zmin and zmax
         if self._dz is not None:
             self._errors.append("TypeError")
             message = ("dz can currently just be set through zmin and zmax\n"
                        "dz = 2*pi*(zmax-zmin)/(MZ)")
             raise TypeError(message)
-        #}}}
 
-        #{{{Check that dx, dy and dz are of the same length
         if self._dx is not None and self._dy is not None:
             self._check_if_same_len((self._dx, "dx"), (self._dy, "dy"))
         if self._dx is not None and self._dz is not None:
             self._check_if_same_len((self._dx, "dx"), (self._dz, "dz"))
         if self._dy is not None and self._dz is not None:
             self._check_if_same_len((self._dy, "dy"), (self._dz, "dz"))
-        #}}}
 
-        #{{{Check that (dx, nx), (dy, ny) and (dz,nz) are of the same length
         if self._dx is not None and self._nx is not None:
             self._check_if_same_len((self._dx, "dx"), (self._nx, "nx"))
         if self._dy is not None and self._ny is not None:
             self._check_if_same_len((self._dy, "dy"), (self._ny, "ny"))
         if self._nz is not None and self._dz is not None:
             self._check_if_same_len((self._dz, "dz"), (self._nz, "nz"))
-        #}}}
 
-        #{{{ Check that timestep and nout have the same len
         if self._timestep is not None and self._nout is not None:
             self._check_if_same_len((self._timestep, "timestep"),
                                     (self._nout, "nout"))
-        #}}}
 
-        #{{{Check that additional and series_add are on the correct form
         self._error_check_additional((self._additional, "additional"))
         self._error_check_additional((self._series_add, "series_add"))
-        #}}}
 
-        #{{{Check that self._series_add[:][2] have the same length
         if self._series_add is not None:
             # Make the second indices iterable if they are not already
             # Start by converting to list, so that self._series becomes
@@ -1453,9 +1373,7 @@ class basic_runner(object):
                            " of series_add must be the same")
                 self._errors.append("TypeError")
                 raise TypeError(message)
-        #}}}
 
-        #{{{Check mms, symGlobX, symGlobY, cpy_src/grid, use_expand and
         #   allow_size_mod is bool
         check_if_bool = (
             (self._mms, "mms"),
@@ -1469,30 +1387,20 @@ class basic_runner(object):
 
         self._check_for_correct_type(var=check_if_bool,
                                      the_type=bool)
-        #}}}
 
-        #{{{Check grid_file is None if cpy_grid==True
         if (self._grid_file is None) and (self._cpy_grid):
             # Raise error
             self._errors.append("TypeError")
             message = ("Cannot copy the grid files if none exists in "
                        " 'grid_file'")
             raise TypeError(message)
-        #}}}
 
-        #{{{Check that zmin and zmax has the same length
         if (self._zmin is not None) and (self._zmax is not None):
             self._check_if_same_len((self._zmin, "zmin"),
                                     (self._zmax, "zmax"))
 
-        #}}}
-#}}}
-#}}}
 
-#{{{Functions called by _check_for_basic_instance_error
-    #{{{_error_check_additional
     def _error_check_additional(self, input_member):
-        #{{{docstring
         """
         Checks that the input_member is on the following form:
 
@@ -1506,7 +1414,6 @@ class basic_runner(object):
             input_member[0] is the input data and
             input_member[1] is the name of the input data
         """
-        #}}}
 
         # If input_member is set
         if input_member[0] is not None:
@@ -1545,11 +1452,7 @@ class basic_runner(object):
                      "       ...))\n").format(input_member[1])
                 self._errors.append("TypeError")
                 raise TypeError(message)
-        #}}}
-#}}}
 
-#{{{ Functions called by the execute_runs function
-#{{{_error_check_for_run_input
     def _error_check_for_run_input(self,
                                    remove_old,
                                    post_processing_function,
@@ -1559,48 +1462,38 @@ class basic_runner(object):
         Check if there are any type errors in input for the run function
         """
 
-        #{{{Check if remove_old is of the correct type
         check_if_bool = (
             (remove_old, "remove_old"),
         )
 
         self._check_for_correct_type(var=check_if_bool,
                                      the_type=bool)
-        #}}}
 
-        #{{{Check if remove_old and restart is set on the same time
         if remove_old and self._restart is not None:
             self._errors.append("RuntimeError")
             raise RuntimeError("You should not remove old data if you"
                                " want a restart run")
-        #}}}
 
-        #{{{Check that the post_processing_function is a fuction
         if (post_processing_function is not None) and\
            (not(hasattr(post_processing_function, "__call__"))):
             self._errors.append("RuntimeError")
             message = ("post_process_after_every_run must be a"
                        " function")
             raise RuntimeError(message)
-        #}}}
 
-        #{{{Check that the post_process_after_every_run is not set alone
         if (post_process_after_every_run and
             post_processing_function is None):
             self._errors.append("RuntimeError")
             message = ("post_process_after_every_run can only be set if"
                        " post_processing_function is given")
             raise RuntimeError(message)
-        #}}}
 
-        #{{{Check that the post_process_after_every_run is a boolean
         if (post_process_after_every_run is not None) and\
            (not isinstance(post_process_after_every_run, bool)):
             self._errors.append("RuntimeError")
             message = ("post_process_after_every_run must be set to"
                        " a boolean when set")
             raise RuntimeError(message)
-        #}}}
 
         # Check for errors in a child class
         self._check_for_child_class_errors(
@@ -1608,9 +1501,7 @@ class basic_runner(object):
             post_processing_function,
             post_process_after_every_run
         )
-#}}}
 
-#{{{_create_run_log
     def _create_run_log(self):
         """Makes a run_log file if it doesn't exists"""
 
@@ -1627,9 +1518,7 @@ class basic_runner(object):
 
         # Preparation of the run
         print("\nRunning with inputs from '{}'".format(self._directory))
-#}}}
 
-#{{{_get_correct_domain_split
     def _get_correct_domain_split(self):
         """
         Checks that the grid can be split in the correct number of
@@ -1639,15 +1528,12 @@ class basic_runner(object):
         """
 
         if (self._nx is None) and (self._ny is None):
-            #{{{ Set local_nx and local_ny from input
             # Set the local nx value
             local_nx = [self._get_dim_from_input("nx")]
 
             # Set the local ny value
             local_ny = [self._get_dim_from_input("ny")]
-            #}}}
         elif (self._nx is None):
-            #{{{ Set local_nx from input
             # ny is given, so we only need to find nx
             local_ny = list(self._ny)
 
@@ -1656,9 +1542,7 @@ class basic_runner(object):
 
             # Get the same length on nx and ny
             local_nx = local_nx * len(local_ny)
-            #}}}
         elif (self._ny is None):
-            #{{{ Set local_ny from input
             # nx is given, so we only need to find ny
             local_nx = list(self._nx)
 
@@ -1667,7 +1551,6 @@ class basic_runner(object):
 
             # Get the same length on nx and ny
             local_ny = local_ny * len(local_nx)
-            #}}}
         else:
             local_nx = list(self._nx)
             local_ny = list(self._ny)
@@ -1679,7 +1562,6 @@ class basic_runner(object):
         # Obtain MXG
         MXG, _MYG = self._get_MXG_MYG()
         if self._NXPE is None:
-            #{{{ If NXPE is not set
             for size_nr in range(len(local_nx)):
                 print("Checking nx={}  and ny={}".
                       format(local_nx[size_nr], local_ny[size_nr]))
@@ -1691,7 +1573,6 @@ class basic_runner(object):
                 # called
                 count = 0
 
-                #{{{While cur_split_found == False
                 while cur_split_found == False:
                     # The same check as below is performed internally in
                     # BOUT++ (see boutmesh.cxx under
@@ -1717,16 +1598,13 @@ class basic_runner(object):
                                                       using_nx=True,
                                                       using_ny=True)
 
-                    #{{{ Check if the split was found the first go.
                     # This will be used if self_allow_size_modification is
                     # off, or if we are using a grid file
                     if count == 0 and cur_split_found:
                         init_split_found = True
-                    #}}}
 
                     # Add one to the counter
                     count += 1
-                #}}}
 
                 # Check if initial split succeeded
                 self._check_init_split_found(init_split_found,
@@ -1736,9 +1614,7 @@ class basic_runner(object):
                                              test_nx=True,
                                              test_ny=True,
                                              produce_warning=produce_warning)
-            #}}}
         else:
-            #{{{ If NXPE is set
             # Check if NXPE and NYPE is set consistently with nproc
             self._check_NXPE_or_NYPE(local_nx,
                                      local_ny,
@@ -1747,10 +1623,7 @@ class basic_runner(object):
             self._check_NXPE_or_NYPE(local_nx,
                                      local_ny,
                                      type_str="NYPE")
-            #}}}
-#}}}
 
-#{{{_get_possibilities
     def _get_possibilities(self):
         """
         Returns the list of the possibilities. In get_combinations
@@ -1758,7 +1631,6 @@ class basic_runner(object):
         of strings which will be used when making a run.
         """
 
-        #{{{Set combination of nx, ny and nz (if not set in grid_file)
         # Appendable list
         spatial_grid_possibilities = []
         if (self._grid_file is None):
@@ -1808,9 +1680,7 @@ class basic_runner(object):
                                      for key in keys)
                 # Join the strings in the list and append
                 spatial_grid_possibilities.append(" ".join(current_grid))
-        #}}}
 
-        #{{{Set the combination of timestep and nout if is not None
         # Appendable lists
         temporal_grid_possibilities = []
         timestep_str = []
@@ -1838,9 +1708,7 @@ class basic_runner(object):
                              )
             # Join the strings in the list and append
             temporal_grid_possibilities.append(" ".join(current_times))
-        #}}}
 
-        #{{{Set the combination of the series_add option if is not None
         # Appendable list
         series_add_possibilities = []
         if self._series_add is not None:
@@ -1874,9 +1742,7 @@ class basic_runner(object):
             # a space, and append them to series_add_possibilities
             for one_possibility in zip(*all_sec_var_vals):
                 series_add_possibilities.append(" ".join(one_possibility))
-        #}}}
 
-        #{{{Put non-iterable variables into a list if they are not set to None
         # This makes the member data iterable, and usable in
         # generate_possibilities
         if self._MXG is not None:
@@ -1889,9 +1755,7 @@ class basic_runner(object):
             self._symGlobX = (self._symGlobX,)
         if self._symGlobY is not None:
             self._symGlobY = (self._symGlobY,)
-        #}}}
 
-        #{{{tuple of tuple of variables to generate possibilities from
         tuple_of_variables = [
             (self._solver, "solver", "type"),
             (self._mms, "solver", "mms"),
@@ -1924,9 +1788,7 @@ class basic_runner(object):
             (self._symGlobX, "mesh", "symmetricGlobalX"),
             (self._symGlobY, "mesh", "symmetricGlobalY")
         ]
-        #}}}
 
-        #{{{Append the additional option to tuple of variables if set
         if self._additional is not None:
             for additional in self._additional:
                 # If the last element of additional is not iterable we need
@@ -1946,9 +1808,7 @@ class basic_runner(object):
                      additional[0],
                      additional[1])
                 )
-        #}}}
 
-        #{{{List of the possibilities of the variables
         # Start out with the already generated
         # spatial_grid_possibilities and temporal_grid_possibilities
         list_of_possibilities = [spatial_grid_possibilities,
@@ -1960,13 +1820,10 @@ class basic_runner(object):
             list_of_possibilities.append(
                 self._generate_possibilities(var[0], var[1], var[2])
             )
-        #}}}
 
         # Return the list_of possibilities
         return list_of_possibilities
-#}}}
 
-#{{{_get_combinations
     def _get_combinations(self, input_list):
         """
         The input_list is a list with lists as element.
@@ -2005,15 +1862,11 @@ class basic_runner(object):
             all_combinations_as_strings.append(" ".join(a_tuple))
 
         return all_combinations_as_strings
-#}}}
 
-#{{{_print_run_or_submit
     def _print_run_or_submit(self):
         """Prints "Now running" """
         print("\nNow running:")
-#}}}
 
-#{{{_prepare_dmp_folder
     def _prepare_dmp_folder(self, combination, **kwargs):
         """
         Prepare the dump folder for runs
@@ -2047,7 +1900,6 @@ class basic_runner(object):
         # do_run is set to True by default
         do_run = True
 
-        #{{{ Obtain folder name and copy the input file
         folder_name = self._get_folder_name(combination)
         self._dmp_folder = os.path.join(self._directory, folder_name)
         # If the last character is "/", then remove it
@@ -2069,9 +1921,7 @@ class basic_runner(object):
             # Copy the input file into this folder
             src = os.path.join(self._directory, "BOUT.inp")
             shutil.copy2(src, self._dmp_folder)
-        #}}}
 
-        #{{{ Obtain the folder name to restart from
         if self._restart_from is not None:
 
             if isinstance(self._restart_from, str):
@@ -2094,9 +1944,7 @@ class basic_runner(object):
 
         else:
             self._cur_restart_from = None
-        #}}}
 
-        #{{{ Toggle restart
         dmp_files = glob.glob(os.path.join(self._dmp_folder, "*.restart.*"))
         # If no dump files are found, set restart to "None"
         if len(dmp_files) == 0 and\
@@ -2108,14 +1956,10 @@ class basic_runner(object):
             self._restart = None
             self._warning_printer(message)
             self._warnings.append(message)
-        #}}}
 
-        #{{{ Find the appropriate mxg and myg if redistribute is set
         if self._redistribute:
             redistribute_MXG, redistribute_MYG = self._get_MXG_MYG()
-        #}}}
 
-        #{{{ Copy restart files if restart_from and/or redistribute is set
         if self._restart and self._cur_restart_from:
             if self._redistribute:
                 # Use the redistribute function to copy the restart file
@@ -2150,16 +1994,12 @@ class basic_runner(object):
                                   mxg=redistribute_MXG,
                                   myg=redistribute_MYG,
                                   )
-        #}}}
 
-        #{{{ Save files if restart is set to "overwrite"
         # NOTE: This is already done if self._redistribute is set
         if self._restart == "overwrite" and not(self._redistribute) and do_run:
             self._move_old_runs(folder_name="restart",
                                 include_restart=False)
-        #}}}
 
-        #{{{Finding cur_nz
         if self._restart and do_run:
             if self._nz:
                 # The current nz should be in the second index as any
@@ -2187,12 +2027,10 @@ class basic_runner(object):
                     else:
                         message = "nz = {} not a power of 2".format(cur_nz)
                         raise RuntimeError(message)
-        #}}}
 
         # Flag to check if the mesh has been resized
         resized = False
 
-        #{{{ Resize nx, ny and nz of the evolved fields
         if self._restart and do_run and (self._nx or self._ny or self._nz):
             # Obtain MXG and MYG
             MXG, MYG = self._get_MXG_MYG()
@@ -2364,9 +2202,7 @@ class basic_runner(object):
                     raise RuntimeError(message)
 
                 resized = True
-        #}}}
 
-        #{{{ Resize nz only
         if self._restart and do_run\
            and self._nz and not resized and self._use_expand:
             # The current nz should be in the second index as any
@@ -2478,9 +2314,7 @@ class basic_runner(object):
                         message = "resizeZ failed, skipping run."
                         self._warnings.append(message)
                         self._warning_printer(message)
-        #}}}
 
-        #{{{ Add noise
         if self._restart and self._add_noise and do_run:
             print("Now adding noise\n")
             for var, scale in self._add_noise.items():
@@ -2497,9 +2331,7 @@ class basic_runner(object):
                           format("\n" * 4, "!" * 3))
                     raise ex
             print("\n")
-        #}}}
 
-        #{{{ Copy the source files if cpy_source is True
         if self._cpy_source and do_run:
             # This will copy all C++ files to the dmp_folder
             cpp_extension = (".cc", ".cpp", ".cxx", ".C", ".c++",
@@ -2509,12 +2341,9 @@ class basic_runner(object):
                 file_names = glob.glob("*" + extension)
                 for a_file in file_names:
                     shutil.copy2(a_file, self._dmp_folder)
-        #}}}
 
         return do_run
-#}}}
 
-#{{{_remove_data
     def _remove_data(self):
         """
         Removes dmp.*, fail.*, restart.*, log.* and *.cpy files from the
@@ -2542,9 +2371,7 @@ class basic_runner(object):
         folder_to_rm = tuple(f for f in folder_to_rm if os.path.isdir(f))
         for f in folder_to_rm:
             shutil.rmtree(f)
-#}}}
 
-#{{{_check_if_run_already_performed
     def _check_if_run_already_performed(self,
                                         restart_file_search_reason=None):
         """
@@ -2587,9 +2414,7 @@ class basic_runner(object):
             return False
         else:
             return True
-#}}}
 
-#{{{_call_post_processing_function
     def _call_post_processing_function(
             self,
             function=None,
@@ -2599,11 +2424,7 @@ class basic_runner(object):
 
         function(folders, **kwargs)
 
-#}}}
-#}}}
 
-#{{{Functions called by _error_check_for_run_input
-    #{{{_check_for_child_class_errors
     def _check_for_child_class_errors(
         self,
         remove_old,
@@ -2616,11 +2437,7 @@ class basic_runner(object):
         Here a virtual function
         """
         pass
-    #}}}
-#}}}
 
-#{{{Function called by _set_program_name
-#{{{_run_make
     def _run_make(self):
         """Make cleans and makes the .cxx program"""
 
@@ -2635,11 +2452,7 @@ class basic_runner(object):
         if status != 0:
             self._errors.append("RuntimeError")
             raise RuntimeError("Error encountered during make.")
-#}}}
-#}}}
 
-#{{{ Functions called by the basic_error_checker
-#{{{_check_for_correct_type
     def _check_for_correct_type(self,
                                 var=None,
                                 the_type=None,
@@ -2689,9 +2502,7 @@ class basic_runner(object):
                                     " as elements.").format(the_type.__name__)
                     self._errors.append("TypeError")
                     raise TypeError(message)
-#}}}
 
-#{{{_check_if_set_correctly
     def _check_if_set_correctly(self,
                                 var=None,
                                 possibilities=None):
@@ -2721,9 +2532,7 @@ class basic_runner(object):
                 format(var[1], "\n".join(possibilities))
             self._errors.append("TypeError")
             raise TypeError(message)
-#}}}
 
-#{{{_check_if_same_len
     def _check_if_same_len(self, object1=None, object2=None):
         """Checks if object1 and object2 has the same length
 
@@ -2749,11 +2558,7 @@ class basic_runner(object):
                        " length when specified").format(object1[1], object2[1])
             self._errors.append("RuntimeError")
             raise RuntimeError(message)
-#}}}
-#}}}
 
-#{{{ Functions called by _get_correct_domain_split
-    #{{{_check_cur_split_found
     def _check_cur_split_found(self,
                                cur_split_found,
                                produce_warning,
@@ -2763,7 +2568,6 @@ class basic_runner(object):
                                local_ny,
                                using_nx=None,
                                using_ny=None):
-        #{{{docstring
         """
         Checks if the current split is found.
 
@@ -2801,7 +2605,6 @@ class basic_runner(object):
         produce_warning : bool
             Whether or not a warning should be produced
         """
-        #}}}
 
         # If the value tried is not a good value
         if not cur_split_found:
@@ -2835,9 +2638,7 @@ class basic_runner(object):
                 produce_warning = False
 
         return local_nx, local_ny, add_number, produce_warning
-    #}}}
 
-    #{{{_check_init_split_found
     def _check_init_split_found(self,
                                 init_split_found,
                                 size_nr,
@@ -2846,7 +2647,6 @@ class basic_runner(object):
                                 test_nx=None,
                                 test_ny=None,
                                 produce_warning=None):
-        #{{{docstring
         """
         Check if the initial split was a good choice when checking the grids.
 
@@ -2871,9 +2671,7 @@ class basic_runner(object):
         produce_warning : bool
             whether or not a warning should be produced
         """
-        #}}}
 
-        #{{{ If the initial split did not succeed
         if not(init_split_found):
             # If modification is allowed
             if not(self._allow_size_modification) or\
@@ -2904,9 +2702,7 @@ class basic_runner(object):
                 # Set nx and ny
                 self._nx = local_nx
                 self._ny = local_ny
-        #}}}
 
-        #{{{ When the good value is found
         print("Successfully found the following good values for the mesh:")
         message = ""
         if test_nx:
@@ -2915,17 +2711,12 @@ class basic_runner(object):
             message += "ny = {} ".format(local_ny[size_nr])
 
         print(message + "\n")
-        #}}}
 
-        #{{{ Make the warning if produced
         if produce_warning:
             message = "The mesh was changed to allow the split given by nproc"
             self._warning_printer(message)
             self._warnings.append(message)
-        #}}}
-    #}}}
 
-    #{{{_check_NXPE_or_NYPE
     def _check_NXPE_or_NYPE(self,
                             local_nx,
                             local_ny,
@@ -2933,7 +2724,6 @@ class basic_runner(object):
                             MXG=None,
                             produce_warning=None,
                             ):
-        #{{{docstring
         """
         Check if NXPE or NYPE is consistent with nproc
 
@@ -2954,7 +2744,6 @@ class basic_runner(object):
         produce_warning : bool
             Whether or not a warning should be produced
         """
-        #}}}
 
         for size_nr in range(len(local_nx)):
             # Check the type
@@ -2972,7 +2761,6 @@ class basic_runner(object):
             # called
             count = 0
 
-            #{{{While cur_split_found == False
             while cur_split_found == False:
                 # The same check as below is performed internally in
                 # BOUT++ (see boutmesh.cxx under
@@ -3014,16 +2802,13 @@ class basic_runner(object):
                                                       using_nx=False,
                                                       using_ny=True)
 
-                #{{{ Check if the split was found the first go.
                 # This will be used if self_allow_size_modification is
                 # off, or if we are using a grid file
                 if count == 0 and cur_split_found:
                     init_split_found = True
-                #}}}
 
                 # Add one to the counter
                 count += 1
-            #}}}
 
             # Check if initial split succeeded
             if type_str == "NXPE":
@@ -3042,11 +2827,7 @@ class basic_runner(object):
                                              test_nx=False,
                                              test_ny=True,
                                              produce_warning=produce_warning)
-    #}}}
-#}}}
 
-#{{{Function called by _prepare_dmp_folder
-#{{{_get_folder_name
     def _get_folder_name(self, combination):
         """
         Returning the folder name where the data will be stored.
@@ -3059,7 +2840,6 @@ class basic_runner(object):
         # which is used as the command line arguments in the run
         combination = combination.split()
 
-        #{{{Append from eventual grid file
         # FIXME: The grid-file names can become long if adding these,
         #        consider using just path name to gridfile
         # If there is a grid file, we will extract the values from the
@@ -3109,7 +2889,6 @@ class basic_runner(object):
                     combination.append("{}{}={}".format(mesh_type[0],
                                                         mesh_type[1],
                                                         grid_variable))
-        #}}}
 
         # Make lists for the folder-type, so that we can append the
         # elements in the combination folders if it is found
@@ -3207,7 +2986,6 @@ class basic_runner(object):
         # matter how the full combination string looks like
         # Sort alphabetically
         solver.sort()
-        #{{{ Manual sort solver
         # We want "type" to be first, and "atol" and "rtol" to be last
         sort_these = (
             ("type", 0),
@@ -3228,7 +3006,6 @@ class basic_runner(object):
                 # Swap the elements in the solver
                 solver[sort_this[1]], solver[swap_nr] =\
                     solver[swap_nr], solver[sort_this[1]]
-        #}}}
         method.sort()
         nout_timestep.sort()
         mesh.sort()
@@ -3261,18 +3038,14 @@ class basic_runner(object):
         combination_folder = "/".join(combination_folder)
 
         return combination_folder
-#}}}
 
-#{{{_create_folder
     def _create_folder(self, folder):
         """Creates a folder if it doesn't exists"""
 
         if not os.path.exists(folder):
             os.makedirs(folder)
             print(folder + " created\n")
-#}}}
 
-#{{{_copy_run_files
     def _copy_run_files(self):
         """
         Function which copies run files from self._cur_restart_from
@@ -3336,9 +3109,7 @@ class basic_runner(object):
                         shutil.copy2(cur_file, self._dmp_folder)
 
         return do_run
-#}}}
 
-#{{{_move_old_runs
     def _move_old_runs(self, folder_name="restart", include_restart=False):
         """Move old runs, return the destination path"""
 
@@ -3406,11 +3177,7 @@ class basic_runner(object):
                 shutil.copy2(cur_file, dst)
 
         return dst
-#}}}
-#}}}
 
-#{{{Function called by _run_driver
-#{{{_single_run
     def _single_run(self, combination):
         """Makes a single MPIRUN of the program"""
 
@@ -3462,9 +3229,7 @@ class basic_runner(object):
         elapsed_time = toc - tic
 
         return out, elapsed_time
-#}}}
 
-#{{{_append_run_log
     def _append_run_log(self, start, run_no, run_time):
         """Appends the run_log"""
 
@@ -3489,11 +3254,7 @@ class basic_runner(object):
         log_format = "{:<19}   {:^9}   {:^6}   {:<17}   {:<}"
         with open(self._run_log, "a") as f:
             f.write(log_format.format(*line) + "\n")
-#}}}
-#}}}
 
-#{{{Function called by _get_possibilities
-#{{{_generate_possibilities
     def _generate_possibilities(self, variables=None, section=None, name=None):
         """Generate the list of strings of possibilities"""
 
@@ -3513,11 +3274,7 @@ class basic_runner(object):
             var_possibilities = []
 
         return var_possibilities
-#}}}
-#}}}
 
-#{{{Functions called by _get_combinations
-#{{{_get_swapped_input_list
     def _get_swapped_input_list(self, input_list):
         """
         Finds the element in the input list, which corresponds to the
@@ -3537,13 +3294,10 @@ class basic_runner(object):
             # Find what list in the input_list which contains what we
             # would sort by
 
-            #{{{ If we would like to sort by the spatial domain
             if sort_by == "spatial_domain":
                 # nx, ny and nz are all under the section "mesh"
                 find_in_list = "mesh"
-            #}}}
 
-            #{{{ If we would like to sort by the temporal domain
             elif sort_by == "temporal_domain":
                 # If we are sorting by the temporal domain, we can either
                 # search for timestep or nout
@@ -3551,9 +3305,7 @@ class basic_runner(object):
                     find_in_list = "timestep"
                 elif self._nout is not None:
                     find_in_list = "nout"
-            #}}}
 
-            #{{{ If we would like to sort by the method
             elif (sort_by == "ddx_first") or\
                  (sort_by == "ddx_second") or\
                  (sort_by == "ddx_upwind") or\
@@ -3567,17 +3319,12 @@ class basic_runner(object):
                  (sort_by == "ddz_upwind") or\
                  (sort_by == "ddz_flux"):
                 find_in_list = sort_by.replace("_", ":")
-            #}}}
 
-            #{{{ If we would like to sort by the solver
             elif sort_by == "solver":
                 find_in_list = sort_by
-            #}}}
 
-            #{{{ If we would like to sort by anything else
             else:
                 find_in_list = sort_by
-            #}}}
 
             # Append what to be found in the input_list
             sort_list.append(find_in_list)
@@ -3623,11 +3370,7 @@ class basic_runner(object):
             self._len_group *= elem
 
         return input_list
-#}}}
-#}}}
 
-#{{{Function called by _single_run
-#{{{_get_command_to_run
     def _get_command_to_run(self, combination):
         """
         Returns a string of the command which will run the BOUT++
@@ -3648,11 +3391,7 @@ class basic_runner(object):
         command = "./{} {}".format(self._program_name, arg)
 
         return command
-#}}}
-#}}}
 
-#{{{Functions called from several places in the code
-#{{{_get_MXG_MYG
     def _get_MXG_MYG(self):
         """Function which returns the MXG and MYG"""
 
@@ -3682,9 +3421,7 @@ class basic_runner(object):
             MYG = self._MYG
 
         return MXG, MYG
-#}}}
 
-#{{{_get_dim_from_input
     def _get_dim_from_input(self, direction):
         """
         Get the dimension from the input
@@ -3721,9 +3458,7 @@ class basic_runner(object):
                 raise RuntimeError(message)
 
         return n_points
-#}}}
 
-    #{{{_warning_printer
     def _warning_printer(self, message):
         """Function for printing warnings"""
 
@@ -3734,24 +3469,17 @@ class basic_runner(object):
             rigth_padding = " " * (76 - len(chunk))
             print("* {}{} *".format(chunk, rigth_padding))
         print("*" * 80 + "\n" * 3)
-    #}}}
 
-    #{{{_message_chunker
     def _message_chunker(self, message, chunk=76):
         """Generator used to chop a message so it doesn't exceed some
         width"""
 
         for start in range(0, len(message), chunk):
             yield message[start:start + chunk]
-    #}}}
-#}}}
-#}}}
 
-#{{{class PBS_runner
 
 
 class PBS_runner(basic_runner):
-    #{{{docstring
     """
     pbs_runner
     ----------
@@ -3764,10 +3492,8 @@ class PBS_runner(basic_runner):
 
     For more info check the docstring of bout_runners.
     """
-#}}}
 
 # The constructor
-#{{{__init__
     def __init__(self,
                  BOUT_nodes=1,
                  BOUT_ppn=1,
@@ -3785,7 +3511,6 @@ class PBS_runner(basic_runner):
                  post_process_run_name=None,
                  post_process_account=None,
                  **kwargs):
-        #{{{docstring
         """
         PBS_runner constructor
         ----------------------
@@ -3838,7 +3563,6 @@ class PBS_runner(basic_runner):
             For a full sequence of possible keywords, see the docstring of
             the bout_runners constructor.
         """
-        #}}}
 
         # Note that the constructor accepts additional keyword
         # arguments (**kwargs). These must match the keywords of the
@@ -3874,23 +3598,17 @@ class PBS_runner(basic_runner):
 
         # Initialize the jobid returned from the PBS
         self._PBS_id = []
-#}}}
 
 # The run_driver
-#{{{_run_driver
     def _run_driver(self, combination, run_no):
         """The machinery which actually performs the run"""
 
         # Submit the job to the queue
         self._single_submit(combination, run_no, append_to_run_log=True)
-#}}}
 
-#{{{Functions called by the constructor
-    #{{{_check_for_PBS_instance_error
     def _check_for_PBS_instance_error(self):
         """Check if there are any type errors when creating the object"""
 
-        #{{{Check if BOUT_ppn and BOUT_nodes have the correct type
         # BOUT_ppn and BOUT_nodes are set by default, however, we must check
         # that the user has not given them as wrong input
         if not isinstance(self._BOUT_ppn, int):
@@ -3903,16 +3621,12 @@ class PBS_runner(basic_runner):
                        "BOUT_nodes must be given as a int")
             self._errors.append("TypeError")
             raise TypeError(message)
-        #}}}
 
-        #{{{Check that nprocs, BOUT_nodes and BOUT_ppn is consistent
         if self._nproc > (self._BOUT_nodes * self._BOUT_ppn):
             message = "Must have nproc <= BOUT_nodes * BOUT_ppn"
             self._errors.append("TypeError")
             raise TypeError(message)
-        #}}}
 
-        #{{{Check all the proper post_process data is set if any is set
         check_if_set = (
             self._post_process_nproc,
             self._post_process_nodes,
@@ -3930,9 +3644,7 @@ class PBS_runner(basic_runner):
                        " set, all others must be set as well.")
             self._errors.append("TypeError")
             raise TypeError(message)
-        #}}}
 
-        #{{{Check if post_process_ppn and post_process_nodes is int if set
         check_if_int = (
             (self._post_process_nodes, "post_process_nodes"),
             (self._post_process_ppn, "post_process_ppn")
@@ -3940,9 +3652,7 @@ class PBS_runner(basic_runner):
         self._check_for_correct_type(var=check_if_int,
                                      the_type=int,
                                      allow_iterable=False)
-        #}}}
 
-        #{{{Check that post_process_nprocs,nodes,ppn is consistent if set
         if self._post_process_nproc is not None:
             if self._post_process_nproc > \
                     (self._post_process_nodes * self._post_process_ppn):
@@ -3950,9 +3660,7 @@ class PBS_runner(basic_runner):
                            "post_process_nodes * post_process_ppn")
                 self._errors.append("TypeError")
                 raise TypeError(message)
-        #}}}
 
-        #{{{Check if walltime, mail and queue is a string if set
         check_if_str = (
             (self._BOUT_walltime, "BOUT_walltime"),
             (self._BOUT_mail, "BOUT_mail"),
@@ -3968,9 +3676,7 @@ class PBS_runner(basic_runner):
         self._check_for_correct_type(var=check_if_str,
                                      the_type=str,
                                      allow_iterable=False)
-        #}}}
 
-        #{{{Check that walltime is on correct format
         # A list to loop over
         walltimes = []
         # Append the walltimes if set
@@ -4030,12 +3736,7 @@ class PBS_runner(basic_runner):
                 message = walltime[1] + " must be on the form H...H:MM:SS"
                 self._errors.append("TypeError")
                 raise TypeError(message)
-        #}}}
-    #}}}
-#}}}
 
-#{{{Functions called by _error_check_for_run_input
-    #{{{_check_for_child_class_errors
     def _check_for_child_class_errors(
         self,
         remove_old,
@@ -4063,19 +3764,11 @@ class PBS_runner(basic_runner):
                            " be set if post_processing_function is set.")
                 self._errors.append("TypeError")
                 raise TypeError(message)
-    #}}}
-#}}}
 
-#{{{Functions called by the execute_runs
-    #{{{ _print_run_or_submit
     def _print_run_or_submit(self):
         """Prints "submitting" """
         print("\nSubmitting:")
-    #}}}
-#}}}
 
-#{{{Functions called by _run_driver
-    #{{{_single_submit
     def _single_submit(self, combination, run_no, append_to_run_log=None):
         """Submit a single BOUT job and submit the jobid to self._PBS_id"""
 
@@ -4088,9 +3781,7 @@ class PBS_runner(basic_runner):
         # The submission
         PBS_id = self._submit_to_PBS(job_string)
         self._PBS_id.append(PBS_id)
-    #}}}
 
-    #{{{_call_post_processing_function
     def _call_post_processing_function(
         self,
         function=None,
@@ -4104,7 +3795,6 @@ class PBS_runner(basic_runner):
         that will be called by a PBS script.
         """
 
-        #{{{ Create a python script, calling the post-processing function
         # Get the start_time (to be used in the name of the file)
         start_time = self._get_start_time()
 
@@ -4145,9 +3835,7 @@ class PBS_runner(basic_runner):
         # Write the python script
         with open(python_name, "w") as f:
             f.write(python_tmp)
-        #}}}
 
-        #{{{Create and submit the shell script
         # Creating the job string
         if self._post_process_run_name is None:
             job_name = "post_process_{}_".format(function.__name__, start_time)
@@ -4175,19 +3863,13 @@ class PBS_runner(basic_runner):
         print("\nSubmitting the post processing function '{}'\n".
               format(function.__name__))
         self._submit_to_PBS(job_string, dependent_job=dependencies)
-        #}}}
-    #}}}
-#}}}
 
-#{{{ Functions called by _single_submit
-    #{{{_get_job_string
     def _get_job_string(self, run_no, combination, append_to_run_log):
         """
         Make a string which will saved as a shell script before being
         sent to the PBS queue.
         """
 
-        #{{{Make the job name based on the combination
         # Split the name to a list
         combination_name = combination.split(" ")
         # Remove whitespace
@@ -4205,17 +3887,13 @@ class PBS_runner(basic_runner):
                        format(combination_name, self._directory, run_no)
         else:
             job_name = self._BOUT_run_name
-        #}}}
 
-        #{{{Make the main command that will be used in the PBS script
         command = self._get_command_to_run(combination)
         command = "mpirun -np {} {}".format(self._nproc, command)
 
         # Print the command
         print(command + "\n")
-        #}}}
 
-        #{{{ Creating the core job string
         job_string = self._create_PBS_core_string(
             job_name=job_name,
             nodes=self._BOUT_nodes,
@@ -4225,17 +3903,13 @@ class PBS_runner(basic_runner):
             queue=self._BOUT_queue,
             account=self._BOUT_account,
         )
-        #}}}
 
         if append_to_run_log:
-            #{{{ Get the time for start of the submission
             start = datetime.datetime.now()
             start_time = "{}-{}-{}-{}:{}:{}".\
                          format(start.year, start.month, start.day,
                                 start.hour, start.minute, start.second)
-            #}}}
 
-            #{{{ Start the timer
             job_string += "start=`date +%s`\n"
             # Run the bout program
             job_string += command + "\n"
@@ -4248,9 +3922,7 @@ class PBS_runner(basic_runner):
             job_string += "h=$((time/3600))\n"
             job_string += "m=$((($time%3600)/60))\n"
             job_string += "s=$((time%60))\n"
-            #}}}
 
-            #{{{ Append to the run log
             # Ideally we would check if any process were writing to
             # run_log.txt
             # This could be done with lsof command as described in
@@ -4267,17 +3939,12 @@ class PBS_runner(basic_runner):
                           "{:<}".format(self._dmp_folder) + " " * 3 +\
                           " >> $PBS_O_WORKDIR/" + self._directory +\
                           "/run_log.txt\n"
-            #}}}
 
         # Exit the qsub
         job_string += "exit"
 
         return job_string
-    #}}}
-#}}}
 
-#{{{Functions called by _submit_to_PBS
-#{{{_get_start_time
     def _get_start_time(self):
         """
         Returns a string of the current time down to micro precision
@@ -4294,11 +3961,7 @@ class PBS_runner(basic_runner):
                                           time_now.microsecond,
                                           )
         return start_time
-#}}}
-#}}}
 
-#{{{Functions called by several functions
-#{{{_create_PBS_core_string
     def _create_PBS_core_string(
         self,
         job_name=None,
@@ -4341,9 +4004,7 @@ class PBS_runner(basic_runner):
         job_string += "cd $PBS_O_WORKDIR\n"
 
         return job_string
-#}}}
 
-#{{{_submit_to_PBS
     def _submit_to_PBS(self, job_string, dependent_job=None):
         """
         Saves the job_string as a shell script, submits it and deletes
@@ -4404,15 +4065,10 @@ class PBS_runner(basic_runner):
             pass
 
         return output
-#}}}
-#}}}
-#}}}
 
 
-#{{{if __name__ == "__main__":
 if __name__ == "__main__":
 
     print(("\n\nTo find out about the bout_runners, please read the user's "
            "manual, or have a look at 'BOUT/examples/bout_runners_example', "
            "or have a look at the documentation"))
-#}}}
