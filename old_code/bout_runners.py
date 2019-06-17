@@ -16,7 +16,7 @@ BOUT/examples/bout_runners_example.
 #       2. Better input parsing: The input for the constructors are rather long.
 #          One alternative could be to have setters for a grouping of
 #          parameters
-from bout_runners.overview import _warning_printer, _run_make, _create_folder, \
+from old_code.overview import _warning_printer, _run_make, _create_folder, \
     _check_if_set_correctly, _check_for_correct_type, \
     _error_check_additional, \
     _error_check_for_run_input
