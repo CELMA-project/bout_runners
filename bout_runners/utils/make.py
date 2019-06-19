@@ -49,7 +49,7 @@ class MakeProject(object):
         if make_file_root_path is None:
             frame = inspect.stack()[1]
             module = inspect.getmodule(frame[0])
-            make_file_root_path = module.__file__
+            make_file_root_path = Path(module.__file__).parent
 
         self.make_file_root_path = Path(make_file_root_path)
         print(self.make_file_root_path)
