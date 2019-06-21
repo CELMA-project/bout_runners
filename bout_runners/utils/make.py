@@ -9,6 +9,17 @@ from bout_runners.utils.subprocesses_functions import run_subprocess
 logger = logging.getLogger(__name__)
 
 
+# FIXME: We might need the exec_name elsewhere, as the executable is
+#        needed for a run
+
+
+class MakeError(Exception):
+    """
+    Error class indicating that this is a Make error
+    """
+    pass
+
+
 class MakeProject(object):
     """
     The make class is responsible for making the project
@@ -52,7 +63,15 @@ class MakeProject(object):
             make_file_root_path = Path(module.__file__).parent
 
         self.make_file_root_path = Path(make_file_root_path)
-        print(self.make_file_root_path)
+
+        if force:
+            print('Force make')
+        else:
+            if exec_name is not None:
+                exec_name = self._get_exec_name()
+            if not self._exec_exist(exec_name):
+                print('Did not find any possible executable name for '
+                      'the project')
 
     def _run_make(self):
         """
@@ -66,42 +85,44 @@ class MakeProject(object):
         command = "make"
         run_subprocess(command, self.make_file_root_path)
 
-    def _set_program_name(self, prog_name=None):
+    def _get_exec_name(self):
         """
-        Will set self._program_name and make the program if the
-        prog_name.o file is not found.
+        Returns the name of the executable if a *.o file is found
 
-        Parameters
-        ----------
-        prog_name : str
-            Name of the exceutable. If None, the name will be set from
-            the *.o file.
+        Returns
+        -------
+        exec_name : str
+            Name of the executable
+
+        Raises
+        ------
+        MakeError
+            If no *.o file is found
         """
 
-        if prog_name is not(None):
-            # Check that a string is given
-            if not isinstance(prog_name, str):
-                message = "prog_name must be given as a string"
-                self._errors.append("TypeError")
-                raise TypeError(message)
+        o_files = self.make_file_root_path.glob("*.o")
+
+        if len(o_files) > 1:
+            message = ("More than one *.o file found. "
+                       "The first *.o file is chosen. "
+                       "Consider setting 'prog_name'.")
+            self._warning_printer(message)
+            self._warnings.append(message)
+            self._program_name = o_files[0].replace(".o", "")
+        elif len(o_files) == 1:
+            # Pick the first instance as the name
+            self._program_name = o_files[0].replace(".o", "")
+
+
             # Search for file
-            if os.path.isfile(prog_name):
-                self._program_name = prog_name
+            if not(os.path.isfile(prog_name)):
+                message = ("{} could not be found after make. "
+                           "Please check for spelling mistakes").\
+                    format(prog_name)
+                self._errors.append("RuntimeError")
+                raise RuntimeError(message)
             else:
-                print("{} not found, now making:".format(prog_name))
-                # File not found, make
-                self._run_make()
-                # Set the make flag to False, so it is not made again
-                self._make = False
-                # Search for file
-                if not(os.path.isfile(prog_name)):
-                    message = ("{} could not be found after make. "
-                               "Please check for spelling mistakes").\
-                        format(prog_name)
-                    self._errors.append("RuntimeError")
-                    raise RuntimeError(message)
-                else:
-                    self._program_name = prog_name
+                self._program_name = prog_name
         else:
             # Find the *.o file
             o_files = glob.glob("*.o")
@@ -115,31 +136,41 @@ class MakeProject(object):
             elif len(o_files) == 1:
                 # Pick the first instance as the name
                 self._program_name = o_files[0].replace(".o", "")
+        else:
+            self._errors.append("RuntimeError")
+            raise RuntimeError(
+                "No make file found in current directory")
+
+
+    def _exec_exist(self, exec_name):
+        """
+        Check if an executable already exist
+
+        Parameters
+        ----------
+        exec_name : str
+            Name of the executable
+
+        Returns
+        -------
+        bool
+            Whether the executable is found or not
+        """
+
+        # Check if there exists a make
+        make_file = glob.glob("*make*")
+        if len(make_file) > 0:
+            # Run make
+            self._run_make()
+            # Set the make flag to False, so it is not made again
+            self._make = False
+            # Search for the .o file again
+            o_files = glob.glob("*.o")
+            if len(o_files) > 0:
+                self._program_name = o_files[0].replace(".o", "")
             else:
-                # Check if there exists a make
-                make_file = glob.glob("*make*")
-                if len(make_file) > 0:
-                    # Run make
-                    self._run_make()
-                    # Set the make flag to False, so it is not made again
-                    self._make = False
-                    # Search for the .o file again
-                    o_files = glob.glob("*.o")
-                    if len(o_files) > 0:
-                        self._program_name = o_files[0].replace(".o", "")
-                    else:
-                        self._program_name = False
-                        message = ("The constructor could not make your"
-                                   " program")
-                        self._errors.append("RuntimeError")
-                        raise RuntimeError(message)
-                else:
-                    self._errors.append("RuntimeError")
-                    raise RuntimeError(
-                        "No make file found in current directory")
-
-
-if __name__ == '__main__':
-    MakeProject()
-
-
+                self._program_name = False
+                message = ("The constructor could not make your"
+                           " program")
+                self._errors.append("RuntimeError")
+                raise RuntimeError(message)

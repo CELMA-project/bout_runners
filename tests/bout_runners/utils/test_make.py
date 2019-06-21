@@ -1,4 +1,7 @@
+import os
+from pathlib import Path
 from bout_runners.utils.make import MakeProject
+from dotenv import load_dotenv
 
 
 # FIXME: YOU ARE HERE: ADD BOUT-DEV PATH TO DOTENV
@@ -8,4 +11,7 @@ from bout_runners.utils.make import MakeProject
 
 
 def test_make_project():
+    load_dotenv()
+    bout_path = Path(os.getenv('BOUT_PATH'))
     MakeProject()
+    print(bout_path)
