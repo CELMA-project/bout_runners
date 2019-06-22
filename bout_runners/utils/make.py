@@ -2,6 +2,7 @@
 Contains the make class
 """
 
+import re
 import inspect
 import logging
 from pathlib import Path
@@ -58,12 +59,15 @@ class MakeProject(object):
         """
 
         if make_file_root_path is None:
+            # Assume that the make_file_root_path is located in the
+            # caller directory
             frame = inspect.stack()[1]
             module = inspect.getmodule(frame[0])
             make_file_root_path = Path(module.__file__).parent
 
         self.make_file_root_path = Path(make_file_root_path)
 
+        # FIXME: Don't have print statements
         if force:
             print('Force make')
         else:
@@ -97,49 +101,78 @@ class MakeProject(object):
         Raises
         ------
         MakeError
-            If no *.o file is found
+            If no valid executable file name is found
         """
 
-        o_files = self.make_file_root_path.glob("*.o")
+    def _get_variable_line(self, variable_to_find, string):
+        """
+        Get the whole line of a variable
 
-        if len(o_files) > 1:
-            message = ("More than one *.o file found. "
-                       "The first *.o file is chosen. "
-                       "Consider setting 'prog_name'.")
-            self._warning_printer(message)
-            self._warnings.append(message)
-            self._program_name = o_files[0].replace(".o", "")
-        elif len(o_files) == 1:
-            # Pick the first instance as the name
-            self._program_name = o_files[0].replace(".o", "")
+        Parameters
+        ----------
+        variable_to_find
+
+        Returns
+        -------
+        str or None
+
+        Examples
+        --------
+        >>> self._
+        """
+
+        variable_line = None
+
+        # Build the match function for the regex
+        no_comment_line = r'^\s*(?!#.)'
+        must_containt_eq_sign = r'\s*=\s*'
+        can_contain_anything = r'.*'
+
+        pattern = f'{no_comment_line}{variable_to_find}' \
+                  f'{must_containt_eq_sign}{can_contain_anything}'
+
+        match = re.search(pattern, string)
+
+        if not match is None:
+            variable_line = match.group()
+
+        return variable_line
+
+    def _get_variable_rhs_stem(self, rhs_to_find, variable_line):
+        """
+        Get the stem of the right hand side of a variable
+
+        # FIXME: YOU ARE HERE: CHCEK REGEX101, MAKE EXAMPLE HERE AND
+        ABOVE
+
+        Parameters
+        ----------
+        variable_to_find
+
+        Returns
+        -------
+        str or None
+
+        Examples
+        --------
+        >>> self._
+        """
 
 
-            # Search for file
-            if not(os.path.isfile(prog_name)):
-                message = ("{} could not be found after make. "
-                           "Please check for spelling mistakes").\
-                    format(prog_name)
-                self._errors.append("RuntimeError")
-                raise RuntimeError(message)
-            else:
-                self._program_name = prog_name
-        else:
-            # Find the *.o file
-            o_files = glob.glob("*.o")
-            if len(o_files) > 1:
-                message = ("More than one *.o file found. "
-                           "The first *.o file is chosen. "
-                           "Consider setting 'prog_name'.")
-                self._warning_printer(message)
-                self._warnings.append(message)
-                self._program_name = o_files[0].replace(".o", "")
-            elif len(o_files) == 1:
-                # Pick the first instance as the name
-                self._program_name = o_files[0].replace(".o", "")
-        else:
-            self._errors.append("RuntimeError")
-            raise RuntimeError(
-                "No make file found in current directory")
+        rhs_stem = None
+
+        # Build the match function for the regex
+        must_containt_eq_sign = r'\s*=\s*'
+        valid_stem_group = r'=\s*([^#\[\\/:*?\"<>|.\]]*)'
+
+        pattern = f'{must_containt_eq_sign}{valid_stem_group}'
+
+        match = re.search(pattern, variable_line)
+
+        if not match is None:
+            rhs_stem = match.group(1)
+
+        return rhs_stem
 
 
     def _exec_exist(self, exec_name):
