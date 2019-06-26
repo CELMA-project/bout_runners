@@ -13,8 +13,10 @@ class ReadMakeFileError(Exception):
 
         Parameters
         ----------
-        variable
-        path
+        variable : str
+            Variable to searched for
+        path : Path or str
+            Path searched at
         """
         message = f'Could not find {variable} in {path}'
 
