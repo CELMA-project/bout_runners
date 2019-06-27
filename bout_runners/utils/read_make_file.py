@@ -123,38 +123,3 @@ class BoutMakeFileVariable(ReadBoutMakeFile):
         self.variable_value = matches[-1]
 
         return self.variable_value
-
-    def _get_variable_rhs_stem(self, rhs_to_find, variable_line):
-        """
-        Get the stem of the right hand side of a variable
-
-        # FIXME: YOU ARE HERE: CHCEK REGEX101, MAKE EXAMPLE HERE AND
-        ABOVE
-
-        Parameters
-        ----------
-        variable_to_find
-
-        Returns
-        -------
-        str or None
-
-        Examples
-        --------
-        >>> self._
-        """
-
-        rhs_stem = None
-
-        # Build the match function for the regex
-        must_containt_eq_sign = r'\s*=\s*'
-        valid_stem_group = r'=\s*([^#\[\\/:*?\"<>|.\]]*)'
-
-        pattern = f'{must_containt_eq_sign}{valid_stem_group}'
-
-        match = re.search(pattern, variable_line)
-
-        if not match is None:
-            rhs_stem = match.group(1)
-
-        return rhs_stem
