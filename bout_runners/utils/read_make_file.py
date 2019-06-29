@@ -113,7 +113,7 @@ class BoutMakeFileVariable(ReadBoutMakeFile):
         #       and as we only have one matching group in the
         #       pattern the elements in the list will be string not a
         #       tuple
-        matches = re.findall(pattern, self.content)
+        matches = re.findall(pattern, self.content, re.M)
 
         if len(matches) == 0:
             raise ReadMakeFileError(self.variable_name, self.path)
