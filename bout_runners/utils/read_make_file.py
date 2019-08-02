@@ -47,6 +47,34 @@ class ReadBoutMakeFile(object):
 class BoutMakeFileVariable(ReadBoutMakeFile):
     """
     Class which reads a variable from a BOUT++ MakeFile
+
+    Attributes
+    ----------
+    variable_name : str
+        Name of the variable belonging to the instance
+    variable_value : str
+        Value belonging to the variable of the instance
+
+    Methods
+    -------
+    get_variable_value()
+        Get the value of the variable
+
+    Examples
+    --------
+    MakeFile
+    >>> # Find the home, since ~ does not work in general
+    ... # shell runs a shell command
+    ... BOUT_SUPER	= /super/path/to/BOUT-dev
+    ... BOUT_TOP	= $(BOUT_SUPER)/BOUT-dev
+    ...
+    ... SOURCEC		= bout_model.cxx
+    ...
+    ... include $(BOUT_TOP)/make.config
+
+    Script
+    >>> BoutMakeFileVariable('SOURCEC', 'Makefile').get_variable_value()
+    'bout_model.cxx'
     """
 
     def __init__(self, path, variable_name):
