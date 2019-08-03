@@ -2,9 +2,9 @@ import re
 from pathlib import Path
 
 
-class ReadMakeFileError(Exception):
+class ReadMakefileError(Exception):
     """
-    Error class indicating that this is a ReadMakeFile error
+    Error class indicating that this is a ReadMakefile error
     """
 
     def __init__(self, variable, path):
@@ -23,14 +23,14 @@ class ReadMakeFileError(Exception):
         super().__init__(message)
 
 
-class ReadBoutMakeFile(object):
+class ReadBoutMakefile(object):
     """
-    Class which reads a BOUT++ MakeFile
+    Class which reads a BOUT++ Makefile
     """
 
     def __init__(self, path):
         """
-        Reads the content of a MakeFile and stores it into self.content
+        Reads the content of a Makefile and stores it into self.content
 
         Parameters
         ----------
@@ -44,9 +44,9 @@ class ReadBoutMakeFile(object):
             self.content = f.read()
 
 
-class BoutMakeFileVariable(ReadBoutMakeFile):
+class BoutMakefileVariable(ReadBoutMakefile):
     """
-    Class which reads a variable from a BOUT++ MakeFile
+    Class which reads a variable from a BOUT++ Makefile
 
     Attributes
     ----------
@@ -62,7 +62,7 @@ class BoutMakeFileVariable(ReadBoutMakeFile):
 
     Examples
     --------
-    MakeFile
+    Makefile
     >>> # Find the home, since ~ does not work in general
     ... # shell runs a shell command
     ... BOUT_SUPER	= /super/path/to/BOUT-dev
@@ -73,7 +73,7 @@ class BoutMakeFileVariable(ReadBoutMakeFile):
     ... include $(BOUT_TOP)/make.config
 
     Script
-    >>> BoutMakeFileVariable('SOURCEC', 'Makefile').get_variable_value()
+    >>> BoutMakefileVariable('SOURCEC', 'Makefile').get_variable_value()
     'bout_model.cxx'
     """
 
@@ -84,12 +84,12 @@ class BoutMakeFileVariable(ReadBoutMakeFile):
         Parameters
         ----------
         path : Path or str
-            The path to the MakeFile
+            The path to the Makefile
         variable_name : str
             The variable under consideration
         """
 
-        super(BoutMakeFileVariable, self).__init__(path)
+        super(BoutMakefileVariable, self).__init__(path)
 
         self.variable_name = variable_name
         self.variable_value = None
@@ -105,18 +105,18 @@ class BoutMakeFileVariable(ReadBoutMakeFile):
 
         Raises
         ------
-        ReadMakeFileError
+        ReadMakefileError
             If self.variable is not found
 
         Examples
         --------
-        MakeFile
+        Makefile
         >>> # foo=bar
         ... foo = baz
         ... foo   = foobar.qux # foo = quux.quuz
 
         Script
-        >>> BoutMakeFileVariable('foo', 'Makefile').get_variable_value()
+        >>> BoutMakefileVariable('foo', 'Makefile').get_variable_value()
         'foobar.qux'
         """
 
@@ -144,7 +144,7 @@ class BoutMakeFileVariable(ReadBoutMakeFile):
         matches = re.findall(pattern, self.content, re.M)
 
         if len(matches) == 0:
-            raise ReadMakeFileError(self.variable_name, self.path)
+            raise ReadMakefileError(self.variable_name, self.path)
 
         # Only the last line of the variable will be considered by
         # the Makefile
