@@ -3,8 +3,6 @@ from bout_runners.utils.read_makefile import BoutMakefileVariable
 from bout_runners.utils.read_makefile import ReadMakefileError
 
 
-# FIXME: infer Makefile name
-
 def get_exec_name(makefile_root_path, makefile_name=None):
     """
     Gets the name of the project executable
@@ -29,7 +27,7 @@ def get_exec_name(makefile_root_path, makefile_name=None):
     """
 
     if makefile_name is None:
-        makefile_name = infer_makefile_name(makefile_root_path)
+        makefile_name = get_makefile_name(makefile_root_path)
 
     makefile_path = Path(makefile_root_path).joinpath(makefile_name)
 
@@ -49,7 +47,7 @@ def get_exec_name(makefile_root_path, makefile_name=None):
     return exec_name
 
 
-def infer_makefile_name(makefile_root_path):
+def get_makefile_name(makefile_root_path):
     """
     Searches for a valid Makefile
 
@@ -63,6 +61,11 @@ def infer_makefile_name(makefile_root_path):
     -------
     makefile_name : str
         The name of the Makefile
+
+    Raises
+    ------
+    FileNotFoundError
+        If none of the valid makefile names are found
     """
 
     possible_names = ('GNUmakefile',
