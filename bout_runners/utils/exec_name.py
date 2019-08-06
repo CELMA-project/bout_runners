@@ -32,10 +32,10 @@ def get_exec_name(makefile_root_path, makefile_name=None):
     makefile_path = Path(makefile_root_path).joinpath(makefile_name)
 
     try:
-        exec_name = BoutMakefileVariable('TARGET', makefile_path)\
+        exec_name = BoutMakefileVariable(makefile_path, 'TARGET')\
             .get_variable_value()
     except ReadMakefileError:
-        exec_name = BoutMakefileVariable('SOURCEC', makefile_path)\
+        exec_name = BoutMakefileVariable(makefile_path, 'SOURCEC')\
             .get_variable_value()
         # Strip the name from the last .c*
         split_by = '.c'
@@ -75,7 +75,7 @@ def get_makefile_name(makefile_root_path):
     makefile_name = None
 
     for name in possible_names:
-        if makefile_root_path.joinpath(name):
+        if makefile_root_path.joinpath(name).is_file():
             makefile_name = name
             break
 
