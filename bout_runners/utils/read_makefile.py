@@ -63,9 +63,7 @@ class BoutMakefileVariable(ReadBoutMakefile):
     Examples
     --------
     Makefile
-    >>> # Find the home, since ~ does not work in general
-    ... # shell runs a shell command
-    ... BOUT_SUPER	= /super/path/to/BOUT-dev
+    >>> BOUT_SUPER	= /super/path/to/BOUT-dev
     ... BOUT_TOP	= $(BOUT_SUPER)/BOUT-dev
     ...
     ... SOURCEC		= bout_model.cxx
