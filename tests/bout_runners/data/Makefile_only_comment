@@ -1,0 +1,4 @@
+# VAR   = val
+#VAR=val
+# VAR  =  val.cxx # Previously called val.cxx
+#VAR  =  val.cxx # Previously called val.cxx

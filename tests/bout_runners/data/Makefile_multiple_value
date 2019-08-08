@@ -1,0 +1,6 @@
+VAR  =  val 123 lel.cxx.bob # Previously called = val.cxx
+VAR = val
+VAR=val
+VAR  =  not_val
+
+# VAR   = val
