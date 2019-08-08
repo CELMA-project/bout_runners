@@ -16,7 +16,7 @@ def test_read_bout_makefile():
     assert reader.content == 'This is some text'
 
 
-@pytest.mark.parametrize("file,expected",
+@pytest.mark.parametrize('file,expected',
                          [('Makefile_value', 'val 123 val.cxx.foo'),
                           ('Makefile_multiple_value', 'not_val')])
 def test_get_variable_value(file, expected):
