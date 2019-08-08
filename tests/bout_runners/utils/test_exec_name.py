@@ -36,6 +36,11 @@ def copy_makefile():
     Creates a temporary directory, copies Makefile from DATA_PATH to
     DATA_PATH/tmp/my_makefile to search for the Makefile.
     The file and directory are teared it down after the test.
+
+    Yields
+    ------
+    tmp_path : Path
+        The path to the temporary directory
     """
     # Setup
     tmp_path = DATA_PATH.joinpath('tmp')
