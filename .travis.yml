@@ -21,11 +21,11 @@ install:
   - cd ${HOME}/BOUT-dev
   - ./configure
   - make
+  - cd ${TRAVIS_BUILD_DIR}
   - pip install -r requirements.txt
   - pip install codecov pytest-cov
 
 script:
-  - cd ${TRAVIS_BUILD_DIR}
   - pytest --cov=./
 
 after_success:
