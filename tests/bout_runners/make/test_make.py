@@ -1,7 +1,7 @@
 import os
 import pytest
 from pathlib import Path
-from bout_runners.utils.make import MakeProject
+from bout_runners.make.make import MakeProject
 from dotenv import load_dotenv
 
 

@@ -1,8 +1,8 @@
 import pytest
 from pathlib import Path
-from bout_runners.utils.read_makefile import ReadBoutMakefile
-from bout_runners.utils.read_makefile import BoutMakefileVariable
-from bout_runners.utils.read_makefile import ReadMakefileError
+from bout_runners.make.read_makefile import ReadBoutMakefile
+from bout_runners.make.read_makefile import BoutMakefileVariable
+from bout_runners.make.read_makefile import ReadMakefileError
 
 DATA_PATH = Path(__file__).absolute().parents[1].joinpath('data')
 

@@ -1,6 +1,6 @@
 from pathlib import Path
-from bout_runners.utils.read_makefile import BoutMakefileVariable
-from bout_runners.utils.read_makefile import ReadMakefileError
+from bout_runners.make.read_makefile import BoutMakefileVariable
+from bout_runners.make.read_makefile import ReadMakefileError
 
 
 def get_exec_name(makefile_root_path, makefile_name=None):
