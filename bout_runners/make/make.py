@@ -1,6 +1,6 @@
-import inspect
 import logging
 from pathlib import Path
+from bout_runners.utils.file_operations import get_caller_dir
 from bout_runners.utils.subprocesses_functions import run_subprocess
 from bout_runners.utils.exec_name import get_exec_name
 
@@ -48,11 +48,7 @@ class MakeProject(object):
         """
 
         if makefile_root_path is None:
-            # Assume that the makefile_root_path is located in the
-            # caller directory
-            frame = inspect.stack()[1]
-            module = inspect.getmodule(frame[0])
-            makefile_root_path = Path(module.__file__).parent
+            makefile_root_path = get_caller_dir()
 
         self.makefile_root_path = Path(makefile_root_path)
         self.makefile_name = makefile_name
