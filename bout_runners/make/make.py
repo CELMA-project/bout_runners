@@ -15,6 +15,7 @@ class MakeError(Exception):
     pass
 
 
+# FIXME: Fill the docstring
 class MakeProject(object):
     """
     The make class is responsible for making the project
