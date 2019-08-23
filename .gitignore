@@ -101,8 +101,11 @@ ENV/
 .idea
 .pytest_cache
 
+# Project related
+*.db
+
 # Temporary files
 *delme*
 
-# mac stuff
+# Mac stuff
 *.DS_Store
