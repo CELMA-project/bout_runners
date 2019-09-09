@@ -48,7 +48,13 @@ def main(database_root_path=None):
                         '   file_1_modified TIMESTAMP,'
                         '   git_sha TEXT'
                         ')')
-            # FIXME: Parameters depend on project
+            # FIXME: Parameter attributes can be found from
+            #  BOUT.settings after executing the executable once. The
+            #  parameters can be read using the normal configparser
+            #  library (must convert to type) https://docs.python.org/3/library/configparser.html#supported-datatypes
+            # FIXME: One table per parameter section
+            # FIXME: One table to reference all the parameters (join
+            #  table)
             cur.execute('CREATE TABLE parameters'
                         '('
                         '   id INTEGER PRIMARY KEY,'
