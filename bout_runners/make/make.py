@@ -54,6 +54,10 @@ class MakeProject(object):
         self.makefile_root_path = Path(makefile_root_path)
         self.makefile_name = makefile_name
 
+        # Will be filled
+        self.exec_name = get_exec_name(self.makefile_root_path,
+                                       self.makefile_name)
+
     def run_make(self, force=False):
         """
         Runs make in the self.makefile_root_path
@@ -67,14 +71,15 @@ class MakeProject(object):
             If True, make clean will be called prior to make
         """
 
-        # Check if already made
-        exec_name = get_exec_name(self.makefile_root_path,
-                                  self.makefile_name)
+        # If force: Run clean so that `made` returns false
         if force:
             self.run_clean()
 
-        made = self.makefile_root_path.joinpath(exec_name).is_file()
+        # Check if already made
+        made = \
+            self.makefile_root_path.joinpath(self.exec_name).is_file()
 
+        # Do nothing if already made
         if not made:
             make_str = 'make' if self.makefile_name is None \
                 else f'make -f {self.makefile_name}'
