@@ -5,7 +5,7 @@ from bout_runners.utils.subprocesses_functions import run_subprocess
 
 logger = logging.getLogger(__name__)
 
-# FIXME: Rudimental runner to create database
+# FIXME: Rudimentary runner to create database
 
 
 def single_run(path, nproc, options):
