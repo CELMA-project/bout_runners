@@ -15,20 +15,33 @@ class MakeError(Exception):
     pass
 
 
-# FIXME: Fill the docstring
 class MakeProject(object):
     """
     The make class is responsible for making the project
 
     Attributes
     ----------
+    makefile_root_path : Path
+        The path to the Makefile
+    makefile_name : str
+        The name of the Makefile
+    exec_name : str
+        The name of the executable
 
     Methods
     -------
+    run_make(force=False)
+        Runs make in the self.makefile_root_path
+    run_clean()
+        Runs make clean in the self.makefile_root_path
 
     Examples
     --------
-
+    >>> from bout_runners.make.make import MakeProject
+    ... from pathlib import Path
+    ... path = Path('path', 'to', 'makefile_root_path')
+    ... make_obj = MakeProject(makefile_root_path=path)
+    ... make_obj.run_make(force=True)
     """
 
     def __init__(self,

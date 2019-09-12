@@ -26,6 +26,13 @@ class ReadMakefileError(Exception):
 class ReadBoutMakefile(object):
     """
     Class which reads a BOUT++ Makefile
+
+    Attributes
+    ----------
+    path : Path
+        The path to the Makefile
+    content : str
+        The content of the Makefile as a string
     """
 
     def __init__(self, path):
