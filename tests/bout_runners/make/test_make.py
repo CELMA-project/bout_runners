@@ -1,12 +1,11 @@
-import os
 import pytest
-from pathlib import Path
+from distutils.dir_util import copy_tree
+from distutils.dir_util import remove_tree
 from bout_runners.make.make import MakeProject
-from dotenv import load_dotenv
 
 
 @pytest.fixture(scope='function')
-def make_make_object():
+def make_make_object(get_bout_path):
     """
     Setup and teardown sequence which makes a make object
 
@@ -17,20 +16,25 @@ def make_make_object():
     ------
     make_obj : MakeProject
         The object to call make and make clean from
+    exec_file : Path
+        The path to the executable
     """
     # Setup
-    load_dotenv()
-    bout_path = Path(os.getenv('BOUT_PATH')).absolute()
+    bout_path = get_bout_path
     project_path = bout_path.joinpath('examples', 'conduction')
-    exec_file = project_path.joinpath('conduction')
+    tmp_path = project_path.parent.joinpath('tmp')
 
-    make_obj = MakeProject(makefile_root_path=project_path)
+    copy_tree(str(project_path), str(tmp_path))
+
+    exec_file = tmp_path.joinpath('conduction')
+
+    make_obj = MakeProject(makefile_root_path=tmp_path)
     make_obj.run_clean()
 
     yield make_obj, exec_file
 
     # Teardown
-    make_obj.run_clean()
+    remove_tree(str(tmp_path))
 
 
 def test_make_project(make_make_object):
