@@ -38,7 +38,7 @@ def make_make_object(get_bout_path):
     # Setup
     bout_path = get_bout_path
     project_path = bout_path.joinpath('examples', 'conduction')
-    tmp_path = project_path.parent.joinpath('tmp')
+    tmp_path = project_path.parent.joinpath('tmp_make')
 
     copy_tree(str(project_path), str(tmp_path))
 
