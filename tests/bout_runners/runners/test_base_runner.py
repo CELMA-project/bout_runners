@@ -56,3 +56,5 @@ def test_single_run(make_tmp_test_run_dir):
                bout_inp_dir=bout_inp_dir,
                nproc=1,
                options='nout=0')
+
+    assert bout_inp_dir.joinpath('BOUT.dmp.0.nc').is_file()
