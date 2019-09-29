@@ -1,7 +1,10 @@
+import re
+import ast
 import logging
 import sqlite3
 import configparser
 import contextlib
+import shutil
 from pathlib import Path
 from bout_runners.utils.file_operations import get_caller_dir
 from bout_runners.runners.base_runner import single_run
@@ -10,15 +13,28 @@ from bout_runners.runners.base_runner import single_run
 logger = logging.getLogger(__name__)
 
 
-def obtain_project_parameters(project_path,
-                              bout_inp_dir):
+def obtain_project_parameters(settings_path):
+    """
+    FIXME: Update after FIXME below
+    Returns the project parameters from the settings file
 
-    single_run(execute_from_path=project_path,
-               bout_inp_dir=bout_inp_dir,
-               nproc=1,
-               options='nout=0')
+    Parameters
+    ----------
+    settings_path : Path
+        Path to the settings file
 
-    settings_path = bout_inp_dir.joinpath('BOUT.settings')
+    Returns
+    -------
+    parameter_dict : dict
+        Dictionary containing the parameters given in BOUT.settings
+        On the form
+        >>> {'section': {'parameter': 'value_type'}}
+    """
+
+    type_map = {'bool': 'INTEGER',  # No bool type in sqllite
+                'float': 'REAL',
+                'int': 'INTEGER',
+                'str': 'TEXT'}
 
     # The settings file lacks a header for the global parameter
     # Therefore, we add add the header [global]
@@ -28,16 +44,76 @@ def obtain_project_parameters(project_path,
     config = configparser.ConfigParser()
     config.read_string(settings_memory)
 
-    config.sections()
+    parameter_dict = dict()
 
-    # FIXME: YOU ARE HERE - ONE TABLE PER HEADER
+    for section in config.sections():
+        parameter_dict[section] = dict()
+        for key, val in config[section].items():
+            # Strip comments
+            capture_all_but_comment = '^([^#]*)'
+            matches = re.findall(capture_all_but_comment, val, re.M)
+
+            # Exclude comment line
+            if len(matches) == 0:
+                continue
+
+            # Capitalize in case of boolean
+            stripped_val = matches[0].capitalize()
+
+            # If type is not found, type is str
+            try:
+                val_type = type(ast.literal_eval(stripped_val))
+            except (SyntaxError, ValueError):
+                val_type = str
+
+            parameter_dict[section][key] = type_map[val_type.__name__]
+
+    # FIXME: Bug in .settings: -d path is captured with # not in use
+    parameter_dict['global'].pop('d', None)
+    parameter_dict['global'].pop(str(bout_inp_dir).lower(), None)
+
+    return parameter_dict
 
 
+def run_test_run(bout_inp_dir, project_path):
+    """
+    Performs a test run
 
-def main(
+    Parameters
+    ----------
+    project_path : Path
+        Path to the project
+    bout_inp_dir : Path
+        Path to the BOUT.inp file
+
+    Returns
+    -------
+    settings_path : Path
+        Path to the settings file
+    """
+
+    test_run_dir = project_path.joinpath('test_run')
+    if not test_run_dir.is_dir():
+        test_run_dir.mkdir(exist_ok=True, parents=True)
+
+    settings_path = test_run_dir.joinpath('BOUT.settings')
+
+    if not settings_path.is_file():
+        test_run_inp_path = test_run_dir.joinpath('BOUT.inp')
+        shutil.copy(bout_inp_dir, test_run_inp_path)
+
+        single_run(execute_from_path=project_path,
+                   bout_inp_dir=test_run_inp_path,
+                   nproc=1,
+                   options='nout=0')
+
+    return settings_path
+
+
+def main(project_path=None,
          database_root_path=None):
     """
-    FIXME
+    FIXME: Global database, on schema per project - find project name
 
     Using normalized pattern, see [1]_ for a quick overview, and [2]_
     for a slightly deeper explanation
@@ -46,8 +122,7 @@ def main(
     ----------
     database_root_path : None or Path or str
         Root path of the database file
-        If None, the path of the root caller of FIXME will
-        be set to the root path
+        If None, the path will be set to $HOME/BOUT_db
 
     Returns
     -------
@@ -58,13 +133,19 @@ def main(
     [2] http://www.bkent.net/Doc/simple5.htm
     """
 
+    if project_path is None:
+        project_path = get_caller_dir()
+
     if database_root_path is None:
-        database_root_path = get_caller_dir()
+        database_root_path = Path().home().joinpath('BOUT_db')
 
     if not database_root_path.is_dir():
         database_root_path.mkdir(exist_ok=True, parents=True)
 
     database_path = database_root_path.joinpath('bookkeeper.db')
+
+    # FIXME: Schema can be obtained from project_path
+    schema = project_path.name
 
     # NOTE: The connection does not close after the 'with' statement
     #       Instead we use the context manager as described here
@@ -72,7 +153,33 @@ def main(
 
     with contextlib.closing(sqlite3.connect(str(database_path))) as con:
         with con as cur:
-            # FIXME: Check if table already exist
+            # All schemas should have the global table
+            cur.execute('SELECT name FROM sqlite_master '
+                        '   WHERE type="table" ' 
+                        '   AND name=?', (f'{schema}.global',))
+            test = cur.cursor().fetchone()
+            a=1
+
+            cur.execute('SELECT name FROM sqlite_master '
+                        '   WHERE type="table" ' 
+                        '   AND name=?', (f'global',))
+            test2 = cur.cursor().fetchone()
+
+            cur.execute('CREATE TABLE global '
+                        '('
+                        '   id INTEGER PRIMARY KEY,'
+                        '   file_1_modified TIMESTAMP,'
+                        '   git_sha TEXT'
+                        ')')
+
+            cur.execute('SELECT name FROM sqlite_master '
+                        '   WHERE type="table" ' 
+                        '   AND name=?', (f'global',))
+            test3 = cur.cursor().fetchone()
+            a=2
+            # FIXME: You are here
+
+
             # FIXME: Files depend on project
             cur.execute('CREATE TABLE file_modification '
                         '('
@@ -134,6 +241,9 @@ if __name__ == '__main__':
     project_path = bout_path.joinpath('examples', 'conduction')
     bout_inp_dir = project_path.joinpath('data')
 
-    obtain_project_parameters(project_path,
-                              bout_inp_dir)
+    main(project_path)
+
+    settings_path = run_test_run(bout_inp_dir, project_path)
+
+    obtain_project_parameters(settings_path)
     # main()
