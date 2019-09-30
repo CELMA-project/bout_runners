@@ -110,55 +110,6 @@ def run_test_run(bout_inp_dir, project_path):
     return settings_path
 
 
-def create_schema(database_path, schema_name):
-    """
-    Creates a schema
-
-    Parameters
-    ----------
-    database_path : Path
-        Path to the sql database
-    schema_name : str
-        Name of the schema
-
-    References
-    ----------
-    [1] https://stackoverflow.com/questions/30897377/python-sqlite3-create-a-schema-without-having-to-use-a-second-database
-    """
-
-    schema_path = database_path.parent.joinpath(f'{schema_name}.db')
-
-    # Auto-closes connection
-    with contextlib.closing(sqlite3.connect(str(database_path))) as con:
-        # Auto-commits
-        with con as c:
-            # Auto-closes cursor
-            with contextlib.closing(c.cursor()) as cur:
-                cur.execute('ATTACH DATABASE ? AS ?',
-                            (str(schema_path), schema_name))
-
-        # FIXME: Remove this
-        # Auto-commits
-        with con as c:
-            # Auto-closes cursor
-            with contextlib.closing(c.cursor()) as cur:
-                command = (f'CREATE TABLE '
-                           f'{schema_name}.file_modification '
-                           '('
-                           '   id INTEGER PRIMARY KEY,'
-                           '   file_1_modified TIMESTAMP,'
-                           '   git_sha TEXT'
-                           ')')
-                cur.execute(command)
-
-        a=1
-        # placeholders = (f'{schema}.file_modification', )
-        # placeholders = (f'file_modification',)
-
-        create_table(database_path, command, placeholders=tuple())
-        a=1
-
-
 def create_table(database_path, command):
     """
     Creates a table
@@ -223,47 +174,34 @@ def main(project_path=None,
     #       https://www.sqlite.org/lang_attach.html
     #       https://stackoverflow.com/questions/30897377/python-sqlite3-create-a-schema-without-having-to-use-a-second-database
     #       Thus we will make one database per project
-    database_path = database_root_path.joinpath('bookkeeper.db')
-
-    # FIXME: Schema can be obtained from project_path
     schema = project_path.name
+    database_path = database_root_path.joinpath(f'{schema}.db')
 
+    # FIXME: Make this a query function
     # NOTE: The connection does not close after the 'with' statement
     #       Instead we use the context manager as described here
     #       https://stackoverflow.com/a/47501337/2786884
-
     # Auto-closes connection
     with contextlib.closing(sqlite3.connect(str(database_path))) as con:
         # Auto-commits
         with con as c:
             # Auto-closes cursor
             with contextlib.closing(c.cursor()) as cur:
-                # All schemas should have the global table
+                # Check if tables are present
 
                 cur.execute('SELECT name FROM sqlite_master '
-                            '   WHERE type="table" ' 
-                            '   AND name=?', (f'{schema}.global',))
-                tables = cur.fetchone()
+                            '   WHERE type="table"')
+                # FIXME: Make fetchall in function
+                table = cur.fetchone()
 
-    if tables is None:
-        create_schema(database_path, schema)
+    if table is None:
+        # FIXME: You are here: Create all the tables (the ones from
+        #  obtain_project_parameters and the ones from below)
+        a =1
 
-    command = (f'CREATE TABLE {schema}.file_modification '
-               '('
-               '   id INTEGER PRIMARY KEY,'
-               '   file_1_modified TIMESTAMP,'
-               '   git_sha TEXT'
-               ')')
-    # placeholders = (f'{schema}.file_modification', )
-    # placeholders = (f'file_modification',)
 
-    create_table(database_path, command, placeholders=tuple())
-    a=1
 
-                # # FIXME: You are here
-                #
-                #
-                # # FIXME: Files depend on project
+                # # FIXME: Create these
                 # cur.execute('CREATE TABLE file_modification '
                 #             '('
                 #             '   id INTEGER PRIMARY KEY,'
