@@ -110,6 +110,80 @@ def run_test_run(bout_inp_dir, project_path):
     return settings_path
 
 
+def create_schema(database_path, schema_name):
+    """
+    Creates a schema
+
+    Parameters
+    ----------
+    database_path : Path
+        Path to the sql database
+    schema_name : str
+        Name of the schema
+
+    References
+    ----------
+    [1] https://stackoverflow.com/questions/30897377/python-sqlite3-create-a-schema-without-having-to-use-a-second-database
+    """
+
+    schema_path = database_path.parent.joinpath(f'{schema_name}.db')
+
+    # Auto-closes connection
+    with contextlib.closing(sqlite3.connect(str(database_path))) as con:
+        # Auto-commits
+        with con as c:
+            # Auto-closes cursor
+            with contextlib.closing(c.cursor()) as cur:
+                cur.execute('ATTACH DATABASE ? AS ?',
+                            (str(schema_path), schema_name))
+
+        # FIXME: Remove this
+        # Auto-commits
+        with con as c:
+            # Auto-closes cursor
+            with contextlib.closing(c.cursor()) as cur:
+                command = (f'CREATE TABLE '
+                           f'{schema_name}.file_modification '
+                           '('
+                           '   id INTEGER PRIMARY KEY,'
+                           '   file_1_modified TIMESTAMP,'
+                           '   git_sha TEXT'
+                           ')')
+                cur.execute(command)
+
+        a=1
+        # placeholders = (f'{schema}.file_modification', )
+        # placeholders = (f'file_modification',)
+
+        create_table(database_path, command, placeholders=tuple())
+        a=1
+
+
+def create_table(database_path, command):
+    """
+    Creates a table
+
+    Parameters
+    ----------
+    database_path : Path
+        Path to the sql database
+    command : str
+        Command to create database
+
+    References
+    ----------
+    [1] https://stackoverflow.com/questions/30897377/python-sqlite3-create-a-schema-without-having-to-use-a-second-database
+    """
+
+    # Auto-closes connection
+    with contextlib.closing(sqlite3.connect(str(database_path))) as con:
+        # Auto-commits
+        with con as c:
+            # Auto-closes cursor
+            with contextlib.closing(c.cursor()) as cur:
+                cur.execute(command)
+
+
 def main(project_path=None,
          database_root_path=None):
     """
@@ -137,11 +211,18 @@ def main(project_path=None,
         project_path = get_caller_dir()
 
     if database_root_path is None:
-        database_root_path = Path().home().joinpath('BOUT_db')
+        # FIXME: Change when going to production
+        database_root_path = get_caller_dir()
+        # database_root_path = Path().home().joinpath('BOUT_db')
 
     if not database_root_path.is_dir():
         database_root_path.mkdir(exist_ok=True, parents=True)
 
+    # NOTE: sqlite does not support schemas (except through an
+    #       ephemeral ATTACH connection)
+    #       https://www.sqlite.org/lang_attach.html
+    #       https://stackoverflow.com/questions/30897377/python-sqlite3-create-a-schema-without-having-to-use-a-second-database
+    #       Thus we will make one database per project
     database_path = database_root_path.joinpath('bookkeeper.db')
 
     # FIXME: Schema can be obtained from project_path
@@ -149,86 +230,88 @@ def main(project_path=None,
 
     # NOTE: The connection does not close after the 'with' statement
     #       Instead we use the context manager as described here
-    #       https://stackoverflow.com/a/19524679/2786884
+    #       https://stackoverflow.com/a/47501337/2786884
 
+    # Auto-closes connection
     with contextlib.closing(sqlite3.connect(str(database_path))) as con:
-        with con as cur:
-            # All schemas should have the global table
-            cur.execute('SELECT name FROM sqlite_master '
-                        '   WHERE type="table" ' 
-                        '   AND name=?', (f'{schema}.global',))
-            test = cur.cursor().fetchone()
-            a=1
+        # Auto-commits
+        with con as c:
+            # Auto-closes cursor
+            with contextlib.closing(c.cursor()) as cur:
+                # All schemas should have the global table
 
-            cur.execute('SELECT name FROM sqlite_master '
-                        '   WHERE type="table" ' 
-                        '   AND name=?', (f'global',))
-            test2 = cur.cursor().fetchone()
+                cur.execute('SELECT name FROM sqlite_master '
+                            '   WHERE type="table" ' 
+                            '   AND name=?', (f'{schema}.global',))
+                tables = cur.fetchone()
 
-            cur.execute('CREATE TABLE global '
-                        '('
-                        '   id INTEGER PRIMARY KEY,'
-                        '   file_1_modified TIMESTAMP,'
-                        '   git_sha TEXT'
-                        ')')
+    if tables is None:
+        create_schema(database_path, schema)
 
-            cur.execute('SELECT name FROM sqlite_master '
-                        '   WHERE type="table" ' 
-                        '   AND name=?', (f'global',))
-            test3 = cur.cursor().fetchone()
-            a=2
-            # FIXME: You are here
+    command = (f'CREATE TABLE {schema}.file_modification '
+               '('
+               '   id INTEGER PRIMARY KEY,'
+               '   file_1_modified TIMESTAMP,'
+               '   git_sha TEXT'
+               ')')
+    # placeholders = (f'{schema}.file_modification', )
+    # placeholders = (f'file_modification',)
 
+    create_table(database_path, command, placeholders=tuple())
+    a=1
 
-            # FIXME: Files depend on project
-            cur.execute('CREATE TABLE file_modification '
-                        '('
-                        '   id INTEGER PRIMARY KEY,'
-                        '   file_1_modified TIMESTAMP,'
-                        '   git_sha TEXT'
-                        ')')
-            # FIXME: Parameter attributes can be found from
-            #  BOUT.settings after executing the executable once. The
-            #  parameters can be read using the normal configparser
-            #  library (must convert to type) https://docs.python.org/3/library/configparser.html#supported-datatypes
-            # FIXME: One table per parameter section
-            # FIXME: One table to reference all the parameters (join
-            #  table)
-            cur.execute('CREATE TABLE parameters'
-                        '('
-                        '   id INTEGER PRIMARY KEY,'
-                        '   parameter_1 TEXT'
-                        ')')
-            cur.execute('CREATE TABLE split'
-                        '('
-                        '   id PRIMARY KEY,'
-                        '   nodes INTEGER,'
-                        '   processors_per_nodes INTEGER'
-                        ')')
-            cur.execute('CREATE TABLE host'
-                        '('
-                        '   id INTEGER,'
-                        '   host_name TEXT'
-                        ')')
-            cur.execute(
-                'CREATE TABLE run '
-                '('
-                '   run_id INTEGER PRIMARY KEY,'
-                '   name TEXT,'
-                '   start TIMESTAMP,'
-                '   stop TIMESTAMP,'
-                '   status TEXT,'
-                '   file_modified_id INTEGER,'
-                '   parameters_id INTEGER,'
-                '   split_id INTEGER,'
-                '   host_id INTEGER,'
-                '   FOREIGN KEY(file_modified_id) '
-                '       REFERENCES file_modification(id),'
-                '   FOREIGN KEY(parameters_id) '
-                '       REFERENCES parameters(id),'
-                '   FOREIGN KEY(split_id) REFERENCES split(id),'
-                '   FOREIGN KEY(host_id) REFERENCES host(id))'
-            )
+                # # FIXME: You are here
+                #
+                #
+                # # FIXME: Files depend on project
+                # cur.execute('CREATE TABLE file_modification '
+                #             '('
+                #             '   id INTEGER PRIMARY KEY,'
+                #             '   file_1_modified TIMESTAMP,'
+                #             '   git_sha TEXT'
+                #             ')')
+                # # FIXME: Parameter attributes can be found from
+                # #  BOUT.settings after executing the executable once. The
+                # #  parameters can be read using the normal configparser
+                # #  library (must convert to type) https://docs.python.org/3/library/configparser.html#supported-datatypes
+                # # FIXME: One table per parameter section
+                # # FIXME: One table to reference all the parameters (join
+                # #  table)
+                # cur.execute('CREATE TABLE parameters'
+                #             '('
+                #             '   id INTEGER PRIMARY KEY,'
+                #             '   parameter_1 TEXT'
+                #             ')')
+                # cur.execute('CREATE TABLE split'
+                #             '('
+                #             '   id PRIMARY KEY,'
+                #             '   nodes INTEGER,'
+                #             '   processors_per_nodes INTEGER'
+                #             ')')
+                # cur.execute('CREATE TABLE host'
+                #             '('
+                #             '   id INTEGER,'
+                #             '   host_name TEXT'
+                #             ')')
+                # cur.execute(
+                #     'CREATE TABLE run '
+                #     '('
+                #     '   run_id INTEGER PRIMARY KEY,'
+                #     '   name TEXT,'
+                #     '   start TIMESTAMP,'
+                #     '   stop TIMESTAMP,'
+                #     '   status TEXT,'
+                #     '   file_modified_id INTEGER,'
+                #     '   parameters_id INTEGER,'
+                #     '   split_id INTEGER,'
+                #     '   host_id INTEGER,'
+                #     '   FOREIGN KEY(file_modified_id) '
+                #     '       REFERENCES file_modification(id),'
+                #     '   FOREIGN KEY(parameters_id) '
+                #     '       REFERENCES parameters(id),'
+                #     '   FOREIGN KEY(split_id) REFERENCES split(id),'
+                #     '   FOREIGN KEY(host_id) REFERENCES host(id))'
+                # )
 
 
 if __name__ == '__main__':
