@@ -111,29 +111,28 @@ def run_test_run(bout_inp_dir, project_path):
     return settings_path
 
 
-def create_table(database_path, command):
+def create_table(database_path, sql_statement):
     """
-    Creates a table
+    Creates a table in the database
 
     Parameters
     ----------
-    database_path : Path
-        Path to the sql database
-    command : str
-        Command to create database
-
-    References
-    ----------
-    [1] https://stackoverflow.com/questions/30897377/python-sqlite3-create-a-schema-without-having-to-use-a-second-database
+    database_path : Path or str
+        Path to database
+    sql_statement : str
+        The query to execute
     """
-
+    # NOTE: The connection does not close after the 'with' statement
+    #       Instead we use the context manager as described here
+    #       https://stackoverflow.com/a/47501337/2786884
     # Auto-closes connection
     with contextlib.closing(sqlite3.connect(str(database_path))) as con:
         # Auto-commits
         with con as c:
             # Auto-closes cursor
             with contextlib.closing(c.cursor()) as cur:
-                cur.execute(command)
+                # Check if tables are present
+                cur.execute(sql_statement)
 
 
 def main(project_path=None,
@@ -184,11 +183,14 @@ def main(project_path=None,
 
     # Check if tables are created
     if len(table.index) == 0:
-        # FIXME: You are here: Create all the tables (the ones from
+        # FIXME: Create all the tables (the ones from
         #  obtain_project_parameters and the ones from below)
+
+        # FIXME: See what files you need to version control
+        file_modification_statement = \
+            get_create_table_statement(name='file_modification',
+                                       columns={})
         a =1
-
-
 
                 # # FIXME: Create these
                 # cur.execute('CREATE TABLE file_modification '
@@ -241,6 +243,9 @@ def main(project_path=None,
                 # )
 
 
+# FIXME: Make a sql object which contains query, insert, write etc
+#  with member data database_path. Should instance hold connection
+#  open? Probably not to avoid concurrency problems
 def query(database_path, query_str):
     """
     Makes a query to the database specified in database_path
@@ -264,6 +269,34 @@ def query(database_path, query_str):
     with contextlib.closing(sqlite3.connect(str(database_path))) as con:
         df = pd.read_sql_query(query_str, con)
     return df
+
+
+def get_create_table_statement(name, columns, foreign_keys=None):
+    """
+    Returns a SQL string which can be used to create
+
+    Parameters
+    ----------
+    name : str
+        Name of the table
+    columns : dict
+        Dictionary where the key is the column name and the value is
+        the type
+    foreign_keys : dict
+        Dictionary where the key is the column in this table to be
+        used as a foreign key and the value is the tuple
+        consisting of (name_of_the_table, key_in_table) to refer to
+
+    Returns
+    -------
+    create_statement : str
+        The SQL statement which creates table
+    """
+
+    # FIXME: You are here
+    create_statement = ''
+
+    return create_statement
 
 
 if __name__ == '__main__':
