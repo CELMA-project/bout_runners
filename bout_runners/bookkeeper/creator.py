@@ -5,6 +5,7 @@ import sqlite3
 import configparser
 import contextlib
 import shutil
+import pandas as pd
 from pathlib import Path
 from bout_runners.utils.file_operations import get_caller_dir
 from bout_runners.runners.base_runner import single_run
@@ -177,24 +178,12 @@ def main(project_path=None,
     schema = project_path.name
     database_path = database_root_path.joinpath(f'{schema}.db')
 
-    # FIXME: Make this a query function
-    # NOTE: The connection does not close after the 'with' statement
-    #       Instead we use the context manager as described here
-    #       https://stackoverflow.com/a/47501337/2786884
-    # Auto-closes connection
-    with contextlib.closing(sqlite3.connect(str(database_path))) as con:
-        # Auto-commits
-        with con as c:
-            # Auto-closes cursor
-            with contextlib.closing(c.cursor()) as cur:
-                # Check if tables are present
+    query_str = ('SELECT name FROM sqlite_master '
+                 '   WHERE type="table"')
+    table = query(database_path, query_str)
 
-                cur.execute('SELECT name FROM sqlite_master '
-                            '   WHERE type="table"')
-                # FIXME: Make fetchall in function
-                table = cur.fetchone()
-
-    if table is None:
+    # Check if tables are created
+    if len(table.index) == 0:
         # FIXME: You are here: Create all the tables (the ones from
         #  obtain_project_parameters and the ones from below)
         a =1
@@ -250,6 +239,31 @@ def main(project_path=None,
                 #     '   FOREIGN KEY(split_id) REFERENCES split(id),'
                 #     '   FOREIGN KEY(host_id) REFERENCES host(id))'
                 # )
+
+
+def query(database_path, query_str):
+    """
+    Makes a query to the database specified in database_path
+
+    Parameters
+    ----------
+    database_path : Path or str
+        Path to database
+    query_str : str
+        The query to execute
+
+    Returns
+    -------
+    table : DataFrame
+        The result of a query as a DataFrame
+    """
+    # NOTE: The connection does not close after the 'with' statement
+    #       Instead we use the context manager as described here
+    #       https://stackoverflow.com/a/47501337/2786884
+    # Auto-closes connection
+    with contextlib.closing(sqlite3.connect(str(database_path))) as con:
+        df = pd.read_sql_query(query_str, con)
+    return df
 
 
 if __name__ == '__main__':
