@@ -5,6 +5,7 @@ import sqlite3
 import configparser
 import contextlib
 import shutil
+import platform
 import pandas as pd
 from pathlib import Path
 from bout_runners.utils.file_operations import get_caller_dir
@@ -16,7 +17,6 @@ logger = logging.getLogger(__name__)
 
 def obtain_project_parameters(settings_path):
     """
-    FIXME: Update after FIXME below
     Returns the project parameters from the settings file
 
     Parameters
@@ -135,6 +135,30 @@ def create_table(database_path, sql_statement):
                 cur.execute(sql_statement)
 
 
+def get_system_info_with_sql_type():
+    """
+    Returns the system information
+
+    Returns
+    -------
+    sys_info_dict : dict
+        Dictionary with the attributes of the system as keys and the
+        type as values
+    """
+    sys_info = platform.uname()
+
+    # Get member data, see
+    # https://stackoverflow.com/questions/11637293/iterate-over-object-attributes-in-python
+    # for details
+    attributes = tuple(name for name in dir(sys_info)
+                       if not name.startswith('_') and not
+                       callable(getattr(sys_info, name)))
+
+    sys_info_dict = {att: 'TEXT' for att in attributes}
+
+    return sys_info_dict
+
+
 def main(project_path=None,
          database_root_path=None):
     """
@@ -183,64 +207,75 @@ def main(project_path=None,
 
     # Check if tables are created
     if len(table.index) == 0:
-        # FIXME: Create all the tables (the ones from
-        #  obtain_project_parameters and the ones from below)
+        # Create the system info table
+        sys_info_dict = get_system_info_with_sql_type()
+        sys_info_statement = \
+            get_create_table_statement(name='system_info',
+                                       columns=sys_info_dict)
+        create_table(database_path, sys_info_statement)
+
+        # Create the split table
+        split_statement = \
+            get_create_table_statement(
+                name='split_modification',
+                columns={'nodes': 'INTEGER',
+                         'processors_per_nodes': 'INTEGER'})
+        create_table(database_path, split_statement)
+
+        # FIXME: YOU ARE HERE: Depends on file_modification, parameters
+        # FIXME: ?Join tables for parameters
+        # Create the run table
+        run_statement = \
+            get_create_table_statement(
+                name='file_modification',
+                columns={'name': 'TEXT',
+                         'start': 'TIMESTAMP',
+                         'stop': 'TIMESTAMP',
+                         'status': 'TEXT',
+                         },
+                foreign_keys={'file_modification_id':
+                              ('file_modification', 'id'),
+                              'split_id': ('split', 'id'),
+                              'parameters_id': ('parameters', 'id'),
+                              'host_id': ('host', 'id')})
+
+
 
         # FIXME: See what files you need to version control
+        # cur.execute('CREATE TABLE file_modification '
+        #             '('
+        #             '   id INTEGER PRIMARY KEY,'
+        #             '   file_1_modified TIMESTAMP,'
+        #             '   git_sha TEXT'
+        #             ')')
         file_modification_statement = \
             get_create_table_statement(name='file_modification',
                                        columns={})
-        a =1
 
-                # # FIXME: Create these
-                # cur.execute('CREATE TABLE file_modification '
-                #             '('
-                #             '   id INTEGER PRIMARY KEY,'
-                #             '   file_1_modified TIMESTAMP,'
-                #             '   git_sha TEXT'
-                #             ')')
-                # # FIXME: Parameter attributes can be found from
-                # #  BOUT.settings after executing the executable once. The
-                # #  parameters can be read using the normal configparser
-                # #  library (must convert to type) https://docs.python.org/3/library/configparser.html#supported-datatypes
-                # # FIXME: One table per parameter section
-                # # FIXME: One table to reference all the parameters (join
-                # #  table)
+        create_table(database_path, file_modification_statement)
+
+        # FIXME: You are here
+        settings_path = run_test_run(bout_inp_dir, project_path)
+        parameter_dict = obtain_project_parameters(settings_path)
+
+
+
                 # cur.execute('CREATE TABLE parameters'
                 #             '('
                 #             '   id INTEGER PRIMARY KEY,'
                 #             '   parameter_1 TEXT'
                 #             ')')
-                # cur.execute('CREATE TABLE split'
-                #             '('
-                #             '   id PRIMARY KEY,'
-                #             '   nodes INTEGER,'
-                #             '   processors_per_nodes INTEGER'
-                #             ')')
-                # cur.execute('CREATE TABLE host'
-                #             '('
-                #             '   id INTEGER,'
-                #             '   host_name TEXT'
-                #             ')')
-                # cur.execute(
-                #     'CREATE TABLE run '
-                #     '('
-                #     '   run_id INTEGER PRIMARY KEY,'
-                #     '   name TEXT,'
-                #     '   start TIMESTAMP,'
-                #     '   stop TIMESTAMP,'
-                #     '   status TEXT,'
-                #     '   file_modified_id INTEGER,'
-                #     '   parameters_id INTEGER,'
-                #     '   split_id INTEGER,'
-                #     '   host_id INTEGER,'
-                #     '   FOREIGN KEY(file_modified_id) '
-                #     '       REFERENCES file_modification(id),'
-                #     '   FOREIGN KEY(parameters_id) '
-                #     '       REFERENCES parameters(id),'
-                #     '   FOREIGN KEY(split_id) REFERENCES split(id),'
-                #     '   FOREIGN KEY(host_id) REFERENCES host(id))'
-                # )
+
+
+def get_project_files():
+    """
+
+    Returns
+    -------
+
+    """
+    # FIXME: Get project paths based on makefile
+    pass
 
 
 # FIXME: Make a sql object which contains query, insert, write etc
@@ -271,7 +306,10 @@ def query(database_path, query_str):
     return df
 
 
-def get_create_table_statement(name, columns, foreign_keys=None):
+def get_create_table_statement(name,
+                               columns,
+                               primary_key='id',
+                               foreign_keys=None):
     """
     Returns a SQL string which can be used to create
 
@@ -282,6 +320,8 @@ def get_create_table_statement(name, columns, foreign_keys=None):
     columns : dict
         Dictionary where the key is the column name and the value is
         the type
+    primary_key : str
+        Name of the primary key (the type is set to INTEGER)
     foreign_keys : dict
         Dictionary where the key is the column in this table to be
         used as a foreign key and the value is the tuple
@@ -293,8 +333,27 @@ def get_create_table_statement(name, columns, foreign_keys=None):
         The SQL statement which creates table
     """
 
-    # FIXME: You are here
-    create_statement = ''
+    create_statement = f'CREATE TABLE {name} \n('
+
+    create_statement += f'   {primary_key} INTEGER PRIMARY KEY,\n'
+
+    for name, sql_type in columns.items():
+        create_statement += f'    {name} {sql_type},\n'
+
+    if foreign_keys is not None:
+        # Create the key as column
+        # NOTE: All keys are integers
+        for name in foreign_keys.keys():
+            create_statement += f'    {name} INTEGER,\n'
+
+        # Add constraint
+        for name, (table_name, key_in_table) in foreign_keys.items():
+            create_statement += \
+                (f'    FOREIGN KEY({name}) \n'
+                 f'        REFERENCES {table_name}({key_in_table}),\n')
+
+    # Replace last comma with )
+    create_statement = f'{create_statement[:-2]})'
 
     return create_statement
 
