@@ -274,7 +274,15 @@ def get_project_files():
     -------
 
     """
-    # FIXME: Get project paths based on makefile
+    # FIXME: Get project paths based on makefile. Problem:
+    #  read_makefile reads only a single variable...could make a
+    #  class which gets all variables (dict), and from that pick the
+    #  desired variable...or...as only the executable is executed,
+    #  maybe it would be enough to track only that...what about:
+    #  executable...whatever BOUT-dev is producing and their
+    #  respective git sha numbers (git rev-parse HEAD)
+
+    # FIXME: Remember to also include the Makefile itself
     pass
 
 
