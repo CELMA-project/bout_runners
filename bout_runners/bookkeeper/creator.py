@@ -30,6 +30,15 @@ def obtain_project_parameters(settings_path):
         Dictionary containing the parameters given in BOUT.settings
         On the form
         >>> {'section': {'parameter': 'value_type'}}
+
+    Notes
+    -----
+    1. The section less part of BOUT.settings will be renamed `global`
+    2. In the `global` section, the keys `d` and the directory to the
+       BOUT.inp file will be removed
+    3. If the section `all` is present in BOUT.settings, the section
+       will be renamed `all_boundaries` as `all` is a protected SQL
+       keyword
     """
 
     type_map = {'bool': 'INTEGER',  # No bool type in sqllite
@@ -70,8 +79,12 @@ def obtain_project_parameters(settings_path):
             parameter_dict[section][key] = type_map[val_type.__name__]
 
     # FIXME: Bug in .settings: -d path is captured with # not in use
+    bout_inp_dir = settings_path.parent
     parameter_dict['global'].pop('d', None)
     parameter_dict['global'].pop(str(bout_inp_dir).lower(), None)
+
+    if 'all' in parameter_dict.keys():
+        parameter_dict['all_boundaries'] = parameter_dict.pop('all')
 
     return parameter_dict
 
@@ -101,10 +114,11 @@ def run_test_run(bout_inp_dir, project_path):
 
     if not settings_path.is_file():
         test_run_inp_path = test_run_dir.joinpath('BOUT.inp')
-        shutil.copy(bout_inp_dir, test_run_inp_path)
+        bout_inp_path = bout_inp_dir.joinpath('BOUT.inp')
+        shutil.copy(bout_inp_path, test_run_inp_path)
 
         single_run(execute_from_path=project_path,
-                   bout_inp_dir=test_run_inp_path,
+                   bout_inp_dir=test_run_dir,
                    nproc=1,
                    options='nout=0')
 
@@ -222,12 +236,26 @@ def main(project_path=None,
                          'processors_per_nodes': 'INTEGER'})
         create_table(database_path, split_statement)
 
-        # FIXME: YOU ARE HERE: Depends on file_modification, parameters
-        # FIXME: ?Join tables for parameters
+        # Create the file modification table
+        file_modification_statement = \
+            get_create_table_statement(
+                name='file_modification',
+                columns={'project_makefile_changed': 'TIMESTAMP',
+                         'project_executable_changed': 'TIMESTAMP',
+                         'project_git_sha': 'TEXT',
+                         'bout_executable_changed': 'TIMESTAMP',
+                         'bout_git_sha': 'TEXT'})
+        create_table(database_path, file_modification_statement)
+
+        # Create the parameter table
+        settings_path = run_test_run(bout_inp_dir, project_path)
+        parameter_dict = obtain_project_parameters(settings_path)
+        create_parameter_tables(database_path, parameter_dict)
+
         # Create the run table
         run_statement = \
             get_create_table_statement(
-                name='file_modification',
+                name='run',
                 columns={'name': 'TEXT',
                          'start': 'TIMESTAMP',
                          'stop': 'TIMESTAMP',
@@ -238,52 +266,46 @@ def main(project_path=None,
                               'split_id': ('split', 'id'),
                               'parameters_id': ('parameters', 'id'),
                               'host_id': ('host', 'id')})
+        create_table(database_path, run_statement)
 
 
-
-        # FIXME: See what files you need to version control
-        # cur.execute('CREATE TABLE file_modification '
-        #             '('
-        #             '   id INTEGER PRIMARY KEY,'
-        #             '   file_1_modified TIMESTAMP,'
-        #             '   git_sha TEXT'
-        #             ')')
-        file_modification_statement = \
-            get_create_table_statement(name='file_modification',
-                                       columns={})
-
-        create_table(database_path, file_modification_statement)
-
-        # FIXME: You are here
-        settings_path = run_test_run(bout_inp_dir, project_path)
-        parameter_dict = obtain_project_parameters(settings_path)
-
-
-
-                # cur.execute('CREATE TABLE parameters'
-                #             '('
-                #             '   id INTEGER PRIMARY KEY,'
-                #             '   parameter_1 TEXT'
-                #             ')')
-
-
-def get_project_files():
+def create_parameter_tables(database_path, parameter_dict):
     """
+    Create a table for each section in BOUT.settings and a join table
 
-    Returns
-    -------
+    Parameters
+    ----------
+    database_path : Path
+        The path to the database
+    parameter_dict : dict
+        The dictionary on the same form as the output of
+        FIXME: Update Path
+        bout_runners.obtain_project_parameters
 
+    Notes
+    -----
+    All `:` will be replaced by `_` in the section names
     """
-    # FIXME: Get project paths based on makefile. Problem:
-    #  read_makefile reads only a single variable...could make a
-    #  class which gets all variables (dict), and from that pick the
-    #  desired variable...or...as only the executable is executed,
-    #  maybe it would be enough to track only that...what about:
-    #  executable...whatever BOUT-dev is producing and their
-    #  respective git sha numbers (git rev-parse HEAD)
+    parameters_foreign_keys = dict()
+    for section in parameter_dict.keys():
+        # Replace bad characters for SQL
+        section_name = section.replace(':', '_')
+        # Generate foreign keys for the parameters table
+        parameters_foreign_keys[f'{section_name}_id'] =\
+            (section_name, 'id')
 
-    # FIXME: Remember to also include the Makefile itself
-    pass
+        columns = dict()
+        for parameter, value_type in parameter_dict[section].items():
+            # Generate the columns
+            columns[parameter] = value_type
+
+        section_statement = \
+            get_create_table_statement(name=section_name,
+                                       columns=columns)
+        create_table(database_path, section_statement)
+    parameters_statement = get_create_table_statement(
+        name='parameters', foreign_keys=parameters_foreign_keys)
+    create_table(database_path, parameters_statement)
 
 
 # FIXME: Make a sql object which contains query, insert, write etc
@@ -315,7 +337,7 @@ def query(database_path, query_str):
 
 
 def get_create_table_statement(name,
-                               columns,
+                               columns=None,
                                primary_key='id',
                                foreign_keys=None):
     """
@@ -325,12 +347,12 @@ def get_create_table_statement(name,
     ----------
     name : str
         Name of the table
-    columns : dict
+    columns : dict or None
         Dictionary where the key is the column name and the value is
         the type
     primary_key : str
         Name of the primary key (the type is set to INTEGER)
-    foreign_keys : dict
+    foreign_keys : dict or None
         Dictionary where the key is the column in this table to be
         used as a foreign key and the value is the tuple
         consisting of (name_of_the_table, key_in_table) to refer to
@@ -345,8 +367,9 @@ def get_create_table_statement(name,
 
     create_statement += f'   {primary_key} INTEGER PRIMARY KEY,\n'
 
-    for name, sql_type in columns.items():
-        create_statement += f'    {name} {sql_type},\n'
+    if columns is not None:
+        for name, sql_type in columns.items():
+            create_statement += f'    {name} {sql_type},\n'
 
     if foreign_keys is not None:
         # Create the key as column
