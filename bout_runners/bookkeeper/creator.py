@@ -9,6 +9,7 @@ from bout_runners.runners.runner_utils import run_test_run
 from bout_runners.utils.file_operations import get_caller_dir
 
 
+# FIXME: You are here
 # FIXME: Use flake8
 # FIXME: Unittests
 # FIXME: Utils with paths
@@ -161,21 +162,3 @@ def create_system_info_table(bk):
         get_create_table_statement(name='system_info',
                                    columns=sys_info_dict)
     bk.create_table(sys_info_statement)
-
-
-if __name__ == '__main__':
-    from dotenv import load_dotenv
-    import os
-
-    load_dotenv()
-    bout_path = Path(os.getenv('BOUT_PATH')).absolute()
-
-    project_path = bout_path.joinpath('examples', 'conduction')
-    bout_inp_dir = project_path.joinpath('data')
-
-    create_database(project_path)
-
-    settings_path = run_test_run(bout_inp_dir, project_path)
-
-    obtain_project_parameters(settings_path)
-    # create_database()
