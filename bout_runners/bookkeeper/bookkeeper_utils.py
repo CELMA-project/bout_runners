@@ -100,3 +100,56 @@ def get_system_info_as_sql_type():
     sys_info_dict = {att: 'TEXT' for att in attributes}
 
     return sys_info_dict
+
+
+def get_create_table_statement(name,
+                               columns=None,
+                               primary_key='id',
+                               foreign_keys=None):
+    """
+    Returns a SQL string which can be used to create
+
+    Parameters
+    ----------
+    name : str
+        Name of the table
+    columns : dict or None
+        Dictionary where the key is the column name and the value is
+        the type
+    primary_key : str
+        Name of the primary key (the type is set to INTEGER)
+    foreign_keys : dict or None
+        Dictionary where the key is the column in this table to be
+        used as a foreign key and the value is the tuple
+        consisting of (name_of_the_table, key_in_table) to refer to
+
+    Returns
+    -------
+    create_statement : str
+        The SQL statement which creates table
+    """
+
+    create_statement = f'CREATE TABLE {name} \n('
+
+    create_statement += f'   {primary_key} INTEGER PRIMARY KEY,\n'
+
+    if columns is not None:
+        for name, sql_type in columns.items():
+            create_statement += f'    {name} {sql_type},\n'
+
+    if foreign_keys is not None:
+        # Create the key as column
+        # NOTE: All keys are integers
+        for name in foreign_keys.keys():
+            create_statement += f'    {name} INTEGER,\n'
+
+        # Add constraint
+        for name, (table_name, key_in_table) in foreign_keys.items():
+            create_statement += \
+                (f'    FOREIGN KEY({name}) \n'
+                 f'        REFERENCES {table_name}({key_in_table}),\n')
+
+    # Replace last comma with )
+    create_statement = f'{create_statement[:-2]})'
+
+    return create_statement

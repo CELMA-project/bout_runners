@@ -1,16 +1,13 @@
 import logging
-import sqlite3
-import contextlib
-import pandas as pd
 from pathlib import Path
 from bout_runners.bookkeeper.bookkeeper_utils import \
-    obtain_project_parameters
+    obtain_project_parameters, get_create_table_statement
 from bout_runners.bookkeeper.bookkeeper_utils import \
     get_system_info_as_sql_type
-from bout_runners.bookkeeper.writer import create_table, \
-    get_create_table_statement, create_parameter_tables
+from bout_runners.bookkeeper.bookkeeper import Bookkeeper
 from bout_runners.runners.runner_utils import run_test_run
 from bout_runners.utils.file_operations import get_caller_dir
+
 
 logger = logging.getLogger(__name__)
 
@@ -57,9 +54,12 @@ def main(project_path=None,
     schema = project_path.name
     database_path = database_root_path.joinpath(f'{schema}.db')
 
+    # Create bookkeeper
+    bk = Bookkeeper(database_path)
+
     query_str = ('SELECT name FROM sqlite_master '
                  '   WHERE type="table"')
-    table = query(database_path, query_str)
+    table = bk.query(query_str)
 
     # Check if tables are created
     if len(table.index) == 0:
@@ -68,7 +68,7 @@ def main(project_path=None,
         sys_info_statement = \
             get_create_table_statement(name='system_info',
                                        columns=sys_info_dict)
-        create_table(database_path, sys_info_statement)
+        bk.create_table(sys_info_statement)
 
         # Create the split table
         split_statement = \
@@ -76,7 +76,7 @@ def main(project_path=None,
                 name='split_modification',
                 columns={'nodes': 'INTEGER',
                          'processors_per_nodes': 'INTEGER'})
-        create_table(database_path, split_statement)
+        bk.create_table(split_statement)
 
         # Create the file modification table
         file_modification_statement = \
@@ -87,12 +87,12 @@ def main(project_path=None,
                          'project_git_sha': 'TEXT',
                          'bout_executable_changed': 'TIMESTAMP',
                          'bout_git_sha': 'TEXT'})
-        create_table(database_path, file_modification_statement)
+        bk.create_table(file_modification_statement)
 
         # Create the parameter table
         settings_path = run_test_run(bout_inp_dir, project_path)
         parameter_dict = obtain_project_parameters(settings_path)
-        create_parameter_tables(database_path, parameter_dict)
+        bk.create_parameter_tables(parameter_dict)
 
         # Create the run table
         run_statement = \
@@ -108,36 +108,7 @@ def main(project_path=None,
                               'split_id': ('split', 'id'),
                               'parameters_id': ('parameters', 'id'),
                               'host_id': ('host', 'id')})
-        create_table(database_path, run_statement)
-
-
-# FIXME: Make a sql object which contains query, insert, write etc
-#  with member data database_path. Should instance hold connection
-#  open? Probably not to avoid concurrency problems
-def query(database_path, query_str):
-    """
-    Makes a query to the database specified in database_path
-
-    Parameters
-    ----------
-    database_path : Path or str
-        Path to database
-    query_str : str
-        The query to execute
-
-    Returns
-    -------
-    table : DataFrame
-        The result of a query as a DataFrame
-    """
-    # NOTE: The connection does not close after the 'with' statement
-    #       Instead we use the context manager as described here
-    #       https://stackoverflow.com/a/47501337/2786884
-    # Auto-closes connection
-
-    with contextlib.closing(sqlite3.connect(str(database_path))) as con:
-        df = pd.read_sql_query(query_str, con)
-    return df
+        bk.create_table(run_statement)
 
 
 if __name__ == '__main__':
