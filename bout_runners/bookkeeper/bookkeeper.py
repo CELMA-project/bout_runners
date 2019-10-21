@@ -8,11 +8,22 @@ from bout_runners.bookkeeper.bookkeeper_utils import \
 #  with member data database_path. Should instance hold connection
 #  open? Probably not to avoid concurrency problems
 
+
 class Bookkeeper(object):
     """
     Class dealing with the database.
 
-    FIXME Attributes etc.
+    Attributes
+    ----------
+    database_path : Path or str
+        Path to database
+
+    Methods
+    -------
+    create_table(sql_statement)
+        Create a table for each BOUT.settings section and a join table
+    query(query_str)
+        Make a query to the database
     """
 
     def __init__(self, database_path):
@@ -91,7 +102,7 @@ class Bookkeeper(object):
 
     def query(self, query_str):
         """
-        Makes a query to the database specified in database_path
+        Makes a query to the database
 
         Parameters
         ----------
