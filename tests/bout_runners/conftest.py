@@ -46,3 +46,16 @@ def make_project(get_bout_path):
 
     # Teardown
     make_obj.run_clean()
+
+
+@pytest.fixture(scope='session')
+def get_test_data_path():
+    """
+    Return the test data path
+
+    Returns
+    -------
+    test_data_path : Path
+        Path to the test data
+    """
+    return Path(__file__).absolute().parent.joinpath('data')

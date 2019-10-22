@@ -1,0 +1,101 @@
+append = false
+async_send = false
+datadir = data
+dump_format = nc
+dump_on_restart = true
+incintshear = false
+mxg = 0
+myg = 2
+non_uniform = true
+nout = 100
+optionfile = BOUT.inp  # not used , from:
+periodicx = false
+restart = false
+restart_format = nc
+settingsfile = BOUT.settings
+stopcheck = false
+timestep = 0.1
+twistshift = false
+wall_limit = -1.00000000000000000e+00
+zmax = 1.00000000000000000e+00
+zmin = 0.00000000000000000e+00
+
+[all]
+evolve_bndry = false
+
+[conduction]
+chi = 1.0  # not used , from: data/BOUT.inp
+
+[mesh]
+dy = 0.2
+ixseps1 = -1
+ixseps2 = -1
+maxregionblocksize = 64
+nx = 1
+ny = 100
+nz = 1
+paralleltransform = identity
+staggergrids = false
+symmetricglobalx = true
+symmetricglobaly = true
+type = bout
+
+[mesh:ddz]
+fft_filter = 0.00000000000000000e+00
+
+[output]
+enabled = true
+floats = false
+flush = true
+flushfrequency = 1
+guards = true
+init_missing = false
+openclose = true
+parallel = false
+shiftinput = false
+shiftoutput = false
+
+[restart]
+enabled = true
+floats = false
+flush = true
+flushfrequency = 1
+guards = true
+init_missing = false
+openclose = true
+parallel = false
+shiftinput = false
+shiftoutput = false
+
+[solver]
+adams_moulton = false
+atol = 9.99999999999999980e-13
+cvode_max_order = -1
+cvode_stability_limit_detection = false
+diagnose = false
+func_iter = false
+max_timestep = -1.00000000000000000e+00
+maxl = 5
+mldq = 3
+mlkeep = 1
+mms = false
+mms_initialise = false
+monitor_timestep = false
+mudq = 3
+mukeep = 1
+mxorder = -1
+mxstep = 500
+nout = 100
+output_step = 1.00000000000000006e-01
+rtol = 1.00000000000000008e-05
+start_timestep = -1.00000000000000000e+00
+type = ""
+use_jacobian = false
+use_precon = false
+use_vector_abstol = false
+
+[t]
+bndry_all = dirichlet_o4(0.0)
+evolve_bndry = false
+function = gauss(y-pi, 0.2)
+scale = 1.0

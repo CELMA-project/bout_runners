@@ -1,44 +1,16 @@
-import pytest
-import shutil
-from pathlib import Path
 from bout_runners.bookkeeper.bookkeeper import Bookkeeper
 
 
-@pytest.fixture(scope='module')
-def bookkeeper_fixture():
-    db_dir = Path(__file__).absolute().parents[2].joinpath('delme')
-    db_dir.mkdir(exist_ok=True, parents=True)
-
-    def _make_db(db_name):
-        """
-        Make a database.
-
-        It makes sense to have one database per test as we are
-        testing the content of the database
-
-        Parameters
-        ----------
-        db_name : str
-            Name of the database
-        """
-        db_path = db_dir.joinpath(db_name)
-        return Bookkeeper(db_path)
-
-    yield _make_db
-
-    shutil.rmtree(db_dir)
-
-
-def test_create_table(bookkeeper_fixture):
+def test_create_table(make_test_database):
     """
     Test query and create_table.
 
     Parameters
     ----------
-    bookkeeper_fixture : Bookkeeper
+    make_test_database : function
         The bookkeeper from the fixture
     """
-    bk = bookkeeper_fixture('create_table.db')
+    bk = make_test_database('create_table.db')
 
     query_str = ('SELECT name FROM sqlite_master '
                  '   WHERE type="table"')
@@ -57,16 +29,16 @@ def test_create_table(bookkeeper_fixture):
     assert(len(table.index) == 1)
 
 
-def test_create_parameter_tables(bookkeeper_fixture):
+def test_create_parameter_tables(make_test_database):
     """
     Test create_parameter_tables.
 
     Parameters
     ----------
-    bookkeeper_fixture : Bookkeeper
+    make_test_database : function
         The bookkeeper from the fixture
     """
-    bk = bookkeeper_fixture('create_parameter_table.db')
+    bk = make_test_database('create_parameter_table.db')
 
     query_str = ('SELECT name FROM sqlite_master '
                  '   WHERE type="table"')
