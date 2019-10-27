@@ -1,101 +1,113 @@
-append = false
-async_send = false
-datadir = data
-dump_format = nc
-dump_on_restart = true
-incintshear = false
-mxg = 0
-myg = 2
-non_uniform = true
-nout = 100
-optionfile = BOUT.inp  # not used , from:
-periodicx = false
-restart = false
-restart_format = nc
-settingsfile = BOUT.settings
-stopcheck = false
-timestep = 0.1
-twistshift = false
-wall_limit = -1.00000000000000000e+00
-zmax = 1.00000000000000000e+00
-zmin = 0.00000000000000000e+00
+append = false          # type: bool, doc: Add new outputs to the end of existing files? If false, overwrite files.
+async_send = false              # type: bool, doc: Whether to use asyncronous MPI sends
+datadir = tmp_run/              # type: string
+dump_format = nc                # type: string
+dump_on_restart = true          # type: bool, doc: Write initial state as time point 0?
+incintshear = false             # type: bool
+mxg = 0         # type: int, doc: Number of guard cells on each side in X
+myg = 2         # type: int, doc: Number of guard cells on each side in Y
+non_uniform = true              # type: bool
+nout = 100              # type: int, doc: Number of output steps
+optionfile = BOUT.inp           # not used , from:
+periodicx = false               # type: bool, doc: Make grid periodic in X?
+restart = false         # type: bool, doc: Load state from restart files?
+restart_format = nc             # type: string
+settingsfile = BOUT.settings            # type: string
+stopcheck = false               # type: bool, doc: Check if a file exists, and exit if it does.
+timestep = 0.1          # type: BoutReal, doc: Output time step size
+twistshift = false              # type: bool, doc: Apply a Twist-Shift boundary using ShiftAngle?
+wall_limit = -1         # type: BoutReal, doc: Wall time limit in hours. By default (< 0), no limit
+zmax = 1                # type: BoutReal
+zmin = 0                # type: BoutReal
 
 [all]
-evolve_bndry = false
+evolve_bndry = false            # type: bool
 
 [conduction]
-chi = 1.0  # not used , from: data/BOUT.inp
+chi = 1.0               # type: BoutReal, doc: Conduction coefficient
+
+[input]
+transform_from_field_aligned = true             # type: bool
 
 [mesh]
+calcparallelslices_on_communicate = true                # type: bool
 dy = 0.2
+extrapolate_x = false           # type: bool
+extrapolate_y = false           # type: bool
 ixseps1 = -1
 ixseps2 = -1
-maxregionblocksize = 64
+maxregionblocksize = 64         # type: int
 nx = 1
 ny = 100
 nz = 1
-paralleltransform = identity
-staggergrids = false
-symmetricglobalx = true
-symmetricglobaly = true
-type = bout
+paralleltransform = identity            # type: string
+staggergrids = false            # type: bool
+symmetricglobalx = true         # type: bool
+symmetricglobaly = true         # type: bool
+type = bout             # type: string
 
 [mesh:ddz]
-fft_filter = 0.00000000000000000e+00
+fft_filter = 0          # type: BoutReal
 
 [output]
-enabled = true
-floats = false
-flush = true
-flushfrequency = 1
-guards = true
-init_missing = false
-openclose = true
-parallel = false
-shiftinput = false
-shiftoutput = false
+enabled = true          # type: bool
+floats = false          # type: bool
+flush = true            # type: bool
+flushfrequency = 1              # type: int
+guards = true           # type: bool
+init_missing = false            # type: bool
+openclose = true                # type: bool
+parallel = false                # type: bool
+shiftinput = false              # type: bool
+shiftoutput = false             # type: bool
 
 [restart]
-enabled = true
-floats = false
-flush = true
-flushfrequency = 1
-guards = true
-init_missing = false
-openclose = true
-parallel = false
-shiftinput = false
-shiftoutput = false
+enabled = true          # type: bool
+floats = false          # type: bool
+flush = true            # type: bool
+flushfrequency = 1              # type: int
+guards = true           # type: bool
+init_missing = false            # type: bool
+openclose = true                # type: bool
+parallel = false                # type: bool
+shiftinput = false              # type: bool
+shiftoutput = false             # type: bool
+
+[run]
+finished = Sun Oct 27 22:29:52 2019
+                # not used , from:
+revision = 123e774f865d4c98d378b909b89accd7efd56dc3             # not used , from:
+started = Sun Oct 27 22:29:49 2019
+                # not used , from:
+version = 4.3.0         # not used , from:
 
 [solver]
-adams_moulton = false
-atol = 9.99999999999999980e-13
-cvode_max_order = -1
-cvode_stability_limit_detection = false
-diagnose = false
-func_iter = false
-max_timestep = -1.00000000000000000e+00
-maxl = 5
-mldq = 3
-mlkeep = 1
-mms = false
-mms_initialise = false
-monitor_timestep = false
-mudq = 3
-mukeep = 1
-mxorder = -1
-mxstep = 500
-nout = 100
-output_step = 1.00000000000000006e-01
-rtol = 1.00000000000000008e-05
-start_timestep = -1.00000000000000000e+00
-type = ""
-use_jacobian = false
-use_precon = false
-use_vector_abstol = false
+adams_moulton = false           # type: bool, doc: Use Adams Moulton implicit multistep. Otherwise BDF method.
+atol = 1e-12            # type: BoutReal, doc: Absolute tolerance
+cvode_max_order = -1            # type: int, doc: Maximum order of method to use. < 0 means no limit.
+cvode_stability_limit_detection = false         # type: bool
+diagnose = false                # type: bool, doc: Print solver diagnostic information?
+func_iter = false               # type: bool
+is_nonsplit_model_diffusive = true              # type: bool, doc: If not a split operator, treat RHS as diffusive?
+max_timestep = -1               # type: BoutReal, doc: Maximum time step size
+maxl = 5                # type: int, doc: Maximum number of linear iterations
+min_timestep = -1               # type: BoutReal, doc: Minimum time step size
+mms = false             # type: bool
+mms_initialise = false          # type: bool
+monitor_timestep = false                # type: bool
+mxorder = -1            # type: int
+mxstep = 500            # type: int, doc: Maximum number of internal steps between outputs.
+nout = 100              # type: int, doc: Number of output steps. Overrides global setting.
+output_step = 0.1               # type: BoutReal, doc: Output time step size. Overrides global TIMESTEP setting.
+rtol = 1e-05            # type: BoutReal, doc: Relative tolerance
+start_timestep = -1             # type: BoutReal, doc: Starting time step. < 0 then chosen by CVODE.
+type = cvode            # type: string
+use_jacobian = false            # type: bool
+use_precon = false              # type: bool, doc: Use preconditioner?
+use_vector_abstol = false               # type: bool
 
 [t]
-bndry_all = dirichlet_o4(0.0)
-evolve_bndry = false
-function = gauss(y-pi, 0.2)
-scale = 1.0
+bndry_all = dirichlet_o4(0.0)           # type: string
+evolve_bndry = false            # type: bool
+function = gauss(y-pi, 0.2)             # type: string
+scale = 1.0             # type: BoutReal
