@@ -6,7 +6,7 @@ import pytest
 from bout_runners.bookkeeper.bookkeeper import Bookkeeper
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope='session')
 def make_test_database():
     db_dir = Path(__file__).absolute().parents[2].joinpath('delme')
     db_dir.mkdir(exist_ok=True, parents=True)

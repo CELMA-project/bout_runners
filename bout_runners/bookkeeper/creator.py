@@ -38,9 +38,6 @@ def create_database(project_path=None,
     [1] https://www.databasestar.com/database-normalization/
     [2] http://www.bkent.net/Doc/simple5.htm
     """
-    project_path = Path(project_path)
-    database_root_path = Path(database_root_path)
-
     if project_path is None:
         project_path = get_caller_dir()
 
@@ -48,6 +45,9 @@ def create_database(project_path=None,
         # FIXME: Change when going to production
         database_root_path = get_caller_dir()
         # database_root_path = Path().home().joinpath('BOUT_db')
+
+    project_path = Path(project_path)
+    database_root_path = Path(database_root_path)
 
     if not database_root_path.is_dir():
         database_root_path.mkdir(exist_ok=True, parents=True)
@@ -72,7 +72,7 @@ def create_database(project_path=None,
         create_system_info_table(bk)
         create_split_table(bk)
         create_file_modification_table(bk)
-        create_parameter_tables(bk, bout_inp_dir, project_path)
+        create_parameter_tables(bk, project_path)
         create_run_table(bk)
 
 
