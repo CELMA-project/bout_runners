@@ -15,5 +15,6 @@ def db_directory_fixture():
 def test_create_database(make_project, db_directory_fixture):
     project_path = make_project
     database_root_path = db_directory_fixture
-    create_database(project_path, database_root_path)
+    create_database(project_path=project_path,
+                    database_root_path=database_root_path)
     assert database_root_path.joinpath('conduction.db').is_file()

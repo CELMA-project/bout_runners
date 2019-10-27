@@ -1,3 +1,4 @@
+import logging
 import contextlib
 import sqlite3
 import pandas as pd
@@ -37,6 +38,7 @@ class Bookkeeper(object):
         """
 
         self.database_path = database_path
+        logging.info(f'Database path set to {self.database_path}')
 
     def create_table(self, sql_statement):
         """

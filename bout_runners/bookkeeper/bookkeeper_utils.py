@@ -28,6 +28,8 @@ def obtain_project_parameters(settings_path):
     3. If the section `all` is present in BOUT.settings, the section
        will be renamed `all_boundaries` as `all` is a protected SQL
        keyword
+    4. The section `run` will be dropped due to bout_runners own
+       `run` table
     """
 
     type_map = {'bool': 'INTEGER',  # No bool type in sqllite
@@ -74,6 +76,9 @@ def obtain_project_parameters(settings_path):
 
     if 'all' in parameter_dict.keys():
         parameter_dict['all_boundaries'] = parameter_dict.pop('all')
+
+    # Drop run as bout_runners will make its own table with that name
+    parameter_dict.pop('run')
 
     return parameter_dict
 
