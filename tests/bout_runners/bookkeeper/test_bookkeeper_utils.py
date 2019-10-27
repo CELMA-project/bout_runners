@@ -1,5 +1,7 @@
 from bout_runners.bookkeeper.bookkeeper_utils import \
     obtain_project_parameters
+from bout_runners.bookkeeper.bookkeeper_utils import \
+    get_system_info_as_sql_type
 
 
 def test_obtain_project_parameters(get_test_data_path):
@@ -9,3 +11,8 @@ def test_obtain_project_parameters(get_test_data_path):
     assert 'global' in parameter_dict.keys()
     assert isinstance(parameter_dict['global'], dict)
     assert parameter_dict['global']['append'] == 'INTEGER'
+
+
+def test_get_system_info_as_sql_type():
+    sys_info_dict = get_system_info_as_sql_type()
+    assert isinstance(sys_info_dict, dict)
