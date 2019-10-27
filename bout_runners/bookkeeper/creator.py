@@ -10,7 +10,6 @@ from bout_runners.utils.file_operations import get_caller_dir
 
 
 # FIXME: You are here
-# FIXME: Unittests
 # FIXME: Store all important paths to a utils/paths.py module
 # FIXME: Use logging config, and log contents
 # FIXME: Use flake8
@@ -148,7 +147,7 @@ def create_split_table(bk):
     """
     split_statement = \
         get_create_table_statement(
-            name='split_modification',
+            name='split',
             columns={'nodes': 'INTEGER',
                      'processors_per_nodes': 'INTEGER'})
     bk.create_table(split_statement)

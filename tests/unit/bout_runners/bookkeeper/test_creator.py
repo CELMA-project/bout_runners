@@ -39,7 +39,7 @@ def test_create_parameter_tables(make_creator_database, make_project):
                     't',
                     'all_boundaries',
                     'parameters'])
-    assert expected == set(table.loc[:, 'name'].values)
+    assert expected.issubset(set(table.loc[:, 'name'].values))
 
 
 def test_create_file_modification_table(make_creator_database):

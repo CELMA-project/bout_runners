@@ -7,7 +7,7 @@ from bout_runners.bookkeeper.creator import create_database
 @pytest.fixture(scope='module')
 def db_directory_fixture():
     database_root_path = \
-        Path(__file__).absolute().parent.joinpath('delme')
+        Path(__file__).absolute().parent.joinpath('delme_integration')
     yield database_root_path
     shutil.rmtree(database_root_path)
 
