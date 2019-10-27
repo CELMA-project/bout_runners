@@ -27,6 +27,8 @@ def create_database(project_path=None,
 
     Parameters
     ----------
+    project_path : None or Path or str
+        Root path to the project (i.e. where the makefile is located)
     database_root_path : None or Path or str
         Root path of the database file
         If None, the path will be set to $HOME/BOUT_db
@@ -36,6 +38,8 @@ def create_database(project_path=None,
     [1] https://www.databasestar.com/database-normalization/
     [2] http://www.bkent.net/Doc/simple5.htm
     """
+    project_path = Path(project_path)
+    database_root_path = Path(database_root_path)
 
     if project_path is None:
         project_path = get_caller_dir()
@@ -68,7 +72,7 @@ def create_database(project_path=None,
         create_system_info_table(bk)
         create_split_table(bk)
         create_file_modification_table(bk)
-        create_parameter_tables(bk, project_path)
+        create_parameter_tables(bk, bout_inp_dir, project_path)
         create_run_table(bk)
 
 
@@ -105,8 +109,10 @@ def create_parameter_tables(bk, project_path):
     ----------
     bk : Bookkeeper
         A bookkeeper object which doe the sql calls
+    project_path : Path
+        Path to the project
     """
-    settings_path = run_test_run(bout_inp_dir, project_path)
+    settings_path = run_test_run(project_path, bout_inp_dir=None)
     parameter_dict = obtain_project_parameters(settings_path)
     bk.create_parameter_tables(parameter_dict)
 
