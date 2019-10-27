@@ -10,10 +10,10 @@ from bout_runners.utils.file_operations import get_caller_dir
 
 
 # FIXME: You are here
-# FIXME: Use flake8
 # FIXME: Unittests
-# FIXME: Utils with paths
-# FIXME: Use logging config, and logg contents
+# FIXME: Store all important paths to a utils/paths.py module
+# FIXME: Use logging config, and log contents
+# FIXME: Use flake8
 logger = logging.getLogger(__name__)
 
 
