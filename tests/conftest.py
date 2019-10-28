@@ -1,7 +1,61 @@
-import sys
+import os
+import pytest
 from pathlib import Path
+from bout_runners.make.make import MakeProject
+from dotenv import load_dotenv
 
 
-path = Path(__file__).absolute().parents[1].\
-    joinpath('BOUT-dev', 'tools', 'pylib')
-sys.path.append(str(path))
+@pytest.fixture(scope='session')
+def get_bout_path():
+    """
+    Loads the .env file and yields the bout_path
+
+    Yields
+    -------
+    bout_path : Path
+        Path to the BOUT++ repository
+    """
+    # Setup
+    load_dotenv()
+    bout_path = Path(os.getenv('BOUT_PATH')).absolute()
+
+    yield bout_path
+
+
+@pytest.fixture(scope='session')
+def make_project(get_bout_path):
+    """
+    Setup and teardown sequence which makes a make object
+
+    The method calls make_obj.run_clean() before and after the yield
+    statement
+
+    Yields
+    ------
+    make_obj : MakeProject
+        The object to call make and make clean from
+    """
+    # Setup
+    bout_path = get_bout_path
+    project_path = bout_path.joinpath('examples', 'conduction')
+
+    make_obj = MakeProject(makefile_root_path=project_path)
+    make_obj.run_make()
+
+    yield project_path
+
+    # Teardown
+    make_obj.run_clean()
+
+
+@pytest.fixture(scope='session')
+def get_test_data_path():
+    """
+    Return the test data path
+
+    Returns
+    -------
+    test_data_path : Path
+        Path to the test data
+    """
+    return Path(__file__).absolute().parent.joinpath('data')

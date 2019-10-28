@@ -6,20 +6,6 @@ Temporary file used to get an overview over the previous bout_runners
 # FIXME: Change shell with subprocess
 import os
 
-def _run_make(_errors):
-    """Make cleans and makes the .cxx program"""
-
-    print("Make clean eventually previously compiled\n")
-    command = "make clean"
-    status, output = shell(command, pipe=True)
-    print("Making the .cxx program\n")
-    command = "make"
-    status, output = shell(command, pipe=True)
-    print(output)
-    # Check if any errors occurred
-    if status != 0:
-        _errors.append("RuntimeError")
-        raise RuntimeError("Error encountered during make.")
 
 # Core
     def _run_driver(self, combination, run_no):
@@ -86,78 +72,6 @@ def _run_make(_errors):
         elapsed_time = toc - tic
 
         return out, elapsed_time
-
-    def _set_program_name(self, prog_name=None):
-        """
-        Will set self._program_name and make the program if the
-        prog_name.o file is not found.
-
-        Parameters
-        ----------
-        prog_name : str
-            Name of the exceutable. If None, the name will be set from
-            the *.o file.
-        """
-
-        if prog_name is not(None):
-            # Check that a string is given
-            if not isinstance(prog_name, str):
-                message = "prog_name must be given as a string"
-                self._errors.append("TypeError")
-                raise TypeError(message)
-            # Search for file
-            if os.path.isfile(prog_name):
-                self._program_name = prog_name
-            else:
-                print("{} not found, now making:".format(prog_name))
-                # File not found, make
-                _run_make(self._errors)
-                # Set the make flag to False, so it is not made again
-                self._make = False
-                # Search for file
-                if not(os.path.isfile(prog_name)):
-                    message = ("{} could not be found after make. "
-                               "Please check for spelling mistakes").\
-                        format(prog_name)
-                    self._errors.append("RuntimeError")
-                    raise RuntimeError(message)
-                else:
-                    self._program_name = prog_name
-        else:
-            # Find the *.o file
-            o_files = glob.glob("*.o")
-            if len(o_files) > 1:
-                message = ("More than one *.o file found. "
-                           "The first *.o file is chosen. "
-                           "Consider setting 'prog_name'.")
-                _warning_printer(message)
-                self._warnings.append(message)
-                self._program_name = o_files[0].replace(".o", "")
-            elif len(o_files) == 1:
-                # Pick the first instance as the name
-                self._program_name = o_files[0].replace(".o", "")
-            else:
-                # Check if there exists a make
-                make_file = glob.glob("*make*")
-                if len(make_file) > 0:
-                    # Run make
-                    _run_make(self._errors)
-                    # Set the make flag to False, so it is not made again
-                    self._make = False
-                    # Search for the .o file again
-                    o_files = glob.glob("*.o")
-                    if len(o_files) > 0:
-                        self._program_name = o_files[0].replace(".o", "")
-                    else:
-                        self._program_name = False
-                        message = ("The constructor could not make your"
-                                   " program")
-                        self._errors.append("RuntimeError")
-                        raise RuntimeError(message)
-                else:
-                    self._errors.append("RuntimeError")
-                    raise RuntimeError(
-                        "No make file found in current directory")
 
 # CLI wrapper
 

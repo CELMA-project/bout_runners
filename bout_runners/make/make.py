@@ -1,6 +1,6 @@
-import inspect
 import logging
 from pathlib import Path
+from bout_runners.utils.file_operations import get_caller_dir
 from bout_runners.utils.subprocesses_functions import run_subprocess
 from bout_runners.utils.exec_name import get_exec_name
 
@@ -21,13 +21,27 @@ class MakeProject(object):
 
     Attributes
     ----------
+    makefile_root_path : Path
+        The path to the Makefile
+    makefile_name : str
+        The name of the Makefile
+    exec_name : str
+        The name of the executable
 
     Methods
     -------
+    run_make(force=False)
+        Runs make in the self.makefile_root_path
+    run_clean()
+        Runs make clean in the self.makefile_root_path
 
     Examples
     --------
-
+    >>> from bout_runners.make.make import MakeProject
+    ... from pathlib import Path
+    ... path = Path('path', 'to', 'makefile_root_path')
+    ... make_obj = MakeProject(makefile_root_path=path)
+    ... make_obj.run_make(force=True)
     """
 
     def __init__(self,
@@ -48,14 +62,14 @@ class MakeProject(object):
         """
 
         if makefile_root_path is None:
-            # Assume that the makefile_root_path is located in the
-            # caller directory
-            frame = inspect.stack()[1]
-            module = inspect.getmodule(frame[0])
-            makefile_root_path = Path(module.__file__).parent
+            makefile_root_path = get_caller_dir()
 
         self.makefile_root_path = Path(makefile_root_path)
         self.makefile_name = makefile_name
+
+        # Will be filled
+        self.exec_name = get_exec_name(self.makefile_root_path,
+                                       self.makefile_name)
 
     def run_make(self, force=False):
         """
@@ -70,14 +84,15 @@ class MakeProject(object):
             If True, make clean will be called prior to make
         """
 
-        # Check if already made
-        exec_name = get_exec_name(self.makefile_root_path,
-                                  self.makefile_name)
+        # If force: Run clean so that `made` returns false
         if force:
             self.run_clean()
 
-        made = self.makefile_root_path.joinpath(exec_name).is_file()
+        # Check if already made
+        made = \
+            self.makefile_root_path.joinpath(self.exec_name).is_file()
 
+        # Do nothing if already made
         if not made:
             make_str = 'make' if self.makefile_name is None \
                 else f'make -f {self.makefile_name}'

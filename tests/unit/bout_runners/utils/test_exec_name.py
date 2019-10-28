@@ -5,31 +5,28 @@ from bout_runners.utils.exec_name import get_exec_name
 from bout_runners.utils.exec_name import get_makefile_name
 
 
-DATA_PATH = Path(__file__).absolute().parents[1].joinpath('data')
-
-
 @pytest.mark.parametrize('file,expected',
                          [(None, 'executable_bout_model'),
                           ('Makefile_without_target', 'bout_model')])
-def test_get_exec_name(file, expected):
+def test_get_exec_name(file, expected, get_test_data_path):
     """
     Test that the exec name is retrievable from the makefiles
     """
-    exec_name = get_exec_name(DATA_PATH, makefile_name=file)
+    exec_name = get_exec_name(get_test_data_path, makefile_name=file)
     assert exec_name == expected
 
 
-def test_get_makefile_name():
+def test_get_makefile_name(get_test_data_path):
     """
     Tests that it is possible to find a makefile name
     """
 
-    makefile_name = get_makefile_name(DATA_PATH)
+    makefile_name = get_makefile_name(get_test_data_path)
     assert makefile_name == 'Makefile'
 
 
 @pytest.fixture(scope='function')
-def copy_makefile():
+def copy_makefile(get_test_data_path):
     """
     Setup and teardown sequence which copies Makefile to my_makefile
 
@@ -43,9 +40,9 @@ def copy_makefile():
         The path to the temporary directory
     """
     # Setup
-    tmp_path = DATA_PATH.joinpath('tmp')
+    tmp_path = get_test_data_path.joinpath('tmp')
     tmp_path.mkdir(exist_ok=True)
-    makefile_path = DATA_PATH.joinpath('Makefile')
+    makefile_path = get_test_data_path.joinpath('Makefile')
     tmp_make = tmp_path.joinpath('my_makefile')
     shutil.copy(makefile_path, tmp_make)
 
