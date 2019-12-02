@@ -25,8 +25,14 @@ jobs:
       with:
         version: 3.7
 
-    - name: Clone BOUT-dev next
-      run: git clone git://github.com/boutproject/BOUT-dev.git ${HOME}/BOUT-dev
+    - name: Setting up BOUT-dev next
+      run: |
+        cd ${HOME}/BOUT-dev
+        git clone git://github.com/boutproject/BOUT-dev.git ${HOME}/BOUT-dev
+        git checkout next
+        ./configure
+        make
+        cd -
 
     - name: Generate coverage report
       # Install and run the coverage report
