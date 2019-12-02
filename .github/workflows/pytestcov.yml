@@ -27,12 +27,12 @@ jobs:
 
     - name: Setup prerequisites
       run: |
-        apt install mpich
-        apt install libmpich-dev
-        apt install libfftw3-dev
-        apt install libnetcdf-dev
-        apt install libnetcdf-cxx-legacy-dev
-        apt install g++
+        sudo apt install mpich
+        sudo apt install libmpich-dev
+        sudo apt install libfftw3-dev
+        sudo apt install libnetcdf-dev
+        sudo apt install libnetcdf-cxx-legacy-dev
+        sudo apt install g++
 
     - name: Setting up BOUT-dev next
       run: |
