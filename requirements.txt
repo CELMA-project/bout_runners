@@ -1,3 +1,5 @@
-pytest==5.2.1
-pandas==0.25.1
+# Required
+pandas==0.25.3
 python-dotenv==0.10.3
+# Optional
+pytest==5.3.0
