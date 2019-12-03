@@ -7,5 +7,5 @@ docker build -f docker/Dockerfile -t "$IMAGE":"$VERSION" .
 #       the github repo
 echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 docker push "$IMAGE":"$VERSION"
-docker tag "$IMAGE":"$VERSION" "$IMAGE"/bout_dev:latest
+docker tag "$IMAGE":"$VERSION" "$IMAGE":latest
 docker push "$IMAGE":latest
