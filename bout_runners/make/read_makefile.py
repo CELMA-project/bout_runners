@@ -1,3 +1,6 @@
+"""Module containing the classes to read the makefile."""
+
+
 import re
 from pathlib import Path
 

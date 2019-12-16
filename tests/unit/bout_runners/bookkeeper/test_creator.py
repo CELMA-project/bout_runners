@@ -1,3 +1,5 @@
+"""Contains unittests for the creator."""
+
 import pytest
 from bout_runners.bookkeeper.creator import create_system_info_table
 from bout_runners.bookkeeper.creator import create_run_table
@@ -20,7 +22,7 @@ def test_create_run_table(make_creator_database):
                  '   WHERE type="table"')
     table = bk.query(query_str)
     assert 'run' in table.loc[:, 'name'].values
-    
+
 
 def test_create_parameter_tables(make_creator_database, make_project):
     bk = make_creator_database

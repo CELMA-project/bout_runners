@@ -1,3 +1,6 @@
+"""Module containing utils only used in the bookkeeper package."""
+
+
 import ast
 import configparser
 import platform

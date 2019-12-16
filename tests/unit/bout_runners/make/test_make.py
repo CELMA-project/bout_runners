@@ -1,3 +1,5 @@
+"""Contains unittests for make."""
+
 import pytest
 from distutils.dir_util import copy_tree
 from distutils.dir_util import remove_tree

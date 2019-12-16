@@ -1,3 +1,5 @@
+"""Contains unittests for the bookkeeper utils."""
+
 from bout_runners.bookkeeper.bookkeeper_utils import \
     obtain_project_parameters
 from bout_runners.bookkeeper.bookkeeper_utils import \

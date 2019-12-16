@@ -1,3 +1,5 @@
+"""Module containing functions to extract names."""
+
 from pathlib import Path
 from bout_runners.make.read_makefile import BoutMakefileVariable
 from bout_runners.make.read_makefile import ReadMakefileError

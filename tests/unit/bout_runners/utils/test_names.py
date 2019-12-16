@@ -1,8 +1,9 @@
+"""Contains unittests for the names module."""
+
 import pytest
 import shutil
-from pathlib import Path
-from bout_runners.utils.exec_name import get_exec_name
-from bout_runners.utils.exec_name import get_makefile_name
+from bout_runners.utils.names import get_exec_name
+from bout_runners.utils.names import get_makefile_name
 
 
 @pytest.mark.parametrize('file,expected',

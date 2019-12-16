@@ -1,3 +1,6 @@
+"""Module containing file operation functions."""
+
+
 import inspect
 from pathlib import Path
 

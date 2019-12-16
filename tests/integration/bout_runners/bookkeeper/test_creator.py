@@ -1,3 +1,5 @@
+"""Contains the integration test for the database."""
+
 import pytest
 import shutil
 from pathlib import Path

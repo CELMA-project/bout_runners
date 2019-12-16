@@ -1,3 +1,5 @@
+"""Contains unittests for the base runner."""
+
 import pytest
 import shutil
 from bout_runners.runners.base_runner import single_run

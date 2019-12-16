@@ -1,6 +1,4 @@
-"""
-Functions related to subprocess calls
-"""
+"""Module containing functions related to subprocess calls."""
 
 import subprocess
 import logging

@@ -1,3 +1,6 @@
+"""Contains modules to create database and tables."""
+
+
 import logging
 from pathlib import Path
 from bout_runners.bookkeeper.bookkeeper_utils import \

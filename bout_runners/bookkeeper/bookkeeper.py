@@ -1,3 +1,5 @@
+"""Module containing the Bookkeeper class."""
+
 import logging
 import contextlib
 import sqlite3

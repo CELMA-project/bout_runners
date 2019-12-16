@@ -1,8 +1,10 @@
+"""Module containing the MakeProject class."""
+
 import logging
 from pathlib import Path
 from bout_runners.utils.file_operations import get_caller_dir
 from bout_runners.utils.subprocesses_functions import run_subprocess
-from bout_runners.utils.exec_name import get_exec_name
+from bout_runners.utils.names import get_exec_name
 
 
 logger = logging.getLogger(__name__)
