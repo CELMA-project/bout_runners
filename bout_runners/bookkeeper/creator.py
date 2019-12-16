@@ -96,7 +96,7 @@ def create_run_table(bk):
                      'status': 'TEXT',
                      },
             foreign_keys={'file_modification_id':
-                              ('file_modification', 'id'),
+                          ('file_modification', 'id'),
                           'split_id': ('split', 'id'),
                           'parameters_id': ('parameters', 'id'),
                           'host_id': ('host', 'id')})

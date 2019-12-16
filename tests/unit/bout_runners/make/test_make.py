@@ -9,7 +9,7 @@ from bout_runners.make.make import MakeProject
 @pytest.fixture(scope='function')
 def make_make_object(get_bout_path):
     """
-    Setup and teardown sequence which makes a make object
+    Set up and tear down the make-object.
 
     In order not to make collisions with the global fixture which
     makes the `conduction` program, this fixture copies the content
@@ -36,7 +36,6 @@ def make_make_object(get_bout_path):
     tests.bout_runners.conftest.get_bout_path : Fixture which returns
     the BOUT++ path
     """
-
     # Setup
     bout_path = get_bout_path
     project_path = bout_path.joinpath('examples', 'conduction')
@@ -57,7 +56,7 @@ def make_make_object(get_bout_path):
 
 def test_make_project(make_make_object):
     """
-    Tests that the MakeProject class is able to make conduction
+    Test that the MakeProject class is able to make conduction.
 
     Parameters
     ----------
@@ -69,7 +68,6 @@ def test_make_project(make_make_object):
     --------
     make_make_object : Fixture which makes the make object
     """
-
     make_obj, exec_file = make_make_object
 
     # NOTE: The setup runs make clean, so the project directory

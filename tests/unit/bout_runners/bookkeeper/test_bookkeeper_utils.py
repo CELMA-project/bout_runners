@@ -9,6 +9,14 @@ from bout_runners.bookkeeper.bookkeeper_utils import \
 
 
 def test_obtain_project_parameters(get_test_data_path):
+    """
+    Test that obtain_project_parameters returns expected output.
+
+    Parameters
+    ----------
+    get_test_data_path : Path
+        Path to the test data
+    """
     settings_path = get_test_data_path.joinpath('BOUT.settings')
     parameter_dict = obtain_project_parameters(settings_path)
     assert isinstance(parameter_dict, dict)
@@ -18,11 +26,13 @@ def test_obtain_project_parameters(get_test_data_path):
 
 
 def test_get_system_info_as_sql_type():
+    """Test that the system info can be returned as a dict."""
     sys_info_dict = get_system_info_as_sql_type()
     assert isinstance(sys_info_dict, dict)
 
 
 def test_get_create_table_statement():
+    """Test that get_create_table_statement returns expected output."""
     result = get_create_table_statement(
         name='foo',
         columns=dict(bar='baz',

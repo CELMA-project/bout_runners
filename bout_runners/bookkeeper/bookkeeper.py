@@ -14,7 +14,7 @@ from bout_runners.bookkeeper.bookkeeper_utils import \
 
 class Bookkeeper(object):
     """
-    Class dealing with the database.
+    Class interacting with the database.
 
     Attributes
     ----------
@@ -38,13 +38,12 @@ class Bookkeeper(object):
         database_path : Path or str
             Path to database
         """
-
         self.database_path = database_path
         logging.info(f'Database path set to {self.database_path}')
 
     def create_table(self, sql_statement):
         """
-        Creates a table in the database
+        Create a table in the database.
 
         Parameters
         ----------
@@ -106,7 +105,7 @@ class Bookkeeper(object):
 
     def query(self, query_str):
         """
-        Makes a query to the database
+        Make a query to the database.
 
         Parameters
         ----------
