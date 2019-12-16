@@ -1,10 +1,13 @@
+"""Module containing utils only used in the runners package."""
+
+
 import shutil
 from bout_runners.runners.base_runner import single_run
 
 
 def run_test_run(project_path, bout_inp_dir=None):
     """
-    Performs a test run
+    Perform a test run.
 
     Parameters
     ----------

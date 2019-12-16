@@ -1,15 +1,16 @@
+"""Module containing the classes to read the makefile."""
+
+
 import re
 from pathlib import Path
 
 
 class ReadMakefileError(Exception):
-    """
-    Error class indicating that this is a ReadMakefile error
-    """
+    """Error class indicating that this is a ReadMakefile error."""
 
     def __init__(self, variable, path):
         """
-        Constructs a string and calls the super constructor
+        Construct a string and call the super constructor.
 
         Parameters
         ----------
@@ -25,7 +26,7 @@ class ReadMakefileError(Exception):
 
 class ReadBoutMakefile(object):
     """
-    Class which reads a BOUT++ Makefile
+    Class which reads a BOUT++ Makefile.
 
     Attributes
     ----------
@@ -37,14 +38,13 @@ class ReadBoutMakefile(object):
 
     def __init__(self, path):
         """
-        Reads the content of a Makefile and stores it into self.content
+        Read the content of a Makefile and store it into self.content.
 
         Parameters
         ----------
         path : Path or str
             Path to the Makefile
         """
-
         self.path = path
 
         with Path(path).open('r') as f:
@@ -53,7 +53,7 @@ class ReadBoutMakefile(object):
 
 class BoutMakefileVariable(ReadBoutMakefile):
     """
-    Class which reads a variable from a BOUT++ Makefile
+    Class which reas a variable from a BOUT++ Makefile.
 
     Attributes
     ----------
@@ -84,7 +84,7 @@ class BoutMakefileVariable(ReadBoutMakefile):
 
     def __init__(self, path, variable_name):
         """
-        Sets the variable name of the instance
+        Set the variable name of the instance.
 
         Parameters
         ----------
@@ -93,7 +93,6 @@ class BoutMakefileVariable(ReadBoutMakefile):
         variable_name : str
             The variable under consideration
         """
-
         super(BoutMakefileVariable, self).__init__(path)
 
         self.variable_name = variable_name
@@ -101,7 +100,7 @@ class BoutMakefileVariable(ReadBoutMakefile):
 
     def get_variable_value(self):
         """
-        Get the value of the variable
+        Get the value of the variable.
 
         Returns
         -------
@@ -124,7 +123,6 @@ class BoutMakefileVariable(ReadBoutMakefile):
         >>> BoutMakefileVariable('foo', 'Makefile').get_variable_value()
         'foobar.qux'
         """
-
         # Build the match function for the regex
         no_comment_line = r'^\s*(?!#)'
         must_contain_eq_sign = r'\s*=\s*'

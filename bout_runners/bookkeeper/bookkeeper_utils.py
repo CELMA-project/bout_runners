@@ -1,3 +1,6 @@
+"""Module containing utils only used in the bookkeeper package."""
+
+
 import ast
 import configparser
 import platform
@@ -6,7 +9,7 @@ import re
 
 def obtain_project_parameters(settings_path):
     """
-    Returns the project parameters from the settings file
+    Return the project parameters from the settings file.
 
     Parameters
     ----------
@@ -31,8 +34,7 @@ def obtain_project_parameters(settings_path):
     4. The section `run` will be dropped due to bout_runners own
        `run` table
     """
-
-    type_map = {'bool': 'INTEGER',  # No bool type in sqllite
+    type_map = {'bool': 'INTEGER',  # No bool type in SQLite
                 'float': 'REAL',
                 'int': 'INTEGER',
                 'str': 'TEXT'}
@@ -85,7 +87,7 @@ def obtain_project_parameters(settings_path):
 
 def get_system_info_as_sql_type():
     """
-    Returns the system information
+    Return the system information.
 
     Returns
     -------
@@ -112,7 +114,7 @@ def get_create_table_statement(name,
                                primary_key='id',
                                foreign_keys=None):
     """
-    Returns a SQL string which can be used to create
+    Return a SQL string which can be used to create the table.
 
     Parameters
     ----------
@@ -133,7 +135,6 @@ def get_create_table_statement(name,
     create_statement : str
         The SQL statement which creates table
     """
-
     create_statement = f'CREATE TABLE {name} \n('
 
     create_statement += f'   {primary_key} INTEGER PRIMARY KEY,\n'

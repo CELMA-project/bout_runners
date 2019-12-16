@@ -1,23 +1,24 @@
+"""Module containing the MakeProject class."""
+
 import logging
 from pathlib import Path
 from bout_runners.utils.file_operations import get_caller_dir
 from bout_runners.utils.subprocesses_functions import run_subprocess
-from bout_runners.utils.exec_name import get_exec_name
+from bout_runners.utils.names import get_exec_name
 
 
 logger = logging.getLogger(__name__)
 
 
 class MakeError(Exception):
-    """
-    Error class indicating that this is a Make error
-    """
+    """Error class indicating that this is a Make error."""
+
     pass
 
 
 class MakeProject(object):
     """
-    The make class is responsible for making the project
+    Class for making the project.
 
     Attributes
     ----------
@@ -48,7 +49,7 @@ class MakeProject(object):
                  makefile_root_path=None,
                  makefile_name=None):
         """
-        Calls the make file of the makefile_root_path
+        Call the make file.
 
         Parameters
         ----------
@@ -60,7 +61,6 @@ class MakeProject(object):
             If set to None, it tries the following names, in order:
             'GNUmakefile', 'makefile' and 'Makefile'
         """
-
         if makefile_root_path is None:
             makefile_root_path = get_caller_dir()
 
@@ -73,7 +73,7 @@ class MakeProject(object):
 
     def run_make(self, force=False):
         """
-        Runs make in the self.makefile_root_path
+        Execute the makefile.
 
         If an executable is found, nothing will be done unless 'force'
         is set to True
@@ -83,7 +83,6 @@ class MakeProject(object):
         force : bool
             If True, make clean will be called prior to make
         """
-
         # If force: Run clean so that `made` returns false
         if force:
             self.run_clean()
@@ -102,9 +101,7 @@ class MakeProject(object):
             run_subprocess(command, self.makefile_root_path)
 
     def run_clean(self):
-        """
-        Runs make clean in the self.makefile_root_path
-        """
+        """Run make clean."""
         make_str = 'make' if self.makefile_name is None \
             else f'make -f {self.makefile_name}'
 

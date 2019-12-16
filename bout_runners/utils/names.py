@@ -1,3 +1,5 @@
+"""Module containing functions to extract names."""
+
 from pathlib import Path
 from bout_runners.make.read_makefile import BoutMakefileVariable
 from bout_runners.make.read_makefile import ReadMakefileError
@@ -5,7 +7,7 @@ from bout_runners.make.read_makefile import ReadMakefileError
 
 def get_exec_name(makefile_root_path, makefile_name=None):
     """
-    Gets the name of the project executable
+    Return the name of the project executable.
 
     This method first searches for the 'TARGET' variable in the
     makefile. If not found it infers the name from the 'SOURCEC'
@@ -25,7 +27,6 @@ def get_exec_name(makefile_root_path, makefile_name=None):
     exec_name : str
         Name of the executable
     """
-
     if makefile_name is None:
         makefile_name = get_makefile_name(makefile_root_path)
 
@@ -49,7 +50,7 @@ def get_exec_name(makefile_root_path, makefile_name=None):
 
 def get_makefile_name(makefile_root_path):
     """
-    Searches for a valid Makefile
+    Search for a valid Makefile.
 
     The order of the search is 'GNUmakefile', 'makefile' and 'Makefile'
 
@@ -67,7 +68,6 @@ def get_makefile_name(makefile_root_path):
     FileNotFoundError
         If none of the valid makefile names are found
     """
-
     possible_names = ('GNUmakefile',
                       'Makefile',
                       'makefile')

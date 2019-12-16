@@ -1,4 +1,4 @@
-from bout_runners.bookkeeper.bookkeeper import Bookkeeper
+"""Contains unittests for the bookkeeper."""
 
 
 def test_create_table(make_test_database):

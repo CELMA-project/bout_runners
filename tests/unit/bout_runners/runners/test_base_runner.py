@@ -1,3 +1,5 @@
+"""Contains unittests for the base runner."""
+
 import pytest
 import shutil
 from bout_runners.runners.base_runner import single_run
@@ -6,7 +8,7 @@ from bout_runners.runners.base_runner import single_run
 @pytest.fixture(scope='function')
 def make_tmp_test_run_dir(make_project):
     """
-    Makes a directory for testing a single run
+    Make a directory for testing a single run.
 
     Parameters
     ----------
@@ -19,7 +21,6 @@ def make_tmp_test_run_dir(make_project):
     tests.bout_runners.conftest.make_project : Fixture which makes
     the project
     """
-
     project_root = make_project
     bout_inp_path = project_root.joinpath('data', 'BOUT.inp')
 
@@ -35,20 +36,18 @@ def make_tmp_test_run_dir(make_project):
 
 def test_single_run(make_tmp_test_run_dir):
     """
-    Tests that it is possible to perform a single run
+    Test that it is possible to perform a single run.
 
     Parameters
     ----------
     make_tmp_test_run_dir : Path
-        Path to the BOUT.inp directory. See the make_tmp_test_run_dir fixture
-        for more details
+        Path to the BOUT.inp directory
 
     See Also
     --------
     make_tmp_test_run_dir : Fixture which makes a directory for the
     test run
     """
-
     bout_inp_dir = make_tmp_test_run_dir
     project_path = bout_inp_dir.parent
 

@@ -1,10 +1,13 @@
+"""Module containing file operation functions."""
+
+
 import inspect
 from pathlib import Path
 
 
 def get_caller_dir():
     """
-    Returns the directory of the topmost caller file
+    Return the directory of the topmost caller file.
 
     Returns
     -------
@@ -15,7 +18,6 @@ def get_caller_dir():
     ----------
     [1] https://stackoverflow.com/a/1095621/2786884
     """
-
     frame = inspect.stack()[1]
     module = inspect.getmodule(frame[0])
     caller_dir = Path(module.__file__).parent

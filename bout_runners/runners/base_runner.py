@@ -1,3 +1,5 @@
+"""Contains the base runner."""
+
 import logging
 from bout_runners.make.make import MakeProject
 from bout_runners.utils.subprocesses_functions import run_subprocess
@@ -12,6 +14,23 @@ def single_run(execute_from_path,
                bout_inp_dir=None,
                nproc=None,
                options=None):
+    """
+    Execute a BOUT++ run.
+
+    Parameters
+    ----------
+    execute_from_path : None or Path or str
+        Root path of make file
+        If None, the path of the root caller of MakeProject will
+        be called
+    bout_inp_dir : None or Path or str
+        Path to the BOUT.inp directory
+        If None is specified, default path will be used
+    nproc : int
+        Number of processors
+    options : str
+        Command line options to use
+    """
     make = MakeProject(execute_from_path)
     make.run_make()
 

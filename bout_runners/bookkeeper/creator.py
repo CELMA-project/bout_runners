@@ -1,3 +1,6 @@
+"""Contains modules to create database and tables."""
+
+
 import logging
 from pathlib import Path
 from bout_runners.bookkeeper.bookkeeper_utils import \
@@ -93,7 +96,7 @@ def create_run_table(bk):
                      'status': 'TEXT',
                      },
             foreign_keys={'file_modification_id':
-                              ('file_modification', 'id'),
+                          ('file_modification', 'id'),
                           'split_id': ('split', 'id'),
                           'parameters_id': ('parameters', 'id'),
                           'host_id': ('host', 'id')})
