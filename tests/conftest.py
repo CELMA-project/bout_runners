@@ -1,3 +1,5 @@
+"""Global fixtures for the test routines."""
+
 import os
 import pytest
 from pathlib import Path
@@ -8,7 +10,7 @@ from dotenv import load_dotenv
 @pytest.fixture(scope='session')
 def get_bout_path():
     """
-    Loads the .env file and yields the bout_path
+    Load the .env file and yield the bout_path.
 
     Yields
     -------
@@ -25,7 +27,7 @@ def get_bout_path():
 @pytest.fixture(scope='session')
 def make_project(get_bout_path):
     """
-    Setup and teardown sequence which makes a make object
+    Setup and teardown sequence which make a Make object.
 
     The method calls make_obj.run_clean() before and after the yield
     statement
@@ -51,7 +53,7 @@ def make_project(get_bout_path):
 @pytest.fixture(scope='session')
 def get_test_data_path():
     """
-    Return the test data path
+    Return the test data path.
 
     Returns
     -------
