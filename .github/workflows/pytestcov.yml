@@ -23,7 +23,7 @@ jobs:
       # Use the master branch of: https://github.com/actions/setup-python
       uses: actions/setup-python@master
       with:
-        version: 3.7
+        version: '3.x'
 
     - name: Setup prerequisites
       run: |
