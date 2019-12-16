@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
-VERSION=$(sed -n "s/__version__ = ['\"]\([^'\"]*\)['\"]/\1/p" bout_install/__init__.py)_$(date +%Y%m%d)
-IMAGE=loeiten/bout_runners
+NAME=bout_runners
+IMAGE=loeiten/"$NAME"
+VERSION=$(sed -n "s/__version__ = ['\"]\([^'\"]*\)['\"]/\1/p" ${NAME}/__init__.py)_$(date +%Y%m%d)
 docker build -f docker/Dockerfile -t "$IMAGE":"$VERSION" .
 # NOTE: DOCKER_PASSWORD and DOCKER_USERNAME are environment secrets of
 #       the github repo
