@@ -1,5 +1,6 @@
 """Contains unittests for the reading of makefiles."""
 
+
 import pytest
 from bout_runners.make.read_makefile import ReadBoutMakefile
 from bout_runners.make.read_makefile import BoutMakefileVariable
