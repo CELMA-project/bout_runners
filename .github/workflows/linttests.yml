@@ -25,7 +25,13 @@ jobs:
       with:
         version: '3.x'
 
-    - name: Run lint test
+    - name: Run flake8 test
       run: |
         python -m pip install flake8-docstrings
         flake8 --docstring-convention numpy .
+
+    - name: Run flake8 test
+      # https://github.com/PyCQA/pylint/issues/352
+      run: |
+        python -m pip install pylint
+        pylint bout_runners/ tests/ *.py
