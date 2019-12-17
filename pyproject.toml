@@ -1,0 +1,5 @@
+[build-system]
+# This will include cython from fresh installation through PEP 518
+# https://stackoverflow.com/questions/44554882/in-a-setup-py-involving-cython-if-install-requires-then-how-can-from-library-i
+# https://github.com/pypa/pip/issues/5761
+requires = ["setuptools", "wheel", "cython"]

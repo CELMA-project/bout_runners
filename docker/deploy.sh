@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# Exit on error
+# NOTE: Some consider trap 'do something' ERR a better practice
+# https://stackoverflow.com/a/19622569/2786884
+set -e
+
 NAME=bout_runners
 IMAGE=loeiten/"$NAME"
 VERSION=$(sed -n "s/__version__ = ['\"]\([^'\"]*\)['\"]/\1/p" ${NAME}/__init__.py)_$(date +%Y%m%d)
