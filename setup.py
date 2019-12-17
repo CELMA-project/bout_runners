@@ -1,51 +1,50 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+"""Package builder for bout_runners."""
 
 import re
+from pathlib import Path
 import setuptools
 import bout_runners
-from pathlib import Path
 
-name = 'bout_runners'
-project = 'CELMA-project'
-keywords = ['bout++',
+NAME = 'bout_runners'
+PROJECT = 'CELMA-project'
+KEYWORDS = ['bout++',
             'bout',
             'python wrapper',
             'metadata storage',
             'plasma',
             'turbulence']
-install_requires = ['pandas',
+INSTALL_REQUIRES = ['pandas',
                     'python-dotenv']
 
-root_path = Path(__file__).parent
-init_path = root_path.joinpath(name, '__init__.py')
-readme_path = root_path.joinpath('README.md')
+ROOT_PATH = Path(__file__).parent
+INIT_PATH = ROOT_PATH.joinpath(NAME, '__init__.py')
+README_PATH = ROOT_PATH.joinpath('README.md')
 
 # https://packaging.python.org/guides/single-sourcing-package-version/
-with init_path.open('r') as f:
-    version_file = f.read()
-    version_match = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
-                              version_file, re.M)
-    if version_match:
-        version = version_match.group(1)
+with INIT_PATH.open('r') as f:
+    VERSION_FILE = f.read()
+    VERSION_MATCH = re.search(r"^__version__ = ['\"]([^'\"]*)['\"]",
+                              VERSION_FILE, re.M)
+    if VERSION_MATCH:
+        VERSION = VERSION_MATCH.group(1)
     else:
         raise RuntimeError('Unable to find version string.')
 
-with readme_path.open('r') as f:
-    long_description = f.read()
+with README_PATH.open('r') as f:
+    LONG_DESCRIPTION = f.read()
 
 setuptools.setup(
-    name=name,
-    version=version,
+    name=NAME,
+    version=VERSION,
     author='Michael Løiten',
     author_email='michael.l.magnussen@gmail.com',
     description=bout_runners.__doc__,
-    long_description=long_description,
+    long_description=LONG_DESCRIPTION,
     long_description_content_type='text/markdown',
-    url=f'https://github.com/{project}/{name}',
+    url=f'https://github.com/{PROJECT}/{NAME}',
     packages=setuptools.find_packages(),
-    keywords=keywords,
-    install_requires=install_requires,
+    keywords=KEYWORDS,
+    install_requires=INSTALL_REQUIRES,
     package_data={
         # Include all .ini files
         '': ['*.ini']
