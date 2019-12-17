@@ -6,10 +6,13 @@
 FROM loeiten/bout_dev:latest
 
 # Install dependencies
-# FIXME: We install from the requirements file until we make a package
 RUN  wget https://raw.githubusercontent.com/CELMA-project/bout_runners/master/requirements.txt \
-    # Build suddenly failing without cython
+    # NOTE: cython is needed to build numpy
     && pip3 install --no-cache-dir cython \
+    # NOTE: pip install pandas fails before installing numpy as
+    #       alpine does not support PEP 513
+    # https://github.com/docker-library/python/issues/381
+    && pip3 install --no-cache-dir numpy \
     && pip3 install --no-cache-dir -r requirements.txt \
     && rm requirements.txt
 

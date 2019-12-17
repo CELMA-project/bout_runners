@@ -1,5 +1,4 @@
 # Required
-cython==0.29.14
 numpy==1.17.4
 pandas==0.25.3
 python-dotenv==0.10.3
@@ -7,10 +6,3 @@ python-dotenv==0.10.3
 numexpr==2.7.0  # Faster evaluation of numpy
 Bottleneck==1.3.1  # Accelerating nan evaluation
 pytest==5.3.0  # Testing
-# printf "setuptools==42.0.2\ncython==0.29.14\nnumpy==1.17.4\npandas==0.25.3" > requirements.txt
-# pip3 install --no-cache-dir -r requirements.txt
-# https://github.com/pypa/pip/issues/1386
-# https://github.com/pypa/pip/issues/988
-# https://github.com/docker-library/python/issues/381
-# FIXME: Looks like I need to use an alpha version
-# FIXME: Docker will always lag behind the pip release if done this way
