@@ -1,14 +1,15 @@
 """Global fixtures for the test routines."""
 
+
 import os
-import pytest
 from pathlib import Path
-from bout_runners.make.make import MakeProject
+import pytest
 from dotenv import load_dotenv
+from bout_runners.make.make import MakeProject
 
 
-@pytest.fixture(scope='session')
-def get_bout_path():
+@pytest.fixture(scope='session', name='get_bout_path')
+def fixture_get_bout_path():
     """
     Load the dot-env file and yield the bout_path.
 

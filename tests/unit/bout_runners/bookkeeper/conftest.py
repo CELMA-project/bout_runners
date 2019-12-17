@@ -1,8 +1,8 @@
 """Contains fixtures for the bookkeepers unittests."""
 
-import pytest
 import shutil
 from pathlib import Path
+import pytest
 from bout_runners.bookkeeper.bookkeeper import Bookkeeper
 
 

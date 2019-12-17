@@ -30,7 +30,7 @@ jobs:
         python -m pip install flake8-docstrings
         flake8 --docstring-convention numpy .
 
-    - name: Run flake8 test
+    - name: Run pylint test
       # https://github.com/PyCQA/pylint/issues/352
       run: |
         python -m pip install pylint

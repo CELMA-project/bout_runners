@@ -10,8 +10,8 @@ from bout_runners.bookkeeper.creator import create_parameter_tables
 from bout_runners.bookkeeper.creator import create_split_table
 
 
-@pytest.fixture(scope='module')
-def make_creator_database(make_test_database):
+@pytest.fixture(scope='module', name='make_creator_database')
+def fixture_make_creator_database(make_test_database):
     """
     Create a database.
 
