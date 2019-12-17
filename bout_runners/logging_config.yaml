@@ -1,0 +1,26 @@
+# Based on https://fangpenlin.com/posts/2012/08/26/good-logging-practice-in-python/
+version: 1
+disable_existing_loggers: False
+formatters:
+  simple:
+    format: "[%(asctime)s][%(levelname)-8s][%(filename)-20s][l%(lineno)-4s] %(message)s"
+
+handlers:
+  console_handler: # Arbitrary name
+    class: logging.StreamHandler
+    level: DEBUG
+    formatter: simple
+    stream: ext://sys.stdout
+
+  file_handler:
+    class: logging.handlers.RotatingFileHandler
+    level: DEBUG
+    formatter: simple
+    filename: log_from_file_handler.log
+    maxBytes: 10485760 # 10MB
+    backupCount: 20
+    encoding: utf8
+
+root:
+  level: DEBUG # Will override the handlers
+  handlers: [console_handler, file_handler]

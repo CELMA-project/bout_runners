@@ -1,13 +1,11 @@
 """Module containing the MakeProject class."""
 
+
 import logging
 from pathlib import Path
 from bout_runners.utils.file_operations import get_caller_dir
 from bout_runners.utils.subprocesses_functions import run_subprocess
 from bout_runners.utils.names import get_exec_name
-
-
-logger = logging.getLogger(__name__)
 
 
 class MakeError(Exception):
@@ -96,7 +94,7 @@ class MakeProject(object):
             make_str = 'make' if self.makefile_name is None \
                 else f'make -f {self.makefile_name}'
 
-            logger.info('Making the program')
+            logging.info('Making the program')
             command = f'{make_str}'
             run_subprocess(command, self.makefile_root_path)
 
@@ -105,6 +103,6 @@ class MakeProject(object):
         make_str = 'make' if self.makefile_name is None \
             else f'make -f {self.makefile_name}'
 
-        logger.info('Running make clean')
+        logging.info('Running make clean')
         command = f'{make_str} clean'
         run_subprocess(command, self.makefile_root_path)

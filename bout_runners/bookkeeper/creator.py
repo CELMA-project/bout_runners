@@ -1,7 +1,6 @@
 """Contains modules to create database and tables."""
 
 
-import logging
 from pathlib import Path
 from bout_runners.bookkeeper.bookkeeper_utils import \
     obtain_project_parameters, get_create_table_statement
@@ -14,9 +13,6 @@ from bout_runners.utils.file_operations import get_caller_dir
 
 # FIXME: You are here
 # FIXME: Store all important paths to a utils/paths.py module
-# FIXME: Use logging config, and log contents
-# FIXME: Use flake8
-logger = logging.getLogger(__name__)
 
 
 def create_database(project_path=None,

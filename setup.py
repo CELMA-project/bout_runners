@@ -13,7 +13,8 @@ KEYWORDS = ['bout++',
             'metadata storage',
             'plasma',
             'turbulence']
-INSTALL_REQUIRES = ['pandas',
+INSTALL_REQUIRES = ['pyyaml',
+                    'pandas',
                     'python-dotenv']
 
 ROOT_PATH = Path(__file__).parent

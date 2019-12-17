@@ -1,11 +1,9 @@
 """Contains the base runner."""
 
-import logging
+
 from bout_runners.make.make import MakeProject
 from bout_runners.utils.subprocesses_functions import run_subprocess
 
-# FIXME: Add some logging, or remove the logger
-logger = logging.getLogger(__name__)
 
 # FIXME: Rudimentary runner to create database
 
