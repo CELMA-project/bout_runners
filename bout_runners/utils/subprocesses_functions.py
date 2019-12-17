@@ -16,11 +16,12 @@ def run_subprocess(command, path):
     path : Path or str
         Path to the location to run the command from
     """
-    logging.info(f'Executing "{command}" in {path}')
+    logging.info('Executing "%s" in %s', command, path)
     result = subprocess.run(command.split(),
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE,
-                            cwd=path)
+                            cwd=path,
+                            check=False)
 
     if result.returncode != 0:
         raise_subprocess_error(result)

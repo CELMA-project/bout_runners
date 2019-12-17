@@ -11,10 +11,8 @@ from bout_runners.utils.names import get_exec_name
 class MakeError(Exception):
     """Error class indicating that this is a Make error."""
 
-    pass
 
-
-class MakeProject(object):
+class MakeProject:
     """
     Class for making the project.
 

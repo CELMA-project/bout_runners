@@ -5,9 +5,6 @@ from bout_runners.make.make import MakeProject
 from bout_runners.utils.subprocesses_functions import run_subprocess
 
 
-# FIXME: Rudimentary runner to create database
-
-
 def single_run(execute_from_path,
                bout_inp_dir=None,
                nproc=None,
@@ -32,7 +29,6 @@ def single_run(execute_from_path,
     make = MakeProject(execute_from_path)
     make.run_make()
 
-    # FIXME: mpirun obtained from getmpirun in boututils. Still needed?
     mpi_cmd = 'mpirun -np'
     nproc_str = nproc if nproc is not None else 1
     bout_inp_path_str =\

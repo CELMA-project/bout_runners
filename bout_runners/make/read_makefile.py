@@ -24,7 +24,7 @@ class ReadMakefileError(Exception):
         super().__init__(message)
 
 
-class ReadBoutMakefile(object):
+class ReadBoutMakefile:
     """
     Class which reads a BOUT++ Makefile.
 
@@ -46,14 +46,27 @@ class ReadBoutMakefile(object):
             Path to the Makefile
         """
         self.path = path
+        self.content = self.read()
 
-        with Path(path).open('r') as f:
-            self.content = f.read()
+    def read(self):
+        """
+        Read the makefile.
+
+        Returns
+        -------
+        str
+            Content of the Makefile
+        """
+        with Path(self.path).open('r') as make_file:
+            return make_file.read()
+
+    def get_variable_value(self):
+        """Get the value of the variable."""
 
 
 class BoutMakefileVariable(ReadBoutMakefile):
     """
-    Class which reas a variable from a BOUT++ Makefile.
+    Class which reads a variable from a BOUT++ Makefile.
 
     Attributes
     ----------

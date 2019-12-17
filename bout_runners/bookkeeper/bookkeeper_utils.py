@@ -41,8 +41,8 @@ def obtain_project_parameters(settings_path):
 
     # The settings file lacks a header for the global parameter
     # Therefore, we add add the header [global]
-    with settings_path.open('r') as f:
-        settings_memory = f'[global]\n{f.read()}'
+    with settings_path.open('r') as settings_file:
+        settings_memory = f'[global]\n{settings_file.read()}'
 
     config = configparser.ConfigParser()
     config.read_string(settings_memory)
@@ -71,7 +71,7 @@ def obtain_project_parameters(settings_path):
 
             parameter_dict[section][key] = type_map[val_type.__name__]
 
-    # FIXME: Bug in .settings: -d path is captured with # not in use
+    # NOTE: Bug in .settings: -d path is captured with # not in use
     bout_inp_dir = settings_path.parent
     parameter_dict['global'].pop('d', None)
     parameter_dict['global'].pop(str(bout_inp_dir).lower(), None)
@@ -109,7 +109,7 @@ def get_system_info_as_sql_type():
     return sys_info_dict
 
 
-def get_create_table_statement(name,
+def get_create_table_statement(table_name,
                                columns=None,
                                primary_key='id',
                                foreign_keys=None):
@@ -118,7 +118,7 @@ def get_create_table_statement(name,
 
     Parameters
     ----------
-    name : str
+    table_name : str
         Name of the table
     columns : dict or None
         Dictionary where the key is the column name and the value is
@@ -135,7 +135,7 @@ def get_create_table_statement(name,
     create_statement : str
         The SQL statement which creates table
     """
-    create_statement = f'CREATE TABLE {name} \n('
+    create_statement = f'CREATE TABLE {table_name} \n('
 
     create_statement += f'   {primary_key} INTEGER PRIMARY KEY,\n'
 
@@ -150,10 +150,11 @@ def get_create_table_statement(name,
             create_statement += f'    {name} INTEGER,\n'
 
         # Add constraint
-        for name, (table_name, key_in_table) in foreign_keys.items():
+        for name, (f_table_name, key_in_table) in foreign_keys.items():
             create_statement += \
                 (f'    FOREIGN KEY({name}) \n'
-                 f'        REFERENCES {table_name}({key_in_table}),\n')
+                 f'        REFERENCES {f_table_name}({key_in_table}),'
+                 f'\n')
 
     # Replace last comma with )
     create_statement = f'{create_statement[:-2]})'
