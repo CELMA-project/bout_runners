@@ -53,7 +53,7 @@ def test_get_variable_value_raises(get_test_data_path):
     """
     var = BoutMakefileVariable(get_test_data_path.joinpath(
         'Makefile_only_comment'),
-        'VAR')
+                               'VAR')
 
     with pytest.raises(ReadMakefileError):
         var.get_variable_value()

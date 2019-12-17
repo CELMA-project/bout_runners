@@ -24,8 +24,8 @@ def get_bout_path():
     yield bout_path
 
 
-@pytest.fixture(scope='session')
-def make_project(get_bout_path):
+@pytest.fixture(scope='session', name='make_project')
+def fixture_make_project(get_bout_path):
     """
     Set up and tear down the Make object.
 
