@@ -1,12 +1,13 @@
 """Contains unittests for the base runner."""
 
-import pytest
+
 import shutil
+import pytest
 from bout_runners.runners.base_runner import single_run
 
 
-@pytest.fixture(scope='function')
-def make_tmp_test_run_dir(make_project):
+@pytest.fixture(scope='function', name='make_tmp_test_run_dir')
+def fixture_make_tmp_test_run_dir(make_project):
     """
     Make a directory for testing a single run.
 

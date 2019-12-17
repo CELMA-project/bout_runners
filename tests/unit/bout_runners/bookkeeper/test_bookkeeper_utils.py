@@ -34,7 +34,7 @@ def test_get_system_info_as_sql_type():
 def test_get_create_table_statement():
     """Test that get_create_table_statement returns expected output."""
     result = get_create_table_statement(
-        name='foo',
+        table_name='foo',
         columns=dict(bar='baz',
                      foobar='qux'),
         primary_key='quux',

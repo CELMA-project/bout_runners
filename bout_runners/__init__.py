@@ -1,4 +1,9 @@
 """Package for running and storing metadata about BOUT++."""
 
+
+from bout_runners.utils.logs import set_up_logger
+
+
 __version__ = '2.0.0'
-__name__ = 'bout_runners'
+
+set_up_logger()

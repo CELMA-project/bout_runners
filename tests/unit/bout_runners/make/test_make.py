@@ -1,13 +1,14 @@
 """Contains unittests for make."""
 
-import pytest
+
 from distutils.dir_util import copy_tree
 from distutils.dir_util import remove_tree
+import pytest
 from bout_runners.make.make import MakeProject
 
 
-@pytest.fixture(scope='function')
-def make_make_object(get_bout_path):
+@pytest.fixture(scope='function', name='make_make_object')
+def fixture_make_make_object(get_bout_path):
     """
     Set up and tear down the make-object.
 

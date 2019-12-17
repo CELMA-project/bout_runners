@@ -1,13 +1,14 @@
 """Contains unittests for the names module."""
 
-import pytest
+
 import shutil
+import pytest
 from bout_runners.utils.names import get_exec_name
 from bout_runners.utils.names import get_makefile_name
 
 
-@pytest.fixture(scope='function')
-def copy_makefile(get_test_data_path):
+@pytest.fixture(scope='function', name='copy_makefile')
+def fixture_copy_makefile(get_test_data_path):
     """
     Set up and tear down a copy of Makefile to my_makefile.
 

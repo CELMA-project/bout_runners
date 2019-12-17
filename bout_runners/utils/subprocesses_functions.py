@@ -1,9 +1,8 @@
 """Module containing functions related to subprocess calls."""
 
+
 import subprocess
 import logging
-
-logger = logging.getLogger(__name__)
 
 
 def run_subprocess(command, path):
@@ -17,11 +16,12 @@ def run_subprocess(command, path):
     path : Path or str
         Path to the location to run the command from
     """
-    logger.info(f'Executing "{command}" in {path}')
+    logging.info('Executing "%s" in %s', command, path)
     result = subprocess.run(command.split(),
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE,
-                            cwd=path)
+                            cwd=path,
+                            check=False)
 
     if result.returncode != 0:
         raise_subprocess_error(result)
@@ -36,9 +36,9 @@ def raise_subprocess_error(result):
     result : subprocess.CompletedProcess
         The result from the subprocess
     """
-    logger.error('Subprocess failed with stdout:')
-    logger.error(result.stdout)
-    logger.error('and stderr:')
-    logger.error(result.stderr)
+    logging.error('Subprocess failed with stdout:')
+    logging.error(result.stdout)
+    logging.error('and stderr:')
+    logging.error(result.stderr)
 
     result.check_returncode()

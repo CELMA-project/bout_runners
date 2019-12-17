@@ -1,5 +1,6 @@
 """Module containing the Bookkeeper class."""
 
+
 import logging
 import contextlib
 import sqlite3
@@ -7,12 +8,8 @@ import pandas as pd
 from bout_runners.bookkeeper.bookkeeper_utils import \
     get_create_table_statement
 
-# FIXME: Make a sql object which contains query, insert, write etc
-#  with member data database_path. Should instance hold connection
-#  open? Probably not to avoid concurrency problems
 
-
-class Bookkeeper(object):
+class Bookkeeper:
     """
     Class interacting with the database.
 
@@ -39,7 +36,7 @@ class Bookkeeper(object):
             Path to database
         """
         self.database_path = database_path
-        logging.info(f'Database path set to {self.database_path}')
+        logging.info('Database path set to %s', self.database_path)
 
     def create_table(self, sql_statement):
         """
@@ -55,11 +52,11 @@ class Bookkeeper(object):
         #       https://stackoverflow.com/a/47501337/2786884
         # Auto-closes connection
         with contextlib.closing(sqlite3.connect(
-                str(self.database_path))) as con:
+                str(self.database_path))) as context:
             # Auto-commits
-            with con as c:
+            with context as con:
                 # Auto-closes cursor
-                with contextlib.closing(c.cursor()) as cur:
+                with contextlib.closing(con.cursor()) as cur:
                     # Check if tables are present
                     cur.execute(sql_statement)
 
@@ -94,13 +91,14 @@ class Bookkeeper(object):
 
             # Creat the section table
             section_statement = \
-                get_create_table_statement(name=section_name,
+                get_create_table_statement(table_name=section_name,
                                            columns=columns)
             self.create_table(section_statement)
 
         # Create the join table
         parameters_statement = get_create_table_statement(
-            name='parameters', foreign_keys=parameters_foreign_keys)
+            table_name='parameters',
+            foreign_keys=parameters_foreign_keys)
         self.create_table(parameters_statement)
 
     def query(self, query_str):
@@ -124,5 +122,5 @@ class Bookkeeper(object):
         # Auto-closes connection
         with contextlib.closing(sqlite3.connect(
                 str(self.database_path))) as con:
-            df = pd.read_sql_query(query_str, con)
-        return df
+            table = pd.read_sql_query(query_str, con)
+        return table

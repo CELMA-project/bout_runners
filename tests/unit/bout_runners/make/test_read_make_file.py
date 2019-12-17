@@ -1,5 +1,6 @@
 """Contains unittests for the reading of makefiles."""
 
+
 import pytest
 from bout_runners.make.read_makefile import ReadBoutMakefile
 from bout_runners.make.read_makefile import BoutMakefileVariable
@@ -53,7 +54,7 @@ def test_get_variable_value_raises(get_test_data_path):
     """
     var = BoutMakefileVariable(get_test_data_path.joinpath(
         'Makefile_only_comment'),
-        'VAR')
+                               'VAR')
 
     with pytest.raises(ReadMakefileError):
         var.get_variable_value()
