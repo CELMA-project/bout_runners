@@ -25,7 +25,7 @@ class BoutRunner:
         """
         Set the execution path.
 
-         Parameters
+        Parameters
         ----------
         execute_from_path : None or Path or str
             Root path of make file
@@ -35,8 +35,8 @@ class BoutRunner:
         if execute_from_path is None:
             execute_from_path = get_caller_dir()
         self.execute_from_path = execute_from_path
-        logging.debug(f'self.execute_from_path set '
-                      f'to {execute_from_path}')
+        logging.debug('self.execute_from_path set to %s',
+                      execute_from_path)
 
         self.make = None  # Set to make-obj in self.make
         self.bout_inp_src = None  # Set to Path in self.set_bout_inp_src
@@ -47,15 +47,15 @@ class BoutRunner:
 
     def _copy_inp(self):
         """Copy BOUT.inp from source to destination."""
-        if not self.bout_inp_src == self.destination:
+        if self.bout_inp_src != self.destination:
             src = self.bout_inp_src.joinpath('BOUT.inp')
             dst = self.destination.joinpath(src.name)
             shutil.copy(src, dst)
-            logging.debug(f'Copied {src} to {dst}')
+            logging.debug('Copied %s to %s', src, dst)
 
     def set_inp_src(self, inp_path=None):
         """
-        Set the path to the directory of the BOUT.inp source
+        Set the path to the directory of the BOUT.inp source.
 
         Parameters
         ----------
@@ -73,7 +73,8 @@ class BoutRunner:
             raise FileNotFoundError(f'{self.bout_inp_src} is not a '
                                     f'file')
 
-        logging.debug(f'self.bout_inp_src set to {self.bout_inp_src}')
+        logging.debug('self.bout_inp_src set to %s',
+                      self.bout_inp_src)
 
         # Copy file to destination if set
         if self.destination is not None:
@@ -98,7 +99,8 @@ class BoutRunner:
 
         self.destination = self.execute_from_path.joinpath(dst_path)
         self.destination.mkdir(exist_ok=True, parents=True)
-        logging.debug(f'self.destination set to {self.destination}')
+        logging.debug('self.destination set to %s',
+                      self.destination)
 
         self._copy_inp()
 
