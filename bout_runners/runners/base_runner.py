@@ -5,7 +5,8 @@ import logging
 import shutil
 from datetime import datetime
 from pathlib import Path
-from bout_runners.bookkeeper.creator import create_database
+from bout_runners.bookkeeper.bookkeeper import Bookkeeper
+from bout_runners.bookkeeper.bookkeeper_utils import get_db_path
 from bout_runners.make.make import MakeProject
 from bout_runners.utils.file_operations import get_caller_dir
 from bout_runners.utils.subprocesses_functions import run_subprocess
@@ -43,9 +44,11 @@ class BoutRunner:
         self.project_path = project_path
         logging.debug('self.project_path set to %s', project_path)
 
-        self.bookkeeper = \
-            create_database(project_path=project_path,
-                            database_root_path=database_root_path)
+        # Get database
+        db_path = get_db_path(project_path=project_path,
+                              database_root_path=database_root_path)
+        self.bookkeeper = Bookkeeper(db_path)
+
         self.make = None  # Set to make-obj in self.make
         self.bout_inp_src = None  # Set to Path in self.set_bout_inp_src
         self.destination = None  # Set to Path in self.set_destination

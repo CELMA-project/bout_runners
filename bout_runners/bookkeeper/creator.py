@@ -3,14 +3,13 @@
 
 from pathlib import Path
 from bout_runners.bookkeeper.bookkeeper_utils import \
-    obtain_project_parameters
+    obtain_project_parameters, get_db_path
 from bout_runners.bookkeeper.bookkeeper_utils import \
     get_create_table_statement
 from bout_runners.bookkeeper.bookkeeper_utils import \
     get_system_info_as_sql_type
 from bout_runners.bookkeeper.bookkeeper import Bookkeeper
 from bout_runners.runners.runner_utils import run_test_run
-from bout_runners.utils.file_operations import get_caller_dir
 
 
 def create_database(project_path=None,
@@ -25,47 +24,22 @@ def create_database(project_path=None,
     ----------
     project_path : None or Path or str
         Root path to the project (i.e. where the makefile is located)
+        If None the root caller directory will be used
     database_root_path : None or Path or str
         Root path of the database file
         If None, the path will be set to $HOME/BOUT_db
-
-    Returns
-    -------
-    bookkeeper : Bookkeeper
-        The bookkeeper object
 
     References
     ----------
     [1] https://www.databasestar.com/database-normalization/
     [2] http://www.bkent.net/Doc/simple5.htm
     """
-    if project_path is None:
-        project_path = get_caller_dir()
-
-    if database_root_path is None:
-        # NOTE: This will be changed when going to production
-        database_root_path = get_caller_dir()
-        # database_root_path = Path().home().joinpath('BOUT_db')
-
-    project_path = Path(project_path)
-    database_root_path = Path(database_root_path)
-
-    database_root_path.mkdir(exist_ok=True, parents=True)
-
-    # NOTE: sqlite does not support schemas (except through an
-    #       ephemeral ATTACH connection)
-    #       Thus we will make one database per project
-    # https://www.sqlite.org/lang_attach.html
-    # https://stackoverflow.com/questions/30897377/python-sqlite3-create-a-schema-without-having-to-use-a-second-database
-    schema = project_path.name
-    database_path = database_root_path.joinpath(f'{schema}.db')
+    database_path = get_db_path(database_root_path, project_path)
 
     # Create bookkeeper
     bookkeeper = Bookkeeper(database_path)
 
-    query_str = ('SELECT name FROM sqlite_master '
-                 '   WHERE type="table"')
-    table = bookkeeper.query(query_str)
+    table = table_created(bookkeeper)
 
     # Check if tables are created
     if len(table.index) == 0:
@@ -75,7 +49,22 @@ def create_database(project_path=None,
         create_parameter_tables(bookkeeper, project_path)
         create_run_table(bookkeeper)
 
-    return bookkeeper
+
+def table_created(bookkeeper):
+    """
+    Check if the table is created
+    Parameters
+    ----------
+    bookkeeper
+
+    Returns
+    -------
+
+    """
+    query_str = ('SELECT name FROM sqlite_master '
+                 '   WHERE type="table"')
+    table = bookkeeper.query(query_str)
+    return table
 
 
 def create_run_table(bookkeeper):

@@ -5,6 +5,8 @@ import ast
 import configparser
 import platform
 import re
+from pathlib import Path
+from bout_runners.utils.file_operations import get_caller_dir
 
 
 def obtain_project_parameters(settings_path):
@@ -160,3 +162,44 @@ def get_create_table_statement(table_name,
     create_statement = f'{create_statement[:-2]})'
 
     return create_statement
+
+
+def get_db_path(database_root_path, project_path):
+    """
+    Return the database path
+
+    Parameters
+    ----------
+    project_path : None or Path or str
+        Root path to the project (i.e. where the makefile is located)
+        If None the root caller directory will be used
+    database_root_path : None or Path or str
+        Root path of the database file
+        If None, the path will be set to $HOME/BOUT_db
+
+    Returns
+    -------
+    database_path : Path
+        Path to the database
+    """
+    if project_path is None:
+        project_path = get_caller_dir()
+
+    if database_root_path is None:
+        # NOTE: This will be changed when going to production
+        database_root_path = get_caller_dir()
+        # database_root_path = Path().home().joinpath('BOUT_db')
+
+    project_path = Path(project_path)
+    database_root_path = Path(database_root_path)
+
+    database_root_path.mkdir(exist_ok=True, parents=True)
+    # NOTE: sqlite does not support schemas (except through an
+    #       ephemeral ATTACH connection)
+    #       Thus we will make one database per project
+    # https://www.sqlite.org/lang_attach.html
+    # https://stackoverflow.com/questions/30897377/python-sqlite3-create-a-schema-without-having-to-use-a-second-database
+    schema = project_path.name
+    database_path = database_root_path.joinpath(f'{schema}.db')
+
+    return database_path
