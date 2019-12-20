@@ -3,7 +3,9 @@
 
 from pathlib import Path
 from bout_runners.bookkeeper.bookkeeper_utils import \
-    obtain_project_parameters, get_create_table_statement
+    obtain_project_parameters
+from bout_runners.bookkeeper.bookkeeper_utils import \
+    get_create_table_statement
 from bout_runners.bookkeeper.bookkeeper_utils import \
     get_system_info_as_sql_type
 from bout_runners.bookkeeper.bookkeeper import Bookkeeper
@@ -27,6 +29,11 @@ def create_database(project_path=None,
         Root path of the database file
         If None, the path will be set to $HOME/BOUT_db
 
+    Returns
+    -------
+    bookkeeper : Bookkeeper
+        The bookkeeper object
+
     References
     ----------
     [1] https://www.databasestar.com/database-normalization/
@@ -43,8 +50,7 @@ def create_database(project_path=None,
     project_path = Path(project_path)
     database_root_path = Path(database_root_path)
 
-    if not database_root_path.is_dir():
-        database_root_path.mkdir(exist_ok=True, parents=True)
+    database_root_path.mkdir(exist_ok=True, parents=True)
 
     # NOTE: sqlite does not support schemas (except through an
     #       ephemeral ATTACH connection)
@@ -68,6 +74,8 @@ def create_database(project_path=None,
         create_file_modification_table(bookkeeper)
         create_parameter_tables(bookkeeper, project_path)
         create_run_table(bookkeeper)
+
+    return bookkeeper
 
 
 def create_run_table(bookkeeper):

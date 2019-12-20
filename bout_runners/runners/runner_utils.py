@@ -21,7 +21,7 @@ def run_test_run(project_path, bout_inp_dir=None):
     settings_path : Path
         Path to the settings file
     """
-    runner = BoutRunner(execute_from_path=project_path)
+    runner = BoutRunner(project_path=project_path)
     runner.set_inp_src(bout_inp_dir)
     runner.set_destination('test_run')
 

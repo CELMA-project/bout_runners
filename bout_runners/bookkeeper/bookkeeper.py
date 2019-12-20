@@ -1,6 +1,7 @@
 """Module containing the Bookkeeper class."""
 
 
+import re
 import logging
 import contextlib
 import sqlite3
@@ -50,6 +51,11 @@ class Bookkeeper:
         # NOTE: The connection does not close after the 'with' statement
         #       Instead we use the context manager as described here
         #       https://stackoverflow.com/a/47501337/2786884
+
+        # Obtain the table name
+        pattern = r'CREATE TABLE (\w*)'
+        table_name = re.match(pattern, sql_statement).group(1)
+
         # Auto-closes connection
         with contextlib.closing(sqlite3.connect(
                 str(self.database_path))) as context:
@@ -59,6 +65,8 @@ class Bookkeeper:
                 with contextlib.closing(con.cursor()) as cur:
                     # Check if tables are present
                     cur.execute(sql_statement)
+
+        logging.info('Created table %s', table_name)
 
     def create_parameter_tables(self, parameter_dict):
         """

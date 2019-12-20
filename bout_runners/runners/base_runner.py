@@ -5,6 +5,7 @@ import logging
 import shutil
 from datetime import datetime
 from pathlib import Path
+from bout_runners.bookkeeper.creator import create_database
 from bout_runners.make.make import MakeProject
 from bout_runners.utils.file_operations import get_caller_dir
 from bout_runners.utils.subprocesses_functions import run_subprocess
@@ -21,23 +22,30 @@ class BoutRunner:
     >>> runner.run()
     """
 
-    def __init__(self, execute_from_path):
+    def __init__(self,
+                 project_path=None,
+                 database_root_path=None):
         """
-        Set the execution path.
+        Set the execution path and create the database.
 
         Parameters
         ----------
-        execute_from_path : None or Path or str
+        project_path : None or Path or str
             Root path of make file
             If None, the path of the path of the root caller will be
             used
+        database_root_path : None or Path or str
+            Root path of the database file
+            If None, the path will be set to $HOME/BOUT_db
         """
-        if execute_from_path is None:
-            execute_from_path = get_caller_dir()
-        self.execute_from_path = execute_from_path
-        logging.debug('self.execute_from_path set to %s',
-                      execute_from_path)
+        if project_path is None:
+            project_path = get_caller_dir()
+        self.project_path = project_path
+        logging.debug('self.project_path set to %s', project_path)
 
+        self.bookkeeper = \
+            create_database(project_path=project_path,
+                            database_root_path=database_root_path)
         self.make = None  # Set to make-obj in self.make
         self.bout_inp_src = None  # Set to Path in self.set_bout_inp_src
         self.destination = None  # Set to Path in self.set_destination
@@ -60,14 +68,14 @@ class BoutRunner:
         Parameters
         ----------
         inp_path : None or str or Path
-            The path to BOUT.inp (relative to self.execute_from_path)
+            The path to BOUT.inp (relative to self.project_path)
             If None, data/BOUT.inp will be used
         """
         bout_inp_src = \
             Path(inp_path) if inp_path is not None else Path('data')
 
         self.bout_inp_src = \
-            self.execute_from_path.joinpath(bout_inp_src)
+            self.project_path.joinpath(bout_inp_src)
 
         if not self.bout_inp_src.is_file:
             raise FileNotFoundError(f'{self.bout_inp_src} is not a '
@@ -90,14 +98,14 @@ class BoutRunner:
         ----------
         dst_path : None or str or Path
             The path to the destination (relative to
-            self.execute_from_path)
+            self.project_path)
             If None,the date will be set
         """
         time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S_%f")
         dst_path = \
             Path(dst_path) if dst_path is not None else Path(time)
 
-        self.destination = self.execute_from_path.joinpath(dst_path)
+        self.destination = self.project_path.joinpath(dst_path)
         self.destination.mkdir(exist_ok=True, parents=True)
         logging.debug('self.destination set to %s',
                       self.destination)
@@ -147,7 +155,7 @@ class BoutRunner:
 
     def make_project(self):
         """Set the make object and Make the project."""
-        self.make = MakeProject(self.execute_from_path)
+        self.make = MakeProject(self.project_path)
         self.make.run_make()
 
     def run(self):
@@ -169,4 +177,13 @@ class BoutRunner:
         command = f'{mpi_cmd} {nproc_str} ./{self.make.exec_name}' \
                   f'{dst_str}{options_str}'
 
-        run_subprocess(command, path=self.execute_from_path)
+        # FIXME: Create database entry
+        # Take everything from default settings
+        # Update with whatever is in self.options
+        # Parameters
+        # Update file_modification
+        # System info
+        # Run
+        run_subprocess(command, path=self.project_path)
+        # Toggle status
+        # FIXME: Update status

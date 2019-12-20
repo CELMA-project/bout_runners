@@ -52,7 +52,7 @@ def test_single_run(make_tmp_test_run_dir):
     bout_inp_dir = make_tmp_test_run_dir
     project_path = bout_inp_dir.parent
 
-    runner = BoutRunner(execute_from_path=project_path)
+    runner = BoutRunner(project_path=project_path)
     runner.set_inp_src(bout_inp_dir)
     runner.set_destination(bout_inp_dir)
     runner.set_split(1)
