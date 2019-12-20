@@ -56,7 +56,7 @@ def test_single_run(make_tmp_settings_run_dir):
     runner.set_inp_src(bout_inp_dir)
     runner.set_destination(bout_inp_dir)
     runner.set_split(1)
-    runner.set_options({'global': {'nout': 0}})
+    runner.set_parameter_dict({'global': {'nout': 0}})
     runner.run()
 
     assert bout_inp_dir.joinpath('BOUT.dmp.0.nc').is_file()

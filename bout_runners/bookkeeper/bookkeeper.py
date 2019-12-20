@@ -80,22 +80,22 @@ class Bookkeeper:
                     # Check if tables are present
                     cur.execute(sql_statement)
 
-    def create_parameter_tables(self, parameter_dict):
+    def create_parameter_tables(self, parameters_as_sql_types):
         """
         Create a table for each BOUT.settings section and a join table.
 
         Parameters
         ----------
-        parameter_dict : dict
-            The dictionary on the same form as the output of
-            bout_runners.bookkeeper.obtain_project_parameters
+        parameters_as_sql_types : dict
+            The dictionary on the form
+            >>> {'section': {'parameter': 'value_type'}}
 
         Notes
         -----
         All `:` will be replaced by `_` in the section names
         """
         parameters_foreign_keys = dict()
-        for section in parameter_dict.keys():
+        for section in parameters_as_sql_types.keys():
             # Replace bad characters for SQL
             section_name = section.replace(':', '_')
             # Generate foreign keys for the parameters table
@@ -104,7 +104,7 @@ class Bookkeeper:
 
             columns = dict()
             for parameter, value_type in \
-                    parameter_dict[section].items():
+                    parameters_as_sql_types[section].items():
                 # Generate the columns
                 columns[parameter] = value_type
 
@@ -120,7 +120,70 @@ class Bookkeeper:
             foreign_keys=parameters_foreign_keys)
         self.create_table(parameters_statement)
 
-    def capture_data(self, project_path, bout_inp_dir, options):
+    def insert_into_parameter_tables(self, parameters_dict):
+        """
+        Insert the parameters into a the parameter tables.
+
+        Parameters
+        ----------
+        parameters_dict : dict
+            The dictionary on the form
+            >>> {'section': {'parameter': 'value'}}
+
+        Notes
+        -----
+        All `:` will be replaced by `_` in the section names
+        """
+        parameters_foreign_keys = dict()
+        for section in parameters_dict.keys():
+            # Replace bad characters for SQL
+            section_name = section.replace(':', '_')
+
+            # FIXME: YOU ARE HERE
+            # FIXME: Check if this combination already exist,
+            #  then make an entry
+            # About getting the last key
+            # https://stackoverflow.com/questions/3442033/sqlite-how-to-get-value-of-auto-increment-primary-key-after-insert-other-than
+            # NOTE: About SELECT 1
+            # https://stackoverflow.com/questions/7039938/what-does-select-1-from-do
+            # NOTE: About checking for existence
+            # https://stackoverflow.com/questions/9755860/valid-query-to-check-if-row-exists-in-sqlite3
+# SELECT
+# 	rowid
+# FROM
+# 	people
+# WHERE
+# 	EXISTS(
+# 	  SELECT 1
+# 	  FROM people
+# 	  WHERE first_name="John"
+# 	  AND last_name="Doe");
+
+            # FIXME: You didn't start on the stuff below yet
+
+            # Generate foreign keys for the parameters table
+            parameters_foreign_keys[f'{section_name}_id'] =\
+                (section_name, 'id')
+
+            columns = dict()
+            for parameter, value_type in \
+                    parameters_dict[section].items():
+                # Generate the columns
+                columns[parameter] = value_type
+
+            # Creat the section table
+            section_statement = \
+                get_create_table_statement(table_name=section_name,
+                                           columns=columns)
+            self.create_table(section_statement)
+
+        # Create the join table
+        parameters_statement = get_create_table_statement(
+            table_name='parameters',
+            foreign_keys=parameters_foreign_keys)
+        self.create_table(parameters_statement)
+
+    def capture_data(self, project_path, bout_inp_dir, parameters_dict):
         """
         Capture data from a run.
 
@@ -130,7 +193,7 @@ class Bookkeeper:
             Root path of project (make file)
         bout_inp_dir : Path
             Path to the directory of BOUT.inp currently in use
-        options : dict of str, dict
+        parameters_dict : dict of str, dict
             Options on the form
             >>> {'global':{'append': False, 'nout': 5},
             ...  'mesh':  {'nx': 4},
@@ -143,9 +206,13 @@ class Bookkeeper:
         # System info
         # Run
 
-        parameters = extract_parameters_in_use(project_path,
-                                               bout_inp_dir,
-                                               options)
+        parameters_dict = extract_parameters_in_use(project_path,
+                                                    bout_inp_dir,
+                                                    parameters_dict)
+
+        self.insert_into_parameter_tables(parameters_dict)
+
+
 
         purchases = [('2006-03-28', 'BUY', 'IBM', 1000, 45.00),
                      ('2006-04-05', 'BUY', 'MSFT', 1000, 72.00),

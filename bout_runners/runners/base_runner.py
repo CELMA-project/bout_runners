@@ -54,8 +54,8 @@ class BoutRunner:
         self.bout_inp_src = None  # Set to Path in self.set_bout_inp_src
         self.destination = None  # Set to Path in self.set_destination
         self.nproc = None  # Set in set_split
-        self.options = None  # Set in self.set_options
-        self.options_str = None  # Set in self.set_options
+        self.parameter_dict = None  # Set in self.set_parameter_dict
+        self.options_str = None  # Set in self.set_parameter_dict
 
     def _copy_inp(self):
         """Copy BOUT.inp from source to destination."""
@@ -127,34 +127,34 @@ class BoutRunner:
         """
         self.nproc = nproc
 
-    def set_options(self, options):
+    def set_parameter_dict(self, parameter_dict):
         """
-        Set the options.
+        Set the parameter_dict.
 
-        The options set here will override those found in the
+        The parameter_dict set here will override those found in the
         BOUT.inp file
 
         Parameters
         ----------
-        options : dict of str, dict
+        parameter_dict : dict of str, dict
             Options on the form
             >>> {'global':{'append': False, 'nout': 5},
             ...  'mesh':  {'nx': 4},
             ...  'section_in_BOUT_inp': {'some_variable': 'some_value'}}
         """
-        self.options = options
-        sections = list(self.options.keys())
+        self.parameter_dict = parameter_dict
+        sections = list(self.parameter_dict.keys())
 
         # Generate the string
         self.options_str = ''
         if 'global' in sections:
             sections.remove('global')
-            global_option = self.options['global']
+            global_option = self.parameter_dict['global']
             for key, val in global_option.items():
                 self.options_str += f'{key}={val} '
 
         for section in sections:
-            for key, val in options.items():
+            for key, val in parameter_dict.items():
                 self.options_str += f'{section}.{key}={val} '
 
     def make_project(self):
@@ -185,7 +185,8 @@ class BoutRunner:
         if db_ready:
             self.bookkeeper.capture_data(self.project_path,
                                          self.destination,
-                                         self.options)
+                                         self.parameter_dict)
+            # FIXME: Check if parameters are already run
         else:
             logging.warning('Database %s has no entries and is not '
                             'ready. '

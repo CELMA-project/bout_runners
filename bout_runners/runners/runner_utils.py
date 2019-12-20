@@ -33,7 +33,7 @@ def run_settings_run(project_path, bout_inp_dir=None):
 
     if not settings_path.is_file():
         runner.set_split(1)
-        runner.set_options({'global': {'nout': 0}})
+        runner.set_parameter_dict({'global': {'nout': 0}})
         runner.run()
 
     return settings_path

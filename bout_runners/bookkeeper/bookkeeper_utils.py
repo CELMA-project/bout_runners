@@ -23,7 +23,7 @@ def obtain_project_parameters(settings_path):
     parameter_dict : dict
         Dictionary containing the parameters given in BOUT.settings
         On the form
-        >>> {'section': {'parameter': 'value_type'}}
+        >>> {'section': {'parameter': 'value'}}
 
     Notes
     -----
@@ -36,12 +36,6 @@ def obtain_project_parameters(settings_path):
     4. The section `run` will be dropped due to bout_runners own
        `run` table
     """
-    # FIXME:
-    type_map = {'bool': 'INTEGER',  # No bool type in SQLite
-                'float': 'REAL',
-                'int': 'INTEGER',
-                'str': 'TEXT'}
-
     # The settings file lacks a header for the global parameter
     # Therefore, we add add the header [global]
     with settings_path.open('r') as settings_file:
@@ -68,11 +62,11 @@ def obtain_project_parameters(settings_path):
 
             # If type is not found, type is str
             try:
-                val_type = type(ast.literal_eval(stripped_val))
+                val = ast.literal_eval(stripped_val)
             except (SyntaxError, ValueError):
-                val_type = str
+                val = stripped_val
 
-            parameter_dict[section][key] = type_map[val_type.__name__]
+            parameter_dict[section][key] = val
 
     # NOTE: Bug in .settings: -d path is captured with # not in use
     bout_inp_dir = settings_path.parent
@@ -86,6 +80,44 @@ def obtain_project_parameters(settings_path):
     parameter_dict.pop('run')
 
     return parameter_dict
+
+
+def cast_parameters_to_sql_type(parameter_dict):
+    """
+    Return the project parameters from the settings file.
+
+    Parameters
+    ----------
+    parameter_dict : dict
+        Dictionary containing the parameters given in BOUT.settings
+        On the form
+        >>> {'section': {'parameter': 'value'}}
+
+    Returns
+    -------
+    parameter_dict_sql_types : dict
+        Dictionary containing the parameters given in BOUT.settings
+        On the form
+        >>> {'section': {'parameter': 'value_type'}}
+    """
+    type_map = {'bool': 'INTEGER',  # No bool type in SQLite
+                'float': 'REAL',
+                'int': 'INTEGER',
+                'str': 'TEXT'}
+
+    parameter_dict_sql_types = parameter_dict.copy()
+
+    for section in parameter_dict.keys():
+        for key, val in parameter_dict[section].items():
+            # If type is not found, type is str
+            try:
+                val_type = type(ast.literal_eval(val))
+            except (SyntaxError, ValueError):
+                val_type = str
+
+            parameter_dict[section][key] = type_map[val_type.__name__]
+
+    return parameter_dict_sql_types
 
 
 def get_system_info_as_sql_type():
@@ -246,7 +278,7 @@ def extract_parameters_in_use(project_path, bout_inp_dir, options):
     Returns
     -------
     parameters : dict of str, dict
-        Parameters on the same form as `options`
+        Parameters on the same form as `parameter_dict`
     """
     # Obtain the default parameters
     settings_path = project_path.joinpath('settings_run',
@@ -259,7 +291,7 @@ def extract_parameters_in_use(project_path, bout_inp_dir, options):
     # Update with parameters from BOUT.inp
     bout_inp_path = bout_inp_dir.joinpath('BOUT.inp')
     parameters.update(obtain_project_parameters(bout_inp_path))
-    # Update with parameters from options
+    # Update with parameters from parameter_dict
     parameters.update(options)
 
     return parameters

@@ -5,6 +5,8 @@ import logging
 from pathlib import Path
 from bout_runners.bookkeeper.bookkeeper_utils import \
     obtain_project_parameters
+from bout_runners.bookkeeper.bookkeeper_utils import \
+    cast_parameters_to_sql_type
 from bout_runners.bookkeeper.bookkeeper_utils import get_db_path
 from bout_runners.bookkeeper.bookkeeper_utils import tables_created
 from bout_runners.bookkeeper.bookkeeper_utils import \
@@ -92,7 +94,9 @@ def create_parameter_tables(bookkeeper, project_path):
     """
     settings_path = run_settings_run(project_path, bout_inp_dir=None)
     parameter_dict = obtain_project_parameters(settings_path)
-    bookkeeper.create_parameter_tables(parameter_dict)
+    parameter_dict_sql_types = \
+        cast_parameters_to_sql_type(parameter_dict)
+    bookkeeper.create_parameter_tables(parameter_dict_sql_types)
 
 
 def create_file_modification_table(bookkeeper):

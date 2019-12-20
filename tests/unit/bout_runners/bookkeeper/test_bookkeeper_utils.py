@@ -3,12 +3,14 @@
 from bout_runners.bookkeeper.bookkeeper_utils import \
     obtain_project_parameters
 from bout_runners.bookkeeper.bookkeeper_utils import \
+    cast_parameters_to_sql_type
+from bout_runners.bookkeeper.bookkeeper_utils import \
     get_system_info_as_sql_type
 from bout_runners.bookkeeper.bookkeeper_utils import \
     get_create_table_statement
 
 
-def test_obtain_project_parameters(get_test_data_path):
+def test_cast_parameters_to_sql_type(get_test_data_path):
     """
     Test that obtain_project_parameters returns expected output.
 
@@ -19,10 +21,11 @@ def test_obtain_project_parameters(get_test_data_path):
     """
     settings_path = get_test_data_path.joinpath('BOUT.settings')
     parameter_dict = obtain_project_parameters(settings_path)
-    assert isinstance(parameter_dict, dict)
-    assert 'global' in parameter_dict.keys()
-    assert isinstance(parameter_dict['global'], dict)
-    assert parameter_dict['global']['append'] == 'INTEGER'
+    parameter_as_sql = cast_parameters_to_sql_type(parameter_dict)
+    assert isinstance(parameter_as_sql, dict)
+    assert 'global' in parameter_as_sql.keys()
+    assert isinstance(parameter_as_sql['global'], dict)
+    assert parameter_as_sql['global']['append'] == 'INTEGER'
 
 
 def test_get_system_info_as_sql_type():
