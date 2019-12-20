@@ -59,8 +59,10 @@ class MakeProject:
         """
         if makefile_root_path is None:
             makefile_root_path = get_caller_dir()
-
         self.makefile_root_path = Path(makefile_root_path)
+        logging.debug('self.makefile_root_path set to %s',
+                      makefile_root_path)
+
         self.makefile_name = makefile_name
 
         # Will be filled

@@ -3,7 +3,7 @@
 
 import shutil
 import pytest
-from bout_runners.runners.base_runner import single_run
+from bout_runners.runners.base_runner import BoutRunner
 
 
 @pytest.fixture(scope='function', name='make_tmp_test_run_dir')
@@ -52,9 +52,11 @@ def test_single_run(make_tmp_test_run_dir):
     bout_inp_dir = make_tmp_test_run_dir
     project_path = bout_inp_dir.parent
 
-    single_run(execute_from_path=project_path,
-               bout_inp_dir=bout_inp_dir,
-               nproc=1,
-               options='nout=0')
+    runner = BoutRunner(execute_from_path=project_path)
+    runner.set_inp_src(bout_inp_dir)
+    runner.set_destination(bout_inp_dir)
+    runner.set_split(1)
+    runner.set_options({'global': {'nout': 0}})
+    runner.run()
 
     assert bout_inp_dir.joinpath('BOUT.dmp.0.nc').is_file()
