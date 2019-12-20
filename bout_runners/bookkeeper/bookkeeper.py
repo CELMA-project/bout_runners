@@ -8,6 +8,8 @@ import sqlite3
 import pandas as pd
 from bout_runners.bookkeeper.bookkeeper_utils import \
     get_create_table_statement
+from bout_runners.bookkeeper.bookkeeper_utils import \
+    extract_parameters_in_use
 
 
 class Bookkeeper:
@@ -39,23 +41,35 @@ class Bookkeeper:
         self.database_path = database_path
         logging.info('Database path set to %s', self.database_path)
 
-    def create_table(self, sql_statement):
+    def create_table(self, table_str):
         """
         Create a table in the database.
 
         Parameters
         ----------
-        sql_statement : str
+        table_str : str
             The query to execute
+        """
+        # Obtain the table name
+        pattern = r'CREATE TABLE (\w*)'
+        table_name = re.match(pattern, table_str).group(1)
+
+        self.execute_statement(table_str)
+
+        logging.info('Created table %s', table_name)
+
+    def execute_statement(self, sql_statement):
+        """
+        Execute a statement in the database.
+
+        Parameters
+        ----------
+        sql_statement : str
+            The statement execute
         """
         # NOTE: The connection does not close after the 'with' statement
         #       Instead we use the context manager as described here
         #       https://stackoverflow.com/a/47501337/2786884
-
-        # Obtain the table name
-        pattern = r'CREATE TABLE (\w*)'
-        table_name = re.match(pattern, sql_statement).group(1)
-
         # Auto-closes connection
         with contextlib.closing(sqlite3.connect(
                 str(self.database_path))) as context:
@@ -66,8 +80,6 @@ class Bookkeeper:
                     # Check if tables are present
                     cur.execute(sql_statement)
 
-        logging.info('Created table %s', table_name)
-
     def create_parameter_tables(self, parameter_dict):
         """
         Create a table for each BOUT.settings section and a join table.
@@ -76,8 +88,7 @@ class Bookkeeper:
         ----------
         parameter_dict : dict
             The dictionary on the same form as the output of
-            FIXME: Update Path
-            bout_runners.obtain_project_parameters
+            bout_runners.bookkeeper.obtain_project_parameters
 
         Notes
         -----
@@ -109,6 +120,44 @@ class Bookkeeper:
             foreign_keys=parameters_foreign_keys)
         self.create_table(parameters_statement)
 
+    def capture_data(self, project_path, bout_inp_dir, options):
+        """
+        Capture data from a run.
+
+        Parameters
+        ----------
+        project_path : Path
+            Root path of project (make file)
+        bout_inp_dir : Path
+            Path to the directory of BOUT.inp currently in use
+        options : dict of str, dict
+            Options on the form
+            >>> {'global':{'append': False, 'nout': 5},
+            ...  'mesh':  {'nx': 4},
+            ...  'section_in_BOUT_inp': {'some_variable': 'some_value'}}
+        """
+
+        # FIXME: Create database entry
+        # Parameters
+        # Update file_modification
+        # System info
+        # Run
+
+        parameters = extract_parameters_in_use(project_path,
+                                               bout_inp_dir,
+                                               options)
+
+        purchases = [('2006-03-28', 'BUY', 'IBM', 1000, 45.00),
+                     ('2006-04-05', 'BUY', 'MSFT', 1000, 72.00),
+                     ('2006-04-06', 'SELL', 'IBM', 500, 53.00),
+                     ]
+        c.executemany('INSERT INTO stocks VALUES (?,?,?,?,?)',
+                      purchases)
+
+    def update_status(self):
+        """Updates the status"""
+        raise NotImplementedError('To be implemented')
+
     def query(self, query_str):
         """
         Make a query to the database.
@@ -132,3 +181,20 @@ class Bookkeeper:
                 str(self.database_path))) as con:
             table = pd.read_sql_query(query_str, con)
         return table
+
+    def insert(self, insert_str):
+        """
+       Insert to the database.
+
+        Parameters
+        ----------
+        insert_str : str
+            The query to execute
+        """
+        # Obtain the table name
+        pattern = r'INSERT INTO (\w*)'
+        table_name = re.match(pattern, insert_str).group(1)
+
+        self.execute_statement(insert_str)
+
+        logging.info('Made insertion to %s', table_name)

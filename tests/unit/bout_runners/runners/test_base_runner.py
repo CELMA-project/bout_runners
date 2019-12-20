@@ -6,8 +6,8 @@ import pytest
 from bout_runners.runners.base_runner import BoutRunner
 
 
-@pytest.fixture(scope='function', name='make_tmp_test_run_dir')
-def fixture_make_tmp_test_run_dir(make_project):
+@pytest.fixture(scope='function', name='make_tmp_settings_run_dir')
+def fixture_make_tmp_settings_run_dir(make_project):
     """
     Make a directory for testing a single run.
 
@@ -25,7 +25,7 @@ def fixture_make_tmp_test_run_dir(make_project):
     project_root = make_project
     bout_inp_path = project_root.joinpath('data', 'BOUT.inp')
 
-    tmp_bout_inp_dir = project_root.joinpath('tmp_test_run')
+    tmp_bout_inp_dir = project_root.joinpath('tmp_settings_run')
     tmp_bout_inp_dir.mkdir(exist_ok=True)
 
     shutil.copy(bout_inp_path, tmp_bout_inp_dir.joinpath('BOUT.inp'))
@@ -35,21 +35,21 @@ def fixture_make_tmp_test_run_dir(make_project):
     shutil.rmtree(tmp_bout_inp_dir)
 
 
-def test_single_run(make_tmp_test_run_dir):
+def test_single_run(make_tmp_settings_run_dir):
     """
     Test that it is possible to perform a single run.
 
     Parameters
     ----------
-    make_tmp_test_run_dir : Path
+    make_tmp_settings_run_dir : Path
         Path to the BOUT.inp directory
 
     See Also
     --------
-    make_tmp_test_run_dir : Fixture which makes a directory for the
+    make_tmp_settings_run_dir : Fixture which makes a directory for the
     test run
     """
-    bout_inp_dir = make_tmp_test_run_dir
+    bout_inp_dir = make_tmp_settings_run_dir
     project_path = bout_inp_dir.parent
 
     runner = BoutRunner(project_path=project_path)

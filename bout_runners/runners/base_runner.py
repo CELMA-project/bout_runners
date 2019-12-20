@@ -7,6 +7,7 @@ from datetime import datetime
 from pathlib import Path
 from bout_runners.bookkeeper.bookkeeper import Bookkeeper
 from bout_runners.bookkeeper.bookkeeper_utils import get_db_path
+from bout_runners.bookkeeper.bookkeeper_utils import tables_created
 from bout_runners.make.make import MakeProject
 from bout_runners.utils.file_operations import get_caller_dir
 from bout_runners.utils.subprocesses_functions import run_subprocess
@@ -180,13 +181,17 @@ class BoutRunner:
         command = f'{mpi_cmd} {nproc_str} ./{self.make.exec_name}' \
                   f'{dst_str}{options_str}'
 
-        # FIXME: Create database entry
-        # Take everything from default settings
-        # Update with whatever is in self.options
-        # Parameters
-        # Update file_modification
-        # System info
-        # Run
+        db_ready = tables_created(self.bookkeeper)
+        if db_ready:
+            self.bookkeeper.capture_data(self.project_path,
+                                         self.destination,
+                                         self.options)
+        else:
+            logging.warning('Database %s has no entries and is not '
+                            'ready. '
+                            'No data capture will be made.',
+                            self.bookkeeper.database_path)
+
         run_subprocess(command, path=self.project_path)
-        # Toggle status
-        # FIXME: Update status
+        if db_ready:
+            self.bookkeeper.update_status()

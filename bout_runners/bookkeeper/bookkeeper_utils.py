@@ -36,6 +36,7 @@ def obtain_project_parameters(settings_path):
     4. The section `run` will be dropped due to bout_runners own
        `run` table
     """
+    # FIXME:
     type_map = {'bool': 'INTEGER',  # No bool type in SQLite
                 'float': 'REAL',
                 'int': 'INTEGER',
@@ -203,3 +204,62 @@ def get_db_path(database_root_path, project_path):
     database_path = database_root_path.joinpath(f'{schema}.db')
 
     return database_path
+
+
+def tables_created(bookkeeper):
+    """
+    Check if the tables is created in the database.
+
+    Parameters
+    ----------
+    bookkeeper : Bookkeeper
+        The Bookkeeper object
+
+    Returns
+    -------
+    bool
+        Whether or not the tables are created
+    """
+    query_str = ('SELECT name FROM sqlite_master '
+                 '   WHERE type="table"')
+
+    table = bookkeeper.query(query_str)
+    return len(table.index) != 0
+
+
+def extract_parameters_in_use(project_path, bout_inp_dir, options):
+    """
+    Extract parameters that will be used in a run.
+
+    Parameters
+    ----------
+    project_path : Path
+        Root path of project (make file)
+    bout_inp_dir : Path
+        Path to the directory of BOUT.inp currently in use
+    options : dict of str, dict
+        Options on the form
+        >>> {'global':{'append': False, 'nout': 5},
+        ...  'mesh':  {'nx': 4},
+        ...  'section_in_BOUT_inp': {'some_variable': 'some_value'}}
+
+    Returns
+    -------
+    parameters : dict of str, dict
+        Parameters on the same form as `options`
+    """
+    # Obtain the default parameters
+    settings_path = project_path.joinpath('settings_run',
+                                          'BOUT.settings')
+    if not settings_path.is_file():
+        FileNotFoundError(f'{settings_path} not found. It can be '
+                          f'created by running '
+                          f'bout_runners.runners.run_settings_run')
+    parameters = obtain_project_parameters(settings_path)
+    # Update with parameters from BOUT.inp
+    bout_inp_path = bout_inp_dir.joinpath('BOUT.inp')
+    parameters.update(obtain_project_parameters(bout_inp_path))
+    # Update with parameters from options
+    parameters.update(options)
+
+    return parameters

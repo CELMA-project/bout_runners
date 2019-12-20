@@ -1,10 +1,11 @@
 """Module containing utils only used in the runners package."""
 
 
+import logging
 from bout_runners.runners.base_runner import BoutRunner
 
 
-def run_test_run(project_path, bout_inp_dir=None):
+def run_settings_run(project_path, bout_inp_dir=None):
     """
     Perform a test run.
 
@@ -23,7 +24,10 @@ def run_test_run(project_path, bout_inp_dir=None):
     """
     runner = BoutRunner(project_path=project_path)
     runner.set_inp_src(bout_inp_dir)
-    runner.set_destination('test_run')
+    runner.set_destination('settings_run')
+    logging.info('Performing a run to obtaining settings in %. '
+                 'Please do not modify this directory',
+                 runner.destination)
 
     settings_path = runner.destination.joinpath('BOUT.settings')
 

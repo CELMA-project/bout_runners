@@ -1,15 +1,18 @@
 """Contains modules to create database and tables."""
 
 
+import logging
 from pathlib import Path
 from bout_runners.bookkeeper.bookkeeper_utils import \
-    obtain_project_parameters, get_db_path
+    obtain_project_parameters
+from bout_runners.bookkeeper.bookkeeper_utils import get_db_path
+from bout_runners.bookkeeper.bookkeeper_utils import tables_created
 from bout_runners.bookkeeper.bookkeeper_utils import \
     get_create_table_statement
 from bout_runners.bookkeeper.bookkeeper_utils import \
     get_system_info_as_sql_type
 from bout_runners.bookkeeper.bookkeeper import Bookkeeper
-from bout_runners.runners.runner_utils import run_test_run
+from bout_runners.runners.runner_utils import run_settings_run
 
 
 def create_database(project_path=None,
@@ -34,37 +37,21 @@ def create_database(project_path=None,
     [1] https://www.databasestar.com/database-normalization/
     [2] http://www.bkent.net/Doc/simple5.htm
     """
+    logging.info('Preparing database')
     database_path = get_db_path(database_root_path, project_path)
 
     # Create bookkeeper
     bookkeeper = Bookkeeper(database_path)
 
-    table = table_created(bookkeeper)
-
     # Check if tables are created
-    if len(table.index) == 0:
+    if tables_created(bookkeeper):
         create_system_info_table(bookkeeper)
         create_split_table(bookkeeper)
         create_file_modification_table(bookkeeper)
         create_parameter_tables(bookkeeper, project_path)
         create_run_table(bookkeeper)
 
-
-def table_created(bookkeeper):
-    """
-    Check if the table is created
-    Parameters
-    ----------
-    bookkeeper
-
-    Returns
-    -------
-
-    """
-    query_str = ('SELECT name FROM sqlite_master '
-                 '   WHERE type="table"')
-    table = bookkeeper.query(query_str)
-    return table
+    logging.info('Database ready')
 
 
 def create_run_table(bookkeeper):
@@ -103,7 +90,7 @@ def create_parameter_tables(bookkeeper, project_path):
     project_path : Path
         Path to the project
     """
-    settings_path = run_test_run(project_path, bout_inp_dir=None)
+    settings_path = run_settings_run(project_path, bout_inp_dir=None)
     parameter_dict = obtain_project_parameters(settings_path)
     bookkeeper.create_parameter_tables(parameter_dict)
 
