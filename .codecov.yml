@@ -1,0 +1,33 @@
+# NOTE: codecov needs to be installed
+#       see https://github.com/apps/codecov
+#       You also need to grant access through
+#       https://github.com/settings/applications
+codecov:
+  notify:
+    require_ci_to_pass: yes # require the build to pass before submitting notifications
+
+coverage:
+  precision: 2       # how many decimal places to display in the UI: 0 <= value <= 4
+  round: down        # how coverage is rounded: down/up/nearest
+  range: "0...100"   # custom range of coverage colors from red -> yellow -> green
+
+  status:
+    project:             # measuring overall project coverage
+      default:           # context
+        enabled: yes     # must be yes|true to enable this status
+        target: auto     # specify the target coverage for each commit status
+                               #   option: "auto" (must increase from parent commit or pull request base)
+        threshold: 1%    # allowed to drop X% and still result in a "success" commit status
+
+parsers:
+  gcov:
+    branch_detection:
+      conditional: yes
+      loop: yes
+      method: no
+      macro: no
+
+comment:
+  layout: "header, diff"
+  behavior: default
+  require_changes: no
