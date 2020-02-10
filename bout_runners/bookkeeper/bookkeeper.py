@@ -334,18 +334,21 @@ class Bookkeeper:
         # https://stackoverflow.com/questions/9755860/valid-query-to-check-if-row-exists-in-sqlite3
         # NOTE: About SELECT 1
         # https://stackoverflow.com/questions/7039938/what-does-select-1-from-do
+        # FIXME: You are here: Parse the entries_dict
+        # FIXME: pylint
+        # FIXME: Unittests
+        where_statement = ('	      WHERE first_name="John"\n'
+                           '	      AND last_name="Doe"')
         query_str = \
-            ('SELECT rowid\n'
-             'FROM people\n'
-             'WHERE\n'
-             '    EXISTS(\n'
-             '        SELECT 1\n'
-             '	      FROM people\n'
-             '	      WHERE first_name="John"\n'
-             '	      AND last_name="Doe")')
+            (f'SELECT rowid\n'
+             f'FROM {table_name}\n'
+             f'WHERE\n'
+             f'    EXISTS(\n'
+             f'       SELECT 1\n'
+             f'	      FROM {table_name}\n{where_statement})')
 
-        df = self.query(query_str)
-        row_id = None if df.empty else df.loc[0, 'rowid']
+        table = self.query(query_str)
+        row_id = None if table.empty else table.loc[0, 'rowid']
 
         return row_id
 
