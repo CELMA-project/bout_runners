@@ -176,19 +176,30 @@ def get_create_table_statement(table_name,
 
     if columns is not None:
         for name, sql_type in columns.items():
-            create_statement += f'    {name} {sql_type},\n'
+            create_statement += f'    {name} {sql_type}'
+            if name == 'stop':
+                # The stop parameter is not know during a run start
+                nullable = ',\n'
+            else:
+                nullable = ' NOT NULL,\n'
+            create_statement += nullable
 
     if foreign_keys is not None:
         # Create the key as column
         # NOTE: All keys are integers
         for name in foreign_keys.keys():
-            create_statement += f'    {name} INTEGER,\n'
+            create_statement += f'    {name} INTEGER NOT NULL,\n'
 
         # Add constraint
         for name, (f_table_name, key_in_table) in foreign_keys.items():
+            # If the parent is updated or deleted, we would like the
+            # same effect to apply to its child (thereby the CASCADE
+            # parameter)
             create_statement += \
                 (f'    FOREIGN KEY({name}) \n'
-                 f'        REFERENCES {f_table_name}({key_in_table}),'
+                 f'        REFERENCES {f_table_name}({key_in_table})\n'
+                 f'            ON UPDATE CASCADE\n'
+                 f'            ON DELETE CASCADE,'
                  f'\n')
 
     # Replace last comma with )
@@ -279,6 +290,7 @@ def extract_parameters_in_use(project_path, bout_inp_dir, options):
     -------
     parameters : dict of str, dict
         Parameters on the same form as `parameter_dict`
+        (from obtain_project_parameters)
     """
     # Obtain the default parameters
     settings_path = project_path.joinpath('settings_run',
@@ -295,3 +307,33 @@ def extract_parameters_in_use(project_path, bout_inp_dir, options):
     parameters.update(options)
 
     return parameters
+
+
+def create_insert_string(field_names, table_name):
+    """
+    Create a question mark style string for database insertions.
+
+    Values must be provided separately in the execution statement
+
+    Parameters
+    ----------
+    field_names : array-like
+        Names of the fields to populate
+    table_name : str
+        Name of the table to use for the insertion
+
+    Returns
+    -------
+    insert_str : str
+        The string to be used for insertion
+
+    References
+    ----------
+    [1] https://stackoverflow.com/a/14108554/2786884
+    """
+    columns = ', '.join(field_names)
+    placeholders = ', '.join('?' * len(field_names))
+    insert_str = f'INSERT INTO {table_name} ' \
+                 f'({columns}) ' \
+                 f'VALUES ({placeholders})'
+    return insert_str

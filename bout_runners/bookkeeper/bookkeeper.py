@@ -9,6 +9,8 @@ import pandas as pd
 from bout_runners.bookkeeper.bookkeeper_utils import \
     get_create_table_statement
 from bout_runners.bookkeeper.bookkeeper_utils import \
+    create_insert_string
+from bout_runners.bookkeeper.bookkeeper_utils import \
     extract_parameters_in_use
 
 
@@ -58,7 +60,7 @@ class Bookkeeper:
 
         logging.info('Created table %s', table_name)
 
-    def execute_statement(self, sql_statement):
+    def execute_statement(self, sql_statement, *parameters):
         """
         Execute a statement in the database.
 
@@ -78,7 +80,7 @@ class Bookkeeper:
                 # Auto-closes cursor
                 with contextlib.closing(con.cursor()) as cur:
                     # Check if tables are present
-                    cur.execute(sql_statement)
+                    cur.execute(sql_statement, parameters)
 
     def create_parameter_tables(self, parameters_as_sql_types):
         """
@@ -120,7 +122,7 @@ class Bookkeeper:
             foreign_keys=parameters_foreign_keys)
         self.create_table(parameters_statement)
 
-    def insert_into_parameter_tables(self, parameters_dict):
+    def create_parameter_tables_entry(self, parameters_dict):
         """
         Insert the parameters into a the parameter tables.
 
@@ -130,60 +132,46 @@ class Bookkeeper:
             The dictionary on the form
             >>> {'section': {'parameter': 'value'}}
 
+        Returns
+        -------
+        parameters_id : int
+            The id key from the `parameters` table
+
         Notes
         -----
         All `:` will be replaced by `_` in the section names
         """
         parameters_foreign_keys = dict()
-        for section in parameters_dict.keys():
+        parameter_sections = list(parameters_dict.keys())
+
+        for section in parameter_sections:
             # Replace bad characters for SQL
             section_name = section.replace(':', '_')
+            section_parameters = parameters_dict[section]
+            section_keys = section_parameters.keys()
+            section_values = section_parameters.values()
 
-            # FIXME: YOU ARE HERE
-            # FIXME: Check if this combination already exist,
-            #  then make an entry
-            # About getting the last key
-            # https://stackoverflow.com/questions/3442033/sqlite-how-to-get-value-of-auto-increment-primary-key-after-insert-other-than
-            # NOTE: About SELECT 1
-            # https://stackoverflow.com/questions/7039938/what-does-select-1-from-do
-            # NOTE: About checking for existence
-            # https://stackoverflow.com/questions/9755860/valid-query-to-check-if-row-exists-in-sqlite3
-# SELECT
-# 	rowid
-# FROM
-# 	people
-# WHERE
-# 	EXISTS(
-# 	  SELECT 1
-# 	  FROM people
-# 	  WHERE first_name="John"
-# 	  AND last_name="Doe");
+            insert_str = create_insert_string(section_keys,
+                                              section_name)
 
-            # FIXME: You didn't start on the stuff below yet
+            self.insert(insert_str, section_values)
 
-            # Generate foreign keys for the parameters table
-            parameters_foreign_keys[f'{section_name}_id'] =\
-                (section_name, 'id')
+            parameters_foreign_keys[f'{section_name}_id'] = \
+                self.get_latest_row_id()
 
-            columns = dict()
-            for parameter, value_type in \
-                    parameters_dict[section].items():
-                # Generate the columns
-                columns[parameter] = value_type
+        # Update the parameters table
+        insert_str = \
+            create_insert_string(parameters_foreign_keys.keys(),
+                                 'parameters')
+        self.insert(insert_str, parameters_foreign_keys.values())
+        parameters_id = self.get_latest_row_id()
 
-            # Creat the section table
-            section_statement = \
-                get_create_table_statement(table_name=section_name,
-                                           columns=columns)
-            self.create_table(section_statement)
+        return parameters_id
 
-        # Create the join table
-        parameters_statement = get_create_table_statement(
-            table_name='parameters',
-            foreign_keys=parameters_foreign_keys)
-        self.create_table(parameters_statement)
-
-    def capture_data(self, project_path, bout_inp_dir, parameters_dict):
+    def store_data_from_run(self,
+                            project_path,
+                            bout_inp_dir,
+                            parameters_dict):
         """
         Capture data from a run.
 
@@ -201,25 +189,78 @@ class Bookkeeper:
         """
 
         # FIXME: Create database entry
-        # Parameters
         # Update file_modification
         # System info
         # Run
 
+        # FIXME: Uncomment this
+        # self.check_if_entry_exist(parameters_dict)
         parameters_dict = extract_parameters_in_use(project_path,
                                                     bout_inp_dir,
                                                     parameters_dict)
 
-        self.insert_into_parameter_tables(parameters_dict)
+        parameters_id = \
+            self.create_parameter_tables_entry(parameters_dict)
 
+        # Update the file_modification
+        # FIXME: Uncomment this
+        # self.check_if_entry_exist(parameters_dict)
+        file_modification_id = self.insert_into_file_modification()
 
+        # Update the split
+        # FIXME: Uncomment this
+        # self.check_if_entry_exist(parameters_dict)
 
-        purchases = [('2006-03-28', 'BUY', 'IBM', 1000, 45.00),
-                     ('2006-04-05', 'BUY', 'MSFT', 1000, 72.00),
-                     ('2006-04-06', 'SELL', 'IBM', 500, 53.00),
-                     ]
-        c.executemany('INSERT INTO stocks VALUES (?,?,?,?,?)',
-                      purchases)
+        # Update the host
+        # FIXME: Uncomment this
+        # self.check_if_entry_exist(parameters_dict)
+
+        # Update the run
+        parameters_id
+        # FIXME: Uncomment this
+        # self.check_if_entry_exist(parameters_dict)
+
+            # FIXME: YOU ARE HERE
+            # FIXME: Status should be renamed to latest known status,
+            #  and can be checked every time the bookkeeper is started
+
+            # NOTE: About SELECT 1
+            # https://stackoverflow.com/questions/7039938/what-does-select-1-from-do
+
+    def get_latest_row_id(self):
+        """
+        Return the latest row id.
+
+        Returns
+        -------
+        row_id : int
+            The latest row inserted row id
+        """
+
+        # https://stackoverflow.com/questions/3442033/sqlite-how-to-get-value-of-auto-increment-primary-key-after-insert-other-than
+        row_id = \
+            self.query('SELECT last_insert_rowid() AS id').loc[0, 'id']
+        return row_id
+
+    def check_if_entry_exist(self):
+        """
+        FIXME
+        """
+        # FIXME: Check if this combination already exist,
+        #  then make an entry
+        # NOTE: About checking for existence
+        # https://stackoverflow.com/questions/9755860/valid-query-to-check-if-row-exists-in-sqlite3
+        # SELECT
+        # 	rowid
+        # FROM
+        # 	people
+        # WHERE
+        # 	EXISTS(
+        # 	  SELECT 1
+        # 	  FROM people
+        # 	  WHERE first_name="John"
+        # 	  AND last_name="Doe");
+        pass
 
     def update_status(self):
         """Updates the status"""
@@ -249,19 +290,21 @@ class Bookkeeper:
             table = pd.read_sql_query(query_str, con)
         return table
 
-    def insert(self, insert_str):
+    def insert(self, insert_str, values):
         """
-       Insert to the database.
+        Insert to the database.
 
         Parameters
         ----------
         insert_str : str
             The query to execute
+        values : tuple
+            Values to be inserted in the query
         """
         # Obtain the table name
         pattern = r'INSERT INTO (\w*)'
         table_name = re.match(pattern, insert_str).group(1)
 
-        self.execute_statement(insert_str)
+        self.execute_statement(insert_str, values)
 
         logging.info('Made insertion to %s', table_name)

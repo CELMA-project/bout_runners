@@ -183,9 +183,9 @@ class BoutRunner:
 
         db_ready = tables_created(self.bookkeeper)
         if db_ready:
-            self.bookkeeper.capture_data(self.project_path,
-                                         self.destination,
-                                         self.parameter_dict)
+            self.bookkeeper.store_data_from_run(self.project_path,
+                                                self.destination,
+                                                self.parameter_dict)
             # FIXME: Check if parameters are already run
         else:
             logging.warning('Database %s has no entries and is not '

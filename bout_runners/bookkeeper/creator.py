@@ -69,9 +69,9 @@ def create_run_table(bookkeeper):
         get_create_table_statement(
             table_name='run',
             columns={'name': 'TEXT',
-                     'start': 'TIMESTAMP',
-                     'stop': 'TIMESTAMP',
-                     'status': 'TEXT',
+                     'start_time': 'TIMESTAMP',
+                     'stop_time': 'TIMESTAMP',
+                     'latest_status': 'TEXT',
                      },
             foreign_keys={'file_modification_id':
                           ('file_modification', 'id'),
