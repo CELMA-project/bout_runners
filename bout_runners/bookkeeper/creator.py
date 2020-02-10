@@ -69,6 +69,7 @@ def create_run_table(bookkeeper):
         get_create_table_statement(
             table_name='run',
             columns={'name': 'TEXT',
+                     'submitted_time': 'TIMESTAMP',
                      'start_time': 'TIMESTAMP',
                      'stop_time': 'TIMESTAMP',
                      'latest_status': 'TEXT',
@@ -131,8 +132,9 @@ def create_split_table(bookkeeper):
     split_statement = \
         get_create_table_statement(
             table_name='split',
-            columns={'nodes': 'INTEGER',
-                     'processors_per_nodes': 'INTEGER'})
+            columns={'number_of_processors': 'INTEGER',
+                     'nodes': 'INTEGER',
+                     'processors_per_node': 'INTEGER'})
     bookkeeper.create_table(split_statement)
 
 

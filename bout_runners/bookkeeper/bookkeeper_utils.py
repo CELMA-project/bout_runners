@@ -168,15 +168,17 @@ def get_create_table_statement(table_name,
 
     create_statement += f'   {primary_key} INTEGER PRIMARY KEY,\n'
 
+    # These are not known during submission time
+    nullable_fields = ('start_time',
+                       'stop_time')
     if columns is not None:
         for name, sql_type in columns.items():
             create_statement += f'    {name} {sql_type}'
-            if name == 'stop':
-                # The stop parameter is not know during a run start
-                nullable = ',\n'
+            if name in nullable_fields:
+                nullable_str = ',\n'
             else:
-                nullable = ' NOT NULL,\n'
-            create_statement += nullable
+                nullable_str = ' NOT NULL,\n'
+            create_statement += nullable_str
 
     if foreign_keys is not None:
         # Create the key as column

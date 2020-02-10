@@ -5,6 +5,7 @@ import re
 import logging
 import contextlib
 import sqlite3
+import numpy as np
 import pandas as pd
 from bout_runners.bookkeeper.bookkeeper_utils import \
     get_create_table_statement
@@ -13,6 +14,7 @@ from bout_runners.bookkeeper.bookkeeper_utils import \
 from bout_runners.bookkeeper.bookkeeper_utils import \
     extract_parameters_in_use
 from bout_runners.runners.runner_utils import get_file_modification
+from bout_runners.runners.runner_utils import get_system_info
 
 
 class Bookkeeper:
@@ -149,37 +151,60 @@ class Bookkeeper:
             # Replace bad characters for SQL
             section_name = section.replace(':', '_')
             section_parameters = parameters_dict[section]
-            section_keys = section_parameters.keys()
-            section_values = section_parameters.values()
-
-            insert_str = create_insert_string(section_keys,
-                                              section_name)
-
-            self.insert(insert_str, section_values)
+            latest_row_id = self.create_entry(section_name,
+                                              section_parameters)
 
             parameters_foreign_keys[f'{section_name}_id'] = \
-                self.get_latest_row_id()
+                latest_row_id
 
         # Update the parameters table
-        insert_str = \
-            create_insert_string(parameters_foreign_keys.keys(),
-                                 'parameters')
-        self.insert(insert_str, parameters_foreign_keys.values())
-        parameters_id = self.get_latest_row_id()
+        parameters_id = self.create_entry('parameters',
+                                          parameters_foreign_keys)
 
         return parameters_id
 
+    def create_entry(self, table_name, entries_dict):
+        """
+        Create a database entry
+
+        Parameters
+        ----------
+        table_name : str
+            Name of the table
+        entries_dict : dict
+            Dictionary containing the entries as key value pairs
+
+        Returns
+        -------
+        latest_row_id : int
+            The id of the entry just made
+        """
+        keys = entries_dict.keys()
+        values = entries_dict.values()
+        insert_str = create_insert_string(keys, table_name)
+        self.insert(insert_str, values)
+
+        latest_row_id = self.get_latest_row_id()
+
+        return latest_row_id
+
     def store_data_from_run(self,
+                            run_name,
                             project_path,
                             bout_inp_dir,
                             makefile_path,
                             exec_name,
-                            parameters_dict):
+                            parameters_dict,
+                            number_of_processors,
+                            nodes=1,
+                            processors_per_node=None):
         """
         Capture data from a run.
 
         Parameters
         ----------
+        run_name : str
+            Name of the run
         project_path : Path
             Root path of project (make file)
         bout_inp_dir : Path
@@ -193,13 +218,15 @@ class Bookkeeper:
             >>> {'global':{'append': False, 'nout': 5},
             ...  'mesh':  {'nx': 4},
             ...  'section_in_BOUT_inp': {'some_variable': 'some_value'}}
+        number_of_processors : int
+            The total number of processors
+        nodes : int
+            The total number of nodes used
+        processors_per_node : int
+            Number of processors per nodes.
+            If None, this will be set to
+            floor(number_of_processors/nodes)
         """
-
-        # FIXME: Create database entry
-        # Update file_modification
-        # System info
-        # Run
-
         # FIXME: Uncomment this
         # self.check_if_entry_exist(parameters_dict)
         parameters_dict = extract_parameters_in_use(project_path,
@@ -215,28 +242,39 @@ class Bookkeeper:
                                   makefile_path,
                                   exec_name)
         # FIXME: Uncomment this
-        # self.check_if_entry_exist(parameters_dict)
-        file_modification_id = self.create_entry(file_modification_dict)
+        # self.check_if_entry_exist(file_modification_dict)
+        file_modification_id = \
+            self.create_entry('file_modification',
+                              file_modification_dict)
 
         # Update the split
+        processors_per_node = processors_per_node if \
+            processors_per_node is not None else \
+            int(np.floor(number_of_processors/nodes))
+        split_dict = {'number_of_processors': number_of_processors,
+                      'nodes': nodes,
+                      'processors_per_nodes': processors_per_node}
         # FIXME: Uncomment this
         # self.check_if_entry_exist(parameters_dict)
+        split_id = self.create_entry('split', split_dict)
 
-        # Update the host
+        # Update the system info
+        system_info_dict = get_system_info()
         # FIXME: Uncomment this
-        # self.check_if_entry_exist(parameters_dict)
+        # self.check_if_entry_exist(system_info)
+        system_info_id = \
+            self.create_entry('system_info', system_info_dict)
 
         # Update the run
-        parameters_id
+        run_dict = {'name': run_name,
+                    'latest_status': 'submitted',
+                    'file_modification_id': file_modification_id,
+                    'split_id': split_id,
+                    'parameters_id': parameters_id,
+                    'host_id': system_info_id}
         # FIXME: Uncomment this
-        # self.check_if_entry_exist(parameters_dict)
-
-            # FIXME: YOU ARE HERE
-            # FIXME: Status should be renamed to latest known status,
-            #  and can be checked every time the bookkeeper is started
-
-            # NOTE: About SELECT 1
-            # https://stackoverflow.com/questions/7039938/what-does-select-1-from-do
+        # self.check_if_entry_exist(run_dict)
+        self.create_entry('run', run_dict)
 
     def get_latest_row_id(self):
         """
@@ -271,6 +309,9 @@ class Bookkeeper:
         # 	  FROM people
         # 	  WHERE first_name="John"
         # 	  AND last_name="Doe");
+
+        # NOTE: About SELECT 1
+        # https://stackoverflow.com/questions/7039938/what-does-select-1-from-do
         pass
 
     def update_status(self):

@@ -103,7 +103,7 @@ class BoutRunner:
         dst_path : None or str or Path
             The path to the destination (relative to
             self.project_path)
-            If None,the date will be set
+            If None, the date will be set
         """
         time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S_%f")
         dst_path = \
@@ -172,7 +172,7 @@ class BoutRunner:
             self.set_destination()
 
         mpi_cmd = 'mpirun -np'
-        nproc_str = self.nproc if self.nproc is not None else 1
+        nproc_str = self.nproc if self.nproc is not None else '1'
         dst_str = f' -d {self.destination}'
         options_str = f' {self.options_str}' \
             if self.options_str is not None else ''
@@ -183,11 +183,13 @@ class BoutRunner:
 
         db_ready = tables_created(self.bookkeeper)
         if db_ready:
-            self.bookkeeper.store_data_from_run(self.project_path,
+            self.bookkeeper.store_data_from_run(self.destination.name,
+                                                self.project_path,
                                                 self.destination,
                                                 self.make.makefile_path,
                                                 self.make.exec_name,
-                                                self.parameter_dict)
+                                                self.parameter_dict,
+                                                int(nproc_str))
             # FIXME: Check if parameters are already run
         else:
             logging.warning('Database %s has no entries and is not '
