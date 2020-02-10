@@ -5,7 +5,7 @@ from bout_runners.make.read_makefile import BoutMakefileVariable
 from bout_runners.make.read_makefile import ReadMakefileError
 
 
-def get_exec_name(makefile_root_path, makefile_name=None):
+def get_exec_name(makefile_path):
     """
     Return the name of the project executable.
 
@@ -15,23 +15,14 @@ def get_exec_name(makefile_root_path, makefile_name=None):
 
     Parameters
     ----------
-    makefile_root_path : Path or str
-        Root path of make file
-    makefile_name : None or str
-        The name of the makefile.
-        If set to None, it tries the following names, in order:
-        'GNUmakefile', 'makefile' and 'Makefile'
+    makefile_path : Path or str
+        Path to the make file
 
     Returns
     -------
     exec_name : str
         Name of the executable
     """
-    if makefile_name is None:
-        makefile_name = get_makefile_name(makefile_root_path)
-
-    makefile_path = Path(makefile_root_path).joinpath(makefile_name)
-
     try:
         exec_name = BoutMakefileVariable(makefile_path, 'TARGET')\
             .get_variable_value()
@@ -46,6 +37,30 @@ def get_exec_name(makefile_root_path, makefile_name=None):
         exec_name = f'{split_by}'.join(split_to_join)
 
     return exec_name
+
+
+def get_makefile_path(makefile_root_path, makefile_name):
+    """
+    Return the makefile path
+
+    Parameters
+    ----------
+    makefile_root_path : Path or str
+        Root path of make file
+    makefile_name : None or str
+        The name of the makefile.
+        If set to None, it tries the following names, in order:
+        'GNUmakefile', 'makefile' and 'Makefile'
+
+    Returns
+    -------
+    makefile_path : Path
+        Path to the makefile
+    """
+    if makefile_name is None:
+        makefile_name = get_makefile_name(makefile_root_path)
+    makefile_path = Path(makefile_root_path).joinpath(makefile_name)
+    return makefile_path
 
 
 def get_makefile_name(makefile_root_path):

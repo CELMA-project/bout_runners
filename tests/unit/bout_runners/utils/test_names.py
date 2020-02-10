@@ -5,6 +5,7 @@ import shutil
 import pytest
 from bout_runners.utils.names import get_exec_name
 from bout_runners.utils.names import get_makefile_name
+from bout_runners.utils.names import get_makefile_path
 
 
 @pytest.fixture(scope='function', name='copy_makefile')
@@ -56,8 +57,9 @@ def test_get_exec_name(filename, expected, get_test_data_path):
     get_test_data_path : Path
         Path to the test data
     """
-    exec_name = get_exec_name(get_test_data_path,
-                              makefile_name=filename)
+    makefile_path = get_makefile_path(get_test_data_path,
+                                      makefile_name=filename)
+    exec_name = get_exec_name(makefile_path)
     assert exec_name == expected
 
 

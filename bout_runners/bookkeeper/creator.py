@@ -111,10 +111,10 @@ def create_file_modification_table(bookkeeper):
     file_modification_statement = \
         get_create_table_statement(
             table_name='file_modification',
-            columns={'project_makefile_changed': 'TIMESTAMP',
-                     'project_executable_changed': 'TIMESTAMP',
+            columns={'project_makefile_modified': 'TIMESTAMP',
+                     'project_executable_modified': 'TIMESTAMP',
                      'project_git_sha': 'TEXT',
-                     'bout_executable_changed': 'TIMESTAMP',
+                     'bout_lib_modified': 'TIMESTAMP',
                      'bout_git_sha': 'TEXT'})
     bookkeeper.create_table(file_modification_statement)
 

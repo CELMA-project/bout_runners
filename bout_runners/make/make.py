@@ -6,6 +6,7 @@ from pathlib import Path
 from bout_runners.utils.file_operations import get_caller_dir
 from bout_runners.utils.subprocesses_functions import run_subprocess
 from bout_runners.utils.names import get_exec_name
+from bout_runners.utils.names import get_makefile_path
 
 
 class MakeError(Exception):
@@ -22,6 +23,8 @@ class MakeProject:
         The path to the Makefile
     makefile_name : str
         The name of the Makefile
+    makefile_path : Path
+        Path to the makefile
     exec_name : str
         The name of the executable
 
@@ -65,9 +68,9 @@ class MakeProject:
 
         self.makefile_name = makefile_name
 
-        # Will be filled
-        self.exec_name = get_exec_name(self.makefile_root_path,
-                                       self.makefile_name)
+        self.makefile_path = get_makefile_path(self.makefile_root_path,
+                                               self.makefile_name)
+        self.exec_name = get_exec_name(self.makefile_path)
 
     def run_make(self, force=False):
         """

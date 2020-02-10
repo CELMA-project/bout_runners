@@ -3,9 +3,10 @@
 
 import ast
 import configparser
-import platform
 import re
 from pathlib import Path
+
+from bout_runners.runners.runner_utils import get_system_info
 from bout_runners.utils.file_operations import get_caller_dir
 
 
@@ -122,7 +123,7 @@ def cast_parameters_to_sql_type(parameter_dict):
 
 def get_system_info_as_sql_type():
     """
-    Return the system information.
+    Return the SQL types of the system information.
 
     Returns
     -------
@@ -130,14 +131,7 @@ def get_system_info_as_sql_type():
         Dictionary with the attributes of the system as keys and the
         type as values
     """
-    sys_info = platform.uname()
-
-    # Get member data, see
-    # https://stackoverflow.com/questions/11637293/iterate-over-object-attributes-in-python
-    # for details
-    attributes = tuple(name for name in dir(sys_info)
-                       if not name.startswith('_') and not
-                       callable(getattr(sys_info, name)))
+    attributes = get_system_info()
 
     sys_info_dict = {att: 'TEXT' for att in attributes}
 

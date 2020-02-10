@@ -12,6 +12,7 @@ from bout_runners.bookkeeper.bookkeeper_utils import \
     create_insert_string
 from bout_runners.bookkeeper.bookkeeper_utils import \
     extract_parameters_in_use
+from bout_runners.runners.runner_utils import get_file_modification
 
 
 class Bookkeeper:
@@ -171,6 +172,8 @@ class Bookkeeper:
     def store_data_from_run(self,
                             project_path,
                             bout_inp_dir,
+                            makefile_path,
+                            exec_name,
                             parameters_dict):
         """
         Capture data from a run.
@@ -181,6 +184,10 @@ class Bookkeeper:
             Root path of project (make file)
         bout_inp_dir : Path
             Path to the directory of BOUT.inp currently in use
+        makefile_path : Path
+            Path to the project makefile
+        exec_name : str
+            Name of the executable
         parameters_dict : dict of str, dict
             Options on the form
             >>> {'global':{'append': False, 'nout': 5},
@@ -203,9 +210,13 @@ class Bookkeeper:
             self.create_parameter_tables_entry(parameters_dict)
 
         # Update the file_modification
+        file_modification_dict = \
+            get_file_modification(project_path,
+                                  makefile_path,
+                                  exec_name)
         # FIXME: Uncomment this
         # self.check_if_entry_exist(parameters_dict)
-        file_modification_id = self.insert_into_file_modification()
+        file_modification_id = self.create_entry(file_modification_dict)
 
         # Update the split
         # FIXME: Uncomment this

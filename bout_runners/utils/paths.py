@@ -1,8 +1,9 @@
 """Contains methods which return common paths."""
-
-
+import os
 import time
 from pathlib import Path
+
+from dotenv import load_dotenv
 
 
 def get_root_path():
@@ -61,3 +62,18 @@ def get_log_file_path(name=time.strftime('%Y%m%d.log')):
     log_file_path = logfile_dir.joinpath(name)
 
     return log_file_path
+
+
+def get_bout_path():
+    """
+    Load the dot-env file and yield the bout_path.
+
+    Returns
+    -------
+    bout_path : Path
+        Path to the BOUT++ repository
+    """
+    # Setup
+    load_dotenv()
+    bout_path = Path(os.getenv('BOUT_PATH')).absolute()
+    return bout_path

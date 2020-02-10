@@ -15,6 +15,11 @@ def run_subprocess(command, path):
         The command to run
     path : Path or str
         Path to the location to run the command from
+
+    Returns
+    -------
+    result : subprocess.CompletedProcess
+        The result of the subprocess call
     """
     logging.info('Executing %s in %s', command, path)
     result = subprocess.run(command.split(),

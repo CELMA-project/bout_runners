@@ -185,6 +185,8 @@ class BoutRunner:
         if db_ready:
             self.bookkeeper.store_data_from_run(self.project_path,
                                                 self.destination,
+                                                self.make.makefile_path,
+                                                self.make.exec_name,
                                                 self.parameter_dict)
             # FIXME: Check if parameters are already run
         else:
