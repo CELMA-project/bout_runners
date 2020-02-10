@@ -206,7 +206,7 @@ def get_create_table_statement(table_name,
 
 def get_db_path(database_root_path, project_path):
     """
-    Return the database path
+    Return the database path.
 
     Parameters
     ----------

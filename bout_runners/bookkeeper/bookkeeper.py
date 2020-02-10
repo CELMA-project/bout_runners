@@ -165,7 +165,7 @@ class Bookkeeper:
 
     def create_entry(self, table_name, entries_dict):
         """
-        Create a database entry
+        Create a database entry.
 
         Parameters
         ----------
@@ -284,17 +284,18 @@ class Bookkeeper:
         -------
         row_id : int
             The latest row inserted row id
-        """
 
-        # https://stackoverflow.com/questions/3442033/sqlite-how-to-get-value-of-auto-increment-primary-key-after-insert-other-than
+        References
+        ----------
+        [1]
+        https://stackoverflow.com/questions/3442033/sqlite-how-to-get-value-of-auto-increment-primary-key-after-insert-other-than
+        """
         row_id = \
             self.query('SELECT last_insert_rowid() AS id').loc[0, 'id']
         return row_id
 
     def check_if_entry_exist(self):
-        """
-        FIXME
-        """
+        """FIXME."""
         # FIXME: Check if this combination already exist,
         #  then make an entry
         # NOTE: About checking for existence
@@ -315,7 +316,7 @@ class Bookkeeper:
         pass
 
     def update_status(self):
-        """Updates the status"""
+        """Update the status."""
         raise NotImplementedError('To be implemented')
 
     def query(self, query_str):

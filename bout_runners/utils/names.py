@@ -41,7 +41,7 @@ def get_exec_name(makefile_path):
 
 def get_makefile_path(makefile_root_path, makefile_name):
     """
-    Return the makefile path
+    Return the makefile path.
 
     Parameters
     ----------
