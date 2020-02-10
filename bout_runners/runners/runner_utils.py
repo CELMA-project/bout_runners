@@ -112,12 +112,9 @@ def get_system_info():
     -------
     attributes : dict
         Dictionary with the attributes of the system
-
-    References
-    ----------
-    [1]
-    https://stackoverflow.com/questions/11637293/iterate-over-object-attributes-in-python
     """
+    # From
+    # https://stackoverflow.com/questions/11637293/iterate-over-object-attributes-in-python
     sys_info = platform.uname()
     attributes = tuple(name for name in dir(sys_info)
                        if not name.startswith('_') and not

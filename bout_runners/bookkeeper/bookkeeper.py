@@ -151,15 +151,21 @@ class Bookkeeper:
             # Replace bad characters for SQL
             section_name = section.replace(':', '_')
             section_parameters = parameters_dict[section]
-            latest_row_id = self.create_entry(section_name,
-                                              section_parameters)
+            section_id = self.check_entry_existence(section_name,
+                                                    section_parameters)
+            if section_id is not None:
+                section_id = self.create_entry(section_name,
+                                               section_parameters)
 
-            parameters_foreign_keys[f'{section_name}_id'] = \
-                latest_row_id
+            parameters_foreign_keys[f'{section_name}_id'] = section_id
 
         # Update the parameters table
-        parameters_id = self.create_entry('parameters',
-                                          parameters_foreign_keys)
+        parameters_id = \
+            self.check_entry_existence('parameters',
+                                       parameters_foreign_keys)
+        if parameters_id is not None:
+            parameters_id = self.create_entry('parameters',
+                                              parameters_foreign_keys)
 
         return parameters_id
 
@@ -226,13 +232,18 @@ class Bookkeeper:
             Number of processors per nodes.
             If None, this will be set to
             floor(number_of_processors/nodes)
+
+        Returns
+        -------
+        new_entry : bool
+            Returns True if this a new entry is made, False if not
         """
-        # FIXME: Uncomment this
-        # self.check_if_entry_exist(parameters_dict)
+        new_entry = False
+
+        # Update the parameters
         parameters_dict = extract_parameters_in_use(project_path,
                                                     bout_inp_dir,
                                                     parameters_dict)
-
         parameters_id = \
             self.create_parameter_tables_entry(parameters_dict)
 
@@ -241,11 +252,13 @@ class Bookkeeper:
             get_file_modification(project_path,
                                   makefile_path,
                                   exec_name)
-        # FIXME: Uncomment this
-        # self.check_if_entry_exist(file_modification_dict)
         file_modification_id = \
-            self.create_entry('file_modification',
-                              file_modification_dict)
+            self.check_entry_existence('file_modification',
+                                       file_modification_dict)
+        if file_modification_id is None:
+            file_modification_id = \
+                self.create_entry('file_modification',
+                                  file_modification_dict)
 
         # Update the split
         processors_per_node = processors_per_node if \
@@ -254,16 +267,17 @@ class Bookkeeper:
         split_dict = {'number_of_processors': number_of_processors,
                       'nodes': nodes,
                       'processors_per_nodes': processors_per_node}
-        # FIXME: Uncomment this
-        # self.check_if_entry_exist(parameters_dict)
-        split_id = self.create_entry('split', split_dict)
+        split_id = self.check_entry_existence('split', split_dict)
+        if split_id is not None:
+            split_id = self.create_entry('split', split_dict)
 
         # Update the system info
         system_info_dict = get_system_info()
-        # FIXME: Uncomment this
-        # self.check_if_entry_exist(system_info)
-        system_info_id = \
-            self.create_entry('system_info', system_info_dict)
+        system_info_id = self.check_entry_existence('system_info',
+                                                    system_info_dict)
+        if system_info_id is not None:
+            system_info_id = \
+                self.create_entry('system_info', system_info_dict)
 
         # Update the run
         run_dict = {'name': run_name,
@@ -272,9 +286,12 @@ class Bookkeeper:
                     'split_id': split_id,
                     'parameters_id': parameters_id,
                     'host_id': system_info_id}
-        # FIXME: Uncomment this
-        # self.check_if_entry_exist(run_dict)
-        self.create_entry('run', run_dict)
+        run_id = self.check_entry_existence('run', run_dict)
+        if run_id is not None:
+            self.create_entry('run', run_dict)
+            new_entry = True
+
+        return new_entry
 
     def get_latest_row_id(self):
         """
@@ -284,36 +301,53 @@ class Bookkeeper:
         -------
         row_id : int
             The latest row inserted row id
-
-        References
-        ----------
-        [1]
-        https://stackoverflow.com/questions/3442033/sqlite-how-to-get-value-of-auto-increment-primary-key-after-insert-other-than
         """
+        # https://stackoverflow.com/questions/3442033/sqlite-how-to-get-value-of-auto-increment-primary-key-after-insert-other-than
         row_id = \
             self.query('SELECT last_insert_rowid() AS id').loc[0, 'id']
         return row_id
 
-    def check_if_entry_exist(self):
-        """FIXME."""
-        # FIXME: Check if this combination already exist,
-        #  then make an entry
+    def check_entry_existence(self, table_name, entries_dict):
+        """
+        Check if the entry already exists in the table entry.
+
+        Parameters
+        ----------
+        table_name : str
+            Name of the table
+        entries_dict : dict
+            Dictionary containing the entries as key value pairs
+
+        Parameters
+        ----------
+        table_name : str
+            Name of the table to check
+        entries_dict : dict
+            The dict with entries
+
+        Returns
+        -------
+        row_id : int or None
+            The id of the hit. If none is found, None is returned
+        """
         # NOTE: About checking for existence
         # https://stackoverflow.com/questions/9755860/valid-query-to-check-if-row-exists-in-sqlite3
-        # SELECT
-        # 	rowid
-        # FROM
-        # 	people
-        # WHERE
-        # 	EXISTS(
-        # 	  SELECT 1
-        # 	  FROM people
-        # 	  WHERE first_name="John"
-        # 	  AND last_name="Doe");
-
         # NOTE: About SELECT 1
         # https://stackoverflow.com/questions/7039938/what-does-select-1-from-do
-        pass
+        query_str = \
+            ('SELECT rowid\n'
+             'FROM people\n'
+             'WHERE\n'
+             '    EXISTS(\n'
+             '        SELECT 1\n'
+             '	      FROM people\n'
+             '	      WHERE first_name="John"\n'
+             '	      AND last_name="Doe")')
+
+        df = self.query(query_str)
+        row_id = None if df.empty else df.loc[0, 'rowid']
+
+        return row_id
 
     def update_status(self):
         """Update the status."""

@@ -322,11 +322,9 @@ def create_insert_string(field_names, table_name):
     -------
     insert_str : str
         The string to be used for insertion
-
-    References
-    ----------
-    [1] https://stackoverflow.com/a/14108554/2786884
     """
+    # From
+    # https://stackoverflow.com/a/14108554/2786884
     columns = ', '.join(field_names)
     placeholders = ', '.join('?' * len(field_names))
     insert_str = f'INSERT INTO {table_name} ' \
