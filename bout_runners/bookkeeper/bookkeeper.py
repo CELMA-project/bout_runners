@@ -8,13 +8,11 @@ import sqlite3
 import numpy as np
 import pandas as pd
 from bout_runners.bookkeeper.bookkeeper_utils import \
-    get_create_table_statement
+    get_create_table_statement, get_file_modification, get_system_info
 from bout_runners.bookkeeper.bookkeeper_utils import \
     create_insert_string
 from bout_runners.bookkeeper.bookkeeper_utils import \
     extract_parameters_in_use
-from bout_runners.runners.runner_utils import get_file_modification
-from bout_runners.runners.runner_utils import get_system_info
 
 
 class Bookkeeper:
@@ -195,12 +193,7 @@ class Bookkeeper:
         return latest_row_id
 
     def store_data_from_run(self,
-                            run_name,
-                            project_path,
-                            bout_inp_dir,
-                            makefile_path,
-                            exec_name,
-                            parameters_dict,
+                            runner,
                             number_of_processors,
                             nodes=1,
                             processors_per_node=None):
@@ -209,21 +202,8 @@ class Bookkeeper:
 
         Parameters
         ----------
-        run_name : str
-            Name of the run
-        project_path : Path
-            Root path of project (make file)
-        bout_inp_dir : Path
-            Path to the directory of BOUT.inp currently in use
-        makefile_path : Path
-            Path to the project makefile
-        exec_name : str
-            Name of the executable
-        parameters_dict : dict of str, dict
-            Options on the form
-            >>> {'global':{'append': False, 'nout': 5},
-            ...  'mesh':  {'nx': 4},
-            ...  'section_in_BOUT_inp': {'some_variable': 'some_value'}}
+        runner : BoutRunner
+            The bout runner object
         number_of_processors : int
             The total number of processors
         nodes : int
@@ -240,23 +220,27 @@ class Bookkeeper:
         """
         new_entry = False
 
+        # Initiate the run_dict (will be filled with the ids)
+        run_dict = {'name': runner.destination.name}
+
         # Update the parameters
-        parameters_dict = extract_parameters_in_use(project_path,
-                                                    bout_inp_dir,
-                                                    parameters_dict)
-        parameters_id = \
+        parameters_dict = \
+            extract_parameters_in_use(runner.project_path,
+                                      runner.destination,
+                                      runner.parameters_dict)
+        run_dict['parameters_id'] = \
             self.create_parameter_tables_entry(parameters_dict)
 
         # Update the file_modification
         file_modification_dict = \
-            get_file_modification(project_path,
-                                  makefile_path,
-                                  exec_name)
-        file_modification_id = \
+            get_file_modification(runner.project_path,
+                                  runner.make.makefile_path,
+                                  runner.make.exec_name)
+        run_dict['file_modification_id'] = \
             self.check_entry_existence('file_modification',
                                        file_modification_dict)
-        if file_modification_id is None:
-            file_modification_id = \
+        if run_dict['file_modification_id'] is None:
+            run_dict['file_modification_id'] = \
                 self.create_entry('file_modification',
                                   file_modification_dict)
 
@@ -267,27 +251,24 @@ class Bookkeeper:
         split_dict = {'number_of_processors': number_of_processors,
                       'nodes': nodes,
                       'processors_per_nodes': processors_per_node}
-        split_id = self.check_entry_existence('split', split_dict)
-        if split_id is not None:
-            split_id = self.create_entry('split', split_dict)
+        run_dict['split_id'] = \
+            self.check_entry_existence('split', split_dict)
+        if run_dict['split_id'] is not None:
+            run_dict['split_id'] = \
+                self.create_entry('split', split_dict)
 
         # Update the system info
         system_info_dict = get_system_info()
-        system_info_id = self.check_entry_existence('system_info',
-                                                    system_info_dict)
-        if system_info_id is not None:
-            system_info_id = \
+        run_dict['host_id'] = \
+            self.check_entry_existence('system_info', system_info_dict)
+        if run_dict['host_id'] is not None:
+            run_dict['host_id'] = \
                 self.create_entry('system_info', system_info_dict)
 
         # Update the run
-        run_dict = {'name': run_name,
-                    'latest_status': 'submitted',
-                    'file_modification_id': file_modification_id,
-                    'split_id': split_id,
-                    'parameters_id': parameters_id,
-                    'host_id': system_info_id}
         run_id = self.check_entry_existence('run', run_dict)
         if run_id is not None:
+            run_dict['latest_status'] = 'submitted'
             self.create_entry('run', run_dict)
             new_entry = True
 
@@ -334,18 +315,20 @@ class Bookkeeper:
         # https://stackoverflow.com/questions/9755860/valid-query-to-check-if-row-exists-in-sqlite3
         # NOTE: About SELECT 1
         # https://stackoverflow.com/questions/7039938/what-does-select-1-from-do
-        # FIXME: You are here: Parse the entries_dict
-        # FIXME: pylint
-        # FIXME: Unittests
-        where_statement = ('	      WHERE first_name="John"\n'
-                           '	      AND last_name="Doe"')
+        where_statements = list()
+        for field, val in entries_dict.items():
+            where_statements.append(f'{" "*7}AND {field}="{val}"')
+        where_statements[0] = where_statements[0].replace('AND',
+                                                          'WHERE')
+        where_statements = '\n'.join(where_statements)
+
         query_str = \
             (f'SELECT rowid\n'
              f'FROM {table_name}\n'
              f'WHERE\n'
              f'    EXISTS(\n'
              f'       SELECT 1\n'
-             f'	      FROM {table_name}\n{where_statement})')
+             f'	      FROM {table_name}\n{where_statements})')
 
         table = self.query(query_str)
         row_id = None if table.empty else table.loc[0, 'rowid']

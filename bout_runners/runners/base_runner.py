@@ -50,7 +50,7 @@ class BoutRunner:
                               database_root_path=database_root_path)
         self.bookkeeper = Bookkeeper(db_path)
 
-        self.make = None  # Set to make-obj in self.make
+        self.make = None  # Set to make-obj in self.make_project
         self.bout_inp_src = None  # Set to Path in self.set_bout_inp_src
         self.destination = None  # Set to Path in self.set_destination
         self.nproc = None  # Set in set_split
@@ -183,14 +183,7 @@ class BoutRunner:
 
         db_ready = tables_created(self.bookkeeper)
         if db_ready:
-            self.bookkeeper.store_data_from_run(self.destination.name,
-                                                self.project_path,
-                                                self.destination,
-                                                self.make.makefile_path,
-                                                self.make.exec_name,
-                                                self.parameter_dict,
-                                                int(nproc_str))
-            # FIXME: Check if parameters are already run
+            self.bookkeeper.store_data_from_run(self, int(nproc_str))
         else:
             logging.warning('Database %s has no entries and is not '
                             'ready. '

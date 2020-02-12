@@ -8,7 +8,7 @@ from bout_runners.make.make import MakeProject
 
 
 @pytest.fixture(scope='function', name='make_make_object')
-def fixture_make_make_object(get_bout_path):
+def fixture_make_make_object(yield_bout_path):
     """
     Set up and tear down the make-object.
 
@@ -21,8 +21,8 @@ def fixture_make_make_object(get_bout_path):
 
     Parameters
     ----------
-    get_bout_path : Path
-        Path to the BOUT++ repository. See the get_bout_path fixture
+    yield_bout_path : Path
+        Path to the BOUT++ repository. See the fixture_get_bout_path
         for more details
 
     Yields
@@ -38,7 +38,7 @@ def fixture_make_make_object(get_bout_path):
     the BOUT++ path
     """
     # Setup
-    bout_path = get_bout_path
+    bout_path = yield_bout_path
     project_path = bout_path.joinpath('examples', 'conduction')
     tmp_path = project_path.parent.joinpath('tmp_make')
 

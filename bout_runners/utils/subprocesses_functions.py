@@ -31,6 +31,8 @@ def run_subprocess(command, path):
     if result.returncode != 0:
         raise_subprocess_error(result)
 
+    return result
+
 
 def raise_subprocess_error(result):
     """

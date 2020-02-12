@@ -6,7 +6,7 @@ from bout_runners.make.make import MakeProject
 from bout_runners.utils.paths import get_bout_path
 
 
-@pytest.fixture(scope='session', name='get_bout_path')
+@pytest.fixture(scope='session', name='yield_bout_path')
 def fixture_get_bout_path():
     """
     Load the dot-env file and yield the bout_path.
@@ -22,12 +22,18 @@ def fixture_get_bout_path():
 
 
 @pytest.fixture(scope='session', name='make_project')
-def fixture_make_project(get_bout_path):
+def fixture_make_project(yield_bout_path):
     """
     Set up and tear down the Make object.
 
     The method calls make_obj.run_clean() before and after the yield
     statement
+
+    Parameters
+    ----------
+    yield_bout_path : Path
+        Path to the BOUT++ repository. See the fixture_get_bout_path
+        for more details
 
     Yields
     ------
@@ -35,7 +41,7 @@ def fixture_make_project(get_bout_path):
         The path to the conduction example
     """
     # Setup
-    bout_path = get_bout_path
+    bout_path = yield_bout_path
     project_path = bout_path.joinpath('examples', 'conduction')
 
     make_obj = MakeProject(makefile_root_path=project_path)
