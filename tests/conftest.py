@@ -21,8 +21,24 @@ def fixture_get_bout_path():
     yield bout_path
 
 
+@pytest.fixture(scope='session', name='yield_conduction_path')
+def fixture_get_conduction_path(yield_bout_path):
+    """
+    Yield the conduction path.
+
+    Yields
+    ------
+    conduction_path : Path
+        Path to the BOUT++ conduction example
+    """
+    bout_path = yield_bout_path
+    conduction_path = bout_path.joinpath('examples', 'conduction')
+
+    yield conduction_path
+
+
 @pytest.fixture(scope='session', name='make_project')
-def fixture_make_project(yield_bout_path):
+def fixture_make_project(yield_conduction_path):
     """
     Set up and tear down the Make object.
 
@@ -31,9 +47,9 @@ def fixture_make_project(yield_bout_path):
 
     Parameters
     ----------
-    yield_bout_path : Path
-        Path to the BOUT++ repository. See the fixture_get_bout_path
-        for more details
+    yield_conduction_path : Path
+        Path to the BOUT++ conduction example.
+        See the fixture_get_conduction_path for more details
 
     Yields
     ------
@@ -41,8 +57,7 @@ def fixture_make_project(yield_bout_path):
         The path to the conduction example
     """
     # Setup
-    bout_path = yield_bout_path
-    project_path = bout_path.joinpath('examples', 'conduction')
+    project_path = yield_conduction_path
 
     make_obj = MakeProject(makefile_root_path=project_path)
     make_obj.run_make()

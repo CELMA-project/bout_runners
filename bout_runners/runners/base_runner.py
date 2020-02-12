@@ -149,17 +149,42 @@ class RunParameters:
 # FIXME: You are here: Use this class as input to BoutRunner
 class BoutPaths:
     """
-    Class which sets the paths
+    Class which sets the paths.
 
     Attributes
     ----------
+    __project_path : Path
+        Getter and setter variable for project_path
+    __bout_inp_src_dir : Path
+        Getter and setter variable for bout_inp_src_dir
+    __bout_inp_dst_dir : Path
+        Getter and setter variable for bout_inp_dst_dir
+    project_path : Path
+        The root path of the project
+    bout_inp_src_dir : Path
+        The path to the BOUT.inp source directory
+    bout_inp_dst_dir : Path
+        The path to the BOUT.inp destination directory
 
     Methods
     -------
+    _copy_inp()
+        Copy BOUT.inp from bout_inp_src_dir to bout_inp_dst_dir
 
     Examples
     --------
-    FIXME
+    >>> bout_paths = BoutPaths()
+    >>> bout_paths.project_path
+    PosixPath(/root/BOUT-dev/examples/conduction)
+
+    >>> bout_paths.bout_inp_src_dir
+    PosixPath(/root/BOUT-dev/examples/conduction/data)
+
+    >>> bout_paths.bout_inp_dst_dir
+    PosixPath(/root/BOUT-dev/examples/conduction/2020-02-12_21-59-00_227295)
+
+    >>> bout_paths.bout_inp_dst_dir = 'foo'
+    PosixPath(/root/BOUT-dev/examples/conduction/foo)
     """
 
     def __init__(self,
@@ -180,8 +205,8 @@ class BoutPaths:
             self.project_path)
             If None, data will be used
         bout_inp_dst_dir : None or str or Path
-            The path to the BOUT.inp bout_inp_dst_dir directory (relative to
-            self.project_path)
+            The path to the BOUT.inp bout_inp_dst_dir directory
+            (relative to self.project_path)
             If None, the current time will be used
         """
         # Declare variables to be used in the getters and setters
@@ -246,6 +271,11 @@ class BoutPaths:
         -------
         self.__bout_inp_src_dir : Path
             The absolute path to the BOUT.inp source directory
+
+        Raises
+        ------
+        FileNotFoundError
+            If no BOUT.inp file is found in the directory
         """
         return self.__bout_inp_src_dir
 
@@ -258,9 +288,9 @@ class BoutPaths:
         self.__bout_inp_src_dir = \
             self.project_path.joinpath(bout_inp_src_dir)
 
-        if not bout_inp_src_dir.is_file:
-            raise FileNotFoundError(f'{self.__bout_inp_src_dir} is not'
-                                    f' a file')
+        if not self.__bout_inp_src_dir.joinpath('BOUT.inp').is_file():
+            raise FileNotFoundError(f'No BOUT.inp file found in '
+                                    f'{self.__bout_inp_src_dir}')
 
         logging.debug('self.bout_inp_src_dir set to %s',
                       self.__bout_inp_src_dir)
@@ -281,8 +311,8 @@ class BoutPaths:
         Parameters
         ----------
         bout_inp_dst_dir : None or str or Path
-            The path to the BOUT.inp bout_inp_dst_dir directory (relative to
-            self.project_path)
+            The path to the BOUT.inp bout_inp_dst_dir directory
+            (relative to self.project_path)
             If None, the current time will be used
 
         Returns
@@ -308,7 +338,7 @@ class BoutPaths:
         self._copy_inp()
 
     def _copy_inp(self):
-        """Copy BOUT.inp from source to bout_inp_dst_dir."""
+        """Copy BOUT.inp from bout_inp_src_dir to bout_inp_dst_dir."""
         if self.bout_inp_src_dir != self.bout_inp_dst_dir:
             src = self.bout_inp_src_dir.joinpath('BOUT.inp')
             dst = self.bout_inp_dst_dir.joinpath(src.name)
