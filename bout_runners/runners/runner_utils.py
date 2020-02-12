@@ -27,9 +27,9 @@ def run_settings_run(project_path, bout_inp_dir=None):
     runner.set_destination('settings_run')
     logging.info('Performing a run to obtaining settings in %s. '
                  'Please do not modify this directory',
-                 runner.destination)
+                 runner.bout_inp_dst_dir)
 
-    settings_path = runner.destination.joinpath('BOUT.settings')
+    settings_path = runner.bout_inp_dst_dir.joinpath('BOUT.settings')
 
     if not settings_path.is_file():
         runner.set_split(1)
