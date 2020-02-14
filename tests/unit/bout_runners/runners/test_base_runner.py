@@ -4,6 +4,7 @@
 import shutil
 import pytest
 from bout_runners.runners.base_runner import BoutPaths
+from bout_runners.runners.base_runner import RunParameters
 from bout_runners.runners.base_runner import BoutRunner
 
 
@@ -58,7 +59,7 @@ def fixture_copy_bout_inp():
 
 def test_bout_path(yield_conduction_path, copy_bout_inp):
     """
-    Test that it is possible to perform a single run.
+    Test that BoutPath is copying BOUT.inp.
 
     Parameters
     ----------
@@ -90,6 +91,16 @@ def test_bout_path(yield_conduction_path, copy_bout_inp):
 
     with pytest.raises(FileNotFoundError):
         bout_paths.bout_inp_src_dir = 'dir_without_BOUT_inp'
+
+
+def test_run_parameters():
+    """Test that the RunParameters are setting the parameters."""
+    run_parameters = RunParameters({'global': {'append': False},
+                                    'mesh':  {'nx': 4}})
+    expected_str = 'append=False mesh.nx=4 '
+    assert run_parameters.run_parameters_str == expected_str
+    with pytest.raises(AttributeError):
+        run_parameters.run_parameters_str = 'foo'
 
 
 def test_single_run(copy_bout_inp, make_project):

@@ -13,140 +13,6 @@ from bout_runners.utils.file_operations import get_caller_dir
 from bout_runners.utils.subprocesses_functions import run_subprocess
 
 
-class BoutRunner:
-    """
-    The basic runner class.
-
-    Examples
-    --------
-    >>> from bout_runners.runners.base_runner import BoutRunner
-    >>> runner = BoutRunner('path/to/project/root')
-    >>> runner.run()
-    """
-
-    def __init__(self,
-                 project_path=None,
-                 database_root_path=None):
-        """
-        Set the execution path and create the database.
-
-        Parameters
-        ----------
-        project_path : None or Path or str
-            Root path of make file
-            If None, the path of the path of the root caller will be
-            used
-        database_root_path : None or Path or str
-            Root path of the database file
-            If None, the path will be set to $HOME/BOUT_db
-        """
-        # FIXME: The constructor is not cleaned after refactoring the
-        #  classes
-        if project_path is None:
-            project_path = get_caller_dir()
-        self.project_path = project_path
-        logging.debug('self.project_path set to %s', project_path)
-
-        # Get database
-        db_path = get_db_path(project_path=project_path,
-                              database_root_path=database_root_path)
-        self.bookkeeper = Bookkeeper(db_path)
-
-        self.make = None  # Set to make-obj in self.make_project
-        self.bout_inp_src_dir = None  # Set to Path in self.set_bout_inp_src
-        self.bout_inp_dst_dir = None  # Set to Path in self.set_destination
-        self.nproc = None  # Set in set_split
-        self.parameter_dict = None  # Set in self.set_parameter_dict
-        self.options_str = None  # Set in self.set_parameter_dict
-
-    def set_split(self, nproc):
-        """
-        Set the split.
-
-        Parameters
-        ----------
-        nproc : int
-            Total numbers of processors to use
-        """
-        self.nproc = nproc
-
-    def set_parameter_dict(self, parameter_dict):
-        """
-        Set the parameter_dict.
-
-        The parameter_dict set here will override those found in the
-        BOUT.inp file
-
-        Parameters
-        ----------
-        parameter_dict : dict of str, dict
-            Options on the form
-            >>> {'global':{'append': False, 'nout': 5},
-            ...  'mesh':  {'nx': 4},
-            ...  'section_in_BOUT_inp': {'some_variable': 'some_value'}}
-        """
-        self.parameter_dict = parameter_dict
-        sections = list(self.parameter_dict.keys())
-
-        # Generate the string
-        self.options_str = ''
-        if 'global' in sections:
-            sections.remove('global')
-            global_option = self.parameter_dict['global']
-            for key, val in global_option.items():
-                self.options_str += f'{key}={val} '
-
-        for section in sections:
-            for key, val in parameter_dict.items():
-                self.options_str += f'{section}.{key}={val} '
-
-    def make_project(self):
-        """Set the make object and Make the project."""
-        self.make = MakeProject(self.project_path)
-        self.make.run_make()
-
-    def run(self):
-        """Execute a BOUT++ run."""
-        # Make the project if not already made
-        self.make_project()
-
-        # Set the bout_inp_dst_dir if not set
-        if self.bout_inp_dst_dir is None:
-            self.set_destination()
-
-        mpi_cmd = 'mpirun -np'
-        nproc_str = self.nproc if self.nproc is not None else '1'
-        dst_str = f' -d {self.bout_inp_dst_dir}'
-        options_str = f' {self.options_str}' \
-            if self.options_str is not None else ''
-
-        # NOTE: No spaces if parameters are None
-        command = f'{mpi_cmd} {nproc_str} ./{self.make.exec_name}' \
-                  f'{dst_str}{options_str}'
-
-        db_ready = tables_created(self.bookkeeper)
-        if db_ready:
-            self.bookkeeper.store_data_from_run(self, int(nproc_str))
-        else:
-            logging.warning('Database %s has no entries and is not '
-                            'ready. '
-                            'No data capture will be made.',
-                            self.bookkeeper.database_path)
-
-        run_subprocess(command, path=self.project_path)
-        if db_ready:
-            self.bookkeeper.update_status()
-
-
-class DomainSplit:
-    pass
-
-
-class RunParameters:
-    pass
-
-
-# FIXME: You are here: Use this class as input to BoutRunner
 class BoutPaths:
     """
     Class which sets the paths.
@@ -192,7 +58,7 @@ class BoutPaths:
                  bout_inp_src_dir=None,
                  bout_inp_dst_dir=None):
         """
-        Sets the paths.
+        Set the paths.
 
         Parameters
         ----------
@@ -226,7 +92,7 @@ class BoutPaths:
     @property
     def project_path(self):
         """
-        Set properties of self.project_path
+        Set the properties of self.project_path
 
         Parameters
         ----------
@@ -253,7 +119,7 @@ class BoutPaths:
     @property
     def bout_inp_src_dir(self):
         """
-        Set properties of bout_inp_src_dir.
+        Set the properties of bout_inp_src_dir.
 
         The setter will convert bout_inp_src_dir an absoulte path
         (as the input is relative to the project path), check that
@@ -302,7 +168,7 @@ class BoutPaths:
     @property
     def bout_inp_dst_dir(self):
         """
-        Set properties of bout_inp_dst_dir.
+        Set the properties of bout_inp_dst_dir.
 
         The setter will convert bout_inp_dst_dir an absoulte path
         (as the input is relative to the project path), and copy
@@ -344,3 +210,215 @@ class BoutPaths:
             dst = self.bout_inp_dst_dir.joinpath(src.name)
             shutil.copy(src, dst)
             logging.debug('Copied %s to %s', src, dst)
+
+
+class RunParameters:
+    """
+    Class which sets run parameters with precedence over BOUT.inp
+
+    Attributes
+    ----------
+    __run_parameters_dict : Path
+        Getter and setter variable for run_parameters_dict
+    __run_parameters_str : Path
+        Getter and setter variable for run_parameters_str
+    run_parameters_dict : Path
+        The run parameters on dictionary form
+   run_parameters_str : Path
+        The run parameters on string form
+
+    Examples
+    --------
+    >>> run_parameters = RunParameters({'mesh':  {'nx': 4}})
+    >>> run_parameters.run_parameters_str
+    'mesh.nx=4 '
+
+    >>> run_parameters.run_parameters_str = 'foo'
+    Traceback (most recent call last):
+      File "<input>", line 1, in <module>
+    AttributeError: The run_parameters_str is read only, and is set
+    internally in the setter of run_parameters_dict
+    """
+    def __init__(self, run_parameters_dict):
+        """
+        Set the parameters.
+
+        Parameters
+        ----------
+        run_parameters_dict : dict of str, dict
+            Options on the form
+            >>> {'global': {'append': False, 'nout': 5},
+            ...  'mesh':  {'nx': 4},
+            ...  'section_in_BOUT_inp': {'some_variable': 'some_value'}}
+
+        Notes
+        -----
+        The parameters set here will override those found in the
+        BOUT.inp file
+        """
+        # Declare variables to be used in the getters and setters
+        self.__run_parameters_dict = None
+        self.__run_parameters_str = None
+
+        # NOTE: run_parameters_srt will be set in the setter of
+        #       run_parameters_dict
+        self.run_parameters_srt = None
+
+        # Set the parameters dict (and create the parameters string)
+        self.run_parameters_dict = run_parameters_dict
+
+    @property
+    def run_parameters_dict(self):
+        """
+        Set the properties of self.run_parameters_dict
+
+        The setter will also create the self.__run_parameters_str
+
+        Parameters
+        ----------
+        run_parameters_dict : dict of str, dict
+            Options on the form
+            >>> {'global': {'append': False, 'nout': 5},
+            ...  'mesh':  {'nx': 4},
+            ...  'section_in_BOUT_inp': {'some_variable': 'some_value'}}
+
+        Returns
+        -------
+        self.__run_parameters_dict : Path
+            Absolute path to the root of make file
+        """
+        return self.__run_parameters_dict
+
+    @run_parameters_dict.setter
+    def run_parameters_dict(self, run_parameters_dict):
+        # Set the run parameters
+        self.__run_parameters_dict = run_parameters_dict
+
+        # Generate the string
+        sections = list(self.run_parameters_dict.keys())
+        self.__run_parameters_str = ''
+        if 'global' in sections:
+            # Removing global, as this is something added in
+            # obtain_project_parameters
+            sections.remove('global')
+            global_option = self.run_parameters_dict['global']
+            for key, val in global_option.items():
+                self.__run_parameters_str += f'{key}={val} '
+
+        for section in sections:
+            for key, val in run_parameters_dict[section].items():
+                self.__run_parameters_str += f'{section}.{key}={val} '
+        logging.debug('Sat the parameters to %s',
+                      self.__run_parameters_str)
+
+    @property
+    def run_parameters_str(self):
+        """
+        Set the properties of self.run_parameters_str
+
+        Returns
+        -------
+        self.__parameters_str : str
+            The parameters dict serialized as a string
+
+        Notes
+        -----
+        As the run_parameters_str must reflect run_parameters_dict,
+        both are set when setting run_parameters_dict
+        """
+        return self.__run_parameters_str
+
+    @run_parameters_str.setter
+    def run_parameters_str(self, _):
+        msg = 'The run_parameters_str is read only, and is ' \
+              'set internally in the setter of run_parameters_dict'
+        raise AttributeError(msg)
+
+
+class DomainSplit:
+    pass
+
+
+class BoutRunner:
+    """
+    The basic runner class.
+
+    Examples
+    --------
+    >>> from bout_runners.runners.base_runner import BoutRunner
+    >>> runner = BoutRunner('path/to/project/root')
+    >>> runner.run()
+    """
+
+    def __init__(self,
+                 bout_paths,
+                 database_root_path=None):
+        """
+        Set the execution path and create the database.
+
+        Parameters
+        ----------
+        bout_paths : BoutPaths
+            Class which contains the paths
+        database_root_path : None or Path or str
+            Root path of the database file
+            If None, the path will be set to $HOME/BOUT_db
+        """
+        # Get database
+        db_path = get_db_path(project_path=bout_paths.project_path,
+                              database_root_path=database_root_path)
+        self.bookkeeper = Bookkeeper(db_path)
+
+        self.make = None  # Set to make-obj in self.make_project
+        self.nproc = None  # Set in set_split
+        self.parameter_dict = None  # Set in self.set_parameter_dict
+        self.options_str = None  # Set in self.set_parameter_dict
+
+    def set_split(self, nproc):
+        """
+        Set the split.
+
+        Parameters
+        ----------
+        nproc : int
+            Total numbers of processors to use
+        """
+        self.nproc = nproc
+
+    def make_project(self):
+        """Set the make object and Make the project."""
+        self.make = MakeProject(self.project_path)
+        self.make.run_make()
+
+    def run(self):
+        """Execute a BOUT++ run."""
+        # Make the project if not already made
+        self.make_project()
+
+        # Set the bout_inp_dst_dir if not set
+        if self.bout_inp_dst_dir is None:
+            self.set_destination()
+
+        mpi_cmd = 'mpirun -np'
+        nproc_str = self.nproc if self.nproc is not None else '1'
+        dst_str = f' -d {self.bout_inp_dst_dir}'
+        options_str = f' {self.options_str}' \
+            if self.options_str is not None else ''
+
+        # NOTE: No spaces if parameters are None
+        command = f'{mpi_cmd} {nproc_str} ./{self.make.exec_name}' \
+                  f'{dst_str}{options_str}'
+
+        db_ready = tables_created(self.bookkeeper)
+        if db_ready:
+            self.bookkeeper.store_data_from_run(self, int(nproc_str))
+        else:
+            logging.warning('Database %s has no entries and is not '
+                            'ready. '
+                            'No data capture will be made.',
+                            self.bookkeeper.database_path)
+
+        run_subprocess(command, path=self.project_path)
+        if db_ready:
+            self.bookkeeper.update_status()
+

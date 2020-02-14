@@ -26,14 +26,14 @@ def obtain_project_parameters(settings_path):
 
     Returns
     -------
-    parameter_dict : dict
+    run_parameters_dict : dict
         Dictionary containing the parameters given in BOUT.settings
         On the form
         >>> {'section': {'parameter': 'value'}}
 
     Notes
     -----
-    1. The section less part of BOUT.settings will be renamed `global`
+    1. The sectionless part of BOUT.settings will be renamed `global`
     2. In the `global` section, the keys `d` and the directory to the
        BOUT.inp file will be removed
     3. If the section `all` is present in BOUT.settings, the section
@@ -290,7 +290,7 @@ def extract_parameters_in_use(project_path, bout_inp_dir, options):
     Returns
     -------
     parameters : dict of str, dict
-        Parameters on the same form as `parameter_dict`
+        Parameters on the same form as `run_parameters_dict`
         (from obtain_project_parameters)
     """
     # Obtain the default parameters
@@ -304,7 +304,7 @@ def extract_parameters_in_use(project_path, bout_inp_dir, options):
     # Update with parameters from BOUT.inp
     bout_inp_path = bout_inp_dir.joinpath('BOUT.inp')
     parameters.update(obtain_project_parameters(bout_inp_path))
-    # Update with parameters from parameter_dict
+    # Update with parameters from run_parameters_dict
     parameters.update(options)
 
     return parameters
