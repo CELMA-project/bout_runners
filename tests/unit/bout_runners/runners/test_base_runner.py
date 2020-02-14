@@ -20,7 +20,6 @@ def fixture_copy_bout_inp():
         Function which copies BOUT.inp and returns the path to the
         temporary directory
     """
-
     # We store the directories to be removed in a list, as lists are
     # mutable irrespective of the scope of their definition
     tmp_dir_list = []

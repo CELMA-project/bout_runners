@@ -92,7 +92,7 @@ class BoutPaths:
     @property
     def project_path(self):
         """
-        Set the properties of self.project_path
+        Set the properties of self.project_path.
 
         Parameters
         ----------
@@ -214,7 +214,7 @@ class BoutPaths:
 
 class RunParameters:
     """
-    Class which sets run parameters with precedence over BOUT.inp
+    Class which sets run parameters with precedence over BOUT.inp.
 
     Attributes
     ----------
@@ -224,7 +224,7 @@ class RunParameters:
         Getter and setter variable for run_parameters_str
     run_parameters_dict : dict
         The run parameters on dictionary form
-   run_parameters_str : None or str
+    run_parameters_str : None or str
         The run parameters on string form
 
     Examples
@@ -239,6 +239,7 @@ class RunParameters:
     AttributeError: The run_parameters_str is read only, and is set
     internally in the setter of run_parameters_dict
     """
+
     def __init__(self, run_parameters_dict=None):
         """
         Set the parameters.
@@ -260,9 +261,9 @@ class RunParameters:
         self.__run_parameters_dict = None
         self.__run_parameters_str = None
 
-        # NOTE: run_parameters_srt will be set in the setter of
+        # NOTE: run_parameters_str will be set in the setter of
         #       run_parameters_dict
-        self.run_parameters_srt = None
+        self.run_parameters_str = None
 
         # Set the parameters dict (and create the parameters string)
         self.run_parameters_dict = run_parameters_dict
@@ -270,7 +271,7 @@ class RunParameters:
     @property
     def run_parameters_dict(self):
         """
-        Set the properties of self.run_parameters_dict
+        Set the properties of self.run_parameters_dict.
 
         The setter will also create the self.__run_parameters_str
 
@@ -315,7 +316,7 @@ class RunParameters:
     @property
     def run_parameters_str(self):
         """
-        Set the properties of self.run_parameters_str
+        Set the properties of self.run_parameters_str.
 
         Returns
         -------
@@ -339,7 +340,7 @@ class RunParameters:
 
 class ProcessorSplit:
     """
-    Class which sets the processor split
+    Class which sets the processor split.
 
     Attributes
     ----------
@@ -406,7 +407,7 @@ class ProcessorSplit:
     @property
     def number_of_processors(self):
         """
-        Set the properties of self.number_of_processors
+        Set the properties of self.number_of_processors.
 
         Parameters
         ----------
@@ -433,7 +434,7 @@ class ProcessorSplit:
     @property
     def number_of_nodes(self):
         """
-        Set the properties of self.number_of_nodes
+        Set the properties of self.number_of_nodes.
 
         Parameters
         ----------
@@ -459,7 +460,7 @@ class ProcessorSplit:
     @property
     def processors_per_node(self):
         """
-        Set the properties of self.processors_per_node
+        Set the properties of self.processors_per_node.
 
         Parameters
         ----------
@@ -498,9 +499,8 @@ class BoutRunner:
 
     Examples
     --------
-    FIXME
-    >>> from bout_runners.runners.base_runner import BoutRunner
-    >>> runner = BoutRunner('path/to/project/root')
+    >>> bout_paths = BoutPaths('path/to/project/root')
+    >>> runner = BoutRunner(bout_paths)
     >>> runner.run()
     """
 
