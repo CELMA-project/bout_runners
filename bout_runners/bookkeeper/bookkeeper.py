@@ -245,6 +245,7 @@ class Bookkeeper:
                                   file_modification_dict)
 
         # Update the split
+        # FIXME: This is fixed in the new ProcessorSplit class
         processors_per_node = processors_per_node if \
             processors_per_node is not None else \
             int(np.floor(number_of_processors/nodes))
