@@ -9,10 +9,11 @@ import re
 import subprocess
 from pathlib import Path
 
-from bout_runners.utils.file_operations import get_caller_dir, \
-    get_modified_time
+from bout_runners.utils.file_operations import get_caller_dir
+from bout_runners.utils.file_operations import get_modified_time
 from bout_runners.utils.paths import get_bout_path
 from bout_runners.utils.subprocesses_functions import run_subprocess
+from bout_runners.runners.runner_utils import run_settings_run
 
 
 def obtain_project_parameters(settings_path):
@@ -83,7 +84,7 @@ def obtain_project_parameters(settings_path):
         parameter_dict['all_boundaries'] = parameter_dict.pop('all')
 
     # Drop run as bout_runners will make its own table with that name
-    parameter_dict.pop('run')
+    parameter_dict.pop('run', None)
 
     return parameter_dict
 
@@ -271,7 +272,9 @@ def tables_created(bookkeeper):
     return len(table.index) != 0
 
 
-def extract_parameters_in_use(project_path, bout_inp_dir, options):
+def extract_parameters_in_use(project_path,
+                              bout_inp_dst_dir,
+                              run_parameters_dict):
     """
     Extract parameters that will be used in a run.
 
@@ -279,9 +282,9 @@ def extract_parameters_in_use(project_path, bout_inp_dir, options):
     ----------
     project_path : Path
         Root path of project (make file)
-    bout_inp_dir : Path
+    bout_inp_dst_dir : Path
         Path to the directory of BOUT.inp currently in use
-    options : dict of str, dict
+    run_parameters_dict : dict of str, dict
         Options on the form
         >>> {'global':{'append': False, 'nout': 5},
         ...  'mesh':  {'nx': 4},
@@ -297,15 +300,14 @@ def extract_parameters_in_use(project_path, bout_inp_dir, options):
     settings_path = project_path.joinpath('settings_run',
                                           'BOUT.settings')
     if not settings_path.is_file():
-        FileNotFoundError(f'{settings_path} not found. It can be '
-                          f'created by running '
-                          f'bout_runners.runners.run_settings_run')
+        logging.info('No setting files found, running run_settings_run')
+        run_settings_run(project_path)
     parameters = obtain_project_parameters(settings_path)
     # Update with parameters from BOUT.inp
-    bout_inp_path = bout_inp_dir.joinpath('BOUT.inp')
+    bout_inp_path = bout_inp_dst_dir.joinpath('BOUT.inp')
     parameters.update(obtain_project_parameters(bout_inp_path))
     # Update with parameters from run_parameters_dict
-    parameters.update(options)
+    parameters.update(run_parameters_dict)
 
     return parameters
 

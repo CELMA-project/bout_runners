@@ -143,6 +143,8 @@ def test_single_run(copy_bout_inp, make_project):
     run_parameters = RunParameters({'global': {'nout': 0}})
     runner = BoutRunner(bout_paths=bout_paths,
                         run_parameters=run_parameters)
+    # FIXME: This test is failing. Possibly because bookeeper is
+    #  messy, and should be refactored
     runner.run()
 
     assert bout_inp_dir.joinpath('BOUT.dmp.0.nc').is_file()

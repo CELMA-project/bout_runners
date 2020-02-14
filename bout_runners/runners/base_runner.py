@@ -11,6 +11,7 @@ from bout_runners.bookkeeper.bookkeeper_utils import tables_created
 from bout_runners.make.make import MakeProject
 from bout_runners.utils.file_operations import get_caller_dir
 from bout_runners.utils.subprocesses_functions import run_subprocess
+from bout_runners.bookkeeper.creator import create_database
 
 
 class BoutPaths:
@@ -261,10 +262,6 @@ class RunParameters:
         self.__run_parameters_dict = None
         self.__run_parameters_str = None
 
-        # NOTE: run_parameters_str will be set in the setter of
-        #       run_parameters_dict
-        self.run_parameters_str = None
-
         # Set the parameters dict (and create the parameters string)
         self.run_parameters_dict = run_parameters_dict
 
@@ -333,7 +330,7 @@ class RunParameters:
     @run_parameters_str.setter
     def run_parameters_str(self, _):
         msg = (f'The run_parameters_str is read only, and is '
-               f'set in run_parameters_dict (currently in use:'
+               f'set in run_parameters_dict (currently in use: '
                f'{self.run_parameters_str})')
         raise AttributeError(msg)
 
@@ -541,8 +538,16 @@ class BoutRunner:
         self.make = MakeProject(self.bout_paths.project_path)
         self.make.run_make()
 
-    def run(self):
-        """Execute a BOUT++ run."""
+    def run(self, settings_run=False):
+        """
+        Execute a BOUT++ run.
+
+        Parameters
+        ----------
+        settings_run : bool
+            Whether or not the run is meant to find the parameters
+            In that case the database is disabled
+        """
         # Make the project if not already made
         self.make_project()
 
@@ -555,8 +560,13 @@ class BoutRunner:
                    f'-d {self.bout_paths.bout_inp_dst_dir} '
                    f'{self.run_parameters.run_parameters_str}')
 
-        db_ready = tables_created(self.bookkeeper)
-        if db_ready:
+        if not settings_run:
+            if not tables_created(self.bookkeeper):
+                db_path = self.bookkeeper.database_path.parent
+                create_database(
+                    project_path=self.bout_paths.project_path,
+                    database_root_path=db_path)
+
             self.bookkeeper.store_data_from_run(
                 self,
                 self.processor_split.number_of_processors)
@@ -567,5 +577,5 @@ class BoutRunner:
                             self.bookkeeper.database_path)
 
         run_subprocess(command, path=self.bout_paths.project_path)
-        if db_ready:
+        if tables_created(self.bookkeeper) and not settings_run:
             self.bookkeeper.update_status()

@@ -224,19 +224,20 @@ class Bookkeeper:
         new_entry = False
 
         # Initiate the run_dict (will be filled with the ids)
-        run_dict = {'name': runner.destination.name}
+        run_dict = {'name': runner.bout_paths.bout_inp_dst_dir.name}
 
         # Update the parameters
         parameters_dict = \
-            extract_parameters_in_use(runner.project_path,
-                                      runner.destination,
-                                      runner.parameters_dict)
+            extract_parameters_in_use(
+                runner.bout_paths.project_path,
+                runner.bout_paths.bout_inp_dst_dir,
+                runner.run_parameters.run_parameters_dict)
         run_dict['parameters_id'] = \
             self.create_parameter_tables_entry(parameters_dict)
 
         # Update the file_modification
         file_modification_dict = \
-            get_file_modification(runner.project_path,
+            get_file_modification(runner.bout_paths.project_path,
                                   runner.make.makefile_path,
                                   runner.make.exec_name)
         run_dict['file_modification_id'] = \

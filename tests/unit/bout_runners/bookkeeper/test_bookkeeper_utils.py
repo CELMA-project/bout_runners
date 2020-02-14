@@ -25,7 +25,7 @@ def test_cast_parameters_to_sql_type(get_test_data_path):
     assert isinstance(parameter_as_sql, dict)
     assert 'global' in parameter_as_sql.keys()
     assert isinstance(parameter_as_sql['global'], dict)
-    assert parameter_as_sql['global']['append'] == 'INTEGER'
+    assert parameter_as_sql['global']['append'] == 'TEXT'
 
 
 def test_get_system_info_as_sql_type():
@@ -46,13 +46,17 @@ def test_get_create_table_statement():
 
     expected = ('CREATE TABLE foo \n'
                 '(   quux INTEGER PRIMARY KEY,\n'
-                '    bar baz,\n'
-                '    foobar qux,\n'
-                '    quuz INTEGER,\n'
-                '    garply INTEGER,\n'
+                '    bar baz NOT NULL,\n'
+                '    foobar qux NOT NULL,\n'
+                '    quuz INTEGER NOT NULL,\n'
+                '    garply INTEGER NOT NULL,\n'
                 '    FOREIGN KEY(quuz) \n'
-                '        REFERENCES corge(grault),\n'
+                '        REFERENCES corge(grault)\n'
+                '            ON UPDATE CASCADE\n'
+                '            ON DELETE CASCADE,\n'
                 '    FOREIGN KEY(garply) \n'
-                '        REFERENCES waldo(fred))')
+                '        REFERENCES waldo(fred)\n'
+                '            ON UPDATE CASCADE\n'
+                '            ON DELETE CASCADE)')
 
     assert result == expected
