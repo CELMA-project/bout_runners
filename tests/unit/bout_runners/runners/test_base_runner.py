@@ -7,8 +7,8 @@ from bout_runners.runners.base_runner import BoutPaths
 from bout_runners.runners.base_runner import BoutRunner
 
 
-@pytest.fixture(scope='function')
-def copy_bout_inp():
+@pytest.fixture(scope='function', name='copy_bout_inp')
+def fixture_copy_bout_inp():
     """
     Copy BOUT.inp to a temporary directory.
 
@@ -19,45 +19,41 @@ def copy_bout_inp():
         temporary directory
     """
 
-    class BoutInpCopier:
-        """Class which encapsulates the tmp_path_name."""
+    # We store the directories to be removed in a list, as lists are
+    # mutable irrespective of the scope of their definition
+    tmp_dir_list = []
 
-        def __init__(self):
-            """Declare self.tmp_path_name."""
-            self.tmp_bout_inp_dir = None
+    def copy_inp_path(project_path, tmp_path_name):
+        """
+        Copy BOUT.inp to a temporary directory.
 
-        def copy_inp_path(self, project_path, tmp_path_name):
-            """
-            Copy BOUT.inp to a temporary directory.
+        Parameters
+        ----------
+        project_path : Path
+            Root path to the project
+        tmp_path_name : str
+            Name of the temporary directory
 
-            Parameters
-            ----------
-            project_path : Path
-                Root path to the project
-            tmp_path_name : str
-                Name of the temporary directory
+        Returns
+        -------
+        tmp_bout_inp_dir : Path
+            Path to the temporary directory
+        """
+        bout_inp_path = project_path.joinpath('data', 'BOUT.inp')
 
-            Returns
-            -------
-            tmp_bout_inp_dir : Path
-                Path to the temporary directory
-            """
-            tmp_path_name = tmp_path_name
-            bout_inp_path = project_path.joinpath('data', 'BOUT.inp')
+        tmp_bout_inp_dir = project_path.joinpath(tmp_path_name)
+        tmp_bout_inp_dir.mkdir(exist_ok=True)
+        tmp_dir_list.append(tmp_bout_inp_dir)
 
-            tmp_bout_inp_dir = project_path.joinpath(tmp_path_name)
-            tmp_bout_inp_dir.mkdir(exist_ok=True)
-            self.tmp_bout_inp_dir = tmp_bout_inp_dir
+        shutil.copy(bout_inp_path,
+                    tmp_bout_inp_dir.joinpath('BOUT.inp'))
 
-            shutil.copy(bout_inp_path,
-                        tmp_bout_inp_dir.joinpath('BOUT.inp'))
+        return tmp_bout_inp_dir
 
-            return tmp_bout_inp_dir
+    yield copy_inp_path
 
-    copier = BoutInpCopier()
-    yield copier.copy_inp_path
-
-    shutil.rmtree(copier.tmp_bout_inp_dir)
+    for tmp_dir_path in tmp_dir_list:
+        shutil.rmtree(tmp_dir_path)
 
 
 def test_bout_path(yield_conduction_path, copy_bout_inp):
