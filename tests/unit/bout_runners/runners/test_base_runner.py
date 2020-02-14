@@ -138,11 +138,12 @@ def test_single_run(copy_bout_inp, make_project):
 
     bout_inp_dir = copy_bout_inp(project_path, tmp_path_name)
 
-    runner = BoutRunner(project_path=project_path)
-    runner.set_inp_src(bout_inp_dir)
-    runner.set_destination(bout_inp_dir)
-    runner.set_split(1)
-    runner.set_parameter_dict({'global': {'nout': 0}})
+    bout_paths = BoutPaths(project_path=project_path,
+                           bout_inp_src_dir=bout_inp_dir,
+                           bout_inp_dst_dir=bout_inp_dir)
+    run_parameters = RunParameters({'global': {'nout': 0}})
+    runner = BoutRunner(bout_paths=bout_paths,
+                        run_parameters=run_parameters)
     runner.run()
 
     assert bout_inp_dir.joinpath('BOUT.dmp.0.nc').is_file()

@@ -2,10 +2,12 @@
 
 
 import logging
+from bout_runners.runners.base_runner import BoutPaths
+from bout_runners.runners.base_runner import RunParameters
 from bout_runners.runners.base_runner import BoutRunner
 
 
-def run_settings_run(project_path, bout_inp_dir=None):
+def run_settings_run(project_path, bout_inp_src_dir=None):
     """
     Perform a test run.
 
@@ -13,7 +15,7 @@ def run_settings_run(project_path, bout_inp_dir=None):
     ----------
     project_path : Path
         Path to the project
-    bout_inp_dir : Path or None
+    bout_inp_src_dir : Path or None
         Path to the BOUT.inp file
         Will be set to `data/` of the `project_path` if not set
 
@@ -22,18 +24,19 @@ def run_settings_run(project_path, bout_inp_dir=None):
     settings_path : Path
         Path to the settings file
     """
-    runner = BoutRunner(project_path=project_path)
-    runner.set_inp_src(bout_inp_dir)
-    runner.set_destination('settings_run')
-    logging.info('Performing a run to obtaining settings in %s. '
-                 'Please do not modify this directory',
-                 runner.bout_inp_dst_dir)
+    bout_paths = BoutPaths(project_path=project_path,
+                           bout_inp_src_dir=bout_inp_src_dir,
+                           bout_inp_dst_dir='settings_run')
+    run_parameters = RunParameters({'global': {'nout': 0}})
+    runner = BoutRunner(bout_paths=bout_paths,
+                        run_parameters=run_parameters)
+    logging.info('Performing a run to obtaining settings in %s.',
+                 bout_paths.bout_inp_dst_dir)
 
-    settings_path = runner.bout_inp_dst_dir.joinpath('BOUT.settings')
+    settings_path = \
+        bout_paths.bout_inp_dst_dir.joinpath('BOUT.settings')
 
     if not settings_path.is_file():
-        runner.set_split(1)
-        runner.set_parameter_dict({'global': {'nout': 0}})
         runner.run()
 
     return settings_path

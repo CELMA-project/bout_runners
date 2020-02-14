@@ -5,10 +5,13 @@ import re
 import logging
 import contextlib
 import sqlite3
-import numpy as np
 import pandas as pd
 from bout_runners.bookkeeper.bookkeeper_utils import \
-    get_create_table_statement, get_file_modification, get_system_info
+    get_create_table_statement
+from bout_runners.bookkeeper.bookkeeper_utils import \
+    get_file_modification
+from bout_runners.bookkeeper.bookkeeper_utils import \
+    get_system_info
 from bout_runners.bookkeeper.bookkeeper_utils import \
     create_insert_string
 from bout_runners.bookkeeper.bookkeeper_utils import \
@@ -245,10 +248,6 @@ class Bookkeeper:
                                   file_modification_dict)
 
         # Update the split
-        # FIXME: This is fixed in the new ProcessorSplit class
-        processors_per_node = processors_per_node if \
-            processors_per_node is not None else \
-            int(np.floor(number_of_processors/nodes))
         split_dict = {'number_of_processors': number_of_processors,
                       'nodes': nodes,
                       'processors_per_nodes': processors_per_node}

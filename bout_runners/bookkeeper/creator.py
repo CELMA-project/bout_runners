@@ -92,7 +92,7 @@ def create_parameter_tables(bookkeeper, project_path):
     project_path : Path
         Path to the project
     """
-    settings_path = run_settings_run(project_path, bout_inp_dir=None)
+    settings_path = run_settings_run(project_path, bout_inp_src_dir=None)
     parameter_dict = obtain_project_parameters(settings_path)
     parameter_dict_sql_types = \
         cast_parameters_to_sql_type(parameter_dict)

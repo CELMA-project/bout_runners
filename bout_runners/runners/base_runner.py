@@ -239,13 +239,13 @@ class RunParameters:
     AttributeError: The run_parameters_str is read only, and is set
     internally in the setter of run_parameters_dict
     """
-    def __init__(self, run_parameters_dict):
+    def __init__(self, run_parameters_dict=None):
         """
         Set the parameters.
 
         Parameters
         ----------
-        run_parameters_dict : dict of str, dict
+        run_parameters_dict : None or dict of str, dict
             Options on the form
             >>> {'global': {'append': False, 'nout': 5},
             ...  'mesh':  {'nx': 4},
@@ -276,7 +276,7 @@ class RunParameters:
 
         Parameters
         ----------
-        run_parameters_dict : dict of str, dict
+        run_parameters_dict : None or dict of str, dict
             Options on the form
             >>> {'global': {'append': False, 'nout': 5},
             ...  'mesh':  {'nx': 4},
@@ -292,7 +292,8 @@ class RunParameters:
     @run_parameters_dict.setter
     def run_parameters_dict(self, run_parameters_dict):
         # Set the run parameters
-        self.__run_parameters_dict = run_parameters_dict
+        self.__run_parameters_dict = run_parameters_dict if \
+            run_parameters_dict is not None else dict()
 
         # Generate the string
         sections = list(self.run_parameters_dict.keys())
@@ -330,8 +331,9 @@ class RunParameters:
 
     @run_parameters_str.setter
     def run_parameters_str(self, _):
-        msg = 'The run_parameters_str is read only, and is ' \
-              'set internally in the setter of run_parameters_dict'
+        msg = (f'The run_parameters_str is read only, and is '
+               f'set in run_parameters_dict (currently in use:'
+               f'{self.run_parameters_str})')
         raise AttributeError(msg)
 
 
@@ -496,6 +498,7 @@ class BoutRunner:
 
     Examples
     --------
+    FIXME
     >>> from bout_runners.runners.base_runner import BoutRunner
     >>> runner = BoutRunner('path/to/project/root')
     >>> runner.run()
@@ -503,31 +506,39 @@ class BoutRunner:
 
     def __init__(self,
                  bout_paths,
+                 run_parameters=RunParameters(),
+                 processor_split=ProcessorSplit(),
                  database_root_path=None):
         """
-        Set the execution path and create the database.
+        Set the input parameters and create the database.
 
         Parameters
         ----------
         bout_paths : BoutPaths
             Class which contains the paths
+        run_parameters : RunParameters
+            Class containing the run parameters
+        processor_split : ProcessorSplit
+            Class containing the processor split
         database_root_path : None or Path or str
             Root path of the database file
             If None, the path will be set to $HOME/BOUT_db
         """
+        # Set member data
+        self.bout_paths = bout_paths
+        self.run_parameters = run_parameters
+        self.processor_split = processor_split
+
         # Get database
-        db_path = get_db_path(project_path=bout_paths.project_path,
+        db_path = get_db_path(project_path=self.bout_paths.project_path,
                               database_root_path=database_root_path)
         self.bookkeeper = Bookkeeper(db_path)
 
         self.make = None  # Set to make-obj in self.make_project
-        self.nproc = None  # Set in set_split
-        self.parameter_dict = None  # Set in self.set_parameter_dict
-        self.options_str = None  # Set in self.set_parameter_dict
 
     def make_project(self):
         """Set the make object and Make the project."""
-        self.make = MakeProject(self.project_path)
+        self.make = MakeProject(self.bout_paths.project_path)
         self.make.run_make()
 
     def run(self):
@@ -535,30 +546,26 @@ class BoutRunner:
         # Make the project if not already made
         self.make_project()
 
-        # Set the bout_inp_dst_dir if not set
-        if self.bout_inp_dst_dir is None:
-            self.set_destination()
-
         mpi_cmd = 'mpirun -np'
-        nproc_str = self.nproc if self.nproc is not None else '1'
-        dst_str = f' -d {self.bout_inp_dst_dir}'
-        options_str = f' {self.options_str}' \
-            if self.options_str is not None else ''
 
         # NOTE: No spaces if parameters are None
-        command = f'{mpi_cmd} {nproc_str} ./{self.make.exec_name}' \
-                  f'{dst_str}{options_str}'
+        command = (f'{mpi_cmd} '
+                   f'{self.processor_split.number_of_processors} '
+                   f'./{self.make.exec_name} '
+                   f'-d {self.bout_paths.bout_inp_dst_dir} '
+                   f'{self.run_parameters.run_parameters_str}')
 
         db_ready = tables_created(self.bookkeeper)
         if db_ready:
-            self.bookkeeper.store_data_from_run(self, int(nproc_str))
+            self.bookkeeper.store_data_from_run(
+                self,
+                self.processor_split.number_of_processors)
         else:
             logging.warning('Database %s has no entries and is not '
                             'ready. '
                             'No data capture will be made.',
                             self.bookkeeper.database_path)
 
-        run_subprocess(command, path=self.project_path)
+        run_subprocess(command, path=self.bout_paths.project_path)
         if db_ready:
             self.bookkeeper.update_status()
-
