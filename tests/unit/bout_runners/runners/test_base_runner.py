@@ -22,6 +22,8 @@ def fixture_copy_bout_inp():
     """
     # We store the directories to be removed in a list, as lists are
     # mutable irrespective of the scope of their definition
+    # See:
+    # https://docs.pytest.org/en/latest/fixture.html#factories-as-fixtures
     tmp_dir_list = []
 
     def copy_inp_path(project_path, tmp_path_name):
