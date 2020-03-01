@@ -7,13 +7,9 @@ import contextlib
 import sqlite3
 import pandas as pd
 from bout_runners.bookkeeper.bookkeeper_utils import \
-    get_create_table_statement
-from bout_runners.bookkeeper.bookkeeper_utils import \
     get_file_modification
 from bout_runners.bookkeeper.bookkeeper_utils import \
     get_system_info
-from bout_runners.bookkeeper.bookkeeper_utils import \
-    create_insert_string
 from bout_runners.bookkeeper.bookkeeper_utils import \
     extract_parameters_in_use
 
@@ -26,6 +22,7 @@ class Bookkeeper:
     ----------
     database_path : Path or str
         Path to database
+    FIXME: Upate these
 
     Methods
     -------
@@ -35,6 +32,8 @@ class Bookkeeper:
         Make a query to the database
     """
 
+    # FIXME: You are here: Ripping apart Bookkeeper, added from
+    #  bookkeeper_utils and creator - remember to move the tests
     def __init__(self, database_path):
         """
         Set the path to the data base.
@@ -47,23 +46,6 @@ class Bookkeeper:
         self.database_path = database_path
         logging.info('Database path set to %s', self.database_path)
 
-    def create_table(self, table_str):
-        """
-        Create a table in the database.
-
-        Parameters
-        ----------
-        table_str : str
-            The query to execute
-        """
-        # Obtain the table name
-        pattern = r'CREATE TABLE (\w*)'
-        table_name = re.match(pattern, table_str).group(1)
-
-        self.execute_statement(table_str)
-
-        logging.info('Created table %s', table_name)
-
     def execute_statement(self, sql_statement, *parameters):
         """
         Execute a statement in the database.
@@ -72,6 +54,8 @@ class Bookkeeper:
         ----------
         sql_statement : str
             The statement execute
+        parameters : tuple
+            Parameters used in .execute of the cursor (like )
         """
         # NOTE: The connection does not close after the 'with' statement
         #       Instead we use the context manager as described here
@@ -86,89 +70,66 @@ class Bookkeeper:
                     # Check if tables are present
                     cur.execute(sql_statement, parameters)
 
-    def create_parameter_tables(self, parameters_as_sql_types):
+    def get_db_path(database_root_path, project_path):
         """
-        Create a table for each BOUT.settings section and a join table.
+        Return the database path.
 
         Parameters
         ----------
-        parameters_as_sql_types : dict
-            The dictionary on the form
-            >>> {'section': {'parameter': 'value_type'}}
-
-        Notes
-        -----
-        All `:` will be replaced by `_` in the section names
-        """
-        parameters_foreign_keys = dict()
-        for section in parameters_as_sql_types.keys():
-            # Replace bad characters for SQL
-            section_name = section.replace(':', '_')
-            # Generate foreign keys for the parameters table
-            parameters_foreign_keys[f'{section_name}_id'] =\
-                (section_name, 'id')
-
-            columns = dict()
-            for parameter, value_type in \
-                    parameters_as_sql_types[section].items():
-                # Generate the columns
-                columns[parameter] = value_type
-
-            # Creat the section table
-            section_statement = \
-                get_create_table_statement(table_name=section_name,
-                                           columns=columns)
-            self.create_table(section_statement)
-
-        # Create the join table
-        parameters_statement = get_create_table_statement(
-            table_name='parameters',
-            foreign_keys=parameters_foreign_keys)
-        self.create_table(parameters_statement)
-
-    def create_parameter_tables_entry(self, parameters_dict):
-        """
-        Insert the parameters into a the parameter tables.
-
-        Parameters
-        ----------
-        parameters_dict : dict
-            The dictionary on the form
-            >>> {'section': {'parameter': 'value'}}
+        project_path : None or Path or str
+            Root path to the project (i.e. where the makefile is located)
+            If None the root caller directory will be used
+        database_root_path : None or Path or str
+            Root path of the database file
+            If None, the path will be set to $HOME/BOUT_db
 
         Returns
         -------
-        parameters_id : int
-            The id key from the `parameters` table
-
-        Notes
-        -----
-        All `:` will be replaced by `_` in the section names
+        database_path : Path
+            Path to the database
         """
-        parameters_foreign_keys = dict()
-        parameter_sections = list(parameters_dict.keys())
+        if project_path is None:
+            project_path = get_caller_dir()
 
-        for section in parameter_sections:
-            # Replace bad characters for SQL
-            section_name = section.replace(':', '_')
-            section_parameters = parameters_dict[section]
-            section_id = self.check_entry_existence(section_name,
-                                                    section_parameters)
-            if section_id is not None:
-                section_id = self.create_entry(section_name,
-                                               section_parameters)
+        if database_root_path is None:
+            # NOTE: This will be changed when going to production
+            database_root_path = get_caller_dir()
+            # database_root_path = Path().home().joinpath('BOUT_db')
 
-            parameters_foreign_keys[f'{section_name}_id'] = section_id
+        project_path = Path(project_path)
+        database_root_path = Path(database_root_path)
 
-        # Update the parameters table
-        parameters_id = \
-            self.check_entry_existence('parameters',
-                                       parameters_foreign_keys)
-        if parameters_id is not None:
-            parameters_id = self.create_entry('parameters',
-                                              parameters_foreign_keys)
+        database_root_path.mkdir(exist_ok=True, parents=True)
+        # NOTE: sqlite does not support schemas (except through an
+        #       ephemeral ATTACH connection)
+        #       Thus we will make one database per project
+        # https://www.sqlite.org/lang_attach.html
+        # https://stackoverflow.com/questions/30897377/python-sqlite3-create-a-schema-without-having-to-use-a-second-database
+        schema = project_path.name
+        database_path = database_root_path.joinpath(f'{schema}.db')
 
-        return parameters_id
+        return database_path
+
+class BookkeeperWriter:
+
+    def insert(self, insert_str, values):
+        """
+        Insert to the database.
+
+        Parameters
+        ----------
+        insert_str : str
+            The query to execute
+        values : tuple
+            Values to be inserted in the query
+        """
+        # Obtain the table name
+        pattern = r'INSERT INTO (\w*)'
+        table_name = re.match(pattern, insert_str).group(1)
+
+        self.execute_statement(insert_str, values)
+
+        logging.info('Made insertion to %s', table_name)
 
     def create_entry(self, table_name, entries_dict):
         """
@@ -275,6 +236,40 @@ class Bookkeeper:
 
         return new_entry
 
+    def update_status(self):
+        """Update the status."""
+        raise NotImplementedError('To be implemented')
+
+    def create_insert_string(field_names, table_name):
+        """
+        Create a question mark style string for database insertions.
+
+        Values must be provided separately in the execution statement
+
+        Parameters
+        ----------
+        field_names : array-like
+            Names of the fields to populate
+        table_name : str
+            Name of the table to use for the insertion
+
+        Returns
+        -------
+        insert_str : str
+            The string to be used for insertion
+        """
+        # From
+        # https://stackoverflow.com/a/14108554/2786884
+        columns = ', '.join(field_names)
+        placeholders = ', '.join('?' * len(field_names))
+        insert_str = f'INSERT INTO {table_name} ' \
+                     f'({columns}) ' \
+                     f'VALUES ({placeholders})'
+        return insert_str
+
+
+class BookkeeperReader:
+
     def get_latest_row_id(self):
         """
         Return the latest row id.
@@ -336,10 +331,6 @@ class Bookkeeper:
 
         return row_id
 
-    def update_status(self):
-        """Update the status."""
-        raise NotImplementedError('To be implemented')
-
     def query(self, query_str):
         """
         Make a query to the database.
@@ -364,21 +355,191 @@ class Bookkeeper:
             table = pd.read_sql_query(query_str, con)
         return table
 
-    def insert(self, insert_str, values):
+    def tables_created(bookkeeper):
         """
-        Insert to the database.
+        Check if the tables is created in the database.
 
         Parameters
         ----------
-        insert_str : str
+        bookkeeper : Bookkeeper
+            The Bookkeeper object
+
+        Returns
+        -------
+        bool
+            Whether or not the tables are created
+        """
+        query_str = ('SELECT name FROM sqlite_master '
+                     '   WHERE type="table"')
+
+        table = bookkeeper.query(query_str)
+        return len(table.index) != 0
+
+
+class BookkeeperCreator:
+
+    def create_parameter_tables(self, parameters_as_sql_types):
+        """
+        Create a table for each BOUT.settings section and a join table.
+
+        Parameters
+        ----------
+        parameters_as_sql_types : dict
+            The dictionary on the form
+            >>> {'section': {'parameter': 'value_type'}}
+
+        Notes
+        -----
+        All `:` will be replaced by `_` in the section names
+        """
+        parameters_foreign_keys = dict()
+        for section in parameters_as_sql_types.keys():
+            # Replace bad characters for SQL
+            section_name = section.replace(':', '_')
+            # Generate foreign keys for the parameters table
+            parameters_foreign_keys[f'{section_name}_id'] =\
+                (section_name, 'id')
+
+            columns = dict()
+            for parameter, value_type in \
+                    parameters_as_sql_types[section].items():
+                # Generate the columns
+                columns[parameter] = value_type
+
+            # Creat the section table
+            section_statement = \
+                get_create_table_statement(table_name=section_name,
+                                           columns=columns)
+            self.create_table(section_statement)
+
+        # Create the join table
+        parameters_statement = get_create_table_statement(
+            table_name='parameters',
+            foreign_keys=parameters_foreign_keys)
+        self.create_table(parameters_statement)
+
+    def create_parameter_tables_entry(self, parameters_dict):
+        """
+        Insert the parameters into a the parameter tables.
+
+        Parameters
+        ----------
+        parameters_dict : dict
+            The dictionary on the form
+            >>> {'section': {'parameter': 'value'}}
+
+        Returns
+        -------
+        parameters_id : int
+            The id key from the `parameters` table
+
+        Notes
+        -----
+        All `:` will be replaced by `_` in the section names
+        """
+        parameters_foreign_keys = dict()
+        parameter_sections = list(parameters_dict.keys())
+
+        for section in parameter_sections:
+            # Replace bad characters for SQL
+            section_name = section.replace(':', '_')
+            section_parameters = parameters_dict[section]
+            section_id = self.check_entry_existence(section_name,
+                                                    section_parameters)
+            if section_id is not None:
+                section_id = self.create_entry(section_name,
+                                               section_parameters)
+
+            parameters_foreign_keys[f'{section_name}_id'] = section_id
+
+        # Update the parameters table
+        parameters_id = \
+            self.check_entry_existence('parameters',
+                                       parameters_foreign_keys)
+        if parameters_id is not None:
+            parameters_id = self.create_entry('parameters',
+                                              parameters_foreign_keys)
+
+        return parameters_id
+
+    def create_table(self, table_str):
+        """
+        Create a table in the database.
+
+        Parameters
+        ----------
+        table_str : str
             The query to execute
-        values : tuple
-            Values to be inserted in the query
         """
         # Obtain the table name
-        pattern = r'INSERT INTO (\w*)'
-        table_name = re.match(pattern, insert_str).group(1)
+        pattern = r'CREATE TABLE (\w*)'
+        table_name = re.match(pattern, table_str).group(1)
 
-        self.execute_statement(insert_str, values)
+        self.execute_statement(table_str)
 
-        logging.info('Made insertion to %s', table_name)
+        logging.info('Created table %s', table_name)
+
+    def get_create_table_statement(table_name,
+                                   columns=None,
+                                   primary_key='id',
+                                   foreign_keys=None):
+        """
+        Return a SQL string which can be used to create the table.
+
+        Parameters
+        ----------
+        table_name : str
+            Name of the table
+        columns : dict or None
+            Dictionary where the key is the column name and the value is
+            the type
+        primary_key : str
+            Name of the primary key (the type is set to INTEGER)
+        foreign_keys : dict or None
+            Dictionary where the key is the column in this table to be
+            used as a foreign key and the value is the tuple
+            consisting of (name_of_the_table, key_in_table) to refer to
+
+        Returns
+        -------
+        create_statement : str
+            The SQL statement which creates table
+        """
+        create_statement = f'CREATE TABLE {table_name} \n('
+
+        create_statement += f'   {primary_key} INTEGER PRIMARY KEY,\n'
+
+        # These are not known during submission time
+        nullable_fields = ('start_time',
+                           'stop_time')
+        if columns is not None:
+            for name, sql_type in columns.items():
+                create_statement += f'    {name} {sql_type}'
+                if name in nullable_fields:
+                    nullable_str = ',\n'
+                else:
+                    nullable_str = ' NOT NULL,\n'
+                create_statement += nullable_str
+
+        if foreign_keys is not None:
+            # Create the key as column
+            # NOTE: All keys are integers
+            for name in foreign_keys.keys():
+                create_statement += f'    {name} INTEGER NOT NULL,\n'
+
+            # Add constraint
+            for name, (f_table_name, key_in_table) in foreign_keys.items():
+                # If the parent is updated or deleted, we would like the
+                # same effect to apply to its child (thereby the CASCADE
+                # parameter)
+                create_statement += \
+                    (f'    FOREIGN KEY({name}) \n'
+                     f'        REFERENCES {f_table_name}({key_in_table})\n'
+                     f'            ON UPDATE CASCADE\n'
+                     f'            ON DELETE CASCADE,'
+                     f'\n')
+
+        # Replace last comma with )
+        create_statement = f'{create_statement[:-2]})'
+
+        return create_statement
