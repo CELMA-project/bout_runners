@@ -2,12 +2,12 @@
 
 
 import pytest
-from bout_runners.bookkeeper.creator import create_system_info_table
-from bout_runners.bookkeeper.creator import create_run_table
-from bout_runners.bookkeeper.creator import \
+from bout_runners.bookkeeper.bookkeeper_creator import create_system_info_table
+from bout_runners.bookkeeper.bookkeeper_creator import create_run_table
+from bout_runners.bookkeeper.bookkeeper_creator import \
     create_file_modification_table
-from bout_runners.bookkeeper.creator import create_parameter_tables
-from bout_runners.bookkeeper.creator import create_split_table
+from bout_runners.bookkeeper.bookkeeper_creator import create_parameter_tables
+from bout_runners.bookkeeper.bookkeeper_creator import create_split_table
 
 
 @pytest.fixture(scope='module', name='make_creator_database')

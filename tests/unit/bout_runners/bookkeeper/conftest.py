@@ -3,7 +3,7 @@
 import shutil
 from pathlib import Path
 import pytest
-from bout_runners.bookkeeper.bookkeeper import Bookkeeper
+from bout_runners.bookkeeper.bookkeeper_base import Bookkeeper
 
 
 @pytest.fixture(scope='session')

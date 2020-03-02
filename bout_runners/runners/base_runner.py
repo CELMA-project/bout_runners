@@ -5,13 +5,13 @@ import logging
 import shutil
 from datetime import datetime
 from pathlib import Path
-from bout_runners.bookkeeper.bookkeeper import Bookkeeper
+from bout_runners.bookkeeper.bookkeeper_base import Bookkeeper
 from bout_runners.bookkeeper.bookkeeper_utils import get_db_path
 from bout_runners.bookkeeper.bookkeeper_utils import tables_created
 from bout_runners.make.make import MakeProject
 from bout_runners.utils.file_operations import get_caller_dir
 from bout_runners.utils.subprocesses_functions import run_subprocess
-from bout_runners.bookkeeper.creator import create_database
+from bout_runners.bookkeeper.bookkeeper_creator import create_database
 
 
 class BoutPaths:
