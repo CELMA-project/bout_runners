@@ -25,6 +25,8 @@ class BookkeeperBase:
         Create the database path
     execute_statement(sql_statement, *parameters)
         Execute a statement in the database
+
+    FIXME: Add examples
     """
 
     def __init__(self, name=None, database_root_path=None):

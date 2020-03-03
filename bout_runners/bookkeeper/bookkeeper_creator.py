@@ -7,6 +7,7 @@
 
 import re
 import logging
+from bout_runners.bookkeeper.bookkeeper_base import BookkeeperBase
 from bout_runners.bookkeeper.bookkeeper_utils import \
     obtain_project_parameters
 from bout_runners.bookkeeper.bookkeeper_utils import \
@@ -21,8 +22,62 @@ from bout_runners.bookkeeper.bookkeeper_base import Bookkeeper
 from bout_runners.runners.runner_utils import run_settings_run
 
 
+class BookkeeperCreator(BookkeeperBase):
+    """
+    Class for creating the schema of the database.
 
-class BookkeeperCreator:
+    Attributes
+    ----------
+    FIXME
+
+    Methods
+    -------
+    FIXME
+
+    FIXME: Add examples
+    """
+
+    def __init__(self, name=None, database_root_path=None):
+        """
+        Call the parent class.
+
+        Parameters
+        ----------
+        name : str or None
+            Name of the database (excluding .db)
+            If set to None, the name of the caller directory will be
+            used
+        database_root_path : Path or str or None
+            Path to database
+            If None is set, the path will be set to $HOME/BOUT_db
+        """
+        super().__init__(name, database_root_path)
+
+    def create_tables(self):
+        """
+        Create the database if it doesn't already exist.
+
+        The database will be on normalized form, see [1]_ for a quick
+        overview, and [2]_ for a slightly deeper explanation
+
+        References
+        ----------
+        [1] https://www.databasestar.com/database-normalization/
+        [2] http://www.bkent.net/Doc/simple5.htm
+        """
+        logging.info(f'Creating tables in {self.database_path}')
+
+        # Check if tables are created
+        # FIXME: Here a reading will take place, should that be done
+        #  here or in the reader?
+        if tables_created(bookkeeper):
+            create_system_info_table(bookkeeper)
+            create_split_table(bookkeeper)
+            create_file_modification_table(bookkeeper)
+            create_parameter_tables(bookkeeper, project_path)
+            create_run_table(bookkeeper)
+
+        logging.info(f'Tables created in {self.database_path}')
 
     def create_parameter_tables(self, parameters_as_sql_types):
         """
@@ -190,43 +245,7 @@ class BookkeeperCreator:
 
         return create_statement
 
-    def create_database(project_path=None,
-                        database_root_path=None):
-        """
-        Create the database if it doesn't already exist.
 
-        The database will be on normalized form, see [1]_ for a quick
-        overview, and [2]_ for a slightly deeper explanation
-
-        Parameters
-        ----------
-        project_path : None or Path or str
-            Root path to the project (i.e. where the makefile is located)
-            If None the root caller directory will be used
-        database_root_path : None or Path or str
-            Root path of the database file
-            If None, the path will be set to $HOME/BOUT_db
-
-        References
-        ----------
-        [1] https://www.databasestar.com/database-normalization/
-        [2] http://www.bkent.net/Doc/simple5.htm
-        """
-        logging.info('Preparing database')
-        database_path = get_db_path(database_root_path, project_path)
-
-        # Create bookkeeper
-        bookkeeper = Bookkeeper(database_path)
-
-        # Check if tables are created
-        if tables_created(bookkeeper):
-            create_system_info_table(bookkeeper)
-            create_split_table(bookkeeper)
-            create_file_modification_table(bookkeeper)
-            create_parameter_tables(bookkeeper, project_path)
-            create_run_table(bookkeeper)
-
-        logging.info('Database ready')
 
     def create_run_table(bookkeeper):
         """
