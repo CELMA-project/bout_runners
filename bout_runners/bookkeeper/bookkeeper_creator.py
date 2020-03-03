@@ -1,5 +1,10 @@
 """Module containing the BookkeeperCreator class."""
 
+# FIXME: You are here: Ripping apart Bookkeeper, added from
+#  bookkeeper_utils and creator - remember to move the tests
+# FIXME: Seems like no need to make abstract classes (except for
+#  runner)
+
 import re
 import logging
 from bout_runners.bookkeeper.bookkeeper_utils import \

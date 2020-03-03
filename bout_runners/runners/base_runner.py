@@ -494,6 +494,8 @@ class BoutRunner:
     """
     The basic runner class.
 
+    FIXME: Add variables and attributes
+
     Examples
     --------
     >>> bout_paths = BoutPaths('path/to/project/root')

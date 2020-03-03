@@ -1,44 +1,115 @@
-"""Module containing the Bookkeeper base class."""
+"""Module containing the BookkeeperBase class."""
 
 
 import contextlib
 import sqlite3
 import logging
+from pathlib import Path
+from bout_runners.utils.file_operations import get_caller_dir
 
 
 class BookkeeperBase:
     """
-    Class interacting with the database.
+    Base class creating the database path and executing sql statements.
 
     Attributes
     ----------
-    database_path : Path or str
+    __database_path : None or Path
+        Getter and setter variable for database_path
+    database_path : Path
         Path to database
-    FIXME: Upate these
 
     Methods
     -------
-    create_table(sql_statement)
-        Create a table for each BOUT.settings section and a join table
-    query(query_str)
-        Make a query to the database
+    create_db_path(name, database_root_path)
+        Create the database path
+    execute_statement(sql_statement, *parameters)
+        Execute a statement in the database
     """
 
-    # FIXME: You are here: Ripping apart Bookkeeper, added from
-    #  bookkeeper_utils and creator - remember to move the tests
-    # FIXME: Seems like no need to make abstract classes (except for
-    #  runner)
-    def __init__(self, database_path):
+    def __init__(self, name=None, database_root_path=None):
         """
         Set the path to the data base.
 
         Parameters
         ----------
-        database_path : Path or str
+        name : str or None
+            Name of the database (excluding .db)
+            If set to None, the name of the caller directory will be
+            used
+        database_root_path : Path or str or None
             Path to database
+            If None is set, the path will be set to $HOME/BOUT_db
         """
-        self.database_path = database_path
-        logging.info('Database path set to %s', self.database_path)
+        # Declare variables to be used in the getters and setters
+        self.__database_path = None
+
+        # Set the database path
+        self.__database_path = \
+            self.create_db_path(name, database_root_path)
+        logging.info('database_path set to %s', self.database_path)
+
+    @property
+    def database_path(self):
+        """
+        Set the properties of self.database_path.
+
+        Returns
+        -------
+        self.__project_path : Path
+            Absolute path to the root of make file
+
+        Notes
+        -----
+        To avoid corrupting data between databases, the setting this
+        parameter outside the constructor is disabled
+        """
+        return self.__database_path
+
+    @database_path.setter
+    def database_path(self, _):
+        msg = (f'The database_path is read only, and is '
+               f'only set in the constructor (currently in use: '
+               f'{self.database_path})')
+        raise AttributeError(msg)
+
+    @staticmethod
+    def create_db_path(name, database_root_path):
+        """
+        Create the database path.
+
+        Parameters
+        ----------
+        name : str or None
+            Name of the database (excluding .db)
+            If set to None, the name of the caller directory will be
+            used
+        database_root_path : Path or str or None
+            Path to database
+            If None is set, the path will be set to $HOME/BOUT_db
+
+        Returns
+        -------
+        database_path : Path
+            Path to the database
+        """
+        if name is None:
+            name = get_caller_dir().name
+
+        if database_root_path is None:
+            database_root_path = Path().home().joinpath('BOUT_db')
+
+        database_root_path = Path(database_root_path)
+
+        database_root_path.mkdir(exist_ok=True, parents=True)
+        # NOTE: sqlite does not support schemas (except through an
+        #       ephemeral ATTACH connection)
+        #       Thus we will make one database per project
+        # https://www.sqlite.org/lang_attach.html
+        # https://stackoverflow.com/questions/30897377/python-sqlite3-create-a-schema-without-having-to-use-a-second-database
+        database_path = database_root_path.joinpath(f'{name}.db')
+
+        return database_path
 
     def execute_statement(self, sql_statement, *parameters):
         """
@@ -63,45 +134,3 @@ class BookkeeperBase:
                 with contextlib.closing(con.cursor()) as cur:
                     # Check if tables are present
                     cur.execute(sql_statement, parameters)
-
-    def get_db_path(database_root_path, project_path):
-        """
-        Return the database path.
-
-        Parameters
-        ----------
-        project_path : None or Path or str
-            Root path to the project (i.e. where the makefile is located)
-            If None the root caller directory will be used
-        database_root_path : None or Path or str
-            Root path of the database file
-            If None, the path will be set to $HOME/BOUT_db
-
-        Returns
-        -------
-        database_path : Path
-            Path to the database
-        """
-        if project_path is None:
-            project_path = get_caller_dir()
-
-        if database_root_path is None:
-            # NOTE: This will be changed when going to production
-            database_root_path = get_caller_dir()
-            # database_root_path = Path().home().joinpath('BOUT_db')
-
-        project_path = Path(project_path)
-        database_root_path = Path(database_root_path)
-
-        database_root_path.mkdir(exist_ok=True, parents=True)
-        # NOTE: sqlite does not support schemas (except through an
-        #       ephemeral ATTACH connection)
-        #       Thus we will make one database per project
-        # https://www.sqlite.org/lang_attach.html
-        # https://stackoverflow.com/questions/30897377/python-sqlite3-create-a-schema-without-having-to-use-a-second-database
-        schema = project_path.name
-        database_path = database_root_path.joinpath(f'{schema}.db')
-
-        return database_path
-
-
