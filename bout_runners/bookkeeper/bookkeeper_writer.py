@@ -17,7 +17,7 @@ from bout_runners.bookkeeper.bookkeeper_utils import \
     get_create_table_statement
 from bout_runners.bookkeeper.bookkeeper_utils import \
     get_system_info_as_sql_type
-from bout_runners.bookkeeper.bookkeeper_base import Bookkeeper
+from bout_runners.bookkeeper.bookkeeper_connector import Bookkeeper
 from bout_runners.runners.runner_utils import run_settings_run
 from bout_runners.bookkeeper.bookkeeper_utils import \
     get_file_modification
@@ -184,3 +184,46 @@ class BookkeeperWriter:
                      f'VALUES ({placeholders})'
         return insert_str
 
+    def _create_parameter_tables_entry(self, parameters_dict):
+        """
+        Insert the parameters into a the parameter tables.
+
+        Parameters
+        ----------
+        parameters_dict : dict
+            The dictionary on the form
+            >>> {'section': {'parameter': 'value'}}
+
+        Returns
+        -------
+        parameters_id : int
+            The id key from the `parameters` table
+
+        Notes
+        -----
+        All `:` will be replaced by `_` in the section names
+        """
+        parameters_foreign_keys = dict()
+        parameter_sections = list(parameters_dict.keys())
+
+        for section in parameter_sections:
+            # Replace bad characters for SQL
+            section_name = section.replace(':', '_')
+            section_parameters = parameters_dict[section]
+            section_id = self.check_entry_existence(section_name,
+                                                    section_parameters)
+            if section_id is not None:
+                section_id = self.create_entry(section_name,
+                                               section_parameters)
+
+            parameters_foreign_keys[f'{section_name}_id'] = section_id
+
+        # Update the parameters table
+        parameters_id = \
+            self.check_entry_existence('parameters',
+                                       parameters_foreign_keys)
+        if parameters_id is not None:
+            parameters_id = self.create_entry('parameters',
+                                              parameters_foreign_keys)
+
+        return parameters_id

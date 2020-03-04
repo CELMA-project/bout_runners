@@ -1,6 +1,12 @@
 """Module containing the BookkeeperReader class."""
 
 
+
+# FIXME: You are here: Ripping apart Bookkeeper, added from
+#  bookkeeper_utils and creator - remember to move the tests
+# FIXME: Seems like no need to make abstract classes (except for
+#  runner)
+
 import re
 import logging
 import contextlib
@@ -17,7 +23,7 @@ from bout_runners.bookkeeper.bookkeeper_utils import \
     get_create_table_statement
 from bout_runners.bookkeeper.bookkeeper_utils import \
     get_system_info_as_sql_type
-from bout_runners.bookkeeper.bookkeeper_base import Bookkeeper
+from bout_runners.bookkeeper.bookkeeper_connector import Bookkeeper
 from bout_runners.runners.runner_utils import run_settings_run
 from bout_runners.bookkeeper.bookkeeper_utils import \
     get_file_modification

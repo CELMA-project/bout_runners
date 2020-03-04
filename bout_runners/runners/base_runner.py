@@ -5,7 +5,7 @@ import logging
 import shutil
 from datetime import datetime
 from pathlib import Path
-from bout_runners.bookkeeper.bookkeeper_base import Bookkeeper
+from bout_runners.bookkeeper.bookkeeper_connector import Bookkeeper
 from bout_runners.bookkeeper.bookkeeper_utils import get_db_path
 from bout_runners.bookkeeper.bookkeeper_utils import tables_created
 from bout_runners.make.make import MakeProject

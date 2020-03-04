@@ -3,14 +3,14 @@
 
 def test_create_table(make_test_database):
     """
-    Test query and create_table.
+    Test query and create_single_table.
 
     Parameters
     ----------
     make_test_database : function
         The bookkeeper from the fixture
     """
-    bookkeeper = make_test_database('create_table.db')
+    bookkeeper = make_test_database('create_single_table.db')
 
     query_str = ('SELECT name FROM sqlite_master '
                  '   WHERE type="table"')
@@ -19,7 +19,7 @@ def test_create_table(make_test_database):
     # Should be empty
     assert len(table.index) == 0
 
-    bookkeeper.create_table('CREATE TABLE foo (bar, TEXT)')
+    bookkeeper.create_single_table('CREATE TABLE foo (bar, TEXT)')
 
     query_str = ('SELECT name FROM sqlite_master '
                  '   WHERE type="table"')

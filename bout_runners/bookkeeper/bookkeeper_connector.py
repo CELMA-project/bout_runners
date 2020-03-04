@@ -8,9 +8,9 @@ from pathlib import Path
 from bout_runners.utils.file_operations import get_caller_dir
 
 
-class BookkeeperBase:
+class BookkeeperConnector:
     """
-    Base class creating the database path and executing sql statements.
+    Class creating the database path and executing sql statements.
 
     Attributes
     ----------
