@@ -1,5 +1,6 @@
 """Module containing the BookkeeperCreator class."""
 
+
 import re
 import logging
 from bout_runners.bookkeeper.bookkeeper_utils import \
@@ -32,7 +33,7 @@ class BookkeeperCreator:
 
         Parameters
         ----------
-        bookkeeper : BookkeeperBase
+        bookkeeper : BookkeeperConnector
             The bookkeeper object to write to
         """
         self.bookkeeper = bookkeeper

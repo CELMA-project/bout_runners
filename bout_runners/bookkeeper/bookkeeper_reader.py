@@ -1,39 +1,60 @@
 """Module containing the BookkeeperReader class."""
 
 
-
-# FIXME: You are here: Ripping apart Bookkeeper, added from
-#  bookkeeper_utils and creator - remember to move the tests
-# FIXME: Seems like no need to make abstract classes (except for
-#  runner)
-
-import re
-import logging
 import contextlib
 import sqlite3
 import pandas as pd
-import logging
-from bout_runners.bookkeeper.bookkeeper_utils import \
-    obtain_project_parameters
-from bout_runners.bookkeeper.bookkeeper_utils import \
-    cast_parameters_to_sql_type
-from bout_runners.bookkeeper.bookkeeper_utils import get_db_path
-from bout_runners.bookkeeper.bookkeeper_utils import tables_created
-from bout_runners.bookkeeper.bookkeeper_utils import \
-    get_create_table_statement
-from bout_runners.bookkeeper.bookkeeper_utils import \
-    get_system_info_as_sql_type
-from bout_runners.bookkeeper.bookkeeper_connector import Bookkeeper
-from bout_runners.runners.runner_utils import run_settings_run
-from bout_runners.bookkeeper.bookkeeper_utils import \
-    get_file_modification
-from bout_runners.bookkeeper.bookkeeper_utils import \
-    get_system_info
-from bout_runners.bookkeeper.bookkeeper_utils import \
-    extract_parameters_in_use
 
 
 class BookkeeperReader:
+    """
+    Class for creating the schema of the database.
+
+    Attributes
+    ----------
+    FIXME
+
+    Methods
+    -------
+    FIXME
+
+    FIXME: Add examples
+    """
+
+    def __init__(self, bookkeeper):
+        """
+        Set the bookkeeper to use.
+
+        Parameters
+        ----------
+        bookkeeper : BookkeeperConnector
+            The bookkeeper object to write to
+        """
+        self.bookkeeper = bookkeeper
+
+    def query(self, query_str):
+        """
+        Make a query to the database.
+
+        Parameters
+        ----------
+        query_str : str
+            The query to execute
+
+        Returns
+        -------
+        table : DataFrame
+            The result of a query as a DataFrame
+        """
+        # NOTE: The connection does not close after the 'with' statement
+        #       Instead we use the context manager as described here
+        #       https://stackoverflow.com/a/47501337/2786884
+
+        # Auto-closes connection
+        with contextlib.closing(sqlite3.connect(
+                str(self.bookkeeper.database_path))) as con:
+            table = pd.read_sql_query(query_str, con)
+        return table
 
     def get_latest_row_id(self):
         """
@@ -96,38 +117,9 @@ class BookkeeperReader:
 
         return row_id
 
-    def query(self, query_str):
-        """
-        Make a query to the database.
-
-        Parameters
-        ----------
-        query_str : str
-            The query to execute
-
-        Returns
-        -------
-        table : DataFrame
-            The result of a query as a DataFrame
-        """
-        # NOTE: The connection does not close after the 'with' statement
-        #       Instead we use the context manager as described here
-        #       https://stackoverflow.com/a/47501337/2786884
-
-        # Auto-closes connection
-        with contextlib.closing(sqlite3.connect(
-                str(self.database_path))) as con:
-            table = pd.read_sql_query(query_str, con)
-        return table
-
-    def tables_created(bookkeeper):
+    def tables_created(self):
         """
         Check if the tables is created in the database.
-
-        Parameters
-        ----------
-        bookkeeper : Bookkeeper
-            The Bookkeeper object
 
         Returns
         -------
@@ -137,5 +129,5 @@ class BookkeeperReader:
         query_str = ('SELECT name FROM sqlite_master '
                      '   WHERE type="table"')
 
-        table = bookkeeper.query(query_str)
+        table = self.bookkeeper.query(query_str)
         return len(table.index) != 0
