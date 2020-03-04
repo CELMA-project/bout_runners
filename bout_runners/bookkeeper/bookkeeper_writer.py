@@ -3,22 +3,6 @@
 
 import re
 import logging
-import contextlib
-import sqlite3
-import pandas as pd
-import logging
-from bout_runners.bookkeeper.bookkeeper_utils import \
-    obtain_project_parameters
-from bout_runners.bookkeeper.bookkeeper_utils import \
-    cast_parameters_to_sql_type
-from bout_runners.bookkeeper.bookkeeper_utils import get_db_path
-from bout_runners.bookkeeper.bookkeeper_utils import tables_created
-from bout_runners.bookkeeper.bookkeeper_utils import \
-    get_create_table_statement
-from bout_runners.bookkeeper.bookkeeper_utils import \
-    get_system_info_as_sql_type
-from bout_runners.bookkeeper.bookkeeper_connector import Bookkeeper
-from bout_runners.runners.runner_utils import run_settings_run
 from bout_runners.bookkeeper.bookkeeper_utils import \
     get_file_modification
 from bout_runners.bookkeeper.bookkeeper_utils import \
@@ -28,6 +12,58 @@ from bout_runners.bookkeeper.bookkeeper_utils import \
 
 
 class BookkeeperWriter:
+    """
+    Class for writing to the schema of the database.
+
+    Attributes
+    ----------
+    FIXME
+
+    Methods
+    -------
+    FIXME
+
+    FIXME: Add examples
+    """
+
+    def __init__(self, bookkeeper):
+        """
+        Set the bookkeeper to use.
+
+        Parameters
+        ----------
+        bookkeeper : BookkeeperConnector
+            The bookkeeper object to write to
+        """
+        self.bookkeeper = bookkeeper
+
+    @staticmethod
+    def create_insert_string(field_names, table_name):
+        """
+        Create a question mark style string for database insertions.
+
+        Values must be provided separately in the execution statement
+
+        Parameters
+        ----------
+        field_names : array-like
+            Names of the fields to populate
+        table_name : str
+            Name of the table to use for the insertion
+
+        Returns
+        -------
+        insert_str : str
+            The string to be used for insertion
+        """
+        # From
+        # https://stackoverflow.com/a/14108554/2786884
+        columns = ', '.join(field_names)
+        placeholders = ', '.join('?' * len(field_names))
+        insert_str = f'INSERT INTO {table_name} ' \
+                     f'({columns}) ' \
+                     f'VALUES ({placeholders})'
+        return insert_str
 
     def insert(self, insert_str, values):
         """
@@ -44,7 +80,7 @@ class BookkeeperWriter:
         pattern = r'INSERT INTO (\w*)'
         table_name = re.match(pattern, insert_str).group(1)
 
-        self.execute_statement(insert_str, values)
+        self.bookkeeper.execute_statement(insert_str, values)
 
         logging.info('Made insertion to %s', table_name)
 
@@ -58,20 +94,11 @@ class BookkeeperWriter:
             Name of the table
         entries_dict : dict
             Dictionary containing the entries as key value pairs
-
-        Returns
-        -------
-        latest_row_id : int
-            The id of the entry just made
         """
         keys = entries_dict.keys()
         values = entries_dict.values()
-        insert_str = create_insert_string(keys, table_name)
+        insert_str = self.create_insert_string(keys, table_name)
         self.insert(insert_str, values)
-
-        latest_row_id = self.get_latest_row_id()
-
-        return latest_row_id
 
     def store_data_from_run(self,
                             runner,
@@ -111,13 +138,14 @@ class BookkeeperWriter:
                 runner.bout_paths.bout_inp_dst_dir,
                 runner.run_parameters.run_parameters_dict)
         run_dict['parameters_id'] = \
-            self.create_parameter_tables_entry(parameters_dict)
+            self._create_parameter_tables_entry(parameters_dict)
 
         # Update the file_modification
         file_modification_dict = \
             get_file_modification(runner.bout_paths.project_path,
                                   runner.make.makefile_path,
                                   runner.make.exec_name)
+        # FIXME: YOU ARE HERE: WE ARE HERE MIXING RESPONSIBILITIES
         run_dict['file_modification_id'] = \
             self.check_entry_existence('file_modification',
                                        file_modification_dict)
@@ -156,33 +184,6 @@ class BookkeeperWriter:
     def update_status(self):
         """Update the status."""
         raise NotImplementedError('To be implemented')
-
-    def create_insert_string(field_names, table_name):
-        """
-        Create a question mark style string for database insertions.
-
-        Values must be provided separately in the execution statement
-
-        Parameters
-        ----------
-        field_names : array-like
-            Names of the fields to populate
-        table_name : str
-            Name of the table to use for the insertion
-
-        Returns
-        -------
-        insert_str : str
-            The string to be used for insertion
-        """
-        # From
-        # https://stackoverflow.com/a/14108554/2786884
-        columns = ', '.join(field_names)
-        placeholders = ', '.join('?' * len(field_names))
-        insert_str = f'INSERT INTO {table_name} ' \
-                     f'({columns}) ' \
-                     f'VALUES ({placeholders})'
-        return insert_str
 
     def _create_parameter_tables_entry(self, parameters_dict):
         """

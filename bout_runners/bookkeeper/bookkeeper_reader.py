@@ -8,7 +8,7 @@ import pandas as pd
 
 class BookkeeperReader:
     """
-    Class for creating the schema of the database.
+    Class for reading the schema of the database.
 
     Attributes
     ----------
@@ -28,7 +28,7 @@ class BookkeeperReader:
         Parameters
         ----------
         bookkeeper : BookkeeperConnector
-            The bookkeeper object to write to
+            The bookkeeper object to read from
         """
         self.bookkeeper = bookkeeper
 
