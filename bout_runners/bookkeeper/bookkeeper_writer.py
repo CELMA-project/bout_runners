@@ -137,6 +137,10 @@ class BookkeeperWriter:
                 runner.bout_paths.project_path,
                 runner.bout_paths.bout_inp_dst_dir,
                 runner.run_parameters.run_parameters_dict)
+        # FIXME: YOU ARE HERE: CHECK IF PARAMETERS_ID IS NONE (
+        #  OBTAINED FROM CHECK_PARAMETER_TABLES_IDS), AND CREATE
+        #  TABLE IDS_DICT SHOULD BE INPUT TO THIS FUNCTION IN ORDER
+        #  TO AVOID CHECK ENTRY EXISTENCE
         run_dict['parameters_id'] = \
             self._create_parameter_tables_entry(parameters_dict)
 
@@ -145,7 +149,6 @@ class BookkeeperWriter:
             get_file_modification(runner.bout_paths.project_path,
                                   runner.make.makefile_path,
                                   runner.make.exec_name)
-        # FIXME: YOU ARE HERE: WE ARE HERE MIXING RESPONSIBILITIES
         run_dict['file_modification_id'] = \
             self.check_entry_existence('file_modification',
                                        file_modification_dict)
@@ -185,7 +188,9 @@ class BookkeeperWriter:
         """Update the status."""
         raise NotImplementedError('To be implemented')
 
-    def _create_parameter_tables_entry(self, parameters_dict):
+    def _create_parameter_tables_entry(self,
+                                       parameters_dict,
+                                       table_ids):
         """
         Insert the parameters into a the parameter tables.
 
@@ -193,38 +198,39 @@ class BookkeeperWriter:
         ----------
         parameters_dict : dict
             The dictionary on the form
-            >>> {'section': {'parameter': 'value'}}
-
-        Returns
-        -------
-        parameters_id : int
-            The id key from the `parameters` table
+            >>> {'section': {'parameter': 'value'}, ...}
+        table_ids : dict
+            Dict containing the ids
+            The id will be None in the cases where an entry does not
+            exist
+            On the form
+            >>> {'table_key': 'id'}
 
         Notes
         -----
         All `:` will be replaced by `_` in the section names
         """
-        parameters_foreign_keys = dict()
-        parameter_sections = list(parameters_dict.keys())
+        # Replace bad characters for SQL
+        parameter_sections = \
+            [section.replace(':', '_') for
+             section in parameters_dict.keys()]
+        # Copy the dict as we do not want to change it outside this
+        # function
+        # FIXME: Maybe it would be better to pop the section_ids
+        #  here, as we will not use them later in store_data_from_run
+        table_ids_copy = table_ids.copy()
+        section_ids = {section_name: table_ids_copy[section_name] for
+                       section_name in parameter_sections}
+        parameters_id = {'parameters_id':
+                         table_ids_copy.pop('parameters_id')}
 
         for section in parameter_sections:
-            # Replace bad characters for SQL
             section_name = section.replace(':', '_')
             section_parameters = parameters_dict[section]
-            section_id = self.check_entry_existence(section_name,
-                                                    section_parameters)
-            if section_id is not None:
-                section_id = self.create_entry(section_name,
-                                               section_parameters)
 
-            parameters_foreign_keys[f'{section_name}_id'] = section_id
+            if section_ids[f'{section_name}_id'] is None:
+                self.create_entry(section_name, section_parameters)
 
         # Update the parameters table
-        parameters_id = \
-            self.check_entry_existence('parameters',
-                                       parameters_foreign_keys)
         if parameters_id is not None:
-            parameters_id = self.create_entry('parameters',
-                                              parameters_foreign_keys)
-
-        return parameters_id
+            self.create_entry('parameters', section_ids)

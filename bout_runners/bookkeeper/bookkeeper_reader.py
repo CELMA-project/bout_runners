@@ -70,9 +70,9 @@ class BookkeeperReader:
             self.query('SELECT last_insert_rowid() AS id').loc[0, 'id']
         return row_id
 
-    def check_entry_existence(self, table_name, entries_dict):
+    def get_entry_id(self, table_name, entries_dict):
         """
-        Check if the entry already exists in the table entry.
+        Get the id of a table entry.
 
         Parameters
         ----------
@@ -91,7 +91,8 @@ class BookkeeperReader:
         Returns
         -------
         row_id : int or None
-            The id of the hit. If none is found, None is returned
+            The id of the hit
+            If none is found, None is returned
         """
         # NOTE: About checking for existence
         # https://stackoverflow.com/questions/9755860/valid-query-to-check-if-row-exists-in-sqlite3
@@ -117,7 +118,7 @@ class BookkeeperReader:
 
         return row_id
 
-    def tables_created(self):
+    def check_tables_created(self):
         """
         Check if the tables is created in the database.
 
@@ -131,3 +132,53 @@ class BookkeeperReader:
 
         table = self.bookkeeper.query(query_str)
         return len(table.index) != 0
+
+    def check_parameter_tables_ids(self, parameters_dict):
+        """
+        Insert the parameters into a the parameter tables.
+
+        Parameters
+        ----------
+        parameters_dict : dict
+            The dictionary on the form
+            >>> {'section': {'parameter': 'value'}}
+
+        Returns
+        -------
+        parameter_ids : dict
+            Dict containing the ids
+            The id will be None in the cases where an entry does not
+            exist
+            On the form
+            >>> {'parameters_id': 'id_parameters', 'section': 'id', ...}
+
+        Notes
+        -----
+        All `:` will be replaced by `_` in the section names
+        """
+        all_sections_got_an_id = True
+        parameter_ids = dict()
+        parameters_foreign_keys = dict()
+        parameter_sections = list(parameters_dict.keys())
+
+        for section in parameter_sections:
+            # Replace bad characters for SQL
+            section_name = section.replace(':', '_')
+            section_parameters = parameters_dict[section]
+            section_id = self.get_entry_id(section_name,
+                                           section_parameters)
+
+            if section_id is None:
+                all_sections_got_an_id = False
+
+            parameter_ids[f'{section_name}_id'] = section_id
+
+        if all_sections_got_an_id:
+            parameters_id = self.get_entry_id('parameters',
+                                              parameters_foreign_keys)
+        else:
+            parameters_id = None
+
+        parameter_ids['parameters_id'] = parameters_id
+
+        return parameter_ids
