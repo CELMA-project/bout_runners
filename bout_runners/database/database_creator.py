@@ -27,16 +27,16 @@ class DatabaseCreator:
     FIXME: Add examples
     """
 
-    def __init__(self, bookkeeper):
+    def __init__(self, database):
         """
         Set the database to use.
 
         Parameters
         ----------
-        bookkeeper : DatabaseConnector
+        database : DatabaseConnector
             The database object to write to
         """
-        self.bookkeeper = bookkeeper
+        self.database = database
 
     def create_all_schema_tables(self, parameters_as_sql_types):
         """
@@ -57,7 +57,7 @@ class DatabaseCreator:
         [2] http://www.bkent.net/Doc/simple5.htm
         """
         logging.info(f'Creating tables in '
-                     f'{self.bookkeeper.database_path}')
+                     f'{self.database.database_path}')
 
         # Check if tables are created
         # FIXME: Test for error if this is created twice
@@ -68,7 +68,7 @@ class DatabaseCreator:
         self._create_run_table()
 
         logging.info(f'Tables created in '
-                     f'{self.bookkeeper.database_path}')
+                     f'{self.database.database_path}')
 
     @staticmethod
     def get_create_table_statement(table_name,
@@ -151,7 +151,7 @@ class DatabaseCreator:
         pattern = r'CREATE TABLE (\w*)'
         table_name = re.match(pattern, table_str).group(1)
 
-        self.bookkeeper.execute_statement(table_str)
+        self.database.execute_statement(table_str)
 
         logging.info('Created table %s', table_name)
 
@@ -171,7 +171,7 @@ class DatabaseCreator:
                 columns={'number_of_processors': 'INTEGER',
                          'nodes': 'INTEGER',
                          'processors_per_node': 'INTEGER'})
-        self.bookkeeper.create_single_table(split_statement)
+        self.database.create_single_table(split_statement)
 
     def _create_file_modification_table(self):
         """Create a table for file modifications."""
@@ -183,7 +183,7 @@ class DatabaseCreator:
                          'project_git_sha': 'TEXT',
                          'bout_lib_modified': 'TIMESTAMP',
                          'bout_git_sha': 'TEXT'})
-        self.bookkeeper.create_single_table(file_modification_statement)
+        self.database.create_single_table(file_modification_statement)
 
     def _create_parameter_tables(self, parameters_as_sql_types):
         """
@@ -241,23 +241,4 @@ class DatabaseCreator:
                               'split_id': ('split', 'id'),
                               'parameters_id': ('parameters', 'id'),
                               'host_id': ('host', 'id')})
-        self.bookkeeper.create_single_table(run_statement)
-
-
-# FIXME: This belongs to the orchestrator object. It should be
-#  renamed as the name is already in use in the creator
-def create_parameter_tables(project_path):
-    """
-    Create one table per section in BOUT.settings and one join table.
-
-    Parameters
-    ----------
-    project_path : Path
-        Path to the project
-    """
-    settings_path = run_settings_run(project_path,
-                                     bout_inp_src_dir=None)
-    parameter_dict = obtain_project_parameters(settings_path)
-    parameter_dict_as_sql_types = \
-        cast_parameters_to_sql_type(parameter_dict)
-    bookkeeper.create_parameter_tables(parameter_dict_as_sql_types)
+        self.database.create_single_table(run_statement)

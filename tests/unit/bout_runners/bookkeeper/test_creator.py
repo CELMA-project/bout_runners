@@ -25,8 +25,8 @@ def fixture_make_creator_database(make_test_database):
     database : Database
         The database object
     """
-    bookkeeper = make_test_database('creator.db')
-    return bookkeeper
+    database = make_test_database('creator.db')
+    return database
 
 
 def test_create_run_table(make_creator_database):
@@ -38,11 +38,11 @@ def test_create_run_table(make_creator_database):
     make_creator_database : Database
         The database object
     """
-    bookkeeper = make_creator_database
-    create_run_table(bookkeeper)
+    database = make_creator_database
+    create_run_table(database)
     query_str = ('SELECT name FROM sqlite_master '
                  '   WHERE type="table"')
-    table = bookkeeper.query(query_str)
+    table = database.query(query_str)
     assert 'run' in table.loc[:, 'name'].values
 
 
@@ -57,12 +57,12 @@ def test_create_parameter_tables(make_creator_database, make_project):
     make_project : Path
         The path to the conduction example
     """
-    bookkeeper = make_creator_database
+    database = make_creator_database
     project_path = make_project
-    create_parameter_tables(bookkeeper, project_path)
+    create_parameter_tables(database, project_path)
     query_str = ('SELECT name FROM sqlite_master '
                  '   WHERE type="table"')
-    table = bookkeeper.query(query_str)
+    table = database.query(query_str)
     expected = {'global',
                 'conduction',
                 'mesh',
@@ -85,11 +85,11 @@ def test_create_file_modification_table(make_creator_database):
     make_creator_database : Database
         The database object
     """
-    bookkeeper = make_creator_database
-    create_file_modification_table(bookkeeper)
+    database = make_creator_database
+    create_file_modification_table(database)
     query_str = ('SELECT name FROM sqlite_master '
                  '   WHERE type="table"')
-    table = bookkeeper.query(query_str)
+    table = database.query(query_str)
     assert 'file_modification' in table.loc[:, 'name'].values
 
 
@@ -102,11 +102,11 @@ def test_create_split_table(make_creator_database):
     make_creator_database : Database
         The database object
     """
-    bookkeeper = make_creator_database
-    create_split_table(bookkeeper)
+    database = make_creator_database
+    create_split_table(database)
     query_str = ('SELECT name FROM sqlite_master '
                  '   WHERE type="table"')
-    table = bookkeeper.query(query_str)
+    table = database.query(query_str)
     assert 'split' in table.loc[:, 'name'].values
 
 
@@ -119,9 +119,9 @@ def test_create_system_info_table(make_creator_database):
     make_creator_database : Database
         The database object
     """
-    bookkeeper = make_creator_database
-    create_system_info_table(bookkeeper)
+    database = make_creator_database
+    create_system_info_table(database)
     query_str = ('SELECT name FROM sqlite_master '
                  '   WHERE type="table"')
-    table = bookkeeper.query(query_str)
+    table = database.query(query_str)
     assert 'system_info' in table.loc[:, 'name'].values

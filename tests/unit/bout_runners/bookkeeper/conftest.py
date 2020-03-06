@@ -1,4 +1,4 @@
-"""Contains fixtures for the bookkeepers unittests."""
+"""Contains fixtures for the databases unittests."""
 
 import shutil
 from pathlib import Path

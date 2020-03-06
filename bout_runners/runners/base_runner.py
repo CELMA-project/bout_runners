@@ -531,7 +531,7 @@ class BoutRunner:
         # Get database
         db_path = get_db_path(project_path=self.bout_paths.project_path,
                               database_root_path=database_root_path)
-        self.bookkeeper = Database(db_path)
+        self.database = Database(db_path)
 
         self.make = None  # Set to make-obj in self.make_project
 
@@ -563,21 +563,21 @@ class BoutRunner:
                    f'{self.run_parameters.run_parameters_str}')
 
         if not settings_run:
-            if not tables_created(self.bookkeeper):
-                db_path = self.bookkeeper.database_path.parent
+            if not tables_created(self.database):
+                db_path = self.database.database_path.parent
                 create_database(
                     project_path=self.bout_paths.project_path,
                     database_root_path=db_path)
 
-            self.bookkeeper.store_data_from_run(
+            self.database.store_data_from_run(
                 self,
                 self.processor_split.number_of_processors)
         else:
             logging.warning('Database %s has no entries and is not '
                             'ready. '
                             'No data capture will be made.',
-                            self.bookkeeper.database_path)
+                            self.database.database_path)
 
         run_subprocess(command, path=self.bout_paths.project_path)
-        if tables_created(self.bookkeeper) and not settings_run:
-            self.bookkeeper.update_status()
+        if tables_created(self.database) and not settings_run:
+            self.database.update_status()
