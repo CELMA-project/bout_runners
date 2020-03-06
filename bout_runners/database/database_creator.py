@@ -9,7 +9,7 @@ from bout_runners.database.database_utils import \
     cast_parameters_to_sql_type
 from bout_runners.database.database_utils import \
     get_system_info_as_sql_type
-from bout_runners.runners.runner_utils import run_settings_run
+from bout_runners.executor.runner_utils import run_settings_run
 
 
 class DatabaseCreator:

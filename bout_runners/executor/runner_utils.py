@@ -1,8 +1,8 @@
-"""Module containing utils only used in the runners package."""
+"""Module containing utils only used in the executor package."""
 
 
 import logging
-import bout_runners.runners
+import bout_runners.executor
 
 
 def run_settings_run(project_path, bout_inp_src_dir=None):
@@ -22,14 +22,14 @@ def run_settings_run(project_path, bout_inp_src_dir=None):
     settings_path : Path
         Path to the settings file
     """
-    bout_paths = bout_runners.runners.base_runner.BoutPaths(
+    bout_paths = bout_runners.executor.base_runner.BoutPaths(
         project_path=project_path,
         bout_inp_src_dir=bout_inp_src_dir,
         bout_inp_dst_dir='settings_run')
     run_parameters = \
-        bout_runners.runners.base_runner.RunParameters(
+        bout_runners.executor.base_runner.RunParameters(
             {'global': {'nout': 0}})
-    runner = bout_runners.runners.base_runner.BoutRunner(
+    runner = bout_runners.executor.base_runner.BoutRunner(
         bout_paths=bout_paths,
         run_parameters=run_parameters)
     logging.info('Performing a run to obtaining settings in %s. '

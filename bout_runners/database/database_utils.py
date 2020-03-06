@@ -13,7 +13,7 @@ from bout_runners.utils.file_operations import get_caller_dir
 from bout_runners.utils.file_operations import get_modified_time
 from bout_runners.utils.paths import get_bout_path
 from bout_runners.utils.subprocesses_functions import run_subprocess
-from bout_runners.runners.runner_utils import run_settings_run
+from bout_runners.executor.runner_utils import run_settings_run
 
 
 def obtain_project_parameters(settings_path):

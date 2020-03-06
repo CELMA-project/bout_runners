@@ -1,1 +1,1 @@
-"""Package containing the unit runners tests for bout_runners."""
+"""Package containing the unit executor tests for bout_runners."""

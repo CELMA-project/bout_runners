@@ -3,10 +3,10 @@
 
 import shutil
 import pytest
-from bout_runners.runners.base_runner import BoutPaths
-from bout_runners.runners.base_runner import RunParameters
-from bout_runners.runners.base_runner import ProcessorSplit
-from bout_runners.runners.base_runner import BoutRunner
+from bout_runners.executor.bout_paths import BoutPaths
+from bout_runners.executor.run_parameters import RunParameters
+from bout_runners.executor.processor_split import ProcessorSplit
+from bout_runners.executor.executor import Executor
 
 
 @pytest.fixture(scope='function', name='copy_bout_inp')
@@ -143,8 +143,8 @@ def test_single_run(copy_bout_inp, make_project):
                            bout_inp_src_dir=bout_inp_dir,
                            bout_inp_dst_dir=bout_inp_dir)
     run_parameters = RunParameters({'global': {'nout': 0}})
-    runner = BoutRunner(bout_paths=bout_paths,
-                        run_parameters=run_parameters)
+    runner = Executor(bout_paths=bout_paths,
+                      run_parameters=run_parameters)
     # FIXME: This test is failing. Possibly because bookeeper is
     #  messy, and should be refactored
     runner.run()
