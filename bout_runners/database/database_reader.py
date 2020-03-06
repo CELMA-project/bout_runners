@@ -21,16 +21,16 @@ class DatabaseReader:
     FIXME: Add examples
     """
 
-    def __init__(self, database):
+    def __init__(self, database_connector):
         """
         Set the database to use.
 
         Parameters
         ----------
-        database : DatabaseConnector
+        database_connector : DatabaseConnector
             The database object to read from
         """
-        self.database = database
+        self.database_connector = database_connector
 
     def query(self, query_str):
         """
@@ -52,7 +52,7 @@ class DatabaseReader:
 
         # Auto-closes connection
         with contextlib.closing(sqlite3.connect(
-                str(self.database.database_path))) as con:
+                str(self.database_connector.database_path))) as con:
             table = pd.read_sql_query(query_str, con)
         return table
 
@@ -130,7 +130,7 @@ class DatabaseReader:
         query_str = ('SELECT name FROM sqlite_master '
                      '   WHERE type="table"')
 
-        table = self.database.query(query_str)
+        table = self.database_connector.query(query_str)
         return len(table.index) != 0
 
     def check_parameter_tables_ids(self, parameters_dict):

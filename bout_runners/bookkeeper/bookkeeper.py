@@ -38,7 +38,77 @@ class Bookkeeper:
             The database connector
         """
         self.database_connector = database_connector
+        # FIXME: Setters and getters?
+        self.database_creator = DatabaseCreator(database_connector)
+        self.database_writer = DatabaseWriter(database_connector)
+        self.database_reader = DatabaseReader(database_connector)
 
+    def _create_parameter_tables_entry(self, parameters_dict):
+        """
+        Insert the parameters into a the parameter tables.
+
+        Parameters
+        ----------
+        parameters_dict : dict
+            The dictionary on the form
+            >>> {'section': {'parameter': 'value'}}
+
+        Returns
+        -------
+        parameters_id : int
+            The id key from the `parameters` table
+
+        Notes
+        -----
+        All `:` will be replaced by `_` in the section names
+        """
+        parameters_foreign_keys = dict()
+        parameter_sections = list(parameters_dict.keys())
+
+        for section in parameter_sections:
+            # Replace bad characters for SQL
+            section_name = section.replace(':', '_')
+            section_parameters = parameters_dict[section]
+            section_id = \
+                self.database_reader.get_entry_id(section_name,
+                                                  section_parameters)
+            if section_id is not None:
+                section_id = self.database_writer.create_entry(
+                    section_name,
+                    section_parameters)
+
+            parameters_foreign_keys[f'{section_name}_id'] = section_id
+
+        # Update the parameters table
+        parameters_id = \
+            self.database_reader.get_entry_id('parameters',
+                                              parameters_foreign_keys)
+        if parameters_id is not None:
+            parameters_id = self.database_writer.create_entry(
+                'parameters',
+                parameters_foreign_keys)
+
+        return parameters_id
+
+    # FIXME: YOU ARE HERE. It should be
+    #  renamed as the name is already in use in the creator
+    def create_parameter_tables(project_path):
+        """
+        Create one table per section in BOUT.settings and one join table.
+
+        Parameters
+        ----------
+        project_path : Path
+            Path to the project
+        """
+        settings_path = run_settings_run(project_path,
+                                         bout_inp_src_dir=None)
+        parameter_dict = obtain_project_parameters(settings_path)
+        parameter_dict_as_sql_types = \
+            cast_parameters_to_sql_type(parameter_dict)
+        database.create_parameter_tables(parameter_dict_as_sql_types)
+
+    # FIXME: This belongs to the object of both runner and bookkeeper
     def store_data_from_run(self,
                             runner,
                             number_of_processors,
@@ -76,10 +146,7 @@ class Bookkeeper:
                 runner.bout_paths.project_path,
                 runner.bout_paths.bout_inp_dst_dir,
                 runner.run_parameters.run_parameters_dict)
-        # FIXME: YOU ARE HERE: CHECK IF PARAMETERS_ID IS NONE (
-        #  OBTAINED FROM CHECK_PARAMETER_TABLES_IDS), AND CREATE
-        #  TABLE IDS_DICT SHOULD BE INPUT TO THIS FUNCTION IN ORDER
-        #  TO AVOID CHECK ENTRY EXISTENCE
+
         run_dict['parameters_id'] = \
             self._create_parameter_tables_entry(parameters_dict)
 
@@ -122,100 +189,3 @@ class Bookkeeper:
             new_entry = True
 
         return new_entry
-
-    def create_parameter_tables(self, parameters_as_sql_types):
-        """
-        Create a table for each BOUT.settings section and a join table.
-        Parameters
-        ----------
-        parameters_as_sql_types : dict
-            The dictionary on the form
-            >>> {'section': {'parameter': 'value_type'}}
-        Notes
-        -----
-        All `:` will be replaced by `_` in the section names
-        """
-        parameters_foreign_keys = dict()
-        for section in parameters_as_sql_types.keys():
-            # Replace bad characters for SQL
-            section_name = section.replace(':', '_')
-            # Generate foreign keys for the parameters table
-            parameters_foreign_keys[f'{section_name}_id'] =\
-                (section_name, 'id')
-
-            columns = dict()
-            for parameter, value_type in \
-                    parameters_as_sql_types[section].items():
-                # Generate the columns
-                columns[parameter] = value_type
-
-            # Creat the section table
-            section_statement = \
-                get_create_table_statement(table_name=section_name,
-                                           columns=columns)
-            self.create_table(section_statement)
-
-        # Create the join table
-        parameters_statement = get_create_table_statement(
-            table_name='parameters',
-            foreign_keys=parameters_foreign_keys)
-        self.create_table(parameters_statement)
-
-    def _create_parameter_tables_entry(self, parameters_dict):
-        """
-        Insert the parameters into a the parameter tables.
-        Parameters
-        ----------
-        parameters_dict : dict
-            The dictionary on the form
-            >>> {'section': {'parameter': 'value'}}
-        Returns
-        -------
-        parameters_id : int
-            The id key from the `parameters` table
-        Notes
-        -----
-        All `:` will be replaced by `_` in the section names
-        """
-        parameters_foreign_keys = dict()
-        parameter_sections = list(parameters_dict.keys())
-
-        for section in parameter_sections:
-            # Replace bad characters for SQL
-            section_name = section.replace(':', '_')
-            section_parameters = parameters_dict[section]
-            section_id = self.check_entry_existence(section_name,
-                                                    section_parameters)
-            if section_id is not None:
-                section_id = self.create_entry(section_name,
-                                               section_parameters)
-
-            parameters_foreign_keys[f'{section_name}_id'] = section_id
-
-        # Update the parameters table
-        parameters_id = \
-            self.check_entry_existence('parameters',
-                                       parameters_foreign_keys)
-        if parameters_id is not None:
-            parameters_id = self.create_entry('parameters',
-                                              parameters_foreign_keys)
-
-        return parameters_id
-
-    # FIXME: This belongs to the orchestrator object. It should be
-    #  renamed as the name is already in use in the creator
-    def create_parameter_tables(project_path):
-        """
-        Create one table per section in BOUT.settings and one join table.
-
-        Parameters
-        ----------
-        project_path : Path
-            Path to the project
-        """
-        settings_path = run_settings_run(project_path,
-                                         bout_inp_src_dir=None)
-        parameter_dict = obtain_project_parameters(settings_path)
-        parameter_dict_as_sql_types = \
-            cast_parameters_to_sql_type(parameter_dict)
-        database.create_parameter_tables(parameter_dict_as_sql_types)

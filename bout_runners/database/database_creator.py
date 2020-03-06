@@ -27,16 +27,16 @@ class DatabaseCreator:
     FIXME: Add examples
     """
 
-    def __init__(self, database):
+    def __init__(self, database_connector):
         """
         Set the database to use.
 
         Parameters
         ----------
-        database : DatabaseConnector
+        database_connector : DatabaseConnector
             The database object to write to
         """
-        self.database = database
+        self.database_connector = database_connector
 
     def create_all_schema_tables(self, parameters_as_sql_types):
         """
@@ -57,7 +57,7 @@ class DatabaseCreator:
         [2] http://www.bkent.net/Doc/simple5.htm
         """
         logging.info(f'Creating tables in '
-                     f'{self.database.database_path}')
+                     f'{self.database_connector.database_path}')
 
         # Check if tables are created
         # FIXME: Test for error if this is created twice
@@ -68,7 +68,7 @@ class DatabaseCreator:
         self._create_run_table()
 
         logging.info(f'Tables created in '
-                     f'{self.database.database_path}')
+                     f'{self.database_connector.database_path}')
 
     @staticmethod
     def get_create_table_statement(table_name,
@@ -151,7 +151,7 @@ class DatabaseCreator:
         pattern = r'CREATE TABLE (\w*)'
         table_name = re.match(pattern, table_str).group(1)
 
-        self.database.execute_statement(table_str)
+        self.database_connector.execute_statement(table_str)
 
         logging.info('Created table %s', table_name)
 
@@ -171,7 +171,7 @@ class DatabaseCreator:
                 columns={'number_of_processors': 'INTEGER',
                          'nodes': 'INTEGER',
                          'processors_per_node': 'INTEGER'})
-        self.database.create_single_table(split_statement)
+        self.database_connector.create_single_table(split_statement)
 
     def _create_file_modification_table(self):
         """Create a table for file modifications."""
@@ -183,7 +183,7 @@ class DatabaseCreator:
                          'project_git_sha': 'TEXT',
                          'bout_lib_modified': 'TIMESTAMP',
                          'bout_git_sha': 'TEXT'})
-        self.database.create_single_table(file_modification_statement)
+        self.database_connector.create_single_table(file_modification_statement)
 
     def _create_parameter_tables(self, parameters_as_sql_types):
         """
@@ -241,4 +241,4 @@ class DatabaseCreator:
                               'split_id': ('split', 'id'),
                               'parameters_id': ('parameters', 'id'),
                               'host_id': ('host', 'id')})
-        self.database.create_single_table(run_statement)
+        self.database_connector.create_single_table(run_statement)

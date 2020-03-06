@@ -26,16 +26,16 @@ class DatabaseWriter:
     FIXME: Add examples
     """
 
-    def __init__(self, database):
+    def __init__(self, database_connector):
         """
         Set the database to use.
 
         Parameters
         ----------
-        database : DatabaseConnector
+        database_connector : DatabaseConnector
             The database object to write to
         """
-        self.database = database
+        self.database_connector = database_connector
 
     @staticmethod
     def create_insert_string(field_names, table_name):
@@ -80,7 +80,7 @@ class DatabaseWriter:
         pattern = r'INSERT INTO (\w*)'
         table_name = re.match(pattern, insert_str).group(1)
 
-        self.database.execute_statement(insert_str, values)
+        self.database_connector.execute_statement(insert_str, values)
 
         logging.info('Made insertion to %s', table_name)
 
