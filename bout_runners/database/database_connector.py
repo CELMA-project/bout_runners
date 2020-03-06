@@ -1,4 +1,4 @@
-"""Module containing the BookkeeperBase class."""
+"""Module containing the DatabaseBase class."""
 
 
 import contextlib
@@ -8,7 +8,7 @@ from pathlib import Path
 from bout_runners.utils.file_operations import get_caller_dir
 
 
-class BookkeeperConnector:
+class DatabaseConnector:
     """
     Class creating the database path and executing sql statements.
 

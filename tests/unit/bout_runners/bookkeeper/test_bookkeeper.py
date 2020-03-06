@@ -1,4 +1,4 @@
-"""Contains unittests for the bookkeeper."""
+"""Contains unittests for the database."""
 
 
 def test_create_table(make_test_database):
@@ -8,7 +8,7 @@ def test_create_table(make_test_database):
     Parameters
     ----------
     make_test_database : function
-        The bookkeeper from the fixture
+        The database from the fixture
     """
     bookkeeper = make_test_database('create_single_table.db')
 
@@ -36,7 +36,7 @@ def test_create_parameter_tables(make_test_database):
     Parameters
     ----------
     make_test_database : function
-        The bookkeeper from the fixture
+        The database from the fixture
     """
     bookkeeper = make_test_database('create_parameter_table.db')
 

@@ -1,17 +1,17 @@
-"""Module containing the BookkeeperWriter class."""
+"""Module containing the DatabaseWriter class."""
 
 
 import re
 import logging
-from bout_runners.bookkeeper.bookkeeper_utils import \
+from bout_runners.database.database_utils import \
     get_file_modification
-from bout_runners.bookkeeper.bookkeeper_utils import \
+from bout_runners.database.database_utils import \
     get_system_info
-from bout_runners.bookkeeper.bookkeeper_utils import \
+from bout_runners.database.database_utils import \
     extract_parameters_in_use
 
 
-class BookkeeperWriter:
+class DatabaseWriter:
     """
     Class for writing to the schema of the database.
 
@@ -28,12 +28,12 @@ class BookkeeperWriter:
 
     def __init__(self, bookkeeper):
         """
-        Set the bookkeeper to use.
+        Set the database to use.
 
         Parameters
         ----------
-        bookkeeper : BookkeeperConnector
-            The bookkeeper object to write to
+        bookkeeper : DatabaseConnector
+            The database object to write to
         """
         self.bookkeeper = bookkeeper
 

@@ -1,1 +1,1 @@
-"""Package containing the unit bookkeeper tests for bout_runners."""
+"""Package containing the unit database tests for bout_runners."""

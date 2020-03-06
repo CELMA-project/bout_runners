@@ -1,4 +1,4 @@
-"""Module containing utils only used in the bookkeeper package."""
+"""Module containing utils only used in the database package."""
 
 
 import ast

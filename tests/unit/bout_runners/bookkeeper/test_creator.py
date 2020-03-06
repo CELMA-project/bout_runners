@@ -2,12 +2,12 @@
 
 
 import pytest
-from bout_runners.bookkeeper.bookkeeper_creator import create_system_info_table
-from bout_runners.bookkeeper.bookkeeper_creator import create_run_table
-from bout_runners.bookkeeper.bookkeeper_creator import \
+from bout_runners.database.database_creator import create_system_info_table
+from bout_runners.database.database_creator import create_run_table
+from bout_runners.database.database_creator import \
     create_file_modification_table
-from bout_runners.bookkeeper.bookkeeper_creator import create_parameter_tables
-from bout_runners.bookkeeper.bookkeeper_creator import create_split_table
+from bout_runners.database.database_creator import create_parameter_tables
+from bout_runners.database.database_creator import create_split_table
 
 
 @pytest.fixture(scope='module', name='make_creator_database')
@@ -22,8 +22,8 @@ def fixture_make_creator_database(make_test_database):
 
     Returns
     -------
-    bookkeeper : Bookkeeper
-        The bookkeeper object
+    database : Database
+        The database object
     """
     bookkeeper = make_test_database('creator.db')
     return bookkeeper
@@ -35,8 +35,8 @@ def test_create_run_table(make_creator_database):
 
     Parameters
     ----------
-    make_creator_database : Bookkeeper
-        The bookkeeper object
+    make_creator_database : Database
+        The database object
     """
     bookkeeper = make_creator_database
     create_run_table(bookkeeper)
@@ -52,8 +52,8 @@ def test_create_parameter_tables(make_creator_database, make_project):
 
     Parameters
     ----------
-    make_creator_database : Bookkeeper
-        The bookkeeper object
+    make_creator_database : Database
+        The database object
     make_project : Path
         The path to the conduction example
     """
@@ -82,8 +82,8 @@ def test_create_file_modification_table(make_creator_database):
 
     Parameters
     ----------
-    make_creator_database : Bookkeeper
-        The bookkeeper object
+    make_creator_database : Database
+        The database object
     """
     bookkeeper = make_creator_database
     create_file_modification_table(bookkeeper)
@@ -99,8 +99,8 @@ def test_create_split_table(make_creator_database):
 
     Parameters
     ----------
-    make_creator_database : Bookkeeper
-        The bookkeeper object
+    make_creator_database : Database
+        The database object
     """
     bookkeeper = make_creator_database
     create_split_table(bookkeeper)
@@ -116,8 +116,8 @@ def test_create_system_info_table(make_creator_database):
 
     Parameters
     ----------
-    make_creator_database : Bookkeeper
-        The bookkeeper object
+    make_creator_database : Database
+        The database object
     """
     bookkeeper = make_creator_database
     create_system_info_table(bookkeeper)

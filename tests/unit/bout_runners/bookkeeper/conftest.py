@@ -3,7 +3,7 @@
 import shutil
 from pathlib import Path
 import pytest
-from bout_runners.bookkeeper.bookkeeper_connector import Bookkeeper
+from bout_runners.database.database_connector import Database
 
 
 @pytest.fixture(scope='session')
@@ -33,11 +33,11 @@ def make_test_database():
 
         Returns
         -------
-        Bookkeeper
-            The bookkeeper object
+        Database
+            The database object
         """
         db_path = db_dir.joinpath(db_name)
-        return Bookkeeper(db_path)
+        return Database(db_path)
 
     yield _make_db
 

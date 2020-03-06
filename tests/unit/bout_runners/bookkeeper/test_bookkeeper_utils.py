@@ -1,12 +1,12 @@
-"""Contains unittests for the bookkeeper utils."""
+"""Contains unittests for the database utils."""
 
-from bout_runners.bookkeeper.bookkeeper_utils import \
+from bout_runners.database.database_utils import \
     obtain_project_parameters
-from bout_runners.bookkeeper.bookkeeper_utils import \
+from bout_runners.database.database_utils import \
     cast_parameters_to_sql_type
-from bout_runners.bookkeeper.bookkeeper_utils import \
+from bout_runners.database.database_utils import \
     get_system_info_as_sql_type
-from bout_runners.bookkeeper.bookkeeper_utils import \
+from bout_runners.database.database_utils import \
     get_create_table_statement
 
 

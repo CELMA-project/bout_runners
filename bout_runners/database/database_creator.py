@@ -1,18 +1,18 @@
-"""Module containing the BookkeeperCreator class."""
+"""Module containing the DatabaseCreator class."""
 
 
 import re
 import logging
-from bout_runners.bookkeeper.bookkeeper_utils import \
+from bout_runners.database.database_utils import \
     obtain_project_parameters
-from bout_runners.bookkeeper.bookkeeper_utils import \
+from bout_runners.database.database_utils import \
     cast_parameters_to_sql_type
-from bout_runners.bookkeeper.bookkeeper_utils import \
+from bout_runners.database.database_utils import \
     get_system_info_as_sql_type
 from bout_runners.runners.runner_utils import run_settings_run
 
 
-class BookkeeperCreator:
+class DatabaseCreator:
     """
     Class for creating the schema of the database.
 
@@ -29,12 +29,12 @@ class BookkeeperCreator:
 
     def __init__(self, bookkeeper):
         """
-        Set the bookkeeper to use.
+        Set the database to use.
 
         Parameters
         ----------
-        bookkeeper : BookkeeperConnector
-            The bookkeeper object to write to
+        bookkeeper : DatabaseConnector
+            The database object to write to
         """
         self.bookkeeper = bookkeeper
 

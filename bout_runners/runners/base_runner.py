@@ -5,13 +5,13 @@ import logging
 import shutil
 from datetime import datetime
 from pathlib import Path
-from bout_runners.bookkeeper.bookkeeper_connector import Bookkeeper
-from bout_runners.bookkeeper.bookkeeper_utils import get_db_path
-from bout_runners.bookkeeper.bookkeeper_utils import tables_created
+from bout_runners.database.database_connector import Database
+from bout_runners.database.database_utils import get_db_path
+from bout_runners.database.database_utils import tables_created
 from bout_runners.make.make import MakeProject
 from bout_runners.utils.file_operations import get_caller_dir
 from bout_runners.utils.subprocesses_functions import run_subprocess
-from bout_runners.bookkeeper.bookkeeper_creator import create_database
+from bout_runners.database.database_creator import create_database
 
 
 class BoutPaths:
@@ -531,7 +531,7 @@ class BoutRunner:
         # Get database
         db_path = get_db_path(project_path=self.bout_paths.project_path,
                               database_root_path=database_root_path)
-        self.bookkeeper = Bookkeeper(db_path)
+        self.bookkeeper = Database(db_path)
 
         self.make = None  # Set to make-obj in self.make_project
 

@@ -4,7 +4,7 @@
 import shutil
 from pathlib import Path
 import pytest
-from bout_runners.bookkeeper.bookkeeper_creator import create_database
+from bout_runners.database.database_creator import create_database
 
 
 @pytest.fixture(scope='module', name='db_directory')

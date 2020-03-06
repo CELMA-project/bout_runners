@@ -1,1 +1,1 @@
-"""Package containing integration bookkeeper tests for bout_runners."""
+"""Package containing integration database tests for bout_runners."""

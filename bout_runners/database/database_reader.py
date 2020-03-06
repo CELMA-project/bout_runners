@@ -1,4 +1,4 @@
-"""Module containing the BookkeeperReader class."""
+"""Module containing the DatabaseReader class."""
 
 
 import contextlib
@@ -6,7 +6,7 @@ import sqlite3
 import pandas as pd
 
 
-class BookkeeperReader:
+class DatabaseReader:
     """
     Class for reading the schema of the database.
 
@@ -23,12 +23,12 @@ class BookkeeperReader:
 
     def __init__(self, bookkeeper):
         """
-        Set the bookkeeper to use.
+        Set the database to use.
 
         Parameters
         ----------
-        bookkeeper : BookkeeperConnector
-            The bookkeeper object to read from
+        bookkeeper : DatabaseConnector
+            The database object to read from
         """
         self.bookkeeper = bookkeeper
 
