@@ -2,7 +2,7 @@
 
 
 from bout_runners.make.make import MakeProject
-from bout_runners.executor.processor_split import ProcessorSplit
+from bout_runners.submitter.processor_split import ProcessorSplit
 from bout_runners.executor.run_parameters import RunParameters
 from bout_runners.utils.subprocesses_functions import run_subprocess
 
@@ -75,4 +75,5 @@ class Executor:
         """Execute a BOUT++ run."""
         # Make the project if not already made
         self.make_project()
+        # FIXME: Use sumbitter class
         run_subprocess(self.command, path=self.bout_paths.project_path)

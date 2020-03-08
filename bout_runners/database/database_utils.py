@@ -8,8 +8,6 @@ import platform
 import re
 import subprocess
 from pathlib import Path
-
-from bout_runners.utils.file_operations import get_caller_dir
 from bout_runners.utils.file_operations import get_modified_time
 from bout_runners.utils.paths import get_bout_path
 from bout_runners.utils.subprocesses_functions import run_subprocess

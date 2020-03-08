@@ -5,7 +5,7 @@ import shutil
 import pytest
 from bout_runners.executor.bout_paths import BoutPaths
 from bout_runners.executor.run_parameters import RunParameters
-from bout_runners.executor.processor_split import ProcessorSplit
+from bout_runners.submitter.processor_split import ProcessorSplit
 from bout_runners.executor.executor import Executor
 
 

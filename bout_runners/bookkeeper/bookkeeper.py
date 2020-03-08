@@ -1,7 +1,6 @@
 """Module containing the Bookkeeper class."""
 
 
-from bout_runners.database.database_creator import DatabaseCreator
 from bout_runners.database.database_writer import DatabaseWriter
 from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.database.database_utils import \
@@ -36,19 +35,12 @@ class Bookkeeper:
         database_connector : DatabaseConnector
             The database connector
         """
-        self.database_connector = database_connector
-        # FIXME: Setters and getters, or maybe just private members?
-        self.database_creator = DatabaseCreator(database_connector)
-        self.database_writer = DatabaseWriter(database_connector)
-        self.database_reader = DatabaseReader(database_connector)
+        self.__database_writer = DatabaseWriter(database_connector)
+        self.__database_reader = DatabaseReader(database_connector)
 
-    # FIXME: YOU ARE HERE 1. Processor split object can be used.
-    #  Clean-up
     def capture_new_data_from_run(self,
                                   runner,
-                                  number_of_processors,
-                                  nodes=1,
-                                  processors_per_node=None):
+                                  processor_split):
         """
         Capture new data from a run.
 
@@ -61,14 +53,8 @@ class Bookkeeper:
         ----------
         runner : BoutRunner
             The bout runner object
-        number_of_processors : int
-            The total number of processors
-        nodes : int
-            The total number of nodes used
-        processors_per_node : int
-            Number of processors per nodes.
-            If None, this will be set to
-            floor(number_of_processors/nodes)
+        processor_split : ProcessorSplit
+            The processor split object
 
         Returns
         -------
@@ -88,8 +74,7 @@ class Bookkeeper:
                 runner.run_parameters.run_parameters_dict)
 
         run_dict['parameters_id'] = \
-            self.bookkeeper._create_parameter_tables_entry(
-                parameters_dict)
+            self._create_parameter_tables_entry(parameters_dict)
 
         # Update the file_modification
         file_modification_dict = \
@@ -97,36 +82,40 @@ class Bookkeeper:
                                   runner.make.makefile_path,
                                   runner.make.exec_name)
         run_dict['file_modification_id'] = \
-            self.check_entry_existence('file_modification',
-                                       file_modification_dict)
+            self.__database_reader.get_entry_id('file_modification',
+                                                file_modification_dict)
         if run_dict['file_modification_id'] is None:
             run_dict['file_modification_id'] = \
-                self.create_entry('file_modification',
-                                  file_modification_dict)
+                self.__database_writer.create_entry(
+                    'file_modification',
+                    file_modification_dict)
 
         # Update the split
-        split_dict = {'number_of_processors': number_of_processors,
-                      'nodes': nodes,
-                      'processors_per_nodes': processors_per_node}
+        split_dict = {'number_of_processors':
+                      processor_split.number_of_processors,
+                      'nodes': processor_split.nodes,
+                      'processors_per_nodes':
+                      processor_split.processors_per_node}
         run_dict['split_id'] = \
-            self.check_entry_existence('split', split_dict)
+            self.__database_reader.get_entry_id('split', split_dict)
         if run_dict['split_id'] is not None:
             run_dict['split_id'] = \
-                self.create_entry('split', split_dict)
+                self.__database_writer.create_entry('split', split_dict)
 
         # Update the system info
         system_info_dict = get_system_info()
-        run_dict['host_id'] = \
-            self.check_entry_existence('system_info', system_info_dict)
+        run_dict['host_id'] = self.__database_reader.get_entry_id(
+            'system_info', system_info_dict)
         if run_dict['host_id'] is not None:
             run_dict['host_id'] = \
-                self.create_entry('system_info', system_info_dict)
+                self.__database_writer.create_entry('system_info',
+                                                    system_info_dict)
 
         # Update the run
-        run_id = self.check_entry_existence('run', run_dict)
+        run_id = self.__database_reader.get_entry_id('run', run_dict)
         if run_id is not None:
             run_dict['latest_status'] = 'submitted'
-            self.create_entry('run', run_dict)
+            self.__database_writer.create_entry('run', run_dict)
             new_entry = True
 
         return new_entry
@@ -158,10 +147,10 @@ class Bookkeeper:
             section_name = section.replace(':', '_')
             section_parameters = parameters_dict[section]
             section_id = \
-                self.database_reader.get_entry_id(section_name,
-                                                  section_parameters)
+                self.__database_reader.get_entry_id(section_name,
+                                                    section_parameters)
             if section_id is not None:
-                section_id = self.database_writer.create_entry(
+                section_id = self.__database_writer.create_entry(
                     section_name,
                     section_parameters)
 
@@ -169,10 +158,10 @@ class Bookkeeper:
 
         # Update the parameters table
         parameters_id = \
-            self.database_reader.get_entry_id('parameters',
-                                              parameters_foreign_keys)
+            self.__database_reader.get_entry_id('parameters',
+                                                parameters_foreign_keys)
         if parameters_id is not None:
-            parameters_id = self.database_writer.create_entry(
+            parameters_id = self.__database_writer.create_entry(
                 'parameters',
                 parameters_foreign_keys)
 
