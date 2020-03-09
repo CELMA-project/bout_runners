@@ -3,31 +3,41 @@
 
 import logging
 import subprocess
+from pathlib import Path
 from bout_runners.submitter.abstract_submitter import AbstractSubmitter
 
 
 # FIXME: Make this a factory pattern. Local, PBS or SLURM can be
 #  selected. Hard to figure out how to test though...
-# FIXME: Copy the run_subprocess from subprocess_functions here
+# FIXME: Should this be a separate repo? Seems like it is multi
+#  purpose, would possibly also be easier with testing etc.
 class LocalSubmitter(AbstractSubmitter):
     """
     Submits a command.
 
-    FIXME: Add variables and attributes
+    Attributes
+    ----------
+    path : Path or str
+        Directory to run the command from
 
-    FIXME: Add examples
+    Methods
+    -------
+    submit_command(command)
+        Run a subprocess
+    _raise_submit_error(self, result):
+        Raise and error from the subprocess in a clean way.
     """
 
     def __init__(self, path):
         """
-        FIXME
+        Set the path from where the calls are made from
 
         Parameters
         ----------
         path : Path or str
-            Path to the location to run the command from
+            Directory to run the command from
         """
-        self.__path = path
+        self.__path = Path(path)
 
     def submit_command(self, command):
         """

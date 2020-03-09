@@ -8,6 +8,7 @@ from pathlib import Path
 from bout_runners.utils.file_operations import get_caller_dir
 
 
+# FIXME: Keep connection open
 class DatabaseConnector:
     """
     Class creating the database path and executing sql statements.

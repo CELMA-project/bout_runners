@@ -7,11 +7,6 @@ from abc import abstractmethod
 
 class AbstractSubmitter(ABC):
 
-    # FIXME: Complete with input
-    @abstractmethod
-    def __init__(self, path):
-        pass
-
     @abstractmethod
     def submit_command(self, command):
         pass
