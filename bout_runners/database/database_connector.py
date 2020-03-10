@@ -1,14 +1,12 @@
 """Module containing the DatabaseBase class."""
 
 
-import contextlib
 import sqlite3
 import logging
 from pathlib import Path
 from bout_runners.utils.file_operations import get_caller_dir
 
 
-# FIXME: Keep connection open
 class DatabaseConnector:
     """
     Class creating the database path and executing sql statements.
@@ -17,6 +15,8 @@ class DatabaseConnector:
     ----------
     __database_path : None or Path
         Getter and setter variable for database_path
+    __connection : Cursor
+        The connection to the database
     database_path : Path
         Path to database
 
@@ -52,6 +52,13 @@ class DatabaseConnector:
             self.create_db_path(name, database_root_path)
         logging.info('database_path set to %s', self.database_path)
 
+        # Open the connection
+        self.__connection = sqlite3.connect(str(self.database_path))
+
+    def __del__(self):
+        """Close the connection."""
+        self.__connection.close()
+
     @property
     def database_path(self):
         """
@@ -59,8 +66,8 @@ class DatabaseConnector:
 
         Returns
         -------
-        self.__project_path : Path
-            Absolute path to the root of make file
+        self.__database_path : Path
+            Absolute path to the database
 
         Notes
         -----
@@ -125,15 +132,6 @@ class DatabaseConnector:
         parameters : tuple
             Parameters used in .execute of the cursor (like )
         """
-        # NOTE: The connection does not close after the 'with' statement
-        #       Instead we use the context manager as described here
-        #       https://stackoverflow.com/a/47501337/2786884
-        # Auto-closes connection
-        with contextlib.closing(sqlite3.connect(
-                str(self.database_path))) as context:
-            # Auto-commits
-            with context as con:
-                # Auto-closes cursor
-                with contextlib.closing(con.cursor()) as cur:
-                    # Check if tables are present
-                    cur.execute(sql_statement, parameters)
+        cursor = self.__connection.cursor()
+        cursor.execute(sql_statement, parameters)
+        self.__connection.commit()
