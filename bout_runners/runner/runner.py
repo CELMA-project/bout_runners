@@ -11,7 +11,7 @@ from bout_runners.bookkeeper.bookkeeper import Bookkeeper
 from bout_runners.executor.bout_paths import BoutPaths
 from bout_runners.executor.run_parameters import RunParameters
 from bout_runners.executor.executor import Executor
-from bout_runners.submitter.sumitter_factory import SubmitterFactory
+from bout_runners.submitter.local_submitter import LocalSubmitter
 
 
 class BoutRunner:
@@ -190,8 +190,7 @@ class BoutRunner:
         run_parameters = RunParameters({'global': {'nout': 0}})
         executor = Executor(
             bout_paths=bout_paths,
-            submitter=SubmitterFactory.get_submitter('local',
-                                                     project_path),
+            submitter=LocalSubmitter(project_path),
             run_parameters=run_parameters)
 
         settings_path = \

@@ -62,6 +62,7 @@ class ReadBoutMakefile:
 
     def get_variable_value(self):
         """Get the value of the variable."""
+        pass
 
 
 class BoutMakefileVariable(ReadBoutMakefile):

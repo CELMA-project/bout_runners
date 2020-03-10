@@ -7,10 +7,7 @@ from pathlib import Path
 from bout_runners.submitter.abstract_submitter import AbstractSubmitter
 from bout_runners.submitter.processor_split import ProcessorSplit
 
-# FIXME: Make this a factory pattern. Local, PBS or SLURM can be
-#  selected. Hard to figure out how to test though...
-# FIXME: Should this be a separate repo? Seems like it is multi
-#  purpose, would possibly also be easier with testing etc.
+
 class LocalSubmitter(AbstractSubmitter):
     """
     Submits a command.
@@ -30,7 +27,7 @@ class LocalSubmitter(AbstractSubmitter):
         Raise and error from the subprocess in a clean way.
     """
 
-    def __init__(self, path, processor_split=ProcessorSplit()):
+    def __init__(self, path='', processor_split=ProcessorSplit()):
         """
         Set the path from where the calls are made from
 
@@ -41,7 +38,7 @@ class LocalSubmitter(AbstractSubmitter):
         processor_split : ProcessorSplit
             Object containing the processor split
         """
-        self.__path = Path(path)
+        self.__path = Path(path).absolute()
         self.processor_split = processor_split
 
     def submit_command(self, command):

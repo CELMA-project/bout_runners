@@ -6,12 +6,19 @@ from bout_runners.submitter.local_submitter import LocalSubmitter
 
 
 class SubmitterFactory:
-    """Factory which returns the submitters."""
+    """
+    Factory which returns the submitters.
+
+    Methods
+    -------
+    get_submitter(name, *args, **kwargs)
+        Submitter object
+    """
 
     @staticmethod
     def get_submitter(name, *args, **kwargs):
         """
-        Return a model.
+        Return a Submitter object.
 
         Parameters
         ----------

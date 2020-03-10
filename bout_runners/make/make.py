@@ -4,9 +4,9 @@
 import logging
 from pathlib import Path
 from bout_runners.utils.file_operations import get_caller_dir
-from bout_runners.utils.subprocesses_functions import run_subprocess
 from bout_runners.utils.names import get_exec_name
 from bout_runners.utils.names import get_makefile_path
+from bout_runners.submitter.local_submitter import LocalSubmitter
 
 
 class MakeError(Exception):
@@ -71,6 +71,7 @@ class MakeProject:
         self.makefile_path = get_makefile_path(self.makefile_root_path,
                                                self.makefile_name)
         self.exec_name = get_exec_name(self.makefile_path)
+        self.submitter = LocalSubmitter(self.makefile_root_path)
 
     def run_make(self, force=False):
         """
@@ -99,7 +100,7 @@ class MakeProject:
 
             logging.info('Making the program')
             command = f'{make_str}'
-            run_subprocess(command, self.makefile_root_path)
+            self.submitter.submit_command(command)
 
     def run_clean(self):
         """Run make clean."""
@@ -108,4 +109,4 @@ class MakeProject:
 
         logging.info('Running make clean')
         command = f'{make_str} clean'
-        run_subprocess(command, self.makefile_root_path)
+        self.submitter.submit_command(command)

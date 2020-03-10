@@ -1,1 +1,1 @@
-"""Package containing the unit utils tests for bout_runners."""
+"""Package containing the unit test for the utils package."""

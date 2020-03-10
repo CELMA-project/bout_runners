@@ -5,7 +5,6 @@ import shutil
 import pytest
 from bout_runners.executor.bout_paths import BoutPaths
 from bout_runners.executor.run_parameters import RunParameters
-from bout_runners.submitter.processor_split import ProcessorSplit
 from bout_runners.executor.executor import Executor
 
 
@@ -103,16 +102,6 @@ def test_run_parameters():
     assert run_parameters.run_parameters_str == expected_str
     with pytest.raises(AttributeError):
         run_parameters.run_parameters_str = 'foo'
-
-
-def test_processor_split():
-    """Test that the ProcessorSplit is setting the parameters."""
-    processor_split = ProcessorSplit(number_of_processors=1,
-                                     number_of_nodes=1,
-                                     processors_per_node=1)
-    assert processor_split.number_of_processors == 1
-    with pytest.raises(ValueError):
-        processor_split.number_of_processors = 2
 
 
 def test_single_run(copy_bout_inp, make_project):
