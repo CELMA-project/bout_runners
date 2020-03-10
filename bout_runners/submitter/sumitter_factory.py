@@ -9,7 +9,7 @@ class SubmitterFactory:
     """Factory which returns the submitters."""
 
     @staticmethod
-    def get_submitter(name):
+    def get_submitter(name, *args, **kwargs):
         """
         Return a model.
 
@@ -17,6 +17,12 @@ class SubmitterFactory:
         ----------
         name : str
             Name of the submitter to use
+        args : tuple
+            Positional arguments (see the different implementation
+            for details)
+        kwargs : dict
+            Keyword arguments (see the different implementation
+            for details)
 
         Returns
         -------
@@ -26,7 +32,7 @@ class SubmitterFactory:
         implemented = ('local',)
 
         if name == 'local':
-            submitter = LocalSubmitter()
+            submitter = LocalSubmitter(*args, **kwargs)
         else:
             msg = (f'{name} is not a valid submitter class, choose '
                    f'from {implemented}')

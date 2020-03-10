@@ -2,9 +2,7 @@
 
 
 from bout_runners.make.make import MakeProject
-from bout_runners.submitter.processor_split import ProcessorSplit
 from bout_runners.executor.run_parameters import RunParameters
-from bout_runners.utils.subprocesses_functions import run_subprocess
 
 
 class Executor:
@@ -23,33 +21,70 @@ class Executor:
 
     def __init__(self,
                  bout_paths,
-                 run_parameters=RunParameters(),
-                 processor_split=ProcessorSplit()):
+                 submitter,
+                 run_parameters=RunParameters()):
         """
         Set the input parameters.
 
         Parameters
         ----------
-        bout_paths : bout_runners.runners.bout_paths.BoutPaths
-            Class which contains the paths
+        bout_paths : BoutPaths
+            Object containing the paths
         run_parameters : RunParameters
-            Class containing the run parameters
-        processor_split : ProcessorSplit
-            Class containing the processor split
+            Object containing the run parameters
+        submitter : AbstractSubmitter
+            Object containing the submitter
         """
         # Set member data
-        self.bout_paths = bout_paths
-        self.run_parameters = run_parameters
-        self.processor_split = processor_split
+        self.__bout_paths = bout_paths
+        self.__run_parameters = run_parameters
+        self.__make = MakeProject(self.__bout_paths.project_path)
+        self.__command = self.get_execute_command()
+        self.submitter = submitter
 
-        # FIXME: Use setters?
-        self.make = None  # Set to make-obj in self.make_project
-        self.command = self.get_execute_command()
+    @property
+    def bout_paths(self):
+        """
+        Set the properties of self.bout_paths.
 
-    def make_project(self):
-        """Set the make object and Make the project."""
-        self.make = MakeProject(self.bout_paths.project_path)
-        self.make.run_make()
+        Returns
+        -------
+        self.__bout_paths : BoutPaths
+            Object containing the paths
+
+        Notes
+        -----
+        The bout_paths is read only
+        """
+        return self.__bout_paths
+
+    @bout_paths.setter
+    def bout_paths(self, _):
+        msg = (f'The bout_paths is read only, and is '
+               f'set through the constructor')
+        raise AttributeError(msg)
+
+    @property
+    def run_parameters(self):
+        """
+        Set the properties of self.run_parameters.
+
+        Returns
+        -------
+        self.__run_parameters : RunParameters
+            Object containing the run parameters
+
+        Notes
+        -----
+        The run_parameters is read only
+        """
+        return self.__run_parameters
+
+    @run_parameters.setter
+    def run_parameters(self, _):
+        msg = (f'The run_parameters is read only, and is '
+               f'set through the constructor')
+        raise AttributeError(msg)
 
     def get_execute_command(self):
         """
@@ -64,16 +99,17 @@ class Executor:
         mpi_cmd = 'mpirun -np'
 
         # NOTE: No spaces if parameters are None
-        command = (f'{mpi_cmd} '
-                   f'{self.processor_split.number_of_processors} '
-                   f'./{self.make.exec_name} '
-                   f'-d {self.bout_paths.bout_inp_dst_dir} '
-                   f'{self.run_parameters.run_parameters_str}')
+        command = \
+            (f'{mpi_cmd} '
+             f'{self.submitter.processor_split.number_of_processors} '
+             f'./{self.__make.exec_name} '
+             f'-d {self.__bout_paths.bout_inp_dst_dir} '
+             f'{self.__run_parameters.run_parameters_str}')
         return command
 
     def execute(self):
         """Execute a BOUT++ run."""
         # Make the project if not already made
-        self.make_project()
-        # FIXME: Use sumbitter class
-        run_subprocess(self.command, path=self.bout_paths.project_path)
+        self.__make.run_make()
+        # Submit the command
+        self.submitter.submit.submit_command(self.__command)

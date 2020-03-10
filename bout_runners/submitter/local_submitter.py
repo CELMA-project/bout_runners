@@ -5,7 +5,7 @@ import logging
 import subprocess
 from pathlib import Path
 from bout_runners.submitter.abstract_submitter import AbstractSubmitter
-
+from bout_runners.submitter.processor_split import ProcessorSplit
 
 # FIXME: Make this a factory pattern. Local, PBS or SLURM can be
 #  selected. Hard to figure out how to test though...
@@ -19,6 +19,8 @@ class LocalSubmitter(AbstractSubmitter):
     ----------
     path : Path or str
         Directory to run the command from
+    processor_split : ProcessorSplit
+        Object containing the processor split
 
     Methods
     -------
@@ -28,7 +30,7 @@ class LocalSubmitter(AbstractSubmitter):
         Raise and error from the subprocess in a clean way.
     """
 
-    def __init__(self, path):
+    def __init__(self, path, processor_split=ProcessorSplit()):
         """
         Set the path from where the calls are made from
 
@@ -36,8 +38,11 @@ class LocalSubmitter(AbstractSubmitter):
         ----------
         path : Path or str
             Directory to run the command from
+        processor_split : ProcessorSplit
+            Object containing the processor split
         """
         self.__path = Path(path)
+        self.processor_split = processor_split
 
     def submit_command(self, command):
         """

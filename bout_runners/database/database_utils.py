@@ -14,7 +14,8 @@ from bout_runners.utils.subprocesses_functions import run_subprocess
 from bout_runners.executor.runner_utils import run_settings_run
 
 
-
+# FIXME: Submitted time is different from start and end
+# FIXME: Should pid be used as well?
 def get_system_info_as_sql_type():
     """
     Return the SQL types of the system information.

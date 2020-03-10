@@ -72,7 +72,7 @@ class DatabaseConnector:
     @database_path.setter
     def database_path(self, _):
         msg = (f'The database_path is read only, and is '
-               f'only set in the constructor (currently in use: '
+               f'set through the constructor (currently in use: '
                f'{self.database_path})')
         raise AttributeError(msg)
 

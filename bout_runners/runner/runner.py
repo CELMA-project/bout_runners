@@ -1,14 +1,17 @@
 """Contains the BOUT runner class."""
 
 
-import ast
 import re
+import logging
+import ast
 import configparser
 from pathlib import Path
-import logging
-from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.database.database_creator import DatabaseCreator
 from bout_runners.bookkeeper.bookkeeper import Bookkeeper
+from bout_runners.executor.bout_paths import BoutPaths
+from bout_runners.executor.run_parameters import RunParameters
+from bout_runners.executor.executor import Executor
+from bout_runners.submitter.sumitter_factory import SubmitterFactory
 
 
 class BoutRunner:
@@ -32,14 +35,9 @@ class BoutRunner:
         """
         # Set member data
         self.__executor = executor
-        # FIXME: Better if bookkeepers reader is non-private, so that
-        #  we can reuse the object
-        self.__database_reader = DatabaseReader(database_connector)
         self.__database_creator = DatabaseCreator(database_connector)
         self.__bookkeeper = Bookkeeper(database_connector)
 
-    # FIXME: Submitted time is different from start and end
-    # FIXME: Should pid be used as well?
     def create_schema(self):
         """
         Create the schema.
@@ -48,22 +46,15 @@ class BoutRunner:
         infer the parameters of the project executable. The
         parameters are subsequently read and their types cast to
         SQL types
-
-        Parameters
-        ----------
-        project_path : Path
-            Path to the project
         """
-        # FIXME: YOU ARE HERE Need to check if these are available
-        #  form one of the input classes
-        settings_path = self.run_settings_run(project_path,
-                                              bout_inp_src_dir=None)
+        settings_path = self.run_settings_run()
         parameter_dict = self.obtain_project_parameters(settings_path)
         parameter_dict_as_sql_types = \
             self.cast_parameters_to_sql_type(parameter_dict)
         self.__database_creator.create_all_schema_tables(
             parameter_dict_as_sql_types)
 
+    @staticmethod
     def obtain_project_parameters(settings_path):
         """
         Return the project parameters from the settings file.
@@ -82,9 +73,10 @@ class BoutRunner:
 
         Notes
         -----
-        1. The sectionless part of BOUT.settings will be renamed `global`
-        2. In the `global` section, the keys `d` and the directory to the
-           BOUT.inp file will be removed
+        1. The section-less part of BOUT.settings will be renamed
+           `global`
+        2. In the `global` section, the keys `d` and the directory to
+           the BOUT.inp file will be removed
         3. If the section `all` is present in BOUT.settings, the section
            will be renamed `all_boundaries` as `all` is a protected SQL
            keyword
@@ -131,11 +123,13 @@ class BoutRunner:
         if 'all' in parameter_dict.keys():
             parameter_dict['all_boundaries'] = parameter_dict.pop('all')
 
-        # Drop run as bout_runners will make its own table with that name
+        # Drop run as bout_runners will make its own table with that
+        # name
         parameter_dict.pop('run', None)
 
         return parameter_dict
 
+    @staticmethod
     def cast_parameters_to_sql_type(parameter_dict):
         """
         Return the project parameters from the settings file.
@@ -174,57 +168,53 @@ class BoutRunner:
 
         return parameter_dict_sql_types
 
-    def run_settings_run(self, project_path, bout_inp_src_dir=None):
+    def run_settings_run(self):
         """
         Perform a settings run.
 
         A settings run executes the executable of the project with
         nout = 0 in order to capture all parameters used in the project
 
-        Parameters
-        ----------
-        project_path : Path
-            Path to the project
-        bout_inp_src_dir : Path or None
-            Path to the BOUT.inp file
-            Will be set to `data/` of the `project_path` if not set
-
         Returns
         -------
         settings_path : Path
             Path to the settings file
         """
-        bout_paths = bout_runners.executor.base_runner.BoutPaths(
+        project_path = self.__executor.bout_paths.project_path
+
+        bout_paths = BoutPaths(
             project_path=project_path,
-            bout_inp_src_dir=bout_inp_src_dir,
+            bout_inp_src_dir=
+            self.__executor.bout_paths.bout_inp_src_dir,
             bout_inp_dst_dir='settings_run')
-        run_parameters = \
-            bout_runners.executor.base_runner.RunParameters(
-                {'global': {'nout': 0}})
-        runner = bout_runners.executor.base_runner.BoutRunner(
+        run_parameters = RunParameters({'global': {'nout': 0}})
+        executor = Executor(
             bout_paths=bout_paths,
+            submitter=SubmitterFactory.get_submitter('local',
+                                                     project_path),
             run_parameters=run_parameters)
-        # FIXME: Document reason for why we may not alter the directory
-        logging.info('Performing a run to obtaining settings in %s. '
-                     'Please do not modify this directory',
-                     bout_paths.bout_inp_dst_dir)
 
         settings_path = \
             bout_paths.bout_inp_dst_dir.joinpath('BOUT.settings')
 
         if not settings_path.is_file():
-            runner.run(settings_run=True)
+            logging.info('Running settings run as the parameters of '
+                         'the project are unknown')
+            executor.execute()
 
         return settings_path
 
     def run(self):
-
-        if not self.__database_reader.check_tables_created():
+        """Perform the run and capture data."""
+        if not self.__bookkeeper.database_reader.check_tables_created():
+            logging.info('Creating schema as no tables were found in '
+                         '%s',
+                         self.__bookkeeper.database_reader.
+                         database_connector.database_path)
             self.create_schema()
 
-        self.database.store_data_from_run(
+        self.__bookkeeper.capture_new_data_from_run(
             self,
-            self.processor_split.number_of_processors)
+            self.__executor.processor_split)
 
-        if tables_created(self.database) and not settings_run:
-            self.database.update_status()
+        self.__bookkeeper.database_reader.update_status()
