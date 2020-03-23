@@ -4,12 +4,7 @@
 import re
 import logging
 from bout_runners.database.database_utils import \
-    obtain_project_parameters
-from bout_runners.database.database_utils import \
-    cast_parameters_to_sql_type
-from bout_runners.database.database_utils import \
     get_system_info_as_sql_type
-from bout_runners.executor.runner_utils import run_settings_run
 
 
 class DatabaseCreator:
@@ -18,12 +13,31 @@ class DatabaseCreator:
 
     Attributes
     ----------
-    FIXME
+    database_connector : DatabaseConnector
+        The database object to write to
 
     Methods
     -------
-    FIXME
+    create_all_schema_tables(parameters_as_sql_types)
+        Create the all the tables for a schema
+    get_create_table_statement(table_name, columns=None,
+    primary_key='id', foreign_keys=None)
+        Return a SQL string which can be used to create the table
+    _create_single_table(table_str)
+        Create a table in the database
+    _create_system_info_table()
+        Create a table for the system info
+    _create_split_table()
+        Create a table which stores the grid split
+    _create_file_modification_table()
+        Create a table for file modifications
+    _create_parameter_tables(parameters_as_sql_types)
+        Create a table for each BOUT.settings section and a join table
+    _create_run_table()
+        Create a table for the metadata of a run
 
+    Examples
+    --------
     FIXME: Add examples
     """
 
@@ -38,7 +52,8 @@ class DatabaseCreator:
         """
         self.database_connector = database_connector
 
-    def create_all_schema_tables(self, parameters_as_sql_types):
+    def create_all_schema_tables(self,
+                                 parameters_as_sql_types):
         """
         Create the all the tables for a schema.
 
@@ -171,7 +186,7 @@ class DatabaseCreator:
                 columns={'number_of_processors': 'INTEGER',
                          'nodes': 'INTEGER',
                          'processors_per_node': 'INTEGER'})
-        self.database_connector.create_single_table(split_statement)
+        self._create_single_table(split_statement)
 
     def _create_file_modification_table(self):
         """Create a table for file modifications."""
@@ -183,7 +198,7 @@ class DatabaseCreator:
                          'project_git_sha': 'TEXT',
                          'bout_lib_modified': 'TIMESTAMP',
                          'bout_git_sha': 'TEXT'})
-        self.database_connector.create_single_table(file_modification_statement)
+        self._create_single_table(file_modification_statement)
 
     def _create_parameter_tables(self, parameters_as_sql_types):
         """
@@ -241,4 +256,4 @@ class DatabaseCreator:
                               'split_id': ('split', 'id'),
                               'parameters_id': ('parameters', 'id'),
                               'host_id': ('host', 'id')})
-        self.database_connector.create_single_table(run_statement)
+        self._create_single_table(run_statement)

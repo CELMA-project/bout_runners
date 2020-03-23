@@ -15,10 +15,12 @@ class DatabaseConnector:
     ----------
     __database_path : None or Path
         Getter and setter variable for database_path
-    __connection : Cursor
-        The connection to the database
+    __connection : Connection
+        Getter and setter variable for connection
     database_path : Path
         Path to database
+    connection : Connection
+        The connection to the database
 
     Methods
     -------
@@ -84,6 +86,29 @@ class DatabaseConnector:
         msg = (f'The database_path is read only, and is '
                f'set through the constructor (currently in use: '
                f'{self.database_path})')
+        raise AttributeError(msg)
+
+    @property
+    def connection(self):
+        """
+        Set the properties of self.connection.
+
+        Returns
+        -------
+        self.__connection : Connection
+        The connection to the database
+
+        Notes
+        -----
+        To avoid corrupting data between databases, the setting this
+        parameter outside the constructor is disabled
+        """
+        return self.__connection
+
+    @connection.setter
+    def connection(self, _):
+        msg = ('The connection is read only, and is set through the '
+               'constructor')
         raise AttributeError(msg)
 
     @staticmethod

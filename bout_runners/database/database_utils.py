@@ -1,17 +1,12 @@
 """Module containing utils only used in the database package."""
 
 
-import ast
-import configparser
 import logging
 import platform
-import re
 import subprocess
 from pathlib import Path
 from bout_runners.utils.file_operations import get_modified_time
 from bout_runners.utils.paths import get_bout_path
-from bout_runners.utils.subprocesses_functions import run_subprocess
-from bout_runners.executor.runner_utils import run_settings_run
 
 
 # FIXME: Submitted time is different from start and end

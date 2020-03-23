@@ -13,6 +13,7 @@ def test_database_connector(make_test_database):
     2. Check that one can execute a statement
     3. Check that it raises error on an invalid statement
     4. Check that it is not possible to change the database_path
+    4. Check that it is not possible to change the connection
 
     Parameters
     ----------
@@ -20,15 +21,17 @@ def test_database_connector(make_test_database):
         The database from the fixture
     """
 
-    database = make_test_database('connection_test')
-    connection = database._DatabaseConnector__connection
-    assert isinstance(connection, sqlite3.Connection)
+    db_connection = make_test_database('connection_test')
+    assert isinstance(db_connection.connection, sqlite3.Connection)
 
-    database.execute_statement('CREATE TABLE my_table (col INT)')
-    database.execute_statement('SELECT 1+1')
+    db_connection.execute_statement('CREATE TABLE my_table (col INT)')
+    db_connection.execute_statement('SELECT 1+1')
 
     with pytest.raises(sqlite3.OperationalError):
-        database.execute_statement('THIS IS AN INVALID STATEMENT')
+        db_connection.execute_statement('THIS IS AN INVALID STATEMENT')
 
     with pytest.raises(AttributeError):
-        database.database_path = 'foo'
+        db_connection.database_path = 'invalid'
+
+    with pytest.raises(AttributeError):
+        db_connection.connection = 'invalid'

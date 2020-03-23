@@ -46,15 +46,8 @@ class DatabaseReader:
         table : DataFrame
             The result of a query as a DataFrame
         """
-        # NOTE: The connection does not close after the 'with' statement
-        #       Instead we use the context manager as described here
-        #       https://stackoverflow.com/a/47501337/2786884
-
-        # Auto-closes connection
-        # FIXME: Use connection of database
-        with contextlib.closing(sqlite3.connect(
-                str(self.database_connector.database_path))) as con:
-            table = pd.read_sql_query(query_str, con)
+        table = pd.read_sql_query(query_str,
+                                  self.database_connector.connection)
         return table
 
     def get_latest_row_id(self):
@@ -131,7 +124,7 @@ class DatabaseReader:
         query_str = ('SELECT name FROM sqlite_master '
                      '   WHERE type="table"')
 
-        table = self.database_connector.query(query_str)
+        table = self.query(query_str)
         return len(table.index) != 0
 
     def check_parameter_tables_ids(self, parameters_dict):
