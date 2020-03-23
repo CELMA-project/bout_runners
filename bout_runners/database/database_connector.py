@@ -27,7 +27,10 @@ class DatabaseConnector:
     execute_statement(sql_statement, *parameters)
         Execute a statement in the database
 
-    FIXME: Add examples
+    Examples
+    --------
+    >>> database = DatabaseConnector('test')
+    >>> database.execute_statement('CREATE TABLE my_table (col INT)')
     """
 
     def __init__(self, name=None, database_root_path=None):

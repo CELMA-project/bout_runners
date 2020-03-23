@@ -51,6 +51,7 @@ class DatabaseReader:
         #       https://stackoverflow.com/a/47501337/2786884
 
         # Auto-closes connection
+        # FIXME: Use connection of database
         with contextlib.closing(sqlite3.connect(
                 str(self.database_connector.database_path))) as con:
             table = pd.read_sql_query(query_str, con)
