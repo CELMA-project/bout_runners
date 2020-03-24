@@ -8,7 +8,7 @@ from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.database.database_creator import DatabaseCreator
 
 
-def test_database_creator(make_test_database, get_test_data_path):
+def test_database_creator(get_test_data_path, make_test_database):
     """
     Test we can create the database schemas.
 
@@ -19,12 +19,11 @@ def test_database_creator(make_test_database, get_test_data_path):
 
     Parameters
     ----------
-    make_test_database : function
-        The database from the fixture
     get_test_data_path : Path
         Path to the test data
+    make_test_database : function
+        Function returning the database connection
     """
-
     db_connection = make_test_database('creation_test')
     db_reader = DatabaseReader(db_connection)
 

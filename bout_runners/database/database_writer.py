@@ -80,7 +80,7 @@ class DatabaseWriter:
         pattern = r'INSERT INTO (\w*)'
         table_name = re.match(pattern, insert_str).group(1)
 
-        self.database_connector.execute_statement(insert_str, values)
+        self.database_connector.execute_statement(insert_str, *values)
 
         logging.info('Made insertion to %s', table_name)
 
@@ -96,11 +96,12 @@ class DatabaseWriter:
             Dictionary containing the entries as key value pairs
         """
         keys = entries_dict.keys()
-        values = entries_dict.values()
+        values = tuple(entries_dict.values())
         insert_str = self.create_insert_string(keys, table_name)
         self.insert(insert_str, values)
 
     def update_status(self):
         """Update the status."""
+        # FIXME
         raise NotImplementedError('To be implemented')
 

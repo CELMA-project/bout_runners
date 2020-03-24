@@ -1,11 +1,14 @@
 """Global fixtures for the test routines."""
 
+
 import shutil
 from pathlib import Path
 import pytest
 from bout_runners.make.make import MakeProject
+from bout_runners.runner.runner import BoutRunner
 from bout_runners.utils.paths import get_bout_path
 from bout_runners.database.database_connector import DatabaseConnector
+from bout_runners.database.database_creator import DatabaseCreator
 
 
 @pytest.fixture(scope='session', name='yield_bout_path')
@@ -86,7 +89,7 @@ def get_test_data_path():
 @pytest.fixture(scope='session')
 def make_test_database():
     """
-    Return the wrapped function.
+    Return the wrapped function for database creation.
 
     Yields
     ------
@@ -110,8 +113,8 @@ def make_test_database():
 
         Returns
         -------
-        Database
-            The database object
+        DatabaseConnector
+            The database connection object
         """
         return DatabaseConnector(name=db_name,
                                  database_root_path=db_dir)
@@ -119,3 +122,52 @@ def make_test_database():
     yield _make_db
 
     shutil.rmtree(db_dir)
+
+
+@pytest.fixture(scope='session')
+def make_test_schema(get_test_data_path, make_test_database):
+    """
+    Return the wrapped function for schema creation.
+
+    Parameters
+    ----------
+    get_test_data_path : Path
+        Path to the test data
+    make_test_database : function
+        Function returning the database connection
+
+    Yields
+    ------
+    _make_schema : function
+        The function making the schema (i.e. making all the tables)
+    """
+    def _make_schema(db_name=None):
+        """
+        Create the schema (i.e. make all the tables) of the database.
+
+        Parameters
+        ----------
+        db_name : None or str
+            Name of the database
+
+        Returns
+        -------
+        db_connection : DatabaseConnector
+            The database connection object
+        """
+        db_connection = make_test_database(db_name)
+
+        settings_path = get_test_data_path.joinpath('BOUT.settings')
+
+        run_parameters_dict = \
+            BoutRunner.obtain_project_parameters(settings_path)
+        parameters_as_sql_types = \
+            BoutRunner.cast_parameters_to_sql_type(run_parameters_dict)
+
+        db_creator = DatabaseCreator(db_connection)
+
+        db_creator.create_all_schema_tables(parameters_as_sql_types)
+
+        return db_connection
+
+    yield _make_schema

@@ -138,7 +138,7 @@ class Bookkeeper:
         split_dict = {'number_of_processors':
                       processor_split.number_of_processors,
                       'nodes': processor_split.nodes,
-                      'processors_per_nodes':
+                      'processors_per_node':
                       processor_split.processors_per_node}
         run_dict['split_id'] = \
             self.__database_reader.get_entry_id('split', split_dict)
