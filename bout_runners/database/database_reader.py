@@ -25,9 +25,10 @@ class DatabaseReader:
         Get the id of a table entry
     check_tables_created()
         Check if the tables is created in the database
-    check_parameter_tables_ids(parameters_dict)
 
-    FIXME: Add examples
+    Examples
+    --------
+    FIXME
     """
 
     def __init__(self, database_connector):
@@ -80,16 +81,9 @@ class DatabaseReader:
         Parameters
         ----------
         table_name : str
-            Name of the table
-        entries_dict : dict
-            Dictionary containing the entries as key value pairs
-
-        Parameters
-        ----------
-        table_name : str
             Name of the table to check
         entries_dict : dict
-            The dict with entries
+            Dictionary containing the entries as key value pairs
 
         Returns
         -------
@@ -117,7 +111,7 @@ class DatabaseReader:
              f'	      FROM {table_name}\n{where_statements})')
 
         table = self.query(query_str)
-        row_id = None if table.empty else table.loc[0, 'rowid']
+        row_id = None if table.empty else table.loc[0, 'id']
 
         return row_id
 

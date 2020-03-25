@@ -9,6 +9,7 @@ from bout_runners.runner.runner import BoutRunner
 from bout_runners.utils.paths import get_bout_path
 from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_creator import DatabaseCreator
+from bout_runners.database.database_writer import DatabaseWriter
 
 
 @pytest.fixture(scope='session', name='yield_bout_path')
@@ -171,3 +172,46 @@ def make_test_schema(get_test_data_path, make_test_database):
         return db_connection
 
     yield _make_schema
+
+
+@pytest.fixture(scope='session')
+def write_to_split(make_test_schema):
+    """
+    Return the wrapped function for writing to the split table.
+
+    Parameters
+    ----------
+    make_test_schema : function
+        Function returning the database connection with the schema
+        created
+
+    Yields
+    ------
+    _write_split : function
+        The function writing to the split table
+    """
+    def _write_split(db_name=None):
+        """
+        writing to the split table.
+
+        Parameters
+        ----------
+        db_name : None or str
+            Name of the database
+
+        Returns
+        -------
+        db_connection : DatabaseConnector
+            The database connection object
+        """
+        db_connection = make_test_schema(db_name)
+
+        db_writer = DatabaseWriter(db_connection)
+        dummy_split_dict = {'number_of_processors': 1,
+                            'nodes': 2,
+                            'processors_per_node': 3}
+        db_writer.create_entry('split', dummy_split_dict)
+
+        return db_connection
+
+    yield _write_split

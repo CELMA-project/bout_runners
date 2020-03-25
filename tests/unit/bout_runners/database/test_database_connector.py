@@ -18,7 +18,7 @@ def test_database_connector(make_test_database):
     Parameters
     ----------
     make_test_database : function
-        The database from the fixture
+        Function which returns the database connection
     """
 
     db_connection = make_test_database('connection_test')

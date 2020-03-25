@@ -1,6 +1,6 @@
-"""Contains unittests for the database."""
+"""Contains unittests for the bookkeeper."""
 
-
+# FIXME: You are here: This needs a clean-up
 def test_create_table(make_test_database):
     """
     Test query and create_single_table.
