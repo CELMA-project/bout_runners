@@ -38,7 +38,18 @@ class DatabaseCreator:
 
     Examples
     --------
-    FIXME: Add examples
+    >>> from pathlib import Path
+    >>> from bout_runners.runner.runner import BoutRunner
+    >>> from bout_runners.database.database_connector import \
+    ...     DatabaseConnector
+    >>> settings_path = Path().joinpath('path', 'to', 'BOUT.settings')
+    >>> run_parameters_dict = \
+    ...     BoutRunner.obtain_project_parameters(settings_path)
+    >>> parameters_as_sql_types = \
+    ...     BoutRunner.cast_parameters_to_sql_type(run_parameters_dict)
+    >>> db_connection = DatabaseConnector('name')
+    >>> db_creator = DatabaseCreator(db_connection)
+    >>> db_creator.create_all_schema_tables(parameters_as_sql_types)
     """
 
     def __init__(self, database_connector):

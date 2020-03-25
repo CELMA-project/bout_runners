@@ -17,13 +17,37 @@ class DatabaseWriter:
 
     Attributes
     ----------
-    FIXME
+    database_connector : DatabaseConnector
+        The database object to write to
 
     Methods
     -------
-    FIXME
+    create_insert_string(field_names, table_name)
+        Create a question mark style string for database insertions
+    insert(insert_str, values)
+        Insert to the database
+    create_entry(table_name, entries_dict)
+        Create a database entry
 
-    FIXME: Add examples
+    Examples
+    --------
+    >>> from pathlib import Path
+    >>> from bout_runners.runner.runner import BoutRunner
+    >>> from bout_runners.database.database_connector import \
+    ...     DatabaseConnector
+    >>> settings_path = Path().joinpath('path', 'to', 'BOUT.settings')
+    >>> run_parameters_dict = \
+    ...     BoutRunner.obtain_project_parameters(settings_path)
+    >>> parameters_as_sql_types = \
+    ...     BoutRunner.cast_parameters_to_sql_type(run_parameters_dict)
+    >>> db_connection = DatabaseConnector('name')
+    >>> db_creator = DatabaseCreator(db_connection)
+    >>> db_creator.create_all_schema_tables(parameters_as_sql_types)
+    >>> db_writer = DatabaseWriter(db_connection)
+    >>> dummy_split_dict = {'number_of_processors': 1,
+    ...                     'nodes': 2,
+    ...                     'processors_per_node': 3}
+    >>> db_writer.create_entry('split', dummy_split_dict)
     """
 
     def __init__(self, database_connector):

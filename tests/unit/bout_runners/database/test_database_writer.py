@@ -14,6 +14,7 @@ def test_database_writer(make_test_schema):
     1. We can write to the `split` table
     2. That only one record is made
     3. That the type is correct
+    4. Check that the values are correct
 
     Parameters
     ----------
@@ -25,9 +26,9 @@ def test_database_writer(make_test_schema):
     db_reader = DatabaseReader(db_connection)
 
     db_writer = DatabaseWriter(db_connection)
-    dummy_split_dict = {'number_of_processors': 42,
-                        'nodes': 42,
-                        'processors_per_node': 42}
+    dummy_split_dict = {'number_of_processors': 1,
+                        'nodes': 2,
+                        'processors_per_node': 3}
     db_writer.create_entry('split', dummy_split_dict)
 
     table = db_reader.query('SELECT * FROM split')
@@ -40,3 +41,6 @@ def test_database_writer(make_test_schema):
     # https://www.quora.com/How-do-you-check-if-all-elements-in-a-NumPy-array-are-the-same-in-Python-pandas
     values = table.dtypes.values
     assert (values == np.dtype('int64')).all()
+
+    for key, value in dummy_split_dict.items():
+        assert table.loc[0, key] == value
