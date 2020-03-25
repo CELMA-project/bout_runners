@@ -12,11 +12,20 @@ class DatabaseReader:
 
     Attributes
     ----------
-    FIXME
+    database_connector : DatabaseConnector
+        The database object to read from
 
     Methods
     -------
-    FIXME
+    query(query_str)
+        Make a query to the database
+    get_latest_row_id()
+        Return the latest row id
+    get_entry_id(table_name, entries_dict)
+        Get the id of a table entry
+    check_tables_created()
+        Check if the tables is created in the database
+    check_parameter_tables_ids(parameters_dict)
 
     FIXME: Add examples
     """
@@ -129,12 +138,13 @@ class DatabaseReader:
 
     def check_parameter_tables_ids(self, parameters_dict):
         """
-        Insert the parameters into a the parameter tables.
+        Return the ids of the parameters found in the database.
 
         Parameters
         ----------
         parameters_dict : dict
-            The dictionary on the form
+            The dictionary on the form like that obtained from
+            extract_parameters_in_use. That is on the form
             >>> {'section': {'parameter': 'value'}}
 
         Returns
@@ -149,6 +159,11 @@ class DatabaseReader:
         Notes
         -----
         All `:` will be replaced by `_` in the section names
+
+        See Also
+        --------
+        extract_parameters_in_use : Extract parameters that will be
+        used in a run
         """
         all_sections_got_an_id = True
         parameter_ids = dict()
