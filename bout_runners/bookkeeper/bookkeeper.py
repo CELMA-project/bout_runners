@@ -17,11 +17,21 @@ class Bookkeeper:
 
     Attributes
     ----------
-    FIXME
+    __database_writer : DatabaseWriter
+        Getter and setter variable for database_writer
+    __database_reader : DatabaseReader
+        Getter and setter variable for database_reader
+    database_writer : DatabaseWriter
+        Object which writes to the database
+    database_reader : DatabaseReader
+        Object which reads from the database
 
     Methods
     -------
-    FIXME
+    capture_new_data_from_run(runner, processor_split)
+        Capture new data from a run
+    _create_parameter_tables_entry(parameters_dict)
+        Insert the parameters into a the parameter tables
 
     FIXME: Add examples
     """
@@ -105,6 +115,14 @@ class Bookkeeper:
         new_entry : bool
             Returns True if this a new entry is made, False if not
         """
+        if not self.database_reader.check_tables_created():
+            # FIXME: Something has to make the schema,
+            #  from test_database_creator.py, we can see that we only
+            #  need settings_path for that, but if we do not have
+            #  settings_path we need to do a test run, thus, it may
+            #  be better to move this functionality to an orchestrator
+            self.create_schema()
+
         new_entry = False
 
         # Initiate the run_dict (will be filled with the ids)

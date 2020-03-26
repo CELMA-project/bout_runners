@@ -90,7 +90,7 @@ def get_test_data_path():
 @pytest.fixture(scope='session')
 def make_test_database():
     """
-    Return the wrapped function for database creation.
+    Return the wrapped function for the database connection.
 
     Yields
     ------
