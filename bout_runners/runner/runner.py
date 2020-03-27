@@ -36,7 +36,9 @@ class BoutRunner:
         # Set member data
         self.__executor = executor
         self.__database_creator = DatabaseCreator(database_connector)
-        self.__bookkeeper = Bookkeeper(database_connector)
+        self.__bookkeeper = Bookkeeper(database_connector,
+                                       executor.bout_paths,
+                                       executor.run_parameters)
 
     def create_schema(self):
         """

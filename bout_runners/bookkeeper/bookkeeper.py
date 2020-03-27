@@ -1,6 +1,7 @@
 """Module containing the Bookkeeper class."""
 
 
+from bout_runners.make.make import MakeProject
 from bout_runners.database.database_writer import DatabaseWriter
 from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.database.database_utils import \
@@ -36,7 +37,7 @@ class Bookkeeper:
     FIXME: Add examples
     """
 
-    def __init__(self, database_connector):
+    def __init__(self, database_connector, bout_paths, run_parameters):
         """
         Set the database to use.
 
@@ -44,9 +45,16 @@ class Bookkeeper:
         ----------
         database_connector : DatabaseConnector
             The database connector
+        bout_paths : BoutPaths
+            Object containing the paths
+        run_parameters : RunParameters
+            Object containing the run parameters
         """
         self.__database_writer = DatabaseWriter(database_connector)
         self.__database_reader = DatabaseReader(database_connector)
+        self.__bout_paths = bout_paths
+        self.__run_parameters = run_parameters
+        self.__make = MakeProject(self.__bout_paths.project_path)
 
     @property
     def database_reader(self):
@@ -92,9 +100,7 @@ class Bookkeeper:
                f'set through the constructor')
         raise AttributeError(msg)
 
-    def capture_new_data_from_run(self,
-                                  runner,
-                                  processor_split):
+    def capture_new_data_from_run(self, processor_split):
         """
         Capture new data from a run.
 
@@ -105,8 +111,6 @@ class Bookkeeper:
 
         Parameters
         ----------
-        runner : BoutRunner
-            The bout runner object
         processor_split : ProcessorSplit
             The processor split object
 
@@ -115,34 +119,26 @@ class Bookkeeper:
         new_entry : bool
             Returns True if this a new entry is made, False if not
         """
-        if not self.database_reader.check_tables_created():
-            # FIXME: Something has to make the schema,
-            #  from test_database_creator.py, we can see that we only
-            #  need settings_path for that, but if we do not have
-            #  settings_path we need to do a test run, thus, it may
-            #  be better to move this functionality to an orchestrator
-            self.create_schema()
-
         new_entry = False
 
         # Initiate the run_dict (will be filled with the ids)
-        run_dict = {'name': runner.bout_paths.bout_inp_dst_dir.name}
+        run_dict = {'name': self.__bout_paths.bout_inp_dst_dir.name}
 
         # Update the parameters
         parameters_dict = \
             extract_parameters_in_use(
-                runner.bout_paths.project_path,
-                runner.bout_paths.bout_inp_dst_dir,
-                runner.run_parameters.run_parameters_dict)
+                self.__bout_paths.project_path,
+                self.__bout_paths.bout_inp_dst_dir,
+                self.__run_parameters.run_parameters_dict)
 
         run_dict['parameters_id'] = \
             self._create_parameter_tables_entry(parameters_dict)
 
         # Update the file_modification
         file_modification_dict = \
-            get_file_modification(runner.bout_paths.project_path,
-                                  runner.make.makefile_path,
-                                  runner.make.exec_name)
+            get_file_modification(self.__bout_paths.project_path,
+                                  self.__make.makefile_path,
+                                  self.__make.exec_name)
         run_dict['file_modification_id'] = \
             self.__database_reader.get_entry_id('file_modification',
                                                 file_modification_dict)
