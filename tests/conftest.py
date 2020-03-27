@@ -215,3 +215,53 @@ def write_to_split(make_test_schema):
         return db_connection
 
     yield _write_split
+
+
+@pytest.fixture(scope='function', name='copy_bout_inp')
+def fixture_copy_bout_inp():
+    """
+    Copy BOUT.inp to a temporary directory.
+
+    Returns
+    -------
+    BoutInpCopier.copy_inp_path : function
+        Function which copies BOUT.inp and returns the path to the
+        temporary directory
+    """
+    # We store the directories to be removed in a list, as lists are
+    # mutable irrespective of the scope of their definition
+    # See:
+    # https://docs.pytest.org/en/latest/fixture.html#factories-as-fixtures
+    tmp_dir_list = []
+
+    def copy_inp_path(project_path, tmp_path_name):
+        """
+        Copy BOUT.inp to a temporary directory.
+
+        Parameters
+        ----------
+        project_path : Path
+            Root path to the project
+        tmp_path_name : str
+            Name of the temporary directory
+
+        Returns
+        -------
+        tmp_bout_inp_dir : Path
+            Path to the temporary directory
+        """
+        bout_inp_path = project_path.joinpath('data', 'BOUT.inp')
+
+        tmp_bout_inp_dir = project_path.joinpath(tmp_path_name)
+        tmp_bout_inp_dir.mkdir(exist_ok=True)
+        tmp_dir_list.append(tmp_bout_inp_dir)
+
+        shutil.copy(bout_inp_path,
+                    tmp_bout_inp_dir.joinpath('BOUT.inp'))
+
+        return tmp_bout_inp_dir
+
+    yield copy_inp_path
+
+    for tmp_dir_path in tmp_dir_list:
+        shutil.rmtree(tmp_dir_path)
