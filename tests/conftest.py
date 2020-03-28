@@ -10,6 +10,7 @@ from bout_runners.utils.paths import get_bout_path
 from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_creator import DatabaseCreator
 from bout_runners.database.database_writer import DatabaseWriter
+from bout_runners.executor.bout_paths import BoutPaths
 
 
 @pytest.fixture(scope='session', name='yield_bout_path')
@@ -27,7 +28,7 @@ def fixture_get_bout_path():
     yield bout_path
 
 
-@pytest.fixture(scope='session', name='yield_conduction_path')
+@pytest.fixture(scope='session', name='get_conduction_path')
 def fixture_get_conduction_path(yield_bout_path):
     """
     Yield the conduction path.
@@ -44,7 +45,7 @@ def fixture_get_conduction_path(yield_bout_path):
 
 
 @pytest.fixture(scope='session', name='make_project')
-def fixture_make_project(yield_conduction_path):
+def fixture_make_project(get_conduction_path):
     """
     Set up and tear down the Make object.
 
@@ -53,7 +54,7 @@ def fixture_make_project(yield_conduction_path):
 
     Parameters
     ----------
-    yield_conduction_path : Path
+    get_conduction_path : Path
         Path to the BOUT++ conduction example.
         See the fixture_get_conduction_path for more details
 
@@ -63,7 +64,7 @@ def fixture_make_project(yield_conduction_path):
         The path to the conduction example
     """
     # Setup
-    project_path = yield_conduction_path
+    project_path = get_conduction_path
 
     make_obj = MakeProject(makefile_root_path=project_path)
     make_obj.run_make()
@@ -217,14 +218,14 @@ def write_to_split(make_test_schema):
     yield _write_split
 
 
-@pytest.fixture(scope='function', name='copy_bout_inp')
+@pytest.fixture(scope='session', name='copy_bout_inp')
 def fixture_copy_bout_inp():
     """
     Copy BOUT.inp to a temporary directory.
 
-    Returns
-    -------
-    BoutInpCopier.copy_inp_path : function
+    Yields
+    ------
+    _copy_inp_path : function
         Function which copies BOUT.inp and returns the path to the
         temporary directory
     """
@@ -234,7 +235,7 @@ def fixture_copy_bout_inp():
     # https://docs.pytest.org/en/latest/fixture.html#factories-as-fixtures
     tmp_dir_list = []
 
-    def copy_inp_path(project_path, tmp_path_name):
+    def _copy_inp_path(project_path, tmp_path_name):
         """
         Copy BOUT.inp to a temporary directory.
 
@@ -261,7 +262,51 @@ def fixture_copy_bout_inp():
 
         return tmp_bout_inp_dir
 
-    yield copy_inp_path
+    yield _copy_inp_path
+
+    for tmp_dir_path in tmp_dir_list:
+        shutil.rmtree(tmp_dir_path)
+
+
+@pytest.fixture(scope='function', name='get_bout_path_conduction')
+def fixture_get_bout_path_conduction(get_conduction_path):
+    """
+    Make the bout_path object and clean up after use.
+
+    Yields
+    ------
+    _make_bout_path : function
+        Function which makes the BoutPaths object for the conduction
+        example
+    """
+    # We store the directories to be removed in a list, as lists are
+    # mutable irrespective of the scope of their definition
+    # See:
+    # https://docs.pytest.org/en/latest/fixture.html#factories-as-fixtures
+    tmp_dir_list = []
+
+    def _make_bout_path(tmp_path_name):
+        """
+        Create BoutPaths from the conduction directory.
+
+        Parameters
+        ----------
+        tmp_path_name : str
+            Name of the temporary directory
+
+        Returns
+        -------
+        bout_paths : BoutPaths
+            The BoutPaths object
+        """
+        project_path = get_conduction_path
+        bout_paths = BoutPaths(project_path=project_path,
+                               bout_inp_dst_dir=tmp_path_name)
+        tmp_dir_list.append(bout_paths.bout_inp_dst_dir)
+
+        return bout_paths
+
+    yield _make_bout_path
 
     for tmp_dir_path in tmp_dir_list:
         shutil.rmtree(tmp_dir_path)

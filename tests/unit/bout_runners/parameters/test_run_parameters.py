@@ -2,7 +2,7 @@
 
 
 import pytest
-from bout_runners.executor.run_parameters import RunParameters
+from bout_runners.parameters.run_parameters import RunParameters
 
 
 def test_run_parameters():

@@ -178,7 +178,7 @@ class BoutPaths:
 
         Returns
         -------
-         self.__bout_inp_dst_dir : Path
+        self.__bout_inp_dst_dir : Path
 
         """
         return self.__bout_inp_dst_dir

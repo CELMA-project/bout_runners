@@ -3,12 +3,6 @@
 
 import re
 import logging
-from bout_runners.database.database_utils import \
-    get_file_modification
-from bout_runners.database.database_utils import \
-    get_system_info
-from bout_runners.database.database_utils import \
-    extract_parameters_in_use
 
 
 class DatabaseWriter:

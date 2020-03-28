@@ -2,7 +2,7 @@
 
 
 from bout_runners.make.make import MakeProject
-from bout_runners.executor.run_parameters import RunParameters
+from bout_runners.parameters.run_parameters import RunParameters
 
 
 class Executor:

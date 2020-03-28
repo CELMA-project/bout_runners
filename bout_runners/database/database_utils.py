@@ -1,4 +1,4 @@
-"""Module containing utils only used in the database package."""
+"""Module containing database utils."""
 
 
 import logging
@@ -7,6 +7,7 @@ import subprocess
 from pathlib import Path
 from bout_runners.utils.file_operations import get_modified_time
 from bout_runners.utils.paths import get_bout_path
+from bout_runners.submitter.local_submitter import LocalSubmitter
 
 
 # FIXME: Submitted time is different from start and end
@@ -26,46 +27,6 @@ def get_system_info_as_sql_type():
     sys_info_dict = {att: 'TEXT' for att in attributes}
 
     return sys_info_dict
-
-
-def extract_parameters_in_use(project_path,
-                              bout_inp_dst_dir,
-                              run_parameters_dict):
-    """
-    Extract parameters that will be used in a run.
-
-    Parameters
-    ----------
-    project_path : Path
-        Root path of project (make file)
-    bout_inp_dst_dir : Path
-        Path to the directory of BOUT.inp currently in use
-    run_parameters_dict : dict of str, dict
-        Options on the form
-        >>> {'global':{'append': False, 'nout': 5},
-        ...  'mesh':  {'nx': 4},
-        ...  'section_in_BOUT_inp': {'some_variable': 'some_value'}}
-
-    Returns
-    -------
-    parameters : dict of str, dict
-        Parameters on the same form as `run_parameters_dict`
-        (from obtain_project_parameters)
-    """
-    # Obtain the default parameters
-    settings_path = project_path.joinpath('settings_run',
-                                          'BOUT.settings')
-    if not settings_path.is_file():
-        logging.info('No setting files found, running run_settings_run')
-        run_settings_run(project_path)
-    parameters = obtain_project_parameters(settings_path)
-    # Update with parameters from BOUT.inp
-    bout_inp_path = bout_inp_dst_dir.joinpath('BOUT.inp')
-    parameters.update(obtain_project_parameters(bout_inp_path))
-    # Update with parameters from run_parameters_dict
-    parameters.update(run_parameters_dict)
-
-    return parameters
 
 
 def get_file_modification(project_path, makefile_path, exec_name):
@@ -124,7 +85,8 @@ def get_git_sha(path):
         The git hash
     """
     try:
-        result = run_subprocess('git rev-parse HEAD', path)
+        result = \
+            LocalSubmitter(path).submit_command('git rev-parse HEAD')
         git_sha = result.stdout.decode('utf8').strip()
     # FileNotFoundError when `git` is not found
     except (FileNotFoundError, subprocess.CalledProcessError) as error:
@@ -132,7 +94,9 @@ def get_git_sha(path):
             error_str = error.args[1]
         elif isinstance(error, subprocess.CalledProcessError):
             error_str = error.args[2]
-        logging.warning('Could not retrieve git sha %s', error_str)
+        else:
+            error_str = 'Unknown error'
+        logging.warning('Could not retrieve git sha: %s', error_str)
         git_sha = 'None'
     return git_sha
 
