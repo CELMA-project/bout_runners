@@ -1,4 +1,4 @@
-"""FIXME."""
+"""Contains the class dealing with the default parameters."""
 
 
 import re
@@ -12,9 +12,29 @@ from bout_runners.executor.executor import Executor
 from bout_runners.submitter.local_submitter import LocalSubmitter
 
 
-# FIXME: You are here: Cleaning up the mess
 class DefaultParameters:
     """
+    Class which deals with the default parameters.
+
+    The default parameters are those set internally in BOUT++,
+    or in the specified BOUT.inp file
+
+    Attributes
+    ----------
+    self.__bout_paths : BoutPaths
+        Object for the BOUT++ paths
+    self.__settings_path : None or Path
+        Path to the BOUT.settings file
+
+    Methods
+    -------
+    run_parameters_run()
+        Execute a run to obtain the default parameters.
+    get_default_parameters()
+        Return the default parameters from the settings file.
+
+    Examples
+    --------
     FIXME
     """
 
@@ -53,7 +73,7 @@ class DefaultParameters:
 
     def run_parameters_run(self):
         """
-        Perform a run to obtain the default parameters.
+        Execute a run to obtain the default parameters.
 
         A settings run executes the executable of the project with
         nout = 0 in order to capture all parameters used in the project
@@ -74,7 +94,7 @@ class DefaultParameters:
         self.__settings_path = \
             bout_paths.bout_inp_dst_dir.joinpath('BOUT.settings')
 
-    def obtain_default_parameters(self):
+    def get_default_parameters(self):
         """
         Return the default parameters from the settings file.
 

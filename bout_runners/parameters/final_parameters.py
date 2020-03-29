@@ -1,64 +1,75 @@
-"""FIXME."""
+"""Contains the class dealing with the final parameters."""
 
 
 import ast
-import logging
 
 
-# FIXME: YOU ARE HERE: Cleaning up the mess
-class BoutInpParameters:
+class FinalParameters:
     """
+    Class which deals with the final parameters.
+
+    The final parameters are those who are going to be used in the
+    execution of the project
+
+    Attributes
+    ----------
+    self.__default_parameters : DefaultParameters
+        Object dealing with the default parameters
+    self.__run_parameters = run_parameters
+        Object dealing with the run parameters
+
+    Methods
+    -------
+    get_final_parameters()
+        Obtain the final parameters that will be used in a run
+    cast_parameters_to_sql_type(parameter_dict)
+        Cast the values of a parameter dict to valid SQL types
+
+    Examples
+    --------
     FIXME
     """
 
-    def __init__(self):
+    def __init__(self, default_parameters, run_parameters):
         """
-
-        """
-
-    def extract_parameters_in_use(project_path,
-                                  bout_inp_dst_dir,
-                                  run_parameters_dict):
-        """
-        Extract parameters that will be used in a run.
+        Set the member data.
 
         Parameters
         ----------
-        project_path : Path
-            Root path of project (make file)
-        bout_inp_dst_dir : Path
-            Path to the directory of BOUT.inp currently in use
-        run_parameters_dict : dict of str, dict
-            Options on the form
-            >>> {'global':{'append': False, 'nout': 5},
-            ...  'mesh':  {'nx': 4},
-            ...  'section_in_BOUT_inp': {'some_variable': 'some_value'}}
+        default_parameters : DefaultParameters
+            Object dealing with default parameters (i.e. standard
+            BOUT++ parameters, or those given in BOUT.inp)
+        run_parameters : RunParameters
+            Object dealing with run parameters (i.e. parameters set
+            in bout_runner which has precedence over BOUT.inp)
+        """
+        self.__default_parameters = default_parameters
+        self.__run_parameters = run_parameters
+
+    def get_final_parameters(self):
+        """
+        Obtain the final parameters that will be used in a run.
 
         Returns
         -------
-        parameters : dict of str, dict
-            Parameters on the same form as `run_parameters_dict`
-            (from obtain_project_parameters)
+        final_parameters_dict : dict of str, dict
+            Parameters on the form
+            >>> {'global':{'append': False, 'nout': 5},
+            ...  'mesh':  {'nx': 4},
+            ...  'section_in_BOUT_inp': {'some_variable': 'some_value'}}
         """
-        # Obtain the default parameters
-        settings_path = project_path.joinpath('settings_run',
-                                              'BOUT.settings')
-        if not settings_path.is_file():
-            logging.info('No setting files found, running run_settings_run')
-            self.run_settings_run(project_path)
-        parameters = obtain_project_parameters(settings_path)
-        # Update with parameters from BOUT.inp
-        bout_inp_path = bout_inp_dst_dir.joinpath('BOUT.inp')
-        parameters.update(obtain_project_parameters(bout_inp_path))
-        # Update with parameters from run_parameters_dict
-        parameters.update(run_parameters_dict)
+        default_parameters_dict = \
+            self.__default_parameters.get_default_parameters()
+        run_parameters_dict = self.__run_parameters.run_parameters_dict
+        final_parameters_dict = \
+            default_parameters_dict.update(run_parameters_dict)
 
-        return parameters
+        return final_parameters_dict
 
     @staticmethod
     def cast_parameters_to_sql_type(parameter_dict):
         """
-        Return the project parameters from the settings file.
+        Cast the values of a parameter dict to valid SQL types.
 
         Parameters
         ----------
@@ -69,7 +80,7 @@ class BoutInpParameters:
 
         Returns
         -------
-        parameter_dict_sql_types : dict
+        parameter_dict_as_sql_types : dict
             Dictionary containing the parameters given in BOUT.settings
             On the form
             >>> {'section': {'parameter': 'value_type'}}
@@ -79,7 +90,7 @@ class BoutInpParameters:
                     'int': 'INTEGER',
                     'str': 'TEXT'}
 
-        parameter_dict_sql_types = parameter_dict.copy()
+        parameter_dict_as_sql_types = parameter_dict.copy()
 
         for section in parameter_dict.keys():
             for key, val in parameter_dict[section].items():
@@ -92,4 +103,4 @@ class BoutInpParameters:
                 parameter_dict[section][key] = type_map[
                     val_type.__name__]
 
-        return parameter_dict_sql_types
+        return parameter_dict_as_sql_types

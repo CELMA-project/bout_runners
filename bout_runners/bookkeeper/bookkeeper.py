@@ -8,8 +8,6 @@ from bout_runners.database.database_utils import \
     get_file_modification
 from bout_runners.database.database_utils import \
     get_system_info
-from bout_runners.database.database_utils import \
-    extract_parameters_in_use
 
 
 class Bookkeeper:
@@ -37,7 +35,10 @@ class Bookkeeper:
     FIXME: Add examples
     """
 
-    def __init__(self, database_connector, bout_paths, run_parameters):
+    def __init__(self,
+                 database_connector,
+                 bout_paths,
+                 final_parameters):
         """
         Set the database to use.
 
@@ -47,13 +48,13 @@ class Bookkeeper:
             The database connector
         bout_paths : BoutPaths
             Object containing the paths
-        run_parameters : RunParameters
-            Object containing the run parameters
+        final_parameters : FinalParameters
+            Object containing the final parameters
         """
         self.__database_writer = DatabaseWriter(database_connector)
         self.__database_reader = DatabaseReader(database_connector)
         self.__bout_paths = bout_paths
-        self.__run_parameters = run_parameters
+        self.__final_parameters = final_parameters
         self.__make = MakeProject(self.__bout_paths.project_path)
 
     @property
@@ -125,11 +126,7 @@ class Bookkeeper:
         run_dict = {'name': self.__bout_paths.bout_inp_dst_dir.name}
 
         # Update the parameters
-        parameters_dict = \
-            extract_parameters_in_use(
-                self.__bout_paths.project_path,
-                self.__bout_paths.bout_inp_dst_dir,
-                self.__run_parameters.run_parameters_dict)
+        parameters_dict = self.__final_parameters.get_final_parameters()
 
         run_dict['parameters_id'] = \
             self._create_parameter_tables_entry(parameters_dict)

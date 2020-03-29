@@ -1,4 +1,4 @@
-"""Contains the class setting the run parameters."""
+"""Contains the class dealing with the run parameters."""
 
 
 import logging
@@ -6,7 +6,7 @@ import logging
 
 class RunParameters:
     """
-    Class which sets run parameters with precedence over BOUT.inp.
+    Class which deals with run parameters with precedence over BOUT.inp.
 
     Attributes
     ----------
