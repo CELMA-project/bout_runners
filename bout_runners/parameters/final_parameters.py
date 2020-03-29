@@ -2,6 +2,7 @@
 
 
 import ast
+from bout_runners.parameters.run_parameters import RunParameters
 
 
 class FinalParameters:
@@ -30,7 +31,9 @@ class FinalParameters:
     FIXME
     """
 
-    def __init__(self, default_parameters, run_parameters):
+    def __init__(self,
+                 default_parameters,
+                 run_parameters=RunParameters()):
         """
         Set the member data.
 

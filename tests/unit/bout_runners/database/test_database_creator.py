@@ -3,7 +3,9 @@
 
 import pytest
 import sqlite3
-from bout_runners.runner.runner import BoutRunner
+from bout_runners.executor.bout_paths import BoutPaths
+from bout_runners.parameters.default_parameters import DefaultParameters
+from bout_runners.parameters.final_parameters import FinalParameters
 from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.database.database_creator import DatabaseCreator
 
@@ -32,6 +34,11 @@ def test_database_creator(get_test_data_path, make_test_database):
 
     settings_path = get_test_data_path.joinpath('BOUT.settings')
 
+    # Obtain the final_parameters
+    # FIXME: YOU ARE HERE: Need a real BOUT.inp path as
+    #  DefaultParameters need BOUT.inp in case one need to run
+    #  run_parameters_run
+    bout_paths = BoutPaths(bout_inp_src_dir=, bout_inp_dst_dir=)
     run_parameters_dict = \
         BoutRunner.obtain_project_parameters(settings_path)
     parameters_as_sql_types = \
