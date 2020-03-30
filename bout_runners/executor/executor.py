@@ -36,11 +36,11 @@ class Executor:
             Object containing the submitter
         """
         # Set member data
+        self.submitter = submitter
         self.__bout_paths = bout_paths
         self.__run_parameters = run_parameters
         self.__make = MakeProject(self.__bout_paths.project_path)
         self.__command = self.get_execute_command()
-        self.submitter = submitter
 
     @property
     def bout_paths(self):
@@ -112,4 +112,4 @@ class Executor:
         # Make the project if not already made
         self.__make.run_make()
         # Submit the command
-        self.submitter.submit.submit_command(self.__command)
+        self.submitter.submit_command(self.__command)

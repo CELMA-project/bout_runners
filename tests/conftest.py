@@ -168,7 +168,7 @@ def make_test_schema(get_test_data_path, make_test_database):
         final_parameters_dict = final_parameters.get_final_parameters()
         final_parameters_as_sql_types = \
             final_parameters. \
-                cast_parameters_to_sql_type(final_parameters_dict)
+            cast_parameters_to_sql_type(final_parameters_dict)
 
         db_creator = DatabaseCreator(db_connection)
 
