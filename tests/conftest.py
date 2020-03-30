@@ -5,7 +5,8 @@ import shutil
 from pathlib import Path
 import pytest
 from bout_runners.make.make import MakeProject
-from bout_runners.runner.runner import BoutRunner
+from bout_runners.parameters.default_parameters import DefaultParameters
+from bout_runners.parameters.final_parameters import FinalParameters
 from bout_runners.utils.paths import get_bout_path
 from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_creator import DatabaseCreator
@@ -161,14 +162,18 @@ def make_test_schema(get_test_data_path, make_test_database):
 
         settings_path = get_test_data_path.joinpath('BOUT.settings')
 
-        run_parameters_dict = \
-            BoutRunner.obtain_project_parameters(settings_path)
-        parameters_as_sql_types = \
-            BoutRunner.cast_parameters_to_sql_type(run_parameters_dict)
+        default_parameters = DefaultParameters(
+            settings_path=settings_path)
+        final_parameters = FinalParameters(default_parameters)
+        final_parameters_dict = final_parameters.get_final_parameters()
+        final_parameters_as_sql_types = \
+            final_parameters. \
+                cast_parameters_to_sql_type(final_parameters_dict)
 
         db_creator = DatabaseCreator(db_connection)
 
-        db_creator.create_all_schema_tables(parameters_as_sql_types)
+        db_creator.\
+            create_all_schema_tables(final_parameters_as_sql_types)
 
         return db_connection
 

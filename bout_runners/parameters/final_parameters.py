@@ -61,11 +61,10 @@ class FinalParameters:
             ...  'mesh':  {'nx': 4},
             ...  'section_in_BOUT_inp': {'some_variable': 'some_value'}}
         """
-        default_parameters_dict = \
+        final_parameters_dict = \
             self.__default_parameters.get_default_parameters()
         run_parameters_dict = self.__run_parameters.run_parameters_dict
-        final_parameters_dict = \
-            default_parameters_dict.update(run_parameters_dict)
+        final_parameters_dict.update(run_parameters_dict)
 
         return final_parameters_dict
 

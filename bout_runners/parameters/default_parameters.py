@@ -38,7 +38,7 @@ class DefaultParameters:
     FIXME
     """
 
-    def __init__(self, bout_paths, settings_path=None):
+    def __init__(self, bout_paths=None, settings_path=None):
         """
         Set the member data.
 
@@ -58,6 +58,8 @@ class DefaultParameters:
         ----------
         bout_paths : BoutPaths
             Object containing the paths of the project
+            Will only be used in the `run_parameters_run` call if the
+            `settings_path` is not valid
         settings_path : None or Path
             Path to the up-to-date `settings_path`
             Will invoke `run_parameters_run` if set to None
@@ -69,24 +71,28 @@ class DefaultParameters:
         if not self.__settings_path.is_file():
             logging.info('Running parameter run as the parameters of '
                          'the project are unknown')
-            self.run_parameters_run()
+            self.run_parameters_run(self.__bout_paths)
 
-    def run_parameters_run(self):
+    def run_parameters_run(self, bout_paths):
         """
         Execute a run to obtain the default parameters.
 
         A settings run executes the executable of the project with
         nout = 0 in order to capture all parameters used in the project
+
+        Parameters
+        ----------
+        bout_paths : BoutPaths
+            Object containing the paths of the project
         """
         bout_paths = BoutPaths(
-            project_path=self.__bout_paths.project_path,
-            bout_inp_src_dir=
-            self.__bout_paths.bout_inp_src_dir,
+            project_path=bout_paths.project_path,
+            bout_inp_src_dir=bout_paths.bout_inp_src_dir,
             bout_inp_dst_dir='settings_run')
         run_parameters = RunParameters({'global': {'nout': 0}})
         executor = Executor(
             bout_paths=bout_paths,
-            submitter=LocalSubmitter(self.__bout_paths.project_path),
+            submitter=LocalSubmitter(bout_paths.project_path),
             run_parameters=run_parameters)
 
         executor.execute()
