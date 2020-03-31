@@ -128,14 +128,37 @@ def make_test_database():
 
 
 @pytest.fixture(scope='session')
-def make_test_schema(get_test_data_path, make_test_database):
+def get_default_parameters(get_test_data_path):
     """
-    Return the wrapped function for schema creation.
+    Return the default parameters object.
 
     Parameters
     ----------
     get_test_data_path : Path
         Path to the test data
+
+    Returns
+    -------
+    default_parameters : DefaultParameters
+        The DefaultParameters object
+    """
+
+    settings_path = get_test_data_path.joinpath('BOUT.settings')
+    default_parameters = \
+        DefaultParameters(settings_path=settings_path)
+    return default_parameters
+
+
+@pytest.fixture(scope='session')
+def make_test_schema(get_default_parameters,
+                     make_test_database):
+    """
+    Return the wrapped function for schema creation.
+
+    Parameters
+    ----------
+    get_default_parameters : DefaultParameters
+        The DefaultParameters object
     make_test_database : function
         Function returning the database connection
 
@@ -162,10 +185,7 @@ def make_test_schema(get_test_data_path, make_test_database):
         """
         db_connection = make_test_database(db_name)
 
-        settings_path = get_test_data_path.joinpath('BOUT.settings')
-
-        default_parameters = DefaultParameters(
-            settings_path=settings_path)
+        default_parameters = get_default_parameters
         final_parameters = FinalParameters(default_parameters)
         final_parameters_dict = final_parameters.get_final_parameters()
         final_parameters_as_sql_types = \
