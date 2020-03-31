@@ -22,7 +22,7 @@ def test_database_writer(make_test_schema):
         Function returning the database connection with the schema
         created
     """
-    db_connection = make_test_schema('write_test')
+    db_connection, _ = make_test_schema('write_test')
     db_reader = DatabaseReader(db_connection)
 
     db_writer = DatabaseWriter(db_connection)

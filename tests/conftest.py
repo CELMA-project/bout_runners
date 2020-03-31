@@ -157,6 +157,8 @@ def make_test_schema(get_test_data_path, make_test_database):
         -------
         db_connection : DatabaseConnector
             The database connection object
+        final_parameters_as_sql_types : dict
+            Final parameters as sql types
         """
         db_connection = make_test_database(db_name)
 
@@ -175,7 +177,7 @@ def make_test_schema(get_test_data_path, make_test_database):
         db_creator.\
             create_all_schema_tables(final_parameters_as_sql_types)
 
-        return db_connection
+        return db_connection, final_parameters_as_sql_types
 
     yield _make_schema
 
@@ -210,7 +212,7 @@ def write_to_split(make_test_schema):
         db_connection : DatabaseConnector
             The database connection object
         """
-        db_connection = make_test_schema(db_name)
+        db_connection, _ = make_test_schema(db_name)
 
         db_writer = DatabaseWriter(db_connection)
         dummy_split_dict = {'number_of_processors': 1,
