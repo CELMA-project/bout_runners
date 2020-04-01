@@ -7,7 +7,7 @@ import ast
 import configparser
 from pathlib import Path
 from bout_runners.database.database_creator import DatabaseCreator
-from bout_runners.bookkeeper.bookkeeper import Bookkeeper
+from bout_runners.metadata_recorder.metadata_recorder import MetadataRecorder
 
 
 class BoutRunner:
@@ -32,9 +32,9 @@ class BoutRunner:
         # Set member data
         self.__executor = executor
         self.__database_creator = DatabaseCreator(database_connector)
-        self.__bookkeeper = Bookkeeper(database_connector,
-                                       executor.bout_paths,
-                                       executor.run_parameters)
+        self.__metadata_recorder = MetadataRecorder(database_connector,
+                                             executor.bout_paths,
+                                             executor.run_parameters)
 
     def create_schema(self):
         """
@@ -54,15 +54,15 @@ class BoutRunner:
 
     def run(self):
         """Perform the run and capture data."""
-        if not self.__bookkeeper.database_reader.check_tables_created():
+        if not self.__metadata_recorder.database_reader.check_tables_created():
             logging.info('Creating schema as no tables were found in '
                          '%s',
-                         self.__bookkeeper.database_reader.
+                         self.__metadata_recorder.database_reader.
                          database_connector.database_path)
             self.create_schema()
 
-        self.__bookkeeper.capture_new_data_from_run(
+        self.__metadata_recorder.capture_new_data_from_run(
             self,
             self.__executor.processor_split)
 
-        self.__bookkeeper.database_reader.update_status()
+        self.__metadata_recorder.database_reader.update_status()

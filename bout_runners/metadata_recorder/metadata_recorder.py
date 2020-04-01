@@ -10,7 +10,7 @@ from bout_runners.database.database_utils import \
     get_system_info
 
 
-class Bookkeeper:
+class MetadataRecorder:
     """
     Class for bookkeeping of the runs.
 

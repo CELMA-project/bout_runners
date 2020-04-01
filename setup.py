@@ -10,7 +10,7 @@ PROJECT = 'CELMA-project'
 KEYWORDS = ['bout++',
             'bout',
             'python wrapper',
-            'metadata storage',
+            'metadata recorder',
             'plasma',
             'turbulence']
 INSTALL_REQUIRES = ['pyyaml',
