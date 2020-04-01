@@ -24,7 +24,7 @@ def get_system_info_as_sql_type():
     """
     attributes = get_system_info()
 
-    sys_info_dict = {att: 'TEXT' for att in attributes}
+    sys_info_dict = {att: 'TEXT' for att in attributes.keys()}
 
     return sys_info_dict
 
@@ -64,7 +64,7 @@ def get_file_modification(project_path, makefile_path, exec_name):
 
     bout_path = get_bout_path()
     file_modification['bout_lib_modified'] = \
-        get_git_sha(bout_path.joinpath('lib', 'libbout++.a'))
+        get_modified_time(bout_path.joinpath('lib', 'libbout++.a'))
     file_modification['bout_git_sha'] = get_git_sha(bout_path)
 
     return file_modification
@@ -113,7 +113,8 @@ def get_system_info():
     # From
     # https://stackoverflow.com/questions/11637293/iterate-over-object-attributes-in-python
     sys_info = platform.uname()
-    attributes = tuple(name for name in dir(sys_info)
-                       if not name.startswith('_') and not
-                       callable(getattr(sys_info, name)))
+    attributes = {name: getattr(sys_info, name)
+                  for name in dir(sys_info)
+                  if not name.startswith('_') and not
+                  callable(getattr(sys_info, name))}
     return attributes

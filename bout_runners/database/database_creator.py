@@ -195,7 +195,7 @@ class DatabaseCreator:
             self.get_create_table_statement(
                 table_name='split',
                 columns={'number_of_processors': 'INTEGER',
-                         'nodes': 'INTEGER',
+                         'number_of_nodes': 'INTEGER',
                          'processors_per_node': 'INTEGER'})
         self._create_single_table(split_statement)
 

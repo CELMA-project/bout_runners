@@ -99,7 +99,7 @@ def make_test_database():
     _make_db : function
         The function making the database
     """
-    db_dir = Path(__file__).absolute().parents[2].joinpath('delme')
+    db_dir = Path(__file__).absolute().parent.joinpath('delme')
     db_dir.mkdir(exist_ok=True, parents=True)
 
     def _make_db(db_name=None):

@@ -1,4 +1,4 @@
-"""Module containing the Bookkeeper class."""
+"""Module containing the MetadataRecorder class."""
 
 
 from bout_runners.make.make import MakeProject
@@ -12,7 +12,7 @@ from bout_runners.database.database_utils import \
 
 class MetadataRecorder:
     """
-    Class for bookkeeping of the runs.
+    Class for recording the metadata of the runs.
 
     Attributes
     ----------
@@ -148,7 +148,8 @@ class MetadataRecorder:
         # Update the split
         split_dict = {'number_of_processors':
                       processor_split.number_of_processors,
-                      'nodes': processor_split.nodes,
+                      'number_of_nodes':
+                      processor_split.number_of_nodes,
                       'processors_per_node':
                       processor_split.processors_per_node}
         run_dict['split_id'] = \
