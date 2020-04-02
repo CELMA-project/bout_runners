@@ -117,9 +117,3 @@ class DatabaseWriter:
         values = tuple(entries_dict.values())
         insert_str = self.create_insert_string(keys, table_name)
         self.insert(insert_str, values)
-
-    def update_status(self):
-        """Update the status."""
-        # FIXME
-        raise NotImplementedError('To be implemented')
-

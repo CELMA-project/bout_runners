@@ -1,6 +1,7 @@
 """Module containing the MetadataRecorder class."""
 
 
+from datetime import datetime
 from bout_runners.make.make import MakeProject
 from bout_runners.database.database_writer import DatabaseWriter
 from bout_runners.database.database_reader import DatabaseReader
@@ -128,6 +129,8 @@ class MetadataRecorder:
         # Update the parameters
         parameters_dict = self.__final_parameters.get_final_parameters()
 
+        # FIXME: You are here: Some elements contain serious amount
+        #  of whitespaces
         run_dict['parameters_id'] = \
             self._create_parameter_tables_entry(parameters_dict)
 
@@ -141,9 +144,8 @@ class MetadataRecorder:
                                                 file_modification_dict)
         if run_dict['file_modification_id'] is None:
             run_dict['file_modification_id'] = \
-                self.__database_writer.create_entry(
-                    'file_modification',
-                    file_modification_dict)
+                self.create_entry('file_modification',
+                                  file_modification_dict)
 
         # Update the split
         split_dict = {'number_of_processors':
@@ -154,27 +156,48 @@ class MetadataRecorder:
                       processor_split.processors_per_node}
         run_dict['split_id'] = \
             self.__database_reader.get_entry_id('split', split_dict)
-        if run_dict['split_id'] is not None:
-            run_dict['split_id'] = \
-                self.__database_writer.create_entry('split', split_dict)
+        if run_dict['split_id'] is None:
+            run_dict['split_id'] = self.create_entry('split',
+                                                     split_dict)
 
         # Update the system info
         system_info_dict = get_system_info()
         run_dict['host_id'] = self.__database_reader.get_entry_id(
             'system_info', system_info_dict)
-        if run_dict['host_id'] is not None:
-            run_dict['host_id'] = \
-                self.__database_writer.create_entry('system_info',
+        if run_dict['host_id'] is None:
+            run_dict['host_id'] = self.create_entry('system_info',
                                                     system_info_dict)
 
         # Update the run
         run_id = self.__database_reader.get_entry_id('run', run_dict)
-        if run_id is not None:
+        if run_id is None:
             run_dict['latest_status'] = 'submitted'
-            self.__database_writer.create_entry('run', run_dict)
+            run_dict['submitted_time'] = datetime.now().isoformat()
+            _ = self.create_entry('run', run_dict)
             new_entry = True
 
         return new_entry
+
+    def create_entry(self, table_name, entries_dict):
+        """
+        Create a database entry and return the entry id.
+
+        Parameters
+        ----------
+        table_name : str
+            Name of the table
+        entries_dict : dict
+            Dictionary containing the entries as key value pairs
+
+        Returns
+        -------
+        entry_id : int
+            The id of the newly created entry
+        """
+        self.__database_writer.create_entry(table_name, entries_dict)
+        entry_id = self.__database_reader.get_entry_id(table_name,
+                                                       entries_dict)
+        return entry_id
 
     def _create_parameter_tables_entry(self, parameters_dict):
         """
@@ -205,10 +228,9 @@ class MetadataRecorder:
             section_id = \
                 self.__database_reader.get_entry_id(section_name,
                                                     section_parameters)
-            if section_id is not None:
-                section_id = self.__database_writer.create_entry(
-                    section_name,
-                    section_parameters)
+            if section_id is None:
+                section_id = self.create_entry(section_name,
+                                               section_parameters)
 
             parameters_foreign_keys[f'{section_name}_id'] = section_id
 
@@ -216,9 +238,8 @@ class MetadataRecorder:
         parameters_id = \
             self.__database_reader.get_entry_id('parameters',
                                                 parameters_foreign_keys)
-        if parameters_id is not None:
-            parameters_id = self.__database_writer.create_entry(
-                'parameters',
-                parameters_foreign_keys)
+        if parameters_id is None:
+            parameters_id = \
+                self.create_entry('parameters', parameters_foreign_keys)
 
         return parameters_id

@@ -26,7 +26,13 @@ def test_metadata_recorder(get_bout_path_conduction,
                                          bout_paths,
                                          final_parameters)
 
-    metadata_recorder.capture_new_data_from_run(ProcessorSplit())
+    new_entry = \
+        metadata_recorder.capture_new_data_from_run(ProcessorSplit())
 
     # FIXME: Investigate the writing
     metadata_recorder.database_reader
+
+    # Loop through and check that all tables has only one row
+    # Run again and check the same
+    # Change ProcessorSplit and check a new entry is made
+    # Make join class which enable reading the whole shebang

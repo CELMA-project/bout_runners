@@ -97,7 +97,8 @@ class DatabaseReader:
         # https://stackoverflow.com/questions/7039938/what-does-select-1-from-do
         where_statements = list()
         for field, val in entries_dict.items():
-            where_statements.append(f'{" "*7}AND {field}="{val}"')
+            val = val if isinstance(val, bool) else f'"{val}"'
+            where_statements.append(f'{" "*7}AND {field}={val}')
         where_statements[0] = where_statements[0].replace('AND',
                                                           'WHERE')
         where_statements = '\n'.join(where_statements)
