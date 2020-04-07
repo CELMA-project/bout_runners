@@ -10,25 +10,6 @@ from bout_runners.database.database_creator import create_parameter_tables
 from bout_runners.database.database_creator import create_split_table
 
 
-@pytest.fixture(scope='module', name='make_creator_database')
-def fixture_make_creator_database(make_test_database):
-    """
-    Create a database.
-
-    Parameters
-    ----------
-    make_test_database : function
-        The function for creating the database
-
-    Returns
-    -------
-    database : Database
-        The database object
-    """
-    database = make_test_database('creator.db')
-    return database
-
-
 def test_create_run_table(make_creator_database):
     """
     Test that the run table is created.

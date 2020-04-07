@@ -4,6 +4,8 @@
 import shutil
 from pathlib import Path
 import pytest
+from distutils.dir_util import copy_tree
+from distutils.dir_util import remove_tree
 from bout_runners.make.make import MakeProject
 from bout_runners.parameters.default_parameters import DefaultParameters
 from bout_runners.parameters.final_parameters import FinalParameters
@@ -14,8 +16,8 @@ from bout_runners.database.database_writer import DatabaseWriter
 from bout_runners.executor.bout_paths import BoutPaths
 
 
-@pytest.fixture(scope='session', name='yield_bout_path')
-def fixture_get_bout_path():
+@pytest.fixture(scope='session')
+def yield_bout_path():
     """
     Load the dot-env file and yield the bout_path.
 
@@ -29,8 +31,8 @@ def fixture_get_bout_path():
     yield bout_path
 
 
-@pytest.fixture(scope='session', name='get_conduction_path')
-def fixture_get_conduction_path(yield_bout_path):
+@pytest.fixture(scope='session')
+def yield_conduction_path(yield_bout_path):
     """
     Yield the conduction path.
 
@@ -45,8 +47,56 @@ def fixture_get_conduction_path(yield_bout_path):
     yield conduction_path
 
 
-@pytest.fixture(scope='session', name='make_project')
-def fixture_make_project(get_conduction_path):
+@pytest.fixture(scope='function')
+def make_make_object(yield_bout_path):
+    """
+    Set up and tear down the make-object.
+
+    In order not to make collisions with the global fixture which
+    makes the `conduction` program, this fixture copies the content
+    of the `conduction` directory to a `tmp` directory, which is
+    removed in the teardown.
+
+    This fixture calls make_obj.run_clean() before the yield statement.
+
+    Parameters
+    ----------
+    yield_bout_path : Path
+        Path to the BOUT++ repository. See the yield_bout_path fixture
+        for more details
+
+    Yields
+    ------
+    make_obj : MakeProject
+        The object to call make and make clean from
+    exec_file : Path
+        The path to the executable
+
+    See Also
+    --------
+    tests.bout_runners.conftest.get_bout_path : Fixture which returns
+    the BOUT++ path
+    """
+    # Setup
+    bout_path = yield_bout_path
+    project_path = bout_path.joinpath('examples', 'conduction')
+    tmp_path = project_path.parent.joinpath('tmp_make')
+
+    copy_tree(str(project_path), str(tmp_path))
+
+    exec_file = tmp_path.joinpath('conduction')
+
+    make_obj = MakeProject(makefile_root_path=tmp_path)
+    make_obj.run_clean()
+
+    yield make_obj, exec_file
+
+    # Teardown
+    remove_tree(str(tmp_path))
+
+
+@pytest.fixture(scope='session')
+def make_project(yield_conduction_path):
     """
     Set up and tear down the Make object.
 
@@ -55,9 +105,9 @@ def fixture_make_project(get_conduction_path):
 
     Parameters
     ----------
-    get_conduction_path : Path
+    yield_conduction_path : Path
         Path to the BOUT++ conduction example.
-        See the fixture_get_conduction_path for more details
+        See the yield_conduction_path for more details
 
     Yields
     ------
@@ -65,7 +115,7 @@ def fixture_make_project(get_conduction_path):
         The path to the conduction example
     """
     # Setup
-    project_path = get_conduction_path
+    project_path = yield_conduction_path
 
     make_obj = MakeProject(makefile_root_path=project_path)
     make_obj.run_make()
@@ -245,8 +295,8 @@ def write_to_split(make_test_schema):
     yield _write_split
 
 
-@pytest.fixture(scope='session', name='copy_bout_inp')
-def fixture_copy_bout_inp():
+@pytest.fixture(scope='session')
+def copy_bout_inp():
     """
     Copy BOUT.inp to a temporary directory.
 
@@ -295,8 +345,8 @@ def fixture_copy_bout_inp():
         shutil.rmtree(tmp_dir_path)
 
 
-@pytest.fixture(scope='function', name='get_bout_path_conduction')
-def fixture_get_bout_path_conduction(get_conduction_path):
+@pytest.fixture(scope='function')
+def yield_bout_path_conduction(yield_conduction_path):
     """
     Make the bout_path object and clean up after use.
 
@@ -326,7 +376,7 @@ def fixture_get_bout_path_conduction(get_conduction_path):
         bout_paths : BoutPaths
             The BoutPaths object
         """
-        project_path = get_conduction_path
+        project_path = yield_conduction_path
         bout_paths = BoutPaths(project_path=project_path,
                                bout_inp_dst_dir=tmp_path_name)
         tmp_dir_list.append(bout_paths.bout_inp_dst_dir)
@@ -337,3 +387,36 @@ def fixture_get_bout_path_conduction(get_conduction_path):
 
     for tmp_dir_path in tmp_dir_list:
         shutil.rmtree(tmp_dir_path)
+
+
+@pytest.fixture(scope='function')
+def copy_makefile(get_test_data_path):
+    """
+    Set up and tear down a copy of Makefile to my_makefile.
+
+    Creates a temporary directory, copies Makefile from DATA_PATH to
+    DATA_PATH/tmp/my_makefile to search for the Makefile.
+    The file and directory are teared it down after the test.
+
+    Parameters
+    ----------
+    get_test_data_path : Path
+        Path to the test data
+
+    Yields
+    ------
+    tmp_path : Path
+        The path to the temporary directory
+    """
+    # Setup
+    tmp_path = get_test_data_path.joinpath('tmp')
+    tmp_path.mkdir(exist_ok=True)
+    makefile_path = get_test_data_path.joinpath('Makefile')
+    tmp_make = tmp_path.joinpath('my_makefile')
+    shutil.copy(makefile_path, tmp_make)
+
+    yield tmp_path
+
+    # Teardown
+    tmp_make.unlink()
+    tmp_path.rmdir()
