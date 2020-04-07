@@ -3,8 +3,6 @@
 
 import pytest
 import sqlite3
-from bout_runners.parameters.default_parameters import DefaultParameters
-from bout_runners.parameters.final_parameters import FinalParameters
 from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.database.database_creator import DatabaseCreator
 
@@ -44,3 +42,31 @@ def test_database_creator(make_test_database, make_test_schema):
     with pytest.raises(sqlite3.OperationalError):
         db_creator.\
             create_all_schema_tables(final_parameters_as_sql_types)
+
+
+def test_get_create_table_statement():
+    """Test that get_create_table_statement returns expected output."""
+    result = DatabaseCreator.get_create_table_statement(
+        table_name='foo',
+        columns=dict(bar='baz',
+                     foobar='qux'),
+        primary_key='quux',
+        foreign_keys=dict(quuz=('corge', 'grault'),
+                          garply=('waldo', 'fred')))
+
+    expected = ('CREATE TABLE foo \n'
+                '(   quux INTEGER PRIMARY KEY,\n'
+                '    bar baz NOT NULL,\n'
+                '    foobar qux NOT NULL,\n'
+                '    quuz INTEGER NOT NULL,\n'
+                '    garply INTEGER NOT NULL,\n'
+                '    FOREIGN KEY(quuz) \n'
+                '        REFERENCES corge(grault)\n'
+                '            ON UPDATE CASCADE\n'
+                '            ON DELETE CASCADE,\n'
+                '    FOREIGN KEY(garply) \n'
+                '        REFERENCES waldo(fred)\n'
+                '            ON UPDATE CASCADE\n'
+                '            ON DELETE CASCADE)')
+
+    assert result == expected

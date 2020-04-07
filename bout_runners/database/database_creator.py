@@ -86,7 +86,6 @@ class DatabaseCreator:
                      f'{self.database_connector.database_path}')
 
         # Check if tables are created
-        # FIXME: Test for error if this is created twice
         self._create_system_info_table()
         self._create_split_table()
         self._create_file_modification_table()

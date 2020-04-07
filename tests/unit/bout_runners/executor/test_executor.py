@@ -8,7 +8,7 @@ from bout_runners.submitter.local_submitter import LocalSubmitter
 
 def test_executor(make_project, yield_bout_path_conduction):
     """
-    Test that we are able to execute the conduction example
+    Test that we are able to execute the conduction example.
 
     Parameters
     ----------
