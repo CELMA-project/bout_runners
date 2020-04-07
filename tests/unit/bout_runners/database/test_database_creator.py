@@ -15,6 +15,7 @@ def test_database_creator(make_test_database, make_test_schema):
     1. The database is empty on creation
     2. The tables are created
     3. It is not possible to create the schema more than once
+    4. Check that all expected tables have been created
 
     Parameters
     ----------
@@ -42,6 +43,21 @@ def test_database_creator(make_test_database, make_test_schema):
     with pytest.raises(sqlite3.OperationalError):
         db_creator.\
             create_all_schema_tables(final_parameters_as_sql_types)
+
+    # Check that all tables has been created
+    non_parameter_tables = {'system_info',
+                            'split',
+                            'file_modification',
+                            'parameters',
+                            'run'}
+    parameter_tables = set(el.replace(':', '_') for
+                           el in final_parameters_as_sql_types.keys())
+    query_str = ('SELECT name FROM sqlite_master\n'
+                 '   WHERE type="table"')
+    table = db_reader_schema.query(query_str)
+
+    assert non_parameter_tables.union(parameter_tables) == \
+        set(table.loc[:, 'name'].values)
 
 
 def test_get_create_table_statement():
