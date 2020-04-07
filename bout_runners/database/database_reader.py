@@ -104,12 +104,8 @@ class DatabaseReader:
         where_statements = '\n'.join(where_statements)
 
         query_str = \
-            (f'SELECT rowid\n'
-             f'FROM {table_name}\n'
-             f'WHERE\n'
-             f'    EXISTS(\n'
-             f'       SELECT 1\n'
-             f'	      FROM {table_name}\n{where_statements})')
+            (f'SELECT id\n'
+             f'FROM {table_name}\n{where_statements}')
 
         table = self.query(query_str)
         # NOTE: We explicitly cast to int, as sqlite3 will cast
