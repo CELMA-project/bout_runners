@@ -1,15 +1,13 @@
 """Contains the BOUT runner class."""
 
 
-import re
 import logging
-import ast
-import configparser
-from pathlib import Path
 from bout_runners.database.database_creator import DatabaseCreator
-from bout_runners.metadata_recorder.metadata_recorder import MetadataRecorder
+from bout_runners.metadata_recorder.metadata_recorder import \
+    MetadataRecorder
 
 
+# FIXME: You are here
 class BoutRunner:
     """
     Executes the command for submitting a run.
@@ -32,9 +30,10 @@ class BoutRunner:
         # Set member data
         self.__executor = executor
         self.__database_creator = DatabaseCreator(database_connector)
-        self.__metadata_recorder = MetadataRecorder(database_connector,
-                                             executor.bout_paths,
-                                             executor.run_parameters)
+        self.__metadata_recorder = \
+            MetadataRecorder(database_connector,
+                             executor.bout_paths,
+                             final_parameters)
 
     def create_schema(self):
         """
@@ -54,7 +53,8 @@ class BoutRunner:
 
     def run(self):
         """Perform the run and capture data."""
-        if not self.__metadata_recorder.database_reader.check_tables_created():
+        if not self.__metadata_recorder.database_reader.\
+                check_tables_created():
             logging.info('Creating schema as no tables were found in '
                          '%s',
                          self.__metadata_recorder.database_reader.
@@ -62,7 +62,6 @@ class BoutRunner:
             self.create_schema()
 
         self.__metadata_recorder.capture_new_data_from_run(
-            self,
             self.__executor.processor_split)
 
-        self.__metadata_recorder.database_reader.update_status()
+        self.__executor.execute()

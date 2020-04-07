@@ -6,6 +6,7 @@ from bout_runners.parameters.run_parameters import RunParameters
 from bout_runners.executor.executor import Executor
 
 
+# FIXME: Make status object which updates the status
 # FIXME: Needs update
 def test_single_run(copy_bout_inp, make_project):
     """

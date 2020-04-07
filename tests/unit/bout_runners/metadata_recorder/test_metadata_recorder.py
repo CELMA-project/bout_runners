@@ -35,7 +35,7 @@ def get_number_of_rows_for_all_tables(metadata_recorder):
     return number_of_rows_dict
 
 
-def test_metadata_recorder(get_bout_path_conduction,
+def test_metadata_recorder(yield_bout_path_conduction,
                            get_default_parameters,
                            make_project,
                            make_test_schema):
@@ -54,7 +54,7 @@ def test_metadata_recorder(get_bout_path_conduction,
 
     Parameters
     ----------
-    get_bout_path_conduction : function
+    yield_bout_path_conduction : function
         Function which makes the BoutPaths object for the conduction
         example
     get_default_parameters : DefaultParameters
@@ -69,7 +69,7 @@ def test_metadata_recorder(get_bout_path_conduction,
     # edited time of the executable
     _ = make_project
     db_connection, _ = make_test_schema('test_metadata_recorder')
-    bout_paths = get_bout_path_conduction('test_metadata_recorder')
+    bout_paths = yield_bout_path_conduction('test_metadata_recorder')
     default_parameters = get_default_parameters
     final_parameters = FinalParameters(default_parameters)
 
