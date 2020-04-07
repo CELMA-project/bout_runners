@@ -5,7 +5,7 @@ from bout_runners.parameters.default_parameters import DefaultParameters
 
 
 def test_default_parameters(get_test_data_path,
-                            get_bout_path_conduction):
+                            yield_bout_path_conduction):
     """
     Test the DefaultParameter.
 
@@ -19,7 +19,7 @@ def test_default_parameters(get_test_data_path,
     ----------
     get_test_data_path : Path
         Path to the test data
-    get_bout_path_conduction : function
+    yield_bout_path_conduction : function
         Function returning the bout_paths object
     """
     settings_path = get_test_data_path.joinpath('BOUT.settings')
@@ -29,7 +29,7 @@ def test_default_parameters(get_test_data_path,
 
     assert isinstance(settings_dict, dict)
 
-    bout_paths = get_bout_path_conduction('test_default_parameters')
+    bout_paths = yield_bout_path_conduction('test_default_parameters')
     default_parameters_bout_paths = \
         DefaultParameters(bout_paths=bout_paths)
     bout_paths_dict = \
