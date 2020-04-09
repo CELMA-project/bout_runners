@@ -9,8 +9,7 @@ from bout_runners.metadata_recorder.metadata_recorder import \
 
 class BoutRunner:
     r"""
-    Executes the command for submitting a run.
-
+    Class for executing a run and store its metadata.
 
     Attributes
     ----------

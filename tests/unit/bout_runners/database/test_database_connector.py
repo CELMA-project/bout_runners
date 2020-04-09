@@ -1,7 +1,8 @@
 """Contains unittests for the database connector."""
 
-import pytest
+
 import sqlite3
+import pytest
 
 
 def test_database_connector(make_test_database):

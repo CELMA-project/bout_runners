@@ -103,8 +103,8 @@ class DatabaseCreator:
         [1] https://www.databasestar.com/database-normalization/
         [2] http://www.bkent.net/Doc/simple5.htm
         """
-        logging.info(f'Creating tables in '
-                     f'{self.database_connector.database_path}')
+        logging.info('Creating tables in %s',
+                     self.database_connector.database_path)
 
         # Check if tables are created
         self._create_system_info_table()
@@ -113,8 +113,8 @@ class DatabaseCreator:
         self._create_parameter_tables(parameters_as_sql_types)
         self._create_run_table()
 
-        logging.info(f'Tables created in '
-                     f'{self.database_connector.database_path}')
+        logging.info('Tables created in %s',
+                     self.database_connector.database_path)
 
     @staticmethod
     def get_create_table_statement(table_name,

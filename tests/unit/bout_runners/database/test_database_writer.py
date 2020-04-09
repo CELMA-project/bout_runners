@@ -26,9 +26,9 @@ def test_database_writer(make_test_schema):
     db_reader = DatabaseReader(db_connection)
 
     db_writer = DatabaseWriter(db_connection)
-    dummy_split_dict = {'number_of_processors': 1,
-                        'number_of_nodes': 2,
-                        'processors_per_node': 3}
+    dummy_split_dict = {'number_of_processors': 41,
+                        'number_of_nodes': 42,
+                        'processors_per_node': 43}
     db_writer.create_entry('split', dummy_split_dict)
 
     table = db_reader.query('SELECT * FROM split')

@@ -62,7 +62,6 @@ class ReadBoutMakefile:
 
     def get_variable_value(self):
         """Get the value of the variable."""
-        pass
 
 
 class BoutMakefileVariable(ReadBoutMakefile):
@@ -84,12 +83,14 @@ class BoutMakefileVariable(ReadBoutMakefile):
     Examples
     --------
     Makefile
-    >>> BOUT_SUPER	= /super/path/to/BOUT-dev
-    ... BOUT_TOP	= $(BOUT_SUPER)/BOUT-dev
-    ...
-    ... SOURCEC		= bout_model.cxx
-    ...
-    ... include $(BOUT_TOP)/make.config
+    ```
+    BOUT_SUPER	= /super/path/to/BOUT-dev
+    BOUT_TOP	= $(BOUT_SUPER)/BOUT-dev
+
+    SOURCEC		= bout_model.cxx
+
+    include $(BOUT_TOP)/make.config
+    ```
 
     Script
     >>> BoutMakefileVariable('SOURCEC', 'Makefile').get_variable_value()

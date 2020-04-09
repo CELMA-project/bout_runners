@@ -1,8 +1,8 @@
 """Contains unittests for the database creator."""
 
 
-import pytest
 import sqlite3
+import pytest
 from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.database.database_creator import DatabaseCreator
 

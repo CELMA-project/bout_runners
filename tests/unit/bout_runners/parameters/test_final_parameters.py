@@ -23,15 +23,12 @@ def test_final_parameters(get_default_parameters):
     assert final_parameters_dict['global']['timestep'] is False
 
 
-def test_cast_parameters_to_sql_type(get_test_data_path,
-                                     get_default_parameters):
+def test_cast_parameters_to_sql_type(get_default_parameters):
     """
     Test that obtain_project_parameters returns expected output.
 
     Parameters
     ----------
-    get_test_data_path : Path
-        Path to the test data
     get_default_parameters : DefaultParameters
         The DefaultParameters object
     """

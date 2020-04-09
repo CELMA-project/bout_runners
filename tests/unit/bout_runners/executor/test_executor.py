@@ -24,10 +24,10 @@ def test_executor(make_project, yield_bout_path_conduction):
     # Make the executor
     bout_paths = yield_bout_path_conduction('test_executor')
     run_parameters = RunParameters({'global': {'nout': 0}})
-    executor = Executor(
-        bout_paths=bout_paths,
-        submitter=LocalSubmitter(bout_paths.project_path),
-        run_parameters=run_parameters)
+    executor = Executor(bout_paths=bout_paths,
+                        submitter=LocalSubmitter(
+                            bout_paths.project_path),
+                        run_parameters=run_parameters)
 
     executor.execute()
 

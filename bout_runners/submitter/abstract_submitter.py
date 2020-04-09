@@ -11,9 +11,7 @@ class AbstractSubmitter(ABC):
     @abstractmethod
     def submit_command(self, command):
         """Submit a command."""
-        pass
 
     @abstractmethod
-    def _raise_submit_error(self, error):
+    def _raise_submit_error(self, result):
         """Raise error if submission failed."""
-        pass

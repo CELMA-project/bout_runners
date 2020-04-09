@@ -1,11 +1,11 @@
 """Global fixtures for the test routines."""
 
 
+from distutils.dir_util import copy_tree
+from distutils.dir_util import remove_tree
 import shutil
 from pathlib import Path
 import pytest
-from distutils.dir_util import copy_tree
-from distutils.dir_util import remove_tree
 from bout_runners.make.make import Make
 from bout_runners.parameters.default_parameters import DefaultParameters
 from bout_runners.parameters.final_parameters import FinalParameters
@@ -16,8 +16,8 @@ from bout_runners.database.database_writer import DatabaseWriter
 from bout_runners.executor.bout_paths import BoutPaths
 
 
-@pytest.fixture(scope='session')
-def yield_bout_path():
+@pytest.fixture(scope='session', name='yield_bout_path')
+def fixture_yield_bout_path():
     """
     Load the dot-env file and yield the bout_path.
 
@@ -31,8 +31,8 @@ def yield_bout_path():
     yield bout_path
 
 
-@pytest.fixture(scope='session')
-def yield_conduction_path(yield_bout_path):
+@pytest.fixture(scope='session', name='yield_conduction_path')
+def fixture_yield_conduction_path(yield_bout_path):
     """
     Yield the conduction path.
 
@@ -126,8 +126,8 @@ def make_project(yield_conduction_path):
     make_obj.run_clean()
 
 
-@pytest.fixture(scope='session')
-def get_test_data_path():
+@pytest.fixture(scope='session', name='get_test_data_path')
+def fixture_get_test_data_path():
     """
     Return the test data path.
 
@@ -139,8 +139,8 @@ def get_test_data_path():
     return Path(__file__).absolute().parent.joinpath('data')
 
 
-@pytest.fixture(scope='session')
-def make_test_database():
+@pytest.fixture(scope='session', name='make_test_database')
+def fixture_make_test_database():
     """
     Return the wrapped function for the database connection.
 
@@ -177,8 +177,8 @@ def make_test_database():
     shutil.rmtree(db_dir)
 
 
-@pytest.fixture(scope='session')
-def get_default_parameters(get_test_data_path):
+@pytest.fixture(scope='session', name='get_default_parameters')
+def fixture_get_default_parameters(get_test_data_path):
     """
     Return the default parameters object.
 
@@ -198,9 +198,9 @@ def get_default_parameters(get_test_data_path):
     return default_parameters
 
 
-@pytest.fixture(scope='session')
-def make_test_schema(get_default_parameters,
-                     make_test_database):
+@pytest.fixture(scope='session', name='make_test_schema')
+def fixture_make_test_schema(get_default_parameters,
+                             make_test_database):
     """
     Return the wrapped function for schema creation.
 
