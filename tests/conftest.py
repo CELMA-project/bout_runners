@@ -420,3 +420,43 @@ def copy_makefile(get_test_data_path):
     # Teardown
     tmp_make.unlink()
     tmp_path.rmdir()
+
+
+@pytest.fixture(scope='function')
+def yield_number_of_rows_for_all_tables():
+    """
+    Yield the function used to count number of rows in a table.
+
+    Yields
+    ------
+    _get_number_of_rows_for_all_tables : function
+        Function which returns the number of rows for all tables in a
+        schema
+    """
+    def _get_number_of_rows_for_all_tables(database_reader):
+        """
+        Return the number of rows for all tables in a schema.
+
+        Parameters
+        ----------
+        database_reader : DatabaseReader
+            The object used read from the database
+
+        Returns
+        -------
+        number_of_rows_dict : dict
+            Dict on the form
+            >>> {'table_name': int}
+        """
+        number_of_rows_dict = dict()
+        query_str = ("SELECT name FROM sqlite_master\n"
+                     "    WHERE type ='table'\n"
+                     "    AND name NOT LIKE 'sqlite_%'")
+        table_of_tables = database_reader.query(query_str)
+        for _, table_name_as_series in table_of_tables.iterrows():
+            table_name = table_name_as_series['name']
+            query_str = f'SELECT COUNT(*) AS rows FROM {table_name}'
+            table = database_reader.query(query_str)
+            number_of_rows_dict[table_name] = table.loc[0, 'rows']
+        return number_of_rows_dict
+    yield _get_number_of_rows_for_all_tables

@@ -7,38 +7,11 @@ from bout_runners.parameters.final_parameters import FinalParameters
 from bout_runners.submitter.processor_split import ProcessorSplit
 
 
-def get_number_of_rows_for_all_tables(metadata_recorder):
-    """
-    Return the number of rows for all tables in a schema.
-
-    Parameters
-    ----------
-    metadata_recorder : MetadataRecorder
-        The object used to capture data from a run
-
-    Returns
-    -------
-    number_of_rows_dict : dict
-        Dict on the form
-        >>> {'table_name': int}
-    """
-    number_of_rows_dict = dict()
-    query_str = ("SELECT name FROM sqlite_master\n"
-                 "    WHERE type ='table'\n"
-                 "    AND name NOT LIKE 'sqlite_%'")
-    table_of_tables = metadata_recorder.database_reader.query(query_str)
-    for _, table_name_as_series in table_of_tables.iterrows():
-        table_name = table_name_as_series['name']
-        query_str = f'SELECT COUNT(*) AS rows FROM {table_name}'
-        table = metadata_recorder.database_reader.query(query_str)
-        number_of_rows_dict[table_name] = table.loc[0, 'rows']
-    return number_of_rows_dict
-
-
 def test_metadata_recorder(yield_bout_path_conduction,
                            get_default_parameters,
                            make_project,
-                           make_test_schema):
+                           make_test_schema,
+                           yield_number_of_rows_for_all_tables):
     """
     Test the metadata recorder.
 
@@ -63,6 +36,9 @@ def test_metadata_recorder(yield_bout_path_conduction,
         The path to the conduction example
     make_test_schema : function
         The function making the schema (i.e. making all the tables)
+    yield_number_of_rows_for_all_tables : function
+        Function which returns the number of rows for all tables in a
+        schema
     """
     # NOTE: If the project is not made, the metadata recorder will
     # fail when the get_file_modification is trying to get the last
@@ -83,7 +59,8 @@ def test_metadata_recorder(yield_bout_path_conduction,
     assert new_entry is True
     # Assert that all the values are 1
     number_of_rows_dict = \
-        get_number_of_rows_for_all_tables(metadata_recorder)
+        yield_number_of_rows_for_all_tables(
+            metadata_recorder.database_reader)
     assert sum(number_of_rows_dict.values()) == \
         len(number_of_rows_dict.keys())
 
@@ -93,7 +70,8 @@ def test_metadata_recorder(yield_bout_path_conduction,
     assert new_entry is False
     # Assert that all the values are 1
     number_of_rows_dict = \
-        get_number_of_rows_for_all_tables(metadata_recorder)
+        yield_number_of_rows_for_all_tables(
+            metadata_recorder.database_reader)
     assert sum(number_of_rows_dict.values()) == \
         len(number_of_rows_dict.keys())
 
@@ -105,7 +83,8 @@ def test_metadata_recorder(yield_bout_path_conduction,
     assert new_entry is True
 
     number_of_rows_dict = \
-        get_number_of_rows_for_all_tables(metadata_recorder)
+        yield_number_of_rows_for_all_tables(
+            metadata_recorder.database_reader)
     tables_with_2 = dict()
     tables_with_2['split'] = number_of_rows_dict.pop('split')
     tables_with_2['run'] = number_of_rows_dict.pop('run')

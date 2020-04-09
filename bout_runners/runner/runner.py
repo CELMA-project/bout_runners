@@ -19,7 +19,8 @@ class BoutRunner:
 
     def __init__(self,
                  executor,
-                 database_connector):
+                 database_connector,
+                 final_parameters):
         """
         FIXME
 
@@ -30,26 +31,21 @@ class BoutRunner:
         # Set member data
         self.__executor = executor
         self.__database_creator = DatabaseCreator(database_connector)
+        self.__final_parameters = final_parameters
         self.__metadata_recorder = \
             MetadataRecorder(database_connector,
                              executor.bout_paths,
-                             final_parameters)
+                             self.__final_parameters)
 
-    def create_schema(self):
-        """
-        Create the schema.
-
-        The schema is created by executing a settings run in order to
-        infer the parameters of the project executable. The
-        parameters are subsequently read and their types cast to
-        SQL types
-        """
-        settings_path = self.run_settings_run()
-        parameter_dict = self.obtain_project_parameters(settings_path)
-        parameter_dict_as_sql_types = \
-            self.cast_parameters_to_sql_type(parameter_dict)
+    def _create_schema(self):
+        """Create the schema."""
+        final_parameters_dict = \
+            self.__final_parameters.get_final_parameters()
+        final_parameters_as_sql_types = \
+            self.__final_parameters. \
+            cast_parameters_to_sql_type(final_parameters_dict)
         self.__database_creator.create_all_schema_tables(
-            parameter_dict_as_sql_types)
+            final_parameters_as_sql_types)
 
     def run(self):
         """Perform the run and capture data."""
@@ -59,9 +55,9 @@ class BoutRunner:
                          '%s',
                          self.__metadata_recorder.database_reader.
                          database_connector.database_path)
-            self.create_schema()
+            self._create_schema()
 
         self.__metadata_recorder.capture_new_data_from_run(
-            self.__executor.processor_split)
+            self.__executor.submitter.processor_split)
 
         self.__executor.execute()
