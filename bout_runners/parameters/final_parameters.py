@@ -6,7 +6,7 @@ from bout_runners.parameters.run_parameters import RunParameters
 
 
 class FinalParameters:
-    """
+    r"""
     Class which deals with the final parameters.
 
     The final parameters are those who are going to be used in the
@@ -28,7 +28,37 @@ class FinalParameters:
 
     Examples
     --------
-    FIXME
+    Import dependencies
+    >>> from pathlib import Path
+    >>> from bout_runners.executor.bout_paths import BoutPaths
+    >>> from bout_runners.parameters.default_parameters import \
+    ...     DefaultParameters
+    >>> from bout_runners.parameters.run_parameters import \
+    ...     RunParameters
+
+    Create the `bout_paths` object
+    >>> project_path = Path().joinpath('path', 'to', 'project')
+    >>> bout_inp_src_dir = Path().joinpath('path', 'to', 'source',
+    ... 'BOUT.inp')
+    >>> bout_inp_dst_dir = Path().joinpath('path', 'to', 'destination',
+    ... 'BOUT.inp')
+    >>> bout_paths = BoutPaths(project_path=project_path,
+    ...                        bout_inp_src_dir=bout_inp_src_dir,
+    ...                        bout_inp_dst_dir=bout_inp_dst_dir)
+
+    Get the final parameters
+    >>> default_parameters = DefaultParameters(bout_paths=bout_paths)
+    >>> final_parameters = FinalParameters(default_parameters,
+    ...     RunParameters({'nout': 10}))
+    >>> final_parameters_dict = final_parameters.get_final_parameters()
+    >>> final_parameters_dict
+    {'global': {'append': False, 'async_send': False, ..., 'nout':
+    10, ...}}
+
+    >>> final_parameters.\
+    ...     cast_parameters_to_sql_type(final_parameters_dict)
+    {'global': {'append': TEXT, 'async_send': TETX, ..., 'nout':
+    INTEGER, ...}}
     """
 
     def __init__(self,

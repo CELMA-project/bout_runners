@@ -2,7 +2,7 @@
 
 
 from datetime import datetime
-from bout_runners.make.make import MakeProject
+from bout_runners.make.make import Make
 from bout_runners.database.database_writer import DatabaseWriter
 from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.database.database_utils import \
@@ -12,7 +12,7 @@ from bout_runners.database.database_utils import \
 
 
 class MetadataRecorder:
-    """
+    r"""
     Class for recording the metadata of the runs.
 
     Attributes
@@ -33,7 +33,46 @@ class MetadataRecorder:
     _create_parameter_tables_entry(parameters_dict)
         Insert the parameters into a the parameter tables
 
-    FIXME: Add examples
+    Examples
+    --------
+    Import dependencies
+    >>> from pathlib import Path
+    >>> from bout_runners.executor.bout_paths import BoutPaths
+    >>> from bout_runners.parameters.default_parameters import \
+    ...     DefaultParameters
+    >>> from bout_runners.parameters.final_parameters import \
+    ...     FinalParameters
+    >>> from bout_runners.database.database_connector import \
+    ...     DatabaseConnector
+    >>> from bout_runners.submitter.processor_split import \
+    ...     ProcessorSplit
+
+    Create the `bout_paths` object
+    >>> project_path = Path().joinpath('path', 'to', 'project')
+    >>> bout_inp_src_dir = Path().joinpath('path', 'to', 'source',
+    ... 'BOUT.inp')
+    >>> bout_inp_dst_dir = Path().joinpath('path', 'to', 'destination',
+    ... 'BOUT.inp')
+    >>> bout_paths = BoutPaths(project_path=project_path,
+    ...                        bout_inp_src_dir=bout_inp_src_dir,
+    ...                        bout_inp_dst_dir=bout_inp_dst_dir)
+
+    Obtain the parameters
+    >>> default_parameters = DefaultParameters(bout_paths)
+    >>> final_parameters = FinalParameters(default_parameters)
+    >>> final_parameters_dict = final_parameters.get_final_parameters()
+    >>> final_parameters_as_sql_types = \
+    ...     final_parameters.cast_parameters_to_sql_type(
+    ...     final_parameters_dict)
+
+    Create the metadata recorder object
+    >>> db_connection = DatabaseConnector('name')
+    >>> metadata_recorder = MetadataRecorder(db_connection,
+    ...                                      bout_paths,
+    ...                                      final_parameters)
+
+    Capture the data to the database
+    >>> metadata_recorder.capture_new_data_from_run(ProcessorSplit())
     """
 
     def __init__(self,
@@ -56,7 +95,7 @@ class MetadataRecorder:
         self.__database_reader = DatabaseReader(database_connector)
         self.__bout_paths = bout_paths
         self.__final_parameters = final_parameters
-        self.__make = MakeProject(self.__bout_paths.project_path)
+        self.__make = Make(self.__bout_paths.project_path)
 
     @property
     def database_reader(self):
@@ -129,8 +168,6 @@ class MetadataRecorder:
         # Update the parameters
         parameters_dict = self.__final_parameters.get_final_parameters()
 
-        # FIXME: You are here: Some elements contain serious amount
-        #  of whitespaces
         run_dict['parameters_id'] = \
             self._create_parameter_tables_entry(parameters_dict)
 

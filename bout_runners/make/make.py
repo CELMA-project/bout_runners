@@ -13,7 +13,7 @@ class MakeError(Exception):
     """Error class indicating that this is a Make error."""
 
 
-class MakeProject:
+class Make:
     """
     Class for making the project.
 
@@ -37,10 +37,10 @@ class MakeProject:
 
     Examples
     --------
-    >>> from bout_runners.make.make import MakeProject
+    >>> from bout_runners.make.make import Make
     ... from pathlib import Path
     ... path = Path('path', 'to', 'makefile_root_path')
-    ... make_obj = MakeProject(makefile_root_path=path)
+    ... make_obj = Make(makefile_root_path=path)
     ... make_obj.run_make(force=True)
     """
 

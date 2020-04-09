@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 from distutils.dir_util import copy_tree
 from distutils.dir_util import remove_tree
-from bout_runners.make.make import MakeProject
+from bout_runners.make.make import Make
 from bout_runners.parameters.default_parameters import DefaultParameters
 from bout_runners.parameters.final_parameters import FinalParameters
 from bout_runners.utils.paths import get_bout_path
@@ -86,7 +86,7 @@ def make_make_object(yield_bout_path):
 
     exec_file = tmp_path.joinpath('conduction')
 
-    make_obj = MakeProject(makefile_root_path=tmp_path)
+    make_obj = Make(makefile_root_path=tmp_path)
     make_obj.run_clean()
 
     yield make_obj, exec_file
@@ -117,7 +117,7 @@ def make_project(yield_conduction_path):
     # Setup
     project_path = yield_conduction_path
 
-    make_obj = MakeProject(makefile_root_path=project_path)
+    make_obj = Make(makefile_root_path=project_path)
     make_obj.run_make()
 
     yield project_path

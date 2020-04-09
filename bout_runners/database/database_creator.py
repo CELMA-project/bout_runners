@@ -42,9 +42,9 @@ class DatabaseCreator:
     >>> from pathlib import Path
     >>> from bout_runners.executor.bout_paths import BoutPaths
     >>> from bout_runners.parameters.default_parameters import \
-    ...      DefaultParameters
+    ...     DefaultParameters
     >>> from bout_runners.parameters.final_parameters import \
-    ...      FinalParameters
+    ...     FinalParameters
     >>> from bout_runners.database.database_connector import \
     ...     DatabaseConnector
 

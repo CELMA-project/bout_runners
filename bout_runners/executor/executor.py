@@ -1,22 +1,63 @@
 """Contains the executor class."""
 
 
-from bout_runners.make.make import MakeProject
+from bout_runners.make.make import Make
 from bout_runners.parameters.run_parameters import RunParameters
 
 
 class Executor:
-    """
+    r"""
     Executes the command for submitting a run.
 
-    FIXME: Add variables and attributes
+    Attributes
+    ----------
+    __bout_paths : BoutPaths
+        Getter and setter variable for project_path
+    __run_parameters : RunParameters
+        Object containing the run parameters
+    __make : Make
+        Object for making the project
+    __command : str
+        The terminal command for executing the run
+    submitter : AbstractSubmitter
+        Object containing the submitter
+    bout_paths : BoutPaths
+        Object containing the paths
+
+    Methods
+    -------
+    get_execute_command()
+        Return the execute command string
+    execute()
+        Execute a BOUT++ run
 
     Examples
     --------
-    FIXME: Update
-    >>> bout_paths = BoutPaths('path/to/project/root')
-    >>> runner = Executor(bout_paths)
-    >>> runner.execute()
+    Import the dependencies
+    >>> from pathlib import Path
+    >>> from bout_runners.executor.bout_paths import BoutPaths
+    >>> from bout_runners.submitter.local_submitter import \
+    ...     LocalSubmitter
+
+    Create the `bout_paths` object
+    >>> project_path = Path().joinpath('path', 'to', 'project')
+    >>> bout_inp_src_dir = Path().joinpath('path', 'to', 'source',
+    ... 'BOUT.inp')
+    >>> bout_inp_dst_dir = Path().joinpath('path', 'to', 'destination',
+    ... 'BOUT.inp')
+    >>> bout_paths = BoutPaths(project_path=project_path,
+    ...                        bout_inp_src_dir=bout_inp_src_dir,
+    ...                        bout_inp_dst_dir=bout_inp_dst_dir)
+
+    Create the executor object
+    >>> run_parameters = RunParameters({'global': {'nout': 0}})
+    >>> executor = Executor(
+    ...     bout_paths=bout_paths,
+    ...     submitter=LocalSubmitter(bout_paths.project_path),
+    ...     run_parameters=run_parameters)
+
+    Execute the run
+    >>> executor.execute()
     """
 
     def __init__(self,
@@ -30,16 +71,16 @@ class Executor:
         ----------
         bout_paths : BoutPaths
             Object containing the paths
-        run_parameters : RunParameters
-            Object containing the run parameters
         submitter : AbstractSubmitter
             Object containing the submitter
+        run_parameters : RunParameters
+            Object containing the run parameters
         """
         # Set member data
         self.submitter = submitter
         self.__bout_paths = bout_paths
         self.__run_parameters = run_parameters
-        self.__make = MakeProject(self.__bout_paths.project_path)
+        self.__make = Make(self.__bout_paths.project_path)
         self.__command = self.get_execute_command()
 
     @property

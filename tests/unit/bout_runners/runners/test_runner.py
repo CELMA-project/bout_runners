@@ -10,7 +10,6 @@ from bout_runners.submitter.local_submitter import LocalSubmitter
 from bout_runners.runner.bout_runner import BoutRunner
 
 
-# FIXME: Make status object which updates the status
 def test_bout_runner(yield_bout_path_conduction,
                      make_project,
                      make_test_schema,
@@ -37,12 +36,12 @@ def test_bout_runner(yield_bout_path_conduction,
     db_reader = DatabaseReader(db_connection)
     bout_paths = yield_bout_path_conduction('test_bout_runner')
     run_parameters = RunParameters({'global': {'nout': 0}})
+    default_parameters = DefaultParameters(bout_paths)
+    final_parameters = FinalParameters(default_parameters)
     executor = Executor(
         bout_paths=bout_paths,
         submitter=LocalSubmitter(bout_paths.project_path),
         run_parameters=run_parameters)
-    default_parameters = DefaultParameters(bout_paths)
-    final_parameters = FinalParameters(default_parameters)
 
     runner = BoutRunner(executor,
                         db_connection,

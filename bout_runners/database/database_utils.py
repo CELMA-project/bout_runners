@@ -9,8 +9,6 @@ from bout_runners.utils.paths import get_bout_path
 from bout_runners.submitter.local_submitter import LocalSubmitter
 
 
-# FIXME: Submitted time is different from start and end
-# FIXME: Should pid be used as well?
 def get_system_info_as_sql_type():
     """
     Return the SQL types of the system information.

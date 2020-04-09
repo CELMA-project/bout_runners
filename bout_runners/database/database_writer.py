@@ -5,7 +5,6 @@ import re
 import logging
 
 
-# FIXME: Not bloated, and working examples
 class DatabaseWriter:
     r"""
     Class for writing to the schema of the database.
@@ -30,11 +29,13 @@ class DatabaseWriter:
     >>> from pathlib import Path
     >>> from bout_runners.executor.bout_paths import BoutPaths
     >>> from bout_runners.parameters.default_parameters import \
-    ...      DefaultParameters
+    ...     DefaultParameters
     >>> from bout_runners.parameters.final_parameters import \
-    ...      FinalParameters
+    ...     FinalParameters
     >>> from bout_runners.database.database_connector import \
     ...     DatabaseConnector
+    >>> from bout_runners.database.database_creator import \
+    ...     DatabaseCreator
 
     Create the `bout_paths` object
     >>> project_path = Path().joinpath('path', 'to', 'project')
@@ -63,7 +64,7 @@ class DatabaseWriter:
     Write to the database
     >>> db_writer = DatabaseWriter(db_connection)
     >>> dummy_split_dict = {'number_of_processors': 1,
-    ...                     'nodes': 2,
+    ...                     'number_of_nodes': 2,
     ...                     'processors_per_node': 3}
     >>> db_writer.create_entry('split', dummy_split_dict)
     """

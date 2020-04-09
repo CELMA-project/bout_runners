@@ -35,7 +35,24 @@ class DefaultParameters:
 
     Examples
     --------
-    FIXME
+    Import dependencies
+    >>> from pathlib import Path
+    >>> from bout_runners.executor.bout_paths import BoutPaths
+
+    Create the `bout_paths` object
+    >>> project_path = Path().joinpath('path', 'to', 'project')
+    >>> bout_inp_src_dir = Path().joinpath('path', 'to', 'source',
+    ... 'BOUT.inp')
+    >>> bout_inp_dst_dir = Path().joinpath('path', 'to', 'destination',
+    ... 'BOUT.inp')
+    >>> bout_paths = BoutPaths(project_path=project_path,
+    ...                        bout_inp_src_dir=bout_inp_src_dir,
+    ...                        bout_inp_dst_dir=bout_inp_dst_dir)
+
+    Get the default parameters
+    >>> default_parameter = DefaultParameters(bout_paths=bout_paths)
+    >>> default_parameter.get_default_parameters()
+    {'global': {'append': False, 'async_send': False, ...}}
     """
 
     def __init__(self, bout_paths=None, settings_path=None):
@@ -122,6 +139,7 @@ class DefaultParameters:
            keyword
         4. The section `run` will be dropped due to bout_runners own
            `run` table
+        5. The string values will be stored using lowercase
         """
         # The settings file lacks a header for the global parameter
         # Therefore, we add add the header [global]
@@ -151,7 +169,8 @@ class DefaultParameters:
                 try:
                     val = ast.literal_eval(stripped_val)
                 except (SyntaxError, ValueError):
-                    val = stripped_val
+                    # Strip the whitespaces and cast to lowercase
+                    val = stripped_val.strip().lower()
 
                 default_parameters_dict[section][key] = val
 
