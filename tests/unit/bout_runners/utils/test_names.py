@@ -1,7 +1,6 @@
 """Contains unittests for the names module."""
 
 
-import shutil
 import pytest
 from bout_runners.utils.names import get_exec_name
 from bout_runners.utils.names import get_makefile_name

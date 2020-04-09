@@ -7,7 +7,7 @@ from bout_runners.parameters.run_parameters import RunParameters
 from bout_runners.parameters.default_parameters import DefaultParameters
 from bout_runners.parameters.final_parameters import FinalParameters
 from bout_runners.submitter.local_submitter import LocalSubmitter
-from bout_runners.runner.runner import BoutRunner
+from bout_runners.runner.bout_runner import BoutRunner
 
 
 # FIXME: Make status object which updates the status

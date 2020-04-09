@@ -95,7 +95,6 @@ class Executor:
         command : str
             The terminal command for executing the run
         """
-
         mpi_cmd = 'mpirun -np'
 
         # NOTE: No spaces if parameters are None

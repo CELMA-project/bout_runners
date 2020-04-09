@@ -22,7 +22,7 @@ class BoutRunner:
                  database_connector,
                  final_parameters):
         """
-        FIXME
+        Set the member data.
 
         Parameters
         ----------

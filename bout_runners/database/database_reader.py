@@ -1,8 +1,6 @@
 """Module containing the DatabaseReader class."""
 
 
-import contextlib
-import sqlite3
 import pandas as pd
 
 

@@ -5,8 +5,9 @@ import re
 import logging
 
 
+# FIXME: Not bloated, and working examples
 class DatabaseWriter:
-    """
+    r"""
     Class for writing to the schema of the database.
 
     Attributes
@@ -25,18 +26,41 @@ class DatabaseWriter:
 
     Examples
     --------
+    Import dependencies
     >>> from pathlib import Path
-    >>> from bout_runners.runner.runner import BoutRunner
+    >>> from bout_runners.executor.bout_paths import BoutPaths
+    >>> from bout_runners.parameters.default_parameters import \
+    ...      DefaultParameters
+    >>> from bout_runners.parameters.final_parameters import \
+    ...      FinalParameters
     >>> from bout_runners.database.database_connector import \
     ...     DatabaseConnector
-    >>> settings_path = Path().joinpath('path', 'to', 'BOUT.settings')
-    >>> run_parameters_dict = \
-    ...     BoutRunner.obtain_project_parameters(settings_path)
-    >>> parameters_as_sql_types = \
-    ...     BoutRunner.cast_parameters_to_sql_type(run_parameters_dict)
+
+    Create the `bout_paths` object
+    >>> project_path = Path().joinpath('path', 'to', 'project')
+    >>> bout_inp_src_dir = Path().joinpath('path', 'to', 'source',
+    ... 'BOUT.inp')
+    >>> bout_inp_dst_dir = Path().joinpath('path', 'to', 'destination',
+    ... 'BOUT.inp')
+    >>> bout_paths = BoutPaths(project_path=project_path,
+    ...                        bout_inp_src_dir=bout_inp_src_dir,
+    ...                        bout_inp_dst_dir=bout_inp_dst_dir)
+
+    Obtain the parameters
+    >>> default_parameters = DefaultParameters(bout_paths)
+    >>> final_parameters = FinalParameters(default_parameters)
+    >>> final_parameters_dict = final_parameters.get_final_parameters()
+    >>> final_parameters_as_sql_types = \
+    ...     final_parameters.cast_parameters_to_sql_type(
+    ...     final_parameters_dict)
+
+    Create the database
     >>> db_connection = DatabaseConnector('name')
     >>> db_creator = DatabaseCreator(db_connection)
-    >>> db_creator.create_all_schema_tables(parameters_as_sql_types)
+    >>> db_creator.create_all_schema_tables(
+    ...     final_parameters_as_sql_types)
+
+    Write to the database
     >>> db_writer = DatabaseWriter(db_connection)
     >>> dummy_split_dict = {'number_of_processors': 1,
     ...                     'nodes': 2,

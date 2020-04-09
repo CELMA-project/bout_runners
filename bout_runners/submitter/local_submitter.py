@@ -29,7 +29,7 @@ class LocalSubmitter(AbstractSubmitter):
 
     def __init__(self, path='', processor_split=ProcessorSplit()):
         """
-        Set the path from where the calls are made from
+        Set the path from where the calls are made from.
 
         Parameters
         ----------

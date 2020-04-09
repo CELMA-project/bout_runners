@@ -192,7 +192,6 @@ def get_default_parameters(get_test_data_path):
     default_parameters : DefaultParameters
         The DefaultParameters object
     """
-
     settings_path = get_test_data_path.joinpath('BOUT.settings')
     default_parameters = \
         DefaultParameters(settings_path=settings_path)
@@ -270,7 +269,7 @@ def write_to_split(make_test_schema):
     """
     def _write_split(db_name=None):
         """
-        writing to the split table.
+        Write to the split table.
 
         Parameters
         ----------

@@ -4,7 +4,6 @@
 import logging
 import platform
 import subprocess
-from pathlib import Path
 from bout_runners.utils.file_operations import get_modified_time
 from bout_runners.utils.paths import get_bout_path
 from bout_runners.submitter.local_submitter import LocalSubmitter

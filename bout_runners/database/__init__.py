@@ -1,1 +1,1 @@
-"""Package containing database modules."""
+"""Package containing the database modules."""

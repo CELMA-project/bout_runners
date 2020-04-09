@@ -20,7 +20,6 @@ def test_database_connector(make_test_database):
     make_test_database : function
         Function which returns the database connection
     """
-
     db_connection = make_test_database('connection_test')
     assert isinstance(db_connection.connection, sqlite3.Connection)
 
