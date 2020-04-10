@@ -87,7 +87,7 @@ class FinalParameters:
         -------
         final_parameters_dict : dict of str, dict
             Parameters on the form
-            >>> {'global':{'append': False, 'nout': 5},
+            >>> {'global':{'append': 'False', 'nout': 5},
             ...  'mesh':  {'nx': 4},
             ...  'section_in_BOUT_inp': {'some_variable': 'some_value'}}
         """
@@ -95,6 +95,17 @@ class FinalParameters:
             self.__default_parameters.get_default_parameters()
         run_parameters_dict = self.__run_parameters.run_parameters_dict
         final_parameters_dict.update(run_parameters_dict)
+
+        # Cast True to 1 and False to 0 as SQLite has no support for
+        # bool
+        keys = final_parameters_dict.keys()
+        for key in keys:
+            val = final_parameters_dict[key]
+            if isinstance(val, bool):
+                if val:
+                    final_parameters_dict[key] = 1
+                else:
+                    final_parameters_dict[key] = 0
 
         return final_parameters_dict
 
