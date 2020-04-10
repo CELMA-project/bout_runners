@@ -98,7 +98,7 @@ class DatabaseReader:
         """
         self.database_connector = database_connector
 
-    def query(self, query_str):
+    def query(self, query_str) -> pd.DataFrame:
         """
         Make a query to the database.
 
@@ -109,7 +109,7 @@ class DatabaseReader:
 
         Returns
         -------
-        table : DataFrame
+        table : pd.DataFrame
             The result of a query as a DataFrame
         """
         table = pd.read_sql_query(query_str,
