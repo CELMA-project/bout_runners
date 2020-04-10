@@ -113,12 +113,6 @@ class MetadataRecorder:
         """
         return self.__database_reader
 
-    @database_reader.setter
-    def database_reader(self, _):
-        msg = (f'The database_reader is read only, and is '
-               f'set through the constructor')
-        raise AttributeError(msg)
-
     @property
     def database_writer(self):
         """
@@ -134,12 +128,6 @@ class MetadataRecorder:
         The database_writer is read only
         """
         return self.__database_writer
-
-    @database_writer.setter
-    def database_writer(self, _):
-        msg = (f'The database_writer is read only, and is '
-               f'set through the constructor')
-        raise AttributeError(msg)
 
     def capture_new_data_from_run(self, processor_split):
         """

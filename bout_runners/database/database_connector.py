@@ -81,13 +81,6 @@ class DatabaseConnector:
         """
         return self.__database_path
 
-    @database_path.setter
-    def database_path(self, _):
-        msg = (f'The database_path is read only, and is '
-               f'set through the constructor (currently in use: '
-               f'{self.database_path})')
-        raise AttributeError(msg)
-
     @property
     def connection(self):
         """
@@ -104,12 +97,6 @@ class DatabaseConnector:
         parameter outside the constructor is disabled
         """
         return self.__connection
-
-    @connection.setter
-    def connection(self, _):
-        msg = ('The connection is read only, and is set through the '
-               'constructor')
-        raise AttributeError(msg)
 
     @staticmethod
     def create_db_path(name, database_root_path):

@@ -99,12 +99,6 @@ class Executor:
         """
         return self.__bout_paths
 
-    @bout_paths.setter
-    def bout_paths(self, _):
-        msg = (f'The bout_paths is read only, and is '
-               f'set through the constructor')
-        raise AttributeError(msg)
-
     @property
     def run_parameters(self):
         """
@@ -120,12 +114,6 @@ class Executor:
         The run_parameters is read only
         """
         return self.__run_parameters
-
-    @run_parameters.setter
-    def run_parameters(self, _):
-        msg = (f'The run_parameters is read only, and is '
-               f'set through the constructor')
-        raise AttributeError(msg)
 
     def get_execute_command(self):
         """
