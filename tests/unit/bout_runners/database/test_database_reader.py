@@ -31,7 +31,7 @@ def test_database_reader(make_test_database, write_to_split):
 
     # Check that we can make a query
     table = empty_db_reader.query('SELECT 1+1 AS col')
-    assert table.loc[0, 'col'] == 2
+    assert table.loc[0, 'col'] == 2  # pylint: disable=no-member
 
     # Check that the tables has not been created in an empty db
     assert not empty_db_reader.check_tables_created()

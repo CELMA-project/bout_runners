@@ -98,7 +98,7 @@ class DatabaseReader:
         """
         self.database_connector = database_connector
 
-    def query(self, query_str) -> pd.DataFrame:
+    def query(self, query_str):
         """
         Make a query to the database.
 
@@ -109,7 +109,7 @@ class DatabaseReader:
 
         Returns
         -------
-        table : pd.DataFrame
+        table : DataFrame
             The result of a query as a DataFrame
         """
         table = pd.read_sql_query(query_str,
@@ -126,6 +126,7 @@ class DatabaseReader:
             The latest row inserted row id
         """
         # https://stackoverflow.com/questions/3442033/sqlite-how-to-get-value-of-auto-increment-primary-key-after-insert-other-than
+        # pylint: disable=no-member
         row_id = \
             self.query('SELECT last_insert_rowid() AS id').loc[0, 'id']
         return row_id
@@ -166,6 +167,7 @@ class DatabaseReader:
         table = self.query(query_str)
         # NOTE: We explicitly cast to int, as sqlite3 will cast
         #       np.int64 to bytes
+        # pylint: disable=no-member
         row_id = None if table.empty else int(table.loc[0, 'id'])
 
         return row_id
