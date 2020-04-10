@@ -98,14 +98,16 @@ class FinalParameters:
 
         # Cast True to 1 and False to 0 as SQLite has no support for
         # bool
-        keys = final_parameters_dict.keys()
-        for key in keys:
-            val = final_parameters_dict[key]
-            if isinstance(val, bool):
-                if val:
-                    final_parameters_dict[key] = 1
-                else:
-                    final_parameters_dict[key] = 0
+        sections = final_parameters_dict.keys()
+        for section in sections:
+            parameters = final_parameters_dict[section].keys()
+            for parameter in parameters:
+                val = final_parameters_dict[section][parameter]
+                if isinstance(val, bool):
+                    if val:
+                        final_parameters_dict[section][parameter] = 1
+                    else:
+                        final_parameters_dict[section][parameter] = 0
 
         return final_parameters_dict
 
