@@ -14,9 +14,9 @@ class DatabaseConnector:
     Attributes
     ----------
     __database_path : None or Path
-        Getter and setter variable for database_path
+        Getter variable for database_path
     __connection : Connection
-        Getter and setter variable for connection
+        Getter variable for connection
     database_path : Path
         Path to database
     connection : Connection

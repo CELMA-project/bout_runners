@@ -12,6 +12,11 @@ class AbstractSubmitter(ABC):
     def submit_command(self, command):
         """Submit a command."""
 
+    @property
+    @abstractmethod
+    def pid(self):
+        """Return the process id."""
+
     @abstractmethod
     def _raise_submit_error(self, result):
         """Raise error if submission failed."""

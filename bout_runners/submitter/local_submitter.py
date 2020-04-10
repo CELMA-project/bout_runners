@@ -14,10 +14,14 @@ class LocalSubmitter(AbstractSubmitter):
 
     Attributes
     ----------
+    __pid : None or int
+        Getter variable for pid
     path : Path or str
         Directory to run the command from
     processor_split : ProcessorSplit
         Object containing the processor split
+    pid : None or int
+        The processor id
 
     Methods
     -------
@@ -40,6 +44,12 @@ class LocalSubmitter(AbstractSubmitter):
         """
         self.__path = Path(path).absolute()
         self.processor_split = processor_split
+        self.__pid = None
+
+    @property
+    def pid(self):
+        """Return the process id."""
+        return self.__pid
 
     def submit_command(self, command):
         """
@@ -56,11 +66,20 @@ class LocalSubmitter(AbstractSubmitter):
             The result of the subprocess call
         """
         logging.info('Executing %s in %s', command, self.__path)
-        result = subprocess.run(command.split(),
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE,
-                                cwd=self.__path,
-                                check=False)
+        # This is a simplified subprocess.run(), with the exception
+        # that we capture the process id
+        process = subprocess.Popen(command.split(),
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE,
+                                   cwd=self.__path)
+        std_out, std_err = process.communicate()
+        return_code = process.poll()
+        result = \
+            subprocess.CompletedProcess(process.args,
+                                        return_code,
+                                        std_out,
+                                        std_err)
+        self.__pid = process.pid
 
         if result.returncode != 0:
             self._raise_submit_error(result)

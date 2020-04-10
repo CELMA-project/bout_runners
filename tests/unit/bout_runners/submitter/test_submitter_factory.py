@@ -2,14 +2,14 @@
 
 
 import pytest
-from bout_runners.submitter.submitter_factory import SubmitterFactory
-from bout_runners.submitter.submitter_factory import LocalSubmitter
+from bout_runners.submitter.submitter_factory import get_submitter
+from bout_runners.submitter.local_submitter import LocalSubmitter
 
 
 def test_submitter_factory():
     """Test that the SubmitterFactory returns Submitter objects."""
-    submitter = SubmitterFactory.get_submitter('local')
+    submitter = get_submitter('local')
     assert isinstance(submitter, LocalSubmitter)
 
     with pytest.raises(NotImplementedError):
-        SubmitterFactory.get_submitter('not a class')
+        get_submitter('not a class')

@@ -18,9 +18,9 @@ class MetadataRecorder:
     Attributes
     ----------
     __database_writer : DatabaseWriter
-        Getter and setter variable for database_writer
+        Getter variable for database_writer
     __database_reader : DatabaseReader
-        Getter and setter variable for database_reader
+        Getter variable for database_reader
     database_writer : DatabaseWriter
         Object which writes to the database
     database_reader : DatabaseReader

@@ -11,6 +11,7 @@ def test_local_submitter():
     submitter = LocalSubmitter()
     result = submitter.submit_command('ls')
     assert isinstance(result, subprocess.CompletedProcess)
+    assert isinstance(submitter.pid, int)
 
     with pytest.raises(FileNotFoundError):
         submitter.submit_command('not a real command')

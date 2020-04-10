@@ -12,7 +12,7 @@ class Executor:
     Attributes
     ----------
     __bout_paths : BoutPaths
-        Getter and setter variable for project_path
+        Getter variable for project_path
     __run_parameters : RunParameters
         Object containing the run parameters
     __make : Make

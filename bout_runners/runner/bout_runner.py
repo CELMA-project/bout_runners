@@ -95,7 +95,7 @@ class BoutRunner:
                              executor.bout_paths,
                              self.__final_parameters)
 
-    def _create_schema(self):
+    def create_schema(self):
         """Create the schema."""
         final_parameters_dict = \
             self.__final_parameters.get_final_parameters()
@@ -113,7 +113,7 @@ class BoutRunner:
                          '%s',
                          self.__metadata_recorder.database_reader.
                          database_connector.database_path)
-            self._create_schema()
+            self.create_schema()
 
         self.__metadata_recorder.capture_new_data_from_run(
             self.__executor.submitter.processor_split)
