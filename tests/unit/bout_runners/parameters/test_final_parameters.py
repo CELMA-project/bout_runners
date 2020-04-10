@@ -20,7 +20,7 @@ def test_final_parameters(get_default_parameters):
 
     final_parameters_dict = final_parameters.get_final_parameters()
 
-    assert final_parameters_dict['global']['timestep'] is False
+    assert final_parameters_dict['global']['timestep'] == 0
 
 
 def test_cast_parameters_to_sql_type(get_default_parameters):
