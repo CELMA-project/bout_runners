@@ -1,60 +1,6 @@
 """Contains unittests for make."""
 
 
-from distutils.dir_util import copy_tree
-from distutils.dir_util import remove_tree
-import pytest
-from bout_runners.make.make import MakeProject
-
-
-@pytest.fixture(scope='function', name='make_make_object')
-def fixture_make_make_object(get_bout_path):
-    """
-    Set up and tear down the make-object.
-
-    In order not to make collisions with the global fixture which
-    makes the `conduction` program, this fixture copies the content
-    of the `conduction` directory to a `tmp` directory, which is
-    removed in the teardown.
-
-    This fixture calls make_obj.run_clean() before the yield statement.
-
-    Parameters
-    ----------
-    get_bout_path : Path
-        Path to the BOUT++ repository. See the get_bout_path fixture
-        for more details
-
-    Yields
-    ------
-    make_obj : MakeProject
-        The object to call make and make clean from
-    exec_file : Path
-        The path to the executable
-
-    See Also
-    --------
-    tests.bout_runners.conftest.get_bout_path : Fixture which returns
-    the BOUT++ path
-    """
-    # Setup
-    bout_path = get_bout_path
-    project_path = bout_path.joinpath('examples', 'conduction')
-    tmp_path = project_path.parent.joinpath('tmp_make')
-
-    copy_tree(str(project_path), str(tmp_path))
-
-    exec_file = tmp_path.joinpath('conduction')
-
-    make_obj = MakeProject(makefile_root_path=tmp_path)
-    make_obj.run_clean()
-
-    yield make_obj, exec_file
-
-    # Teardown
-    remove_tree(str(tmp_path))
-
-
 def test_make_project(make_make_object):
     """
     Test that the MakeProject class is able to make conduction.

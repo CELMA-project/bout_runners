@@ -4,15 +4,16 @@
 import logging
 from pathlib import Path
 from bout_runners.utils.file_operations import get_caller_dir
-from bout_runners.utils.subprocesses_functions import run_subprocess
 from bout_runners.utils.names import get_exec_name
+from bout_runners.utils.names import get_makefile_path
+from bout_runners.submitter.local_submitter import LocalSubmitter
 
 
 class MakeError(Exception):
     """Error class indicating that this is a Make error."""
 
 
-class MakeProject:
+class Make:
     """
     Class for making the project.
 
@@ -22,6 +23,8 @@ class MakeProject:
         The path to the Makefile
     makefile_name : str
         The name of the Makefile
+    makefile_path : Path
+        Path to the makefile
     exec_name : str
         The name of the executable
 
@@ -34,10 +37,10 @@ class MakeProject:
 
     Examples
     --------
-    >>> from bout_runners.make.make import MakeProject
+    >>> from bout_runners.make.make import Make
     ... from pathlib import Path
     ... path = Path('path', 'to', 'makefile_root_path')
-    ... make_obj = MakeProject(makefile_root_path=path)
+    ... make_obj = Make(makefile_root_path=path)
     ... make_obj.run_make(force=True)
     """
 
@@ -65,9 +68,10 @@ class MakeProject:
 
         self.makefile_name = makefile_name
 
-        # Will be filled
-        self.exec_name = get_exec_name(self.makefile_root_path,
-                                       self.makefile_name)
+        self.makefile_path = get_makefile_path(self.makefile_root_path,
+                                               self.makefile_name)
+        self.exec_name = get_exec_name(self.makefile_path)
+        self.submitter = LocalSubmitter(self.makefile_root_path)
 
     def run_make(self, force=False):
         """
@@ -96,7 +100,7 @@ class MakeProject:
 
             logging.info('Making the program')
             command = f'{make_str}'
-            run_subprocess(command, self.makefile_root_path)
+            self.submitter.submit_command(command)
 
     def run_clean(self):
         """Run make clean."""
@@ -105,4 +109,4 @@ class MakeProject:
 
         logging.info('Running make clean')
         command = f'{make_str} clean'
-        run_subprocess(command, self.makefile_root_path)
+        self.submitter.submit_command(command)

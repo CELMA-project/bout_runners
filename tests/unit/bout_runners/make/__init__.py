@@ -1,1 +1,1 @@
-"""Package containing the unit make tests for bout_runners."""
+"""Package containing the unit test for the make package."""
