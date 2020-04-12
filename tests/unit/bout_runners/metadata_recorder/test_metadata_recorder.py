@@ -81,18 +81,9 @@ def test_metadata_recorder(yield_bout_path_conduction,
     run_id = \
         metadata_recorder.capture_new_data_from_run(
             ProcessorSplit(number_of_nodes=2))
-    # Assert that a new entry has been made
+    # Assert that a new entry has been made (the number of rows in
+    # the tables will be counted when checking the forceful entry)
     assert run_id is None
-
-    number_of_rows_dict = \
-        yield_number_of_rows_for_all_tables(
-            metadata_recorder.database_reader)
-    tables_with_2 = dict()
-    tables_with_2['split'] = number_of_rows_dict.pop('split')
-    tables_with_2['run'] = number_of_rows_dict.pop('run')
-    # Assert that all the values are 2
-    assert sum(tables_with_2.values()) == \
-        2*len(tables_with_2.keys())
 
     # Forcefully make an entry
     run_id = \
@@ -100,7 +91,6 @@ def test_metadata_recorder(yield_bout_path_conduction,
             ProcessorSplit(number_of_nodes=2), force=True)
     # Assert that a new entry has been made
     assert run_id == 2
-
     number_of_rows_dict = \
         yield_number_of_rows_for_all_tables(
             metadata_recorder.database_reader)
