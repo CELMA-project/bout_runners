@@ -54,9 +54,9 @@ def test_metadata_recorder(yield_bout_path_conduction,
                                          final_parameters)
 
     # Assert that this is a new entry
-    new_entry = \
+    run_id = \
         metadata_recorder.capture_new_data_from_run(ProcessorSplit())
-    assert new_entry is True
+    assert run_id is None
     # Assert that all the values are 1
     number_of_rows_dict = \
         yield_number_of_rows_for_all_tables(
@@ -65,9 +65,9 @@ def test_metadata_recorder(yield_bout_path_conduction,
         len(number_of_rows_dict.keys())
 
     # Assert that this is not a new entry
-    new_entry = \
+    run_id = \
         metadata_recorder.capture_new_data_from_run(ProcessorSplit())
-    assert new_entry is False
+    assert run_id == 1
     # Assert that all the values are 1
     number_of_rows_dict = \
         yield_number_of_rows_for_all_tables(
@@ -76,11 +76,11 @@ def test_metadata_recorder(yield_bout_path_conduction,
         len(number_of_rows_dict.keys())
 
     # Create a new entry in the split table
-    new_entry = \
+    run_id = \
         metadata_recorder.capture_new_data_from_run(
             ProcessorSplit(number_of_nodes=2))
     # Assert that a new entry has been made
-    assert new_entry is True
+    assert run_id is None
 
     number_of_rows_dict = \
         yield_number_of_rows_for_all_tables(

@@ -73,6 +73,7 @@ class MetadataRecorder:
 
     Capture the data to the database
     >>> metadata_recorder.capture_new_data_from_run(ProcessorSplit())
+    None
     """
 
     def __init__(self,
@@ -145,11 +146,10 @@ class MetadataRecorder:
 
         Returns
         -------
-        new_entry : bool
-            Returns True if this a new entry is made, False if not
+        run_id : None or int
+            If no previous run with the same configuration has been
+            executed, this will return None, else the run_id is returned
         """
-        new_entry = False
-
         # Initiate the run_dict (will be filled with the ids)
         run_dict = {'name': self.__bout_paths.bout_inp_dst_dir.name}
 
@@ -199,9 +199,8 @@ class MetadataRecorder:
             run_dict['latest_status'] = 'submitted'
             run_dict['submitted_time'] = datetime.now().isoformat()
             _ = self.create_entry('run', run_dict)
-            new_entry = True
 
-        return new_entry
+        return run_id
 
     def create_entry(self, table_name, entries_dict):
         """

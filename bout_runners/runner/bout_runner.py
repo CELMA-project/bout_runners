@@ -115,7 +115,12 @@ class BoutRunner:
                          database_connector.database_path)
             self.create_schema()
 
-        self.__metadata_recorder.capture_new_data_from_run(
+        run_id = self.__metadata_recorder.capture_new_data_from_run(
             self.__executor.submitter.processor_split)
 
-        self.__executor.execute()
+        if run_id is None:
+            self.__executor.execute()
+        else:
+            logging.warning('Run with the same configuration has been '
+                            'executed before, see run with run_id %d',
+                            run_id)

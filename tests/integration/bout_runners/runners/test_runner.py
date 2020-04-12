@@ -62,3 +62,11 @@ def test_bout_runner(make_project,
         yield_number_of_rows_for_all_tables(db_reader)
     assert sum(number_of_rows_dict.values()) == \
         len(number_of_rows_dict.keys())
+
+    # Check that the run will not be executed again
+    runner.run()
+    # Assert that all the values are 1
+    number_of_rows_dict = \
+        yield_number_of_rows_for_all_tables(db_reader)
+    assert sum(number_of_rows_dict.values()) == \
+        len(number_of_rows_dict.keys())
