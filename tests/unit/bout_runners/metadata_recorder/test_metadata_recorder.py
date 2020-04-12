@@ -24,6 +24,8 @@ def test_metadata_recorder(yield_bout_path_conduction,
     6. Check that a new entry is created
     7. See that the `split` table and the `run` table have two rows,
        whereas the rest have one
+    8. Check that it is possible to forcefully make an entry to the
+       run table
 
     Parameters
     ----------
@@ -54,9 +56,9 @@ def test_metadata_recorder(yield_bout_path_conduction,
                                          final_parameters)
 
     # Assert that this is a new entry
-    new_entry = \
+    run_id = \
         metadata_recorder.capture_new_data_from_run(ProcessorSplit())
-    assert new_entry is True
+    assert run_id is None
     # Assert that all the values are 1
     number_of_rows_dict = \
         yield_number_of_rows_for_all_tables(
@@ -65,9 +67,9 @@ def test_metadata_recorder(yield_bout_path_conduction,
         len(number_of_rows_dict.keys())
 
     # Assert that this is not a new entry
-    new_entry = \
+    run_id = \
         metadata_recorder.capture_new_data_from_run(ProcessorSplit())
-    assert new_entry is False
+    assert run_id == 1
     # Assert that all the values are 1
     number_of_rows_dict = \
         yield_number_of_rows_for_all_tables(
@@ -76,21 +78,32 @@ def test_metadata_recorder(yield_bout_path_conduction,
         len(number_of_rows_dict.keys())
 
     # Create a new entry in the split table
-    new_entry = \
+    run_id = \
         metadata_recorder.capture_new_data_from_run(
             ProcessorSplit(number_of_nodes=2))
-    # Assert that a new entry has been made
-    assert new_entry is True
+    # Assert that a new entry has been made (the number of rows in
+    # the tables will be counted when checking the forceful entry)
+    assert run_id is None
 
+    # Forcefully make an entry
+    run_id = \
+        metadata_recorder.capture_new_data_from_run(
+            ProcessorSplit(number_of_nodes=2), force=True)
+    # Assert that a new entry has been made
+    assert run_id == 2
     number_of_rows_dict = \
         yield_number_of_rows_for_all_tables(
             metadata_recorder.database_reader)
     tables_with_2 = dict()
     tables_with_2['split'] = number_of_rows_dict.pop('split')
-    tables_with_2['run'] = number_of_rows_dict.pop('run')
+    tables_with_3 = dict()
+    tables_with_3['run'] = number_of_rows_dict.pop('run')
     # Assert that all the values are 1
     assert sum(number_of_rows_dict.values()) == \
         len(number_of_rows_dict.keys())
     # Assert that all the values are 2
     assert sum(tables_with_2.values()) == \
         2*len(tables_with_2.keys())
+    # Assert that all the values are 3
+    assert sum(tables_with_3.values()) == \
+        3*len(tables_with_3.keys())

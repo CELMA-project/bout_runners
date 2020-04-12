@@ -13,17 +13,21 @@ class BoutRunner:
 
     Attributes
     ----------
-    self.__bout_paths : BoutPaths
-        Object for the BOUT++ paths
-    self.__settings_path : None or Path
-        Path to the BOUT.settings file
+    self.__executor : Executor
+        Object used to execute the run
+    self.__database_creator : DatabaseCreator
+        Object used to create the database
+    self.__final_parameters : FinalParameters
+        Object containing the parameters to use
+    self.__metadata_recorder : MetadataRecorder
+        Object used to record the metadata about a run
 
     Methods
     -------
-    run_parameters_run()
-        Execute a run to obtain the default parameters.
-    get_default_parameters()
-        Return the default parameters from the settings file.
+    create_schema()
+        Create the schema
+    run(force)
+        Execute the run
 
     Examples
     --------
@@ -55,7 +59,8 @@ class BoutRunner:
     Create the input objects
     >>> run_parameters = RunParameters({'global': {'nout': 0}})
     >>> default_parameters = DefaultParameters(bout_paths)
-    >>> final_parameters = FinalParameters(default_parameters)
+    >>> final_parameters = FinalParameters(default_parameters,
+    ...                                    run_parameters)
     >>> executor = Executor(
     ...     bout_paths=bout_paths,
     ...     submitter=LocalSubmitter(bout_paths.project_path),
@@ -81,7 +86,7 @@ class BoutRunner:
         executor : Executor
             Object executing the run
         database_connector : DatabaseConnector
-            The connection to the databas
+            The connection to the database
         final_parameters : FinalParameters
             The object containing the parameters which are going to
             be used in the run
@@ -105,8 +110,16 @@ class BoutRunner:
         self.__database_creator.create_all_schema_tables(
             final_parameters_as_sql_types)
 
-    def run(self):
-        """Perform the run and capture data."""
+    def run(self, force=False):
+        """
+        Perform the run and capture data.
+
+        Parameters
+        ----------
+        force : bool
+            Execute the run even if has been performed with the same
+            parameters
+        """
         if not self.__metadata_recorder.database_reader.\
                 check_tables_created():
             logging.info('Creating schema as no tables were found in '
@@ -115,7 +128,16 @@ class BoutRunner:
                          database_connector.database_path)
             self.create_schema()
 
-        self.__metadata_recorder.capture_new_data_from_run(
-            self.__executor.submitter.processor_split)
+        run_id = self.__metadata_recorder.capture_new_data_from_run(
+            self.__executor.submitter.processor_split, force)
 
-        self.__executor.execute()
+        if run_id is None:
+            logging.info('Executing the run')
+            self.__executor.execute()
+        else:
+            logging.warning('Run with the same configuration has been '
+                            'executed before, see run with run_id %d',
+                            run_id)
+            if force:
+                logging.info('Executing the run as force==True')
+                self.__executor.execute()

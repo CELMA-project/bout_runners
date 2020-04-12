@@ -17,6 +17,12 @@ def test_bout_runner(make_project,
     """
     Test that the BoutRunner can execute a run.
 
+    This test will test that:
+    1. We can execute a run
+    2. The metadata is properly stored
+    3. We cannot execute the run again...
+    4. ...unless we set force=True
+
     Parameters
     ----------
     make_project : Path
@@ -30,16 +36,16 @@ def test_bout_runner(make_project,
     project_path = make_project
 
     # Create the `bout_paths` object
-    bout_inp_src_dir = project_path.joinpath('data')
-    bout_inp_dst_dir = project_path.joinpath(name)
-    bout_paths = BoutPaths(project_path=project_path,
-                           bout_inp_src_dir=bout_inp_src_dir,
-                           bout_inp_dst_dir=bout_inp_dst_dir)
+    bout_paths = \
+        BoutPaths(project_path=project_path,
+                  bout_inp_src_dir=project_path.joinpath('data'),
+                  bout_inp_dst_dir=project_path.joinpath(name))
 
     # Create the input objects
     run_parameters = RunParameters({'global': {'nout': 0}})
     default_parameters = DefaultParameters(bout_paths)
-    final_parameters = FinalParameters(default_parameters)
+    final_parameters = FinalParameters(default_parameters,
+                                       run_parameters)
     executor = Executor(
         bout_paths=bout_paths,
         submitter=LocalSubmitter(bout_paths.project_path),
@@ -62,3 +68,24 @@ def test_bout_runner(make_project,
         yield_number_of_rows_for_all_tables(db_reader)
     assert sum(number_of_rows_dict.values()) == \
         len(number_of_rows_dict.keys())
+
+    # Check that the run will not be executed again
+    runner.run()
+    # Assert that all the values are 1
+    number_of_rows_dict = \
+        yield_number_of_rows_for_all_tables(db_reader)
+    assert sum(number_of_rows_dict.values()) == \
+        len(number_of_rows_dict.keys())
+
+    # Check that force overrides the behaviour
+    runner.run(force=True)
+    number_of_rows_dict = \
+        yield_number_of_rows_for_all_tables(db_reader)
+    tables_with_2 = dict()
+    tables_with_2['run'] = number_of_rows_dict.pop('run')
+    # Assert that all the values are 1
+    assert sum(number_of_rows_dict.values()) == \
+        len(number_of_rows_dict.keys())
+    # Assert that all the values are 2
+    assert sum(tables_with_2.values()) == \
+        2*len(tables_with_2.keys())
