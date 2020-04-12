@@ -130,7 +130,7 @@ class MetadataRecorder:
         """
         return self.__database_writer
 
-    def capture_new_data_from_run(self, processor_split):
+    def capture_new_data_from_run(self, processor_split, force=False):
         """
         Capture new data from a run.
 
@@ -143,6 +143,11 @@ class MetadataRecorder:
         ----------
         processor_split : ProcessorSplit
             The processor split object
+        force : bool
+            Store entry to the run table even if a entry with the
+            same parameter exists
+            This will typically be used if the bout_runners is
+            forcefully executing a run
 
         Returns
         -------
@@ -195,7 +200,7 @@ class MetadataRecorder:
 
         # Update the run
         run_id = self.__database_reader.get_entry_id('run', run_dict)
-        if run_id is None:
+        if force or run_id is None:
             run_dict['latest_status'] = 'submitted'
             run_dict['submitted_time'] = datetime.now().isoformat()
             _ = self.create_entry('run', run_dict)
