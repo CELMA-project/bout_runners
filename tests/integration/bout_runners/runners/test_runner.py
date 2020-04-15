@@ -1,6 +1,8 @@
 """Contains integration test for the runner."""
 
-
+import os
+import contextlib
+from pathlib import Path
 from bout_runners.executor.bout_paths import BoutPaths
 from bout_runners.executor.executor import Executor
 from bout_runners.database.database_connector import DatabaseConnector
@@ -12,8 +14,55 @@ from bout_runners.submitter.local_submitter import LocalSubmitter
 from bout_runners.runner.bout_runner import BoutRunner
 
 
-def test_bout_runner(make_project,
-                     yield_number_of_rows_for_all_tables):
+@contextlib.contextmanager
+def change_directory(new_path):
+    """
+    Change working directory and return to previous directory on exit.
+
+    Parameters
+    ----------
+    new_path : Path
+        Path to change to
+
+    Yields
+    ------
+    None
+
+    References
+    ----------
+    [1] https://stackoverflow.com/a/42441759/2786884
+    [2] https://stackoverflow.com/a/13197763/2786884
+    """
+    previous_path = Path.cwd().absolute()
+    os.chdir(str(new_path))
+    try:
+        yield
+    finally:
+        os.chdir(str(previous_path))
+
+
+def test_bout_runners_from_directory(make_project):
+    """
+    Test that the minimal BoutRunners setup works.
+
+    Parameters
+    ----------
+    make_project : Path
+        The path to the conduction example
+    """
+    # Make project to save time
+    # FIXME:
+    # project_path = make_project
+    project_path = Path('/root/BOUT-dev/examples/conduction')
+    with change_directory(project_path):
+        bout_paths = BoutPaths()
+        # FIXME: We are striving for this one-liner
+        # BoutRunner().run()
+    a=1
+
+
+def test_full_bout_runner(make_project,
+                          yield_number_of_rows_for_all_tables):
     """
     Test that the BoutRunner can execute a run.
 
