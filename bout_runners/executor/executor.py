@@ -3,6 +3,8 @@
 
 from bout_runners.make.make import Make
 from bout_runners.parameters.run_parameters import RunParameters
+from bout_runners.submitter.local_submitter import LocalSubmitter
+from bout_runners.executor.bout_paths import BoutPaths
 
 
 class Executor:
@@ -33,6 +35,16 @@ class Executor:
 
     Examples
     --------
+    The easiest way to use the Executor is to run a script from the
+    root directory of the project (i.e. where the `Makefile` and
+    `data` directory are normally situated. The script can simply call
+    >>> Executor().execute()
+
+    and `Executor` takes care of the rest.
+
+    A more elaborate example where all the dependency objects are
+    built manually:
+
     Import the dependencies
     >>> from pathlib import Path
     >>> from bout_runners.executor.bout_paths import BoutPaths
@@ -61,24 +73,29 @@ class Executor:
     """
 
     def __init__(self,
-                 bout_paths,
-                 submitter,
+                 bout_paths=None,
+                 submitter=None,
                  run_parameters=RunParameters()):
         """
         Set the input parameters.
 
         Parameters
         ----------
-        bout_paths : BoutPaths
+        bout_paths : BoutPaths or None
             Object containing the paths
+            If None, default BoutPaths values will be used
         submitter : AbstractSubmitter
             Object containing the submitter
         run_parameters : RunParameters
             Object containing the run parameters
         """
         # Set member data
-        self.submitter = submitter
-        self.__bout_paths = bout_paths
+        # NOTE: We are not setting the default as a keyword argument
+        #       as this would mess up the paths
+        self.submitter = \
+            submitter if submitter is not None else LocalSubmitter()
+        self.__bout_paths = \
+            bout_paths if bout_paths is not None else BoutPaths()
         self.__run_parameters = run_parameters
         self.__make = Make(self.__bout_paths.project_path)
         self.__command = self.get_execute_command()

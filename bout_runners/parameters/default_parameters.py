@@ -35,6 +35,15 @@ class DefaultParameters:
 
     Examples
     --------
+    The easiest way to use DefaultParameters is to run a script from the
+    root directory of the project (i.e. where the `Makefile` and
+    `data` directory are normally situated. The script can simply call
+    >>> DefaultParameters().get_default_parameters()
+    {'global': {'append': False, 'async_send': False, ...}}
+
+    A more elaborate example where all the dependency objects are
+    built manually:
+
     Import dependencies
     >>> from pathlib import Path
     >>> from bout_runners.executor.bout_paths import BoutPaths
@@ -73,7 +82,7 @@ class DefaultParameters:
 
         Parameters
         ----------
-        bout_paths : BoutPaths
+        bout_paths : BoutPaths or None
             Object containing the paths of the project
             Will only be used in the `run_parameters_run` call if the
             `settings_path` is not valid
@@ -102,10 +111,11 @@ class DefaultParameters:
         bout_paths : BoutPaths
             Object containing the paths of the project
         """
-        bout_paths = BoutPaths(
-            project_path=bout_paths.project_path,
-            bout_inp_src_dir=bout_paths.bout_inp_src_dir,
-            bout_inp_dst_dir='settings_run')
+        if bout_paths is None:
+            bout_paths = BoutPaths(bout_inp_dst_dir='settings_run')
+        else:
+            bout_paths.bout_inp_dst_dir = 'settings_run'
+
         run_parameters = RunParameters({'global': {'nout': 0}})
         executor = Executor(
             bout_paths=bout_paths,
