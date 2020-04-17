@@ -6,10 +6,11 @@ import subprocess
 from pathlib import Path
 from bout_runners.submitter.abstract_submitter import AbstractSubmitter
 from bout_runners.submitter.processor_split import ProcessorSplit
+from bout_runners.utils.file_operations import get_caller_dir
 
 
 class LocalSubmitter(AbstractSubmitter):
-    """
+    r"""
     Submits a command.
 
     Attributes
@@ -29,20 +30,34 @@ class LocalSubmitter(AbstractSubmitter):
         Run a subprocess
     _raise_submit_error(self, result):
         Raise and error from the subprocess in a clean way.
+
+    Examples
+    --------
+    >>> LocalSubmitter().submit_command('ls')
+    CompletedProcess(args=['ls'], returncode=0, stdout=b'__init__.py\n
+    __pycache__\n
+    test_local_submitter.py\n
+    test_processor_split.py\n
+    test_submitter_factory.py\n', stderr=b'')
     """
 
-    def __init__(self, path='', processor_split=ProcessorSplit()):
+    def __init__(self, path=None, processor_split=ProcessorSplit()):
         """
         Set the path from where the calls are made from.
 
         Parameters
         ----------
-        path : Path or str
+        path : Path or str or None
             Directory to run the command from
+            If None, the calling directory will be used
         processor_split : ProcessorSplit
             Object containing the processor split
         """
-        self.__path = Path(path).absolute()
+        # NOTE: We are not setting the default as a keyword argument
+        #       as this would mess up the paths
+        self.__path = \
+            Path(path).absolute() if path is not None else \
+            get_caller_dir()
         self.processor_split = processor_split
         self.__pid = None
 

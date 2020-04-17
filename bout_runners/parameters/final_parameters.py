@@ -3,6 +3,7 @@
 
 import ast
 from bout_runners.parameters.run_parameters import RunParameters
+from bout_runners.parameters.default_parameters import DefaultParameters
 
 
 class FinalParameters:
@@ -28,6 +29,15 @@ class FinalParameters:
 
     Examples
     --------
+    The easiest way to use FinalParameters is to run a script from the
+    root directory of the project (i.e. where the `Makefile` and
+    `data` directory are normally situated. The script can simply call
+    >>> FinalParameters().get_final_parameters()
+    {'global': {'append': False, 'async_send': False, ...}}
+
+    A more elaborate example where all the dependency objects are
+    built manually:
+
     Import dependencies
     >>> from pathlib import Path
     >>> from bout_runners.executor.bout_paths import BoutPaths
@@ -62,21 +72,23 @@ class FinalParameters:
     """
 
     def __init__(self,
-                 default_parameters,
+                 default_parameters=None,
                  run_parameters=RunParameters()):
         """
         Set the member data.
 
         Parameters
         ----------
-        default_parameters : DefaultParameters
+        default_parameters : DefaultParameters or None
             Object dealing with default parameters (i.e. standard
             BOUT++ parameters, or those given in BOUT.inp)
         run_parameters : RunParameters
             Object dealing with run parameters (i.e. parameters set
             in bout_runner which has precedence over BOUT.inp)
         """
-        self.__default_parameters = default_parameters
+        self.__default_parameters = \
+            default_parameters if default_parameters is not None \
+            else DefaultParameters()
         self.__run_parameters = run_parameters
 
     def get_final_parameters(self):
