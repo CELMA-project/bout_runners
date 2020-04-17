@@ -1,7 +1,7 @@
 """Contains unittests for the metadata_recorder."""
 
 
-from bout_runners.metadata_recorder.metadata_recorder import \
+from bout_runners.metadata.metadata_recorder import \
     MetadataRecorder
 from bout_runners.parameters.final_parameters import FinalParameters
 from bout_runners.submitter.processor_split import ProcessorSplit

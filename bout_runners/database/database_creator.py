@@ -272,7 +272,7 @@ class DatabaseCreator:
         self._create_single_table(parameters_statement)
 
     def _create_run_table(self):
-        """Create a table for the metadata_recorder of a run."""
+        """Create a table for the metadata of a run."""
         run_statement = \
             self.get_create_table_statement(
                 table_name='run',

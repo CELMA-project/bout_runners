@@ -1,4 +1,4 @@
-"""Package for running and storing metadata_recorder about BOUT++."""
+"""Package for running and storing metadata."""
 
 
 from bout_runners.utils.logs import set_up_logger

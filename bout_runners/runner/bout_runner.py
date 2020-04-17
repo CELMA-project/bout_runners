@@ -3,7 +3,7 @@
 
 import logging
 from bout_runners.database.database_creator import DatabaseCreator
-from bout_runners.metadata_recorder.metadata_recorder import \
+from bout_runners.metadata.metadata_recorder import \
     MetadataRecorder
 
 
