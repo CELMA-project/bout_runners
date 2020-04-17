@@ -38,3 +38,19 @@ class MetadataReader:
         """
         FIXME
         """
+
+/*Get all the tables*/
+SELECT name FROM sqlite_master
+WHERE
+    type ='table' AND
+    name NOT LIKE 'sqlite_%';
+
+/*For each table*/
+SELECT name FROM pragma_table_info('parameters');
+
+/*Extract all with x_id from all tables...the x contains the table to join*/
+/*First join the parameters to one table as a subquery*/
+/*Join the rest to a normal inner join*/
+SELECT * FROM parameters
+INNER JOIN conduction ON parameters.conduction_id = conduction.id
+INNER JOIN all_boundaries ON parameters.all_boundaries_id = all_boundaries.id;
