@@ -141,7 +141,7 @@ class FinalParameters:
             for key, val in parameter_dict[section].items():
                 # If type is not found, type is str
                 try:
-                    val_type = type(ast.literal_eval(val))
+                    val_type = type(ast.literal_eval(str(val)))
                 except (SyntaxError, ValueError):
                     val_type = str
 
