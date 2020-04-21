@@ -35,19 +35,59 @@ class MetadataReader:
         """
         pass
 
-    def get_parameters_metadata(self):
+    def get_parameters_metadata(self, columns, table_connections):
         """
         FIXME
         """
+        query = 'SELECT\n'
+        for column in columns:
+            query += f'{column} AS "{column}",\n'
+        query += 'FROM run'
+        for left_table in table_connections.keys():
+            for right_table in table_connections[left_table]:
+                query += (f'INNER JOIN {left_table} ON {left_table}.'
+                          f'{right_table}_id = {right_table}.id\n')
+
+        return self.__database_reader.query(query)
 
     @staticmethod
-    def get_all_columns_sorted():
+    def get_sorted_columns(all_column_names):
         """
-        Return all columns sorted .
+        Return all columns sorted.
 
-        FIXME
+        The columns will be sorted alphabetically first by table
+        name, then alphabetically by column name, with the exception of
+        the columns from the run table, which will be presented first.
+
+        Parameters
+        ----------
+        all_column_names : dict of tuple
+            Dict containing the column names
+            On the form
+            >>> {'table_1': ('table_1_column_1', ...),
+            ...  'table_2': ('table_2_column_1', ...),
+            ...  'run': ('run_column_1', ...), ...}
+
+
+        Returns
+        -------
+        sorted_columns : tuple
+            Dict containing the column names
+            On the form
+            >>> ('run.column_name_1',
+            ...  'run.column_name_2',
+            ...  ...
+            ...  'table_name_1.column_name_1',
+            ...  'table_name_1.column_name_2', ...)
         """
-        pass
+        sorted_columns = list()
+        table_names = sorted(all_column_names.keys())
+        table_names.pop(table_names.index('run'))
+        table_names.insert(0, 'run')
+        for table_name in table_names:
+            for column_name in sorted(all_column_names[table_name]):
+                sorted_columns.append(f'{table_name}.{column_name}')
+        return sorted_columns
 
     @staticmethod
     def get_table_connection(table_column_dict):
@@ -60,7 +100,7 @@ class MetadataReader:
             Dict containing the column names
             On the form
             >>> {'table_1': ('table_1_column_1', ...),
-            ...  'table_2': ('table_2_column_1', ...)}
+            ...  'table_2': ('table_2_column_1', ...), ...}
 
         Returns
         -------
@@ -148,7 +188,7 @@ class MetadataReader:
             Dict containing the column names
             On the form
             >>> {'table_1': ('table_1_column_1', ...),
-            ...  'table_2': ('table_2_column_1', ...)}
+            ...  'table_2': ('table_2_column_1', ...), ...}
         """
         table_column_dict = dict()
 

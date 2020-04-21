@@ -459,3 +459,19 @@ def yield_number_of_rows_for_all_tables():
             number_of_rows_dict[table_name] = table.loc[0, 'rows']
         return number_of_rows_dict
     yield _get_number_of_rows_for_all_tables
+
+
+@pytest.fixture(scope='session')
+def yield_test_db_connection(get_test_data_path):
+    """
+    Yield the connection to the test database.
+
+    Yields
+    ------
+    test_db_connection : DatabaseConnector
+        The connection to the test database
+    """
+    test_db_connection =\
+        DatabaseConnector(name='test',
+                          database_root_path=get_test_data_path)
+    yield test_db_connection
