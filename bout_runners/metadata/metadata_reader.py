@@ -51,43 +51,50 @@ class MetadataReader:
         return self.__database_reader.query(query)
 
     @staticmethod
-    def get_sorted_columns(all_column_names):
+    def get_sorted_columns(table_column_dict):
         """
         Return all columns sorted.
 
         The columns will be sorted alphabetically first by table
-        name, then alphabetically by column name, with the exception of
-        the columns from the run table, which will be presented first.
+        name, then alphabetically by column name, with the
+        following exceptions:
+
+        1. The columns from the run table is presented first
+        2. The id column is the first column in the table
 
         Parameters
         ----------
-        all_column_names : dict of tuple
+        table_column_dict : dict of tuple
             Dict containing the column names
             On the form
             >>> {'table_1': ('table_1_column_1', ...),
             ...  'table_2': ('table_2_column_1', ...),
-            ...  'run': ('run_column_1', ...), ...}
-
+            ...  'run': ('run_column_1', 'id', ...), ...}
 
         Returns
         -------
         sorted_columns : tuple
             Dict containing the column names
             On the form
-            >>> ('run.column_name_1',
+            >>> ('run.id',
+            ...  'run.column_name_1',
             ...  'run.column_name_2',
             ...  ...
             ...  'table_name_1.column_name_1',
             ...  'table_name_1.column_name_2', ...)
         """
         sorted_columns = list()
-        table_names = sorted(all_column_names.keys())
+        table_names = sorted(table_column_dict.keys())
         table_names.pop(table_names.index('run'))
         table_names.insert(0, 'run')
         for table_name in table_names:
-            for column_name in sorted(all_column_names[table_name]):
-                sorted_columns.append(f'{table_name}.{column_name}')
-        return sorted_columns
+            table_columns = list()
+            for column_name in sorted(table_column_dict[table_name]):
+                table_columns.append(f'{table_name}.{column_name}')
+            table_columns.pop(table_columns.index(f'{table_name}.id'))
+            table_columns.insert(0, f'{table_name}.id')
+            sorted_columns = [*sorted_columns, *table_columns]
+        return tuple(sorted_columns)
 
     @staticmethod
     def get_table_connection(table_column_dict):
@@ -139,7 +146,7 @@ class MetadataReader:
                  "    name NOT LIKE 'sqlite_%'")
         return tuple(self.__database_reader.query(query).loc[:, 'name'])
 
-    def get_all_column_names(self, table_names):
+    def get_table_column_dict(self, table_names):
         """
         Return all the column names of the specified tables.
 

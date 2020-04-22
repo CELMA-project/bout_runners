@@ -521,7 +521,7 @@ def fixture_yield_table_column_names(yield_metadata_reader,
         Dict containing the table and column names from the test
         database
     """
-    yield yield_metadata_reader.get_all_column_names(
+    yield yield_metadata_reader.get_table_column_dict(
         yield_all_table_names)
 
 

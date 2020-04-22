@@ -89,6 +89,53 @@ def test_get_table_connections(yield_table_connections):
     assert table_connections == expected_connections
 
 
-def test_get_sorted_columns():
+def test_get_sorted_columns(yield_table_column_names,
+                            yield_metadata_reader):
     """FIXME"""
-    pass
+    sorted_columns = yield_metadata_reader.get_sorted_columns(
+        yield_table_column_names)
+    expected = \
+        ('run.id',
+         'run.file_modification_id',
+         'run.host_id',
+         'run.latest_status',
+         'run.name',
+         'run.parameters_id',
+         'run.split_id',
+         'run.start_time',
+         'run.stop_time',
+         'run.submitted_time',
+         'bar.id',
+         'bar.foo',
+         'bar.quux',
+         'bar.qux',
+         'baz.id',
+         'baz.bar',
+         'baz.corge',
+         'baz.quuz',
+         'file_modification.id',
+         'file_modification.bout_git_sha',
+         'file_modification.bout_lib_modified',
+         'file_modification.project_executable_modified',
+         'file_modification.project_git_sha',
+         'file_modification.project_makefile_modified',
+         'foo.id',
+         'foo.bar',
+         'foo.foo',
+         'foo.foobar',
+         'parameters.id',
+         'parameters.bar_id',
+         'parameters.baz_id',
+         'parameters.foo_id',
+         'split.id',
+         'split.number_of_nodes',
+         'split.number_of_processors',
+         'split.processors_per_node',
+         'system_info.id',
+         'system_info.machine',
+         'system_info.node',
+         'system_info.processor',
+         'system_info.release',
+         'system_info.system',
+         'system_info.version')
+    assert sorted_columns == expected
