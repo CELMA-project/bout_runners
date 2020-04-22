@@ -111,52 +111,18 @@ class MetadataReader:
             connection to the table under consideration
             On the form
             >>> {'table_1': ('table_2', 'table_3'),
-            ...  'table_2': ('table_1',),
-            ...  'table_3': ('table_1',)}
+            ...  'table_4': ('table_5',), ...}
         """
         table_connection_dict = dict()
-        pattern = re.compile('id_(.*)')
+        pattern = re.compile('(.*)_id')
 
         for table, columns in table_column_dict.items():
-            ids = (pattern.match(el) for el in columns if 'id_' in el)
-            table_connection_dict[table] = ids
+            ids = tuple(pattern.match(el)[1] for el in columns
+                        if '_id' in el)
+            if len(ids) > 0:
+                table_connection_dict[table] = ids
 
-        return table_column_dict
-
-    @staticmethod
-    def prune_table_connection(table_connection_dict):
-        """
-        Prune a dict containing the table connections.
-
-        Parameters
-        ----------
-        table_connection_dict : dict
-            A dict telling which tables are connected to each other,
-            where the key is the table under consideration and the
-            value is a tuple containing the tables which have a key
-            connection to the table under consideration
-            On the form
-            >>> {'table_1': ('table_2', 'table_3'),
-            ...  'table_2': ('table_1', 'table_3'),
-            ...  'table_3': ('table_1', 'table_2')}
-
-        Returns
-        -------
-        pruned_table_connection_dict : dict
-            The same as table_connection_dict, but where the
-            connections are represented only once
-            >>> {'table_1': ('table_2', 'table_3'),}
-        """
-        pruned_table_connection_dict = table_connection_dict.copy()
-
-        first_level_tables = table_connection_dict.keys()
-        for first_level_table in first_level_tables:
-            for second_level_table in \
-                    table_connection_dict[first_level_table]:
-                pruned_table_connection_dict.pop(second_level_table,
-                                                 None)
-
-        return pruned_table_connection_dict
+        return table_connection_dict
 
     def get_all_table_names(self):
         """
@@ -196,6 +162,7 @@ class MetadataReader:
 
         for table_name in table_names:
             table_column_dict[table_name] = tuple(
-                self.__database_reader.query(query).loc[:, 'name'])
+                self.__database_reader.query(
+                    query.format(table_name)).loc[:, 'name'])
 
         return table_column_dict

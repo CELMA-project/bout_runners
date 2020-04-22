@@ -14,6 +14,8 @@ from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_creator import DatabaseCreator
 from bout_runners.database.database_writer import DatabaseWriter
 from bout_runners.executor.bout_paths import BoutPaths
+from bout_runners.metadata.metadata_reader import MetadataReader
+
 
 
 @pytest.fixture(scope='session', name='yield_bout_path')
@@ -461,17 +463,86 @@ def yield_number_of_rows_for_all_tables():
     yield _get_number_of_rows_for_all_tables
 
 
-@pytest.fixture(scope='session')
-def yield_test_db_connection(get_test_data_path):
+@pytest.fixture(scope='session', name='yield_metadata_reader')
+def fixture_yield_metadata_reader(get_test_data_path):
     """
     Yield the connection to the test database.
 
+    Parameters
+    ----------
+    get_test_data_path : Path
+        Path to the test data
+
     Yields
     ------
-    test_db_connection : DatabaseConnector
-        The connection to the test database
+    MetadataReader
+        The instance to read the metadata
     """
     test_db_connection =\
         DatabaseConnector(name='test',
                           database_root_path=get_test_data_path)
-    yield test_db_connection
+    yield MetadataReader(test_db_connection)
+
+
+@pytest.fixture(scope='session', name='yield_all_table_names')
+def fixture_yield_all_table_names(yield_metadata_reader):
+    """
+    Yield the table names from the test database.
+
+    Parameters
+    ----------
+    yield_metadata_reader : MetadataReader
+        The instance which reads the metadata
+
+    Yields
+    ------
+    tuple
+        A tuple of the tables in the test database
+    """
+    yield yield_metadata_reader.get_all_table_names()
+
+
+@pytest.fixture(scope='session', name='yield_table_column_names')
+def fixture_yield_table_column_names(yield_metadata_reader,
+                                     yield_all_table_names):
+    """
+    Yield the table names from the test database.
+
+    Parameters
+    ----------
+    yield_metadata_reader : MetadataReader
+        The instance which reads the metadata
+    yield_all_table_names : tuple
+        A tuple of the tables in the test database
+
+    Yields
+    ------
+    dict of tuple
+        Dict containing the table and column names from the test
+        database
+    """
+    yield yield_metadata_reader.get_all_column_names(
+        yield_all_table_names)
+
+
+@pytest.fixture(scope='session', name='yield_table_connections')
+def fixture_yield_table_connections(yield_metadata_reader,
+                                    yield_table_column_names):
+    """
+    Yield the table connection from the test database.
+
+    Parameters
+    ----------
+    yield_metadata_reader : MetadataReader
+        The instance which reads the metadata
+    yield_table_column_names : dict
+        Dict containing the table and column names from the test
+        database
+
+    Yields
+    ------
+    dict of tuple
+        Dict containing the table connections from the test database
+    """
+    yield yield_metadata_reader.get_table_connection(
+        yield_table_column_names)
