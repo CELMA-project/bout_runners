@@ -286,5 +286,5 @@ class DatabaseCreator:
                               ('file_modification', 'id'),
                               'split_id': ('split', 'id'),
                               'parameters_id': ('parameters', 'id'),
-                              'host_id': ('host', 'id')})
+                              'system_info_id': ('system_info', 'id')})
         self._create_single_table(run_statement)
