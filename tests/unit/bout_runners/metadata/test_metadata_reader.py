@@ -139,3 +139,36 @@ def test_get_sorted_columns(yield_table_column_names,
          'system_info.system',
          'system_info.version')
     assert sorted_columns == expected
+
+
+def test_get_parameters_metadata(yield_table_connections,
+                                 yield_table_column_names,
+                                 yield_metadata_reader):
+    # FIXME: Should store more member data in MetdataReader. It's
+    #  easy to use if it's only one method
+    table_connections = yield_table_connections
+    metadata_reader = yield_metadata_reader
+    sorted_columns = yield_metadata_reader.get_sorted_columns(
+        yield_table_column_names)
+    parameter_connections = {'parameters':
+                             table_connections.copy().pop('parameters')}
+    parameter_tables = \
+        ('parameters', *parameter_connections['parameters'])
+    parameter_columns = \
+        [col for col in sorted_columns
+         if col.split('.')[0] in parameter_tables]
+
+    # FIXME: The parameter IDs are shown twice...no need for
+    #  parameters.foo_id
+    parameters_metadata = \
+        metadata_reader.get_parameters_metadata(
+            columns=parameter_columns,
+            table_connections=parameter_connections)
+
+    # FIXME: Test is over, but we continue on the full blown stuff
+    all_metadata_query = \
+        metadata_reader.get_all_metadata(
+            columns=sorted_columns,
+            table_connections=table_connections,
+            sorted_columns=sorted_columns)
+    a=1

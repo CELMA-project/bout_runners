@@ -29,26 +29,80 @@ class MetadataReader:
         """
         self.__database_reader = DatabaseReader(database_connector)
 
-    def get_all_metadata(self):
+    def get_all_metadata(self, columns, table_connections,
+                         sorted_columns):
         """
         FIXME
         """
-        pass
+        # FIXME: This first part needs heavy refactoring
+        parameter_connections = {'parameters':
+                                 table_connections.pop('parameters')}
+        parameter_tables = \
+            ('parameters', *parameter_connections['parameters'])
+        parameter_columns = \
+            [col for col in sorted_columns
+             if col.split('.')[0] in parameter_tables]
+
+        parameter_query = \
+            self.get_join_query('parameters',
+                                parameter_columns,
+                                parameter_columns,
+                                parameter_connections)
+
+
+
+
+        # Adding spaces
+        parameter_query = '\n'.join([f'{" " * 6}{line}' for line in
+                                     parameter_query.split('\n')])
+
+        # Adding parenthesis
+        parameter_query =\
+            f'{parameter_query[:5]}({parameter_query[6:-1]}) AS ' \
+            f'subquery'
+        from_statement = 'run'
+        alias_columns = \
+            [f'subquery."{col}"' if col in parameter_columns else col
+             for col in columns]
+        # FIXME: Swapped alias and columns here
+        unfinished_all_metadata_query = \
+            self.get_join_query(from_statement,
+                                alias_columns,
+                                columns,
+                                table_connections)
+
+        all_metadata_query = \
+            unfinished_all_metadata_query.\
+            replace(' parameters ', f'\n{parameter_query}\n').\
+            replace('= parameters.id', '= subquery."parameters.id"')
+        return self.__database_reader.query(all_metadata_query)
 
     def get_parameters_metadata(self, columns, table_connections):
         """
         FIXME
         """
-        query = 'SELECT\n'
-        for column in columns:
-            query += f'{column} AS "{column}",\n'
-        query += 'FROM run'
-        for left_table in table_connections.keys():
-            for right_table in table_connections[left_table]:
-                query += (f'INNER JOIN {left_table} ON {left_table}.'
-                          f'{right_table}_id = {right_table}.id\n')
+        query = self.get_join_query('parameters',
+                                    columns,
+                                    columns,
+                                    table_connections)
 
         return self.__database_reader.query(query)
+
+    @staticmethod
+    def get_join_query(from_statement, columns,
+                       alias_columns, table_connections):
+        query = 'SELECT\n'
+        for column, alias in zip(columns, alias_columns):
+            query += f'{" " * 7}{column} AS "{alias}",\n'
+        # Remove last comma
+        query = f'{query[:-2]}\n'
+        query += f'FROM {from_statement}\n'
+        for left_table in table_connections.keys():
+            for right_table in table_connections[left_table]:
+                query += (f'{" " * 4}INNER JOIN {right_table} ON '
+                          f'{left_table}.'
+                          f'{right_table}_id = {right_table}.id\n')
+        return query
 
     @staticmethod
     def get_sorted_columns(table_column_dict):
