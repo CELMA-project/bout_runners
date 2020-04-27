@@ -4,6 +4,7 @@
 from distutils.dir_util import copy_tree
 from distutils.dir_util import remove_tree
 import shutil
+import pandas as pd
 from pathlib import Path
 import pytest
 from bout_runners.make.make import Make
@@ -546,3 +547,12 @@ def fixture_yield_table_connections(yield_metadata_reader,
     """
     yield yield_metadata_reader.get_table_connection(
         yield_table_column_names)
+
+
+@pytest.fixture(scope='session')
+def yield_all_metadata(get_test_data_path):
+    """FIXME"""
+    all_metadata = \
+        pd.read_json(get_test_data_path.joinpath('all_metadata.json'),
+                     orient='split')
+    yield all_metadata

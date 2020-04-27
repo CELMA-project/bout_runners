@@ -4,6 +4,7 @@
 def test_get_all_table_names(yield_all_table_names):
     """FIXME"""
     table_names = yield_all_table_names
+    # FIXME: Use all_metadata_json for easier maintenance
     expected_table_names = ('system_info',
                             'split',
                             'file_modification',
@@ -20,6 +21,7 @@ def test_get_all_column_names(yield_table_column_names):
     FIXME
     """
     columns_dict = yield_table_column_names
+    # FIXME: Use all_metadata_json for easier maintenance
     expected_columns_dict = \
         {'system_info': ('id',
                          'machine',
@@ -78,6 +80,7 @@ def test_get_all_column_names(yield_table_column_names):
 def test_get_table_connections(yield_table_connections):
     """FIXME"""
     table_connections = yield_table_connections
+    # FIXME: Use all_metadata_json for easier maintenance
     expected_connections = \
         {'parameters': ('foo',
                         'bar',
@@ -94,6 +97,7 @@ def test_get_sorted_columns(yield_table_column_names,
     """FIXME"""
     sorted_columns = yield_metadata_reader.get_sorted_columns(
         yield_table_column_names)
+    # FIXME: Use all_metadata_json for easier maintenance
     expected = \
         ('run.id',
          'run.file_modification_id',
@@ -143,7 +147,8 @@ def test_get_sorted_columns(yield_table_column_names,
 
 def test_get_parameters_metadata(yield_table_connections,
                                  yield_table_column_names,
-                                 yield_metadata_reader):
+                                 yield_metadata_reader,
+                                 yield_all_metadata):
     # FIXME: Should store more member data in MetdataReader. It's
     #  easy to use if it's only one method
     table_connections = yield_table_connections
@@ -166,9 +171,10 @@ def test_get_parameters_metadata(yield_table_connections,
             table_connections=parameter_connections)
 
     # FIXME: Test is over, but we continue on the full blown stuff
-    all_metadata_query = \
+    all_metadata = \
         metadata_reader.get_all_metadata(
             columns=sorted_columns,
             table_connections=table_connections,
             sorted_columns=sorted_columns)
-    a=1
+    # FIXME: Fails as None -> NaT and dates
+    assert all_metadata.equals(yield_all_metadata)

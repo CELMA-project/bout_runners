@@ -19,7 +19,7 @@ class MetadataReader:
     FIXME
     """
 
-    def __init__(self, database_connector):
+    def __init__(self, database_connector, drop_id=False):
         """
         Set the database to use.
 
@@ -28,7 +28,20 @@ class MetadataReader:
         FIXME
         """
         self.__database_reader = DatabaseReader(database_connector)
+        self.drop_id = drop_id
 
+    def drop_id(func):
+        """FIXME"""
+        def drop(self, *args, **kwargs):
+            """FIXME"""
+            dataframe = func(self, *args, **kwargs)
+            if self.drop_id:
+                # Remove the id's here
+                pass
+            return dataframe
+        return drop
+
+    @drop_id
     def get_all_metadata(self, columns, table_connections,
                          sorted_columns):
         """
@@ -77,6 +90,7 @@ class MetadataReader:
             replace('= parameters.id', '= subquery."parameters.id"')
         return self.__database_reader.query(all_metadata_query)
 
+    @drop_id
     def get_parameters_metadata(self, columns, table_connections):
         """
         FIXME
