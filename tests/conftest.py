@@ -551,7 +551,19 @@ def fixture_yield_table_connections(yield_metadata_reader,
 
 @pytest.fixture(scope='session')
 def yield_all_metadata(get_test_data_path):
-    """FIXME"""
+    """
+    Yield the test metadata.
+
+    Parameters
+    ----------
+    get_test_data_path : Path
+        Path to the test data
+
+    Yields
+    ------
+    all_metadata : DataFrame
+        A DataFrame containing the test metadata
+    """
     all_metadata = \
         pd.read_json(get_test_data_path.joinpath('all_metadata.json'),
                      orient='split')

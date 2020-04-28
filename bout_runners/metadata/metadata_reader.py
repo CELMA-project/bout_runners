@@ -103,8 +103,10 @@ class MetadataReader:
         return self.__database_reader.query(query)
 
     @staticmethod
-    def get_join_query(from_statement, columns,
-                       alias_columns, table_connections):
+    def get_join_query(from_statement,
+                       columns,
+                       alias_columns,
+                       table_connections):
         query = 'SELECT\n'
         for column, alias in zip(columns, alias_columns):
             query += f'{" " * 7}{column} AS "{alias}",\n'

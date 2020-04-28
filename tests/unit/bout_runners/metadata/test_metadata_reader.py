@@ -1,75 +1,37 @@
 """Contains unittests for the metadata_reader."""
 
 
-def test_get_all_table_names(yield_all_table_names):
+def test_get_all_table_names(yield_all_table_names, yield_all_metadata):
     """FIXME"""
     table_names = yield_all_table_names
-    # FIXME: Use all_metadata_json for easier maintenance
-    expected_table_names = ('system_info',
-                            'split',
-                            'file_modification',
-                            'foo',
-                            'bar',
-                            'baz',
-                            'parameters',
-                            'run')
-    assert set(table_names) == set(expected_table_names)
+    # Extract table names
+    all_metadata = yield_all_metadata
+    expected_table_names = \
+        set(table.split('.')[0] for table in all_metadata.columns)
+    assert set(table_names) == expected_table_names
 
 
-def test_get_all_column_names(yield_table_column_names):
+def test_get_all_column_names(yield_table_column_names,
+                              yield_all_metadata):
     """
     FIXME
     """
     columns_dict = yield_table_column_names
-    # FIXME: Use all_metadata_json for easier maintenance
-    expected_columns_dict = \
-        {'system_info': ('id',
-                         'machine',
-                         'node',
-                         'processor',
-                         'release',
-                         'system',
-                         'version'),
-         'split': ('id',
-                   'number_of_processors',
-                   'number_of_nodes',
-                   'processors_per_node'),
-         'file_modification': ('id',
-                               'project_makefile_modified',
-                               'project_executable_modified',
-                               'project_git_sha',
-                               'bout_lib_modified',
-                               'bout_git_sha'),
-         'foo': ('id',
-                 'foo',
-                 'bar',
-                 'foobar'),
-         'bar': ('id',
-                 'foo',
-                 'qux',
-                 'quux'),
-         'baz': ('id',
-                 'bar',
-                 'quuz',
-                 'corge'),
-         'parameters': ('id',
-                        'foo_id',
-                        'bar_id',
-                        'baz_id'),
-         'run': ('id',
-                 'name',
-                 'submitted_time',
-                 'start_time',
-                 'stop_time',
-                 'latest_status',
-                 'file_modification_id',
-                 'split_id',
-                 'parameters_id',
-                 'host_id')}
-    columns_keys = columns_dict.keys()
-    expected_columns_keys = expected_columns_dict.keys()
+    # Extract columns dict
+    all_metadata = yield_all_metadata
+    expected_columns_dict = dict()
+    for pandas_col in all_metadata.columns:
+        table, col = pandas_col.split('.')
+        if table not in expected_columns_dict.keys():
+            expected_columns_dict[table] = list()
+        expected_columns_dict[table].append(col)
+
+    # Check that the tables are the same
+    columns_keys = sorted(columns_dict.keys())
+    expected_columns_keys = sorted(expected_columns_dict.keys())
     assert set(columns_keys) == set(expected_columns_keys)
 
+    # Check that the columns are the same
     for column_name, expected_column_name in \
             zip(columns_keys, expected_columns_keys):
         columns = columns_dict[column_name]
@@ -80,7 +42,6 @@ def test_get_all_column_names(yield_table_column_names):
 def test_get_table_connections(yield_table_connections):
     """FIXME"""
     table_connections = yield_table_connections
-    # FIXME: Use all_metadata_json for easier maintenance
     expected_connections = \
         {'parameters': ('foo',
                         'bar',
@@ -93,55 +54,12 @@ def test_get_table_connections(yield_table_connections):
 
 
 def test_get_sorted_columns(yield_table_column_names,
-                            yield_metadata_reader):
+                            yield_metadata_reader,
+                            yield_all_metadata):
     """FIXME"""
     sorted_columns = yield_metadata_reader.get_sorted_columns(
         yield_table_column_names)
-    # FIXME: Use all_metadata_json for easier maintenance
-    expected = \
-        ('run.id',
-         'run.file_modification_id',
-         'run.host_id',
-         'run.latest_status',
-         'run.name',
-         'run.parameters_id',
-         'run.split_id',
-         'run.start_time',
-         'run.stop_time',
-         'run.submitted_time',
-         'bar.id',
-         'bar.foo',
-         'bar.quux',
-         'bar.qux',
-         'baz.id',
-         'baz.bar',
-         'baz.corge',
-         'baz.quuz',
-         'file_modification.id',
-         'file_modification.bout_git_sha',
-         'file_modification.bout_lib_modified',
-         'file_modification.project_executable_modified',
-         'file_modification.project_git_sha',
-         'file_modification.project_makefile_modified',
-         'foo.id',
-         'foo.bar',
-         'foo.foo',
-         'foo.foobar',
-         'parameters.id',
-         'parameters.bar_id',
-         'parameters.baz_id',
-         'parameters.foo_id',
-         'split.id',
-         'split.number_of_nodes',
-         'split.number_of_processors',
-         'split.processors_per_node',
-         'system_info.id',
-         'system_info.machine',
-         'system_info.node',
-         'system_info.processor',
-         'system_info.release',
-         'system_info.system',
-         'system_info.version')
+    expected = tuple(yield_all_metadata.columns)
     assert sorted_columns == expected
 
 
