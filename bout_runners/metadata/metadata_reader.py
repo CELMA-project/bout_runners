@@ -32,8 +32,16 @@ class MetadataReader:
 
         self.__table_names = self.__get_all_table_names()
         self.__table_column_dict = self.__get_table_column_dict()
-        self.__table_connection = self.__get_table_connection()
+        self.__table_connections = self.__get_table_connections()
         self.__sorted_columns = self.__get_sorted_columns()
+
+        self.__parameter_connections = \
+            {'parameters': self.__table_connections['parameters']}
+        self.__parameter_tables = \
+            ('parameters', *self.__parameter_connections['parameters'])
+        self.__parameter_columns = \
+            tuple(col for col in self.__sorted_columns
+                  if col.split('.')[0] in self.__parameter_tables)
 
     @property
     def table_names(self):
@@ -45,7 +53,7 @@ class MetadataReader:
 
     @property
     def table_connection(self):
-        return self.__table_connection
+        return self.__table_connections
 
     @property
     def sorted_columns(self):
@@ -67,63 +75,56 @@ class MetadataReader:
         """
         FIXME
         """
-        # FIXME: This first part needs heavy refactoring
-        table_connections = self.table_connection.copy()
-        parameter_connections = {'parameters':
-                                 table_connections.pop('parameters')}
-        parameter_tables = \
-            ('parameters', *parameter_connections['parameters'])
-        parameter_columns = \
-            [col for col in self.sorted_columns
-             if col.split('.')[0] in parameter_tables]
-
         parameter_query = \
             self.get_join_query('parameters',
-                                parameter_columns,
-                                parameter_columns,
-                                parameter_connections)
+                                self.__parameter_columns,
+                                self.__parameter_columns,
+                                self.__parameter_connections)
 
+        # Adding spaces and parenthesis
+        parameter_sub_query = '\n'.join([f'{" " * 6}{line}' for line in
+                                        parameter_query.split('\n')])
+        parameter_sub_query =\
+            (f'{parameter_sub_query[:5]}({parameter_sub_query[6:-1]}) ' 
+             f'AS subquery')
 
-
-
-        # Adding spaces
-        parameter_query = '\n'.join([f'{" " * 6}{line}' for line in
-                                     parameter_query.split('\n')])
-
-        # Adding parenthesis
-        parameter_query =\
-            f'{parameter_query[:5]}({parameter_query[6:-1]}) AS ' \
-            f'subquery'
-        from_statement = 'run'
-        alias_columns = \
-            [f'subquery."{col}"' if col in parameter_columns else col
+        # NOTE: The subquery names are the names of the columns after
+        #       the query. We would like to rename them to
+        #       sorted_columns. Hence the `columns` field and
+        #       `alias_columns` field appears swapped
+        subquery_columns = \
+            [f'subquery."{col}"' if col in self.__parameter_columns
+             else col
              for col in self.sorted_columns]
-        # FIXME: Swapped alias and columns here
+        # Remove the parameters from the table_connection to avoid
+        # double joining
+        table_connections = self.__table_connections.copy()
+        table_connections.pop('parameters')
         unfinished_all_metadata_query = \
-            self.get_join_query(from_statement,
-                                alias_columns,
+            self.get_join_query('run',
+                                subquery_columns,
                                 self.sorted_columns,
                                 table_connections)
 
+        # Update the parameters columns
         all_metadata_query = \
             unfinished_all_metadata_query.\
-            replace(' parameters ', f'\n{parameter_query}\n').\
+            replace(' parameters ', f'\n{parameter_sub_query}\n').\
             replace('= parameters.id', '= subquery."parameters.id"')
+        # FIXME: YOU ARE HERE: Change name of decorator, let user
+        #  choose, remove id AND fix dates...or...dates should always
+        #  be fixed
         return self.__database_reader.query(all_metadata_query)
 
     @drop_id
-    def get_parameters_metadata(self, columns, table_connections):
+    def get_parameters_metadata(self):
         """
         FIXME
         """
-        # FIXME: YOU ARE HERE: LOOK AT test_get_parameters_metadata
-        #  to figure these out
-        parameter_columns
-        parameter_connections
         query = self.get_join_query('parameters',
-                                    columns,
-                                    columns,
-                                    table_connections)
+                                    self.__parameter_columns,
+                                    self.__parameter_columns,
+                                    self.__parameter_connections)
 
         return self.__database_reader.query(query)
 
@@ -191,7 +192,7 @@ class MetadataReader:
             sorted_columns = [*sorted_columns, *table_columns]
         return tuple(sorted_columns)
 
-    def __get_table_connection(self):
+    def __get_table_connections(self):
         """
         Return a dict containing the table connections.
 

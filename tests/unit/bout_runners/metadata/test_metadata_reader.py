@@ -61,36 +61,22 @@ def test_get_sorted_columns(yield_metadata_reader,
     assert sorted_columns == expected
 
 
-def test_get_parameters_metadata(yield_table_connections,
-                                 yield_table_column_names,
-                                 yield_metadata_reader,
-                                 yield_all_metadata):
-    # FIXME: Should store more member data in MetdataReader. It's
-    #  easy to use if it's only one method
-    table_connections = yield_table_connections
-    metadata_reader = yield_metadata_reader
-    sorted_columns = yield_metadata_reader.get_sorted_columns(
-        yield_table_column_names)
-    parameter_connections = {'parameters':
-                             table_connections.copy().pop('parameters')}
-    parameter_tables = \
-        ('parameters', *parameter_connections['parameters'])
-    parameter_columns = \
-        [col for col in sorted_columns
-         if col.split('.')[0] in parameter_tables]
-
+def test_get_parameters_metadata(yield_metadata_reader):
+    """FIXME"""
     # FIXME: The parameter IDs are shown twice...no need for
     #  parameters.foo_id
+    metadata_reader = yield_metadata_reader
     parameters_metadata = \
-        metadata_reader.get_parameters_metadata(
-            columns=parameter_columns,
-            table_connections=parameter_connections)
+        metadata_reader.get_parameters_metadata()
+    # FIXME
+    a=1
 
-    # FIXME: Test is over, but we continue on the full blown stuff
+
+def test_get_all_metadata(yield_metadata_reader, yield_all_metadata):
+    """FIXME"""
+    metadata_reader = yield_metadata_reader
     all_metadata = \
-        metadata_reader.get_all_metadata(
-            columns=sorted_columns,
-            table_connections=table_connections,
-            sorted_columns=sorted_columns)
+        metadata_reader.get_all_metadata()
     # FIXME: Fails as None -> NaT and dates
     assert all_metadata.equals(yield_all_metadata)
+
