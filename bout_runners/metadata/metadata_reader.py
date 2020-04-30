@@ -64,6 +64,7 @@ class MetadataReader:
         def drop(self, *args, **kwargs):
             """FIXME"""
             dataframe = func(self, *args, **kwargs)
+
             if self.drop_id:
                 # Remove the id's here
                 pass
@@ -111,10 +112,14 @@ class MetadataReader:
             unfinished_all_metadata_query.\
             replace(' parameters ', f'\n{parameter_sub_query}\n').\
             replace('= parameters.id', '= subquery."parameters.id"')
-        # FIXME: YOU ARE HERE: Change name of decorator, let user
-        #  choose, remove id AND fix dates...or...dates should always
-        #  be fixed
-        return self.__database_reader.query(all_metadata_query)
+        dates = ('run.start_time',
+                 'run.stop_time',
+                 'run.submitted_time',
+                 'file_modification.bout_lib_modified',
+                 'file_modification.project_executable_modified',
+                 'file_modification.project_makefile_modified')
+        return self.__database_reader.query(all_metadata_query,
+                                            parse_dates=dates)
 
     @drop_id
     def get_parameters_metadata(self):

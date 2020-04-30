@@ -61,22 +61,27 @@ def test_get_sorted_columns(yield_metadata_reader,
     assert sorted_columns == expected
 
 
-def test_get_parameters_metadata(yield_metadata_reader):
+def test_get_parameters_metadata(yield_metadata_reader,
+                                 yield_all_metadata):
     """FIXME"""
     # FIXME: The parameter IDs are shown twice...no need for
     #  parameters.foo_id
+    tables_to_keep = ('bar', 'baz', 'foo', 'parameters')
+    cols_to_keep = [col for col in yield_all_metadata.columns
+                    if col.split('.')[0] in tables_to_keep]
+    expected = yield_all_metadata.loc[:, cols_to_keep]
+    expected.drop_duplicates(inplace=True)
     metadata_reader = yield_metadata_reader
     parameters_metadata = \
         metadata_reader.get_parameters_metadata()
-    # FIXME
-    a=1
+    assert parameters_metadata.equals(expected)
 
 
 def test_get_all_metadata(yield_metadata_reader, yield_all_metadata):
     """FIXME"""
+    expected = yield_all_metadata
     metadata_reader = yield_metadata_reader
     all_metadata = \
         metadata_reader.get_all_metadata()
-    # FIXME: Fails as None -> NaT and dates
-    assert all_metadata.equals(yield_all_metadata)
+    assert all_metadata.equals(expected)
 

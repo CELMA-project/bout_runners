@@ -500,7 +500,14 @@ def yield_all_metadata(get_test_data_path):
     all_metadata : DataFrame
         A DataFrame containing the test metadata
     """
+    dates = ('run.start_time',
+             'run.stop_time',
+             'run.submitted_time',
+             'file_modification.bout_lib_modified',
+             'file_modification.project_executable_modified',
+             'file_modification.project_makefile_modified')
     all_metadata = \
         pd.read_json(get_test_data_path.joinpath('all_metadata.json'),
-                     orient='split')
+                     orient='split',
+                     convert_dates=dates)
     yield all_metadata
