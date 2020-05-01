@@ -1,11 +1,11 @@
 """Global fixtures for the test routines."""
 
 
+import shutil
 from distutils.dir_util import copy_tree
 from distutils.dir_util import remove_tree
-import shutil
-import pandas as pd
 from pathlib import Path
+import pandas as pd
 import pytest
 from bout_runners.make.make import Make
 from bout_runners.parameters.default_parameters import DefaultParameters
@@ -499,12 +499,7 @@ def yield_all_metadata(get_test_data_path):
     all_metadata : DataFrame
         A DataFrame containing the test metadata
     """
-    dates = ('run.start_time',
-             'run.stop_time',
-             'run.submitted_time',
-             'file_modification.bout_lib_modified',
-             'file_modification.project_executable_modified',
-             'file_modification.project_makefile_modified')
+    dates = MetadataReader.dates
     all_metadata = \
         pd.read_json(get_test_data_path.joinpath('all_metadata.json'),
                      orient='split',

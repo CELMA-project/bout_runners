@@ -5,12 +5,33 @@ import re
 from bout_runners.database.database_reader import DatabaseReader
 
 
+def drop_ids(func):
+    """FIXME."""
+    def drop(self, *args, **kwargs):
+        """FIXME."""
+        dataframe = func(self, *args, **kwargs)
+
+        if self.drop_id:
+            # Remove the id's here
+            pass
+        return dataframe
+
+    return drop
+
+
 class MetadataReader:
     """
     Class for reading the metadata from the database.
 
     FIXME
     """
+
+    dates = ('run.start_time',
+             'run.stop_time',
+             'run.submitted_time',
+             'file_modification.bout_lib_modified',
+             'file_modification.project_executable_modified',
+             'file_modification.project_makefile_modified')
 
     def __init__(self, database_connector, drop_id=False):
         """
@@ -87,19 +108,7 @@ class MetadataReader:
         """
         return self.__sorted_columns
 
-    def drop_id(func):
-        """FIXME."""
-        def drop(self, *args, **kwargs):
-            """FIXME."""
-            dataframe = func(self, *args, **kwargs)
-
-            if self.drop_id:
-                # Remove the id's here
-                pass
-            return dataframe
-        return drop
-
-    @drop_id
+    @drop_ids
     def get_all_metadata(self):
         """
         Return only all of the run metadata.
@@ -117,7 +126,7 @@ class MetadataReader:
 
         # Adding spaces and parenthesis
         parameter_sub_query = '\n'.join([f'{" " * 6}{line}' for line in
-                                        parameter_query.split('\n')])
+                                         parameter_query.split('\n')])
         parameter_sub_query =\
             (f'{parameter_sub_query[:5]}({parameter_sub_query[6:-1]}) '
              f'AS subquery')
@@ -145,16 +154,11 @@ class MetadataReader:
             unfinished_all_metadata_query.\
             replace(' parameters ', f'\n{parameter_sub_query}\n').\
             replace('= parameters.id', '= subquery."parameters.id"')
-        dates = ('run.start_time',
-                 'run.stop_time',
-                 'run.submitted_time',
-                 'file_modification.bout_lib_modified',
-                 'file_modification.project_executable_modified',
-                 'file_modification.project_makefile_modified')
-        return self.__database_reader.query(all_metadata_query,
-                                            parse_dates=dates)
 
-    @drop_id
+        return self.__database_reader.query(all_metadata_query,
+                                            parse_dates=self.dates)
+
+    @drop_ids
     def get_parameters_metadata(self):
         """
         Return only the parameter part of the run metadata.

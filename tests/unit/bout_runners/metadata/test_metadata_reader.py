@@ -1,25 +1,6 @@
 """Contains unittests for the metadata_reader."""
 
 
-def test_get_all_table_names(yield_metadata_reader, yield_all_metadata):
-    """
-    Test that the metadata reader is able to retrieve all table names.
-
-    Parameters
-    ----------
-    yield_metadata_reader : MetadataReader
-        The metadata reader object
-    yield_all_metadata : DataFrame
-        The test metadata
-    """
-    table_names = yield_metadata_reader.table_names
-    # Extract table names
-    all_metadata = yield_all_metadata
-    expected_table_names = \
-        set(table.split('.')[0] for table in all_metadata.columns)
-    assert set(table_names) == expected_table_names
-
-
 def test_get_table_column_dict(yield_metadata_reader,
                                yield_all_metadata):
     """
