@@ -56,8 +56,8 @@ def test_database_creator(make_test_database, make_test_schema):
                  '   WHERE type="table"')
     table = db_reader_schema.query(query_str)
 
-    assert non_parameter_tables.union(parameter_tables) == \
-        set(table.loc[:, 'name'].values)  # pylint: disable=no-member
+    actual = table.loc[:, 'name'].values  # pylint: disable=no-member
+    assert non_parameter_tables.union(parameter_tables) == set(actual)
 
 
 def test_get_create_table_statement():
