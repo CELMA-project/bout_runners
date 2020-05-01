@@ -45,4 +45,3 @@ def test_cast_parameters_to_sql_type(get_default_parameters):
     assert parameter_as_sql['conduction']['chi'] == 'REAL'  # float
     assert parameter_as_sql['global']['mxg'] == 'INTEGER'  # int
     assert parameter_as_sql['global']['datadir'] == 'TEXT'  # str
-

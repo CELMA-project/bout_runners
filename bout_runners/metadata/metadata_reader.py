@@ -2,14 +2,7 @@
 
 
 import re
-from datetime import datetime
-from bout_runners.make.make import Make
-from bout_runners.database.database_writer import DatabaseWriter
 from bout_runners.database.database_reader import DatabaseReader
-from bout_runners.database.database_utils import \
-    get_file_modification
-from bout_runners.database.database_utils import \
-    get_system_info
 
 
 class MetadataReader:
@@ -45,24 +38,59 @@ class MetadataReader:
 
     @property
     def table_names(self):
+        """
+        Set the properties of self.table_names.
+
+        Returns
+        -------
+        self.__table_names : tuple
+            A tuple containing all names of the tables
+        """
         return self.__table_names
 
     @property
     def table_column_dict(self):
+        """
+        Set the properties of self.table_column_dict.
+
+        Returns
+        -------
+        self.__table_column_dict : dict of tuple
+            A dict where the keys are table names, and the values are
+            corresponding column names
+        """
         return self.__table_column_dict
 
     @property
     def table_connection(self):
+        """
+        Set the properties of self.table_connections.
+
+        Returns
+        -------
+        self.__table_connections : dict og tuple
+            A dict where the keys are tables, and the values are
+            tuples of tables connected to the key table
+        """
         return self.__table_connections
 
     @property
     def sorted_columns(self):
+        """
+        Set the properties of self.sorted_columns.
+
+        Returns
+        -------
+        self.__sorted_columns : tuple
+            A tuple of the column names as they will be sorted in the
+            all_metadata DataFrame
+        """
         return self.__sorted_columns
 
     def drop_id(func):
-        """FIXME"""
+        """FIXME."""
         def drop(self, *args, **kwargs):
-            """FIXME"""
+            """FIXME."""
             dataframe = func(self, *args, **kwargs)
 
             if self.drop_id:
@@ -74,7 +102,12 @@ class MetadataReader:
     @drop_id
     def get_all_metadata(self):
         """
-        FIXME
+        Return only all of the run metadata.
+
+        Returns
+        -------
+        DataFrame
+            The DataFrame of the run metadata
         """
         parameter_query = \
             self.get_join_query('parameters',
@@ -86,7 +119,7 @@ class MetadataReader:
         parameter_sub_query = '\n'.join([f'{" " * 6}{line}' for line in
                                         parameter_query.split('\n')])
         parameter_sub_query =\
-            (f'{parameter_sub_query[:5]}({parameter_sub_query[6:-1]}) ' 
+            (f'{parameter_sub_query[:5]}({parameter_sub_query[6:-1]}) '
              f'AS subquery')
 
         # NOTE: The subquery names are the names of the columns after
@@ -124,7 +157,12 @@ class MetadataReader:
     @drop_id
     def get_parameters_metadata(self):
         """
-        FIXME
+        Return only the parameter part of the run metadata.
+
+        Returns
+        -------
+        DataFrame
+            The DataFrame of the parameter metadata
         """
         query = self.get_join_query('parameters',
                                     self.__parameter_columns,
@@ -138,6 +176,41 @@ class MetadataReader:
                        columns,
                        alias_columns,
                        table_connections):
+        """
+        Return the query string of a `SELECT` query with `INNER JOIN`.
+
+        Notes
+        -----
+        The tables in `table_connection` is assumed to be joined by
+        `id`s. I.e. `table_a` is connected to `table_b` by `table_b`
+        having a column named `table_a_id` which corresponds to the
+        `id` column of `table_a`
+
+        Parameters
+        ----------
+        from_statement : str
+            The statement after the `FROM` keyword in the query
+            I.e.
+            >>> f'SELECT * FROM {from_statement}'
+        columns : array-like
+            The columns to select from the tables
+            I.e.
+            >>> f'SELECT {columns} FROM *'
+        alias_columns : array-like
+            The name of the columns in the resulting table
+            I.e.
+            >>> f'SELECT {columns[0]} AS {alias_columns[0]} FROM *'
+        table_connections : dict of tuple
+            A dict where the keys are the table names, and the values
+            are tuples containing table names connected to the key table
+            as described in the note above
+
+        Returns
+        -------
+        query : str
+            The SQL-string which can be used to query where table in
+            databases are joined through `INNER JOIN` operations
+        """
         query = 'SELECT\n'
         for column, alias in zip(columns, alias_columns):
             query += f'{" " * 7}{column} AS "{alias}",\n'
@@ -161,15 +234,6 @@ class MetadataReader:
 
         1. The columns from the run table is presented first
         2. The id column is the first column in the table
-
-        Parameters
-        ----------
-        table_column_dict : dict of tuple
-            Dict containing the column names
-            On the form
-            >>> {'table_1': ('table_1_column_1', ...),
-            ...  'table_2': ('table_2_column_1', ...),
-            ...  'run': ('run_column_1', 'id', ...), ...}
 
         Returns
         -------

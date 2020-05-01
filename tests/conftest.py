@@ -18,7 +18,6 @@ from bout_runners.executor.bout_paths import BoutPaths
 from bout_runners.metadata.metadata_reader import MetadataReader
 
 
-
 @pytest.fixture(scope='session', name='yield_bout_path')
 def fixture_yield_bout_path():
     """

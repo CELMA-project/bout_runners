@@ -2,7 +2,16 @@
 
 
 def test_get_all_table_names(yield_metadata_reader, yield_all_metadata):
-    """FIXME"""
+    """
+    Test that the metadata reader is able to retrieve all table names.
+
+    Parameters
+    ----------
+    yield_metadata_reader : MetadataReader
+        The metadata reader object
+    yield_all_metadata : DataFrame
+        The test metadata
+    """
     table_names = yield_metadata_reader.table_names
     # Extract table names
     all_metadata = yield_all_metadata
@@ -14,7 +23,14 @@ def test_get_all_table_names(yield_metadata_reader, yield_all_metadata):
 def test_get_table_column_dict(yield_metadata_reader,
                                yield_all_metadata):
     """
-    FIXME
+    Test that the metadata reader retrieves the table column dict.
+
+    Parameters
+    ----------
+    yield_metadata_reader : MetadataReader
+        The metadata reader object
+    yield_all_metadata : DataFrame
+        The test metadata
     """
     table_columns_dict = yield_metadata_reader.table_column_dict
     # Extract columns dict
@@ -40,7 +56,14 @@ def test_get_table_column_dict(yield_metadata_reader,
 
 
 def test_get_table_connections(yield_metadata_reader):
-    """FIXME"""
+    """
+    Test that the metadata reader retrieves the table connections.
+
+    Parameters
+    ----------
+    yield_metadata_reader : MetadataReader
+        The metadata reader object
+    """
     table_connections = yield_metadata_reader.table_connection
     expected_connections = \
         {'parameters': ('foo',
@@ -55,7 +78,16 @@ def test_get_table_connections(yield_metadata_reader):
 
 def test_get_sorted_columns(yield_metadata_reader,
                             yield_all_metadata):
-    """FIXME"""
+    """
+    Test that the metadata reader retrieves sorted columns.
+
+    Parameters
+    ----------
+    yield_metadata_reader : MetadataReader
+        The metadata reader object
+    yield_all_metadata : DataFrame
+        The test metadata
+    """
     sorted_columns = yield_metadata_reader.sorted_columns
     expected = tuple(yield_all_metadata.columns)
     assert sorted_columns == expected
@@ -63,7 +95,16 @@ def test_get_sorted_columns(yield_metadata_reader,
 
 def test_get_parameters_metadata(yield_metadata_reader,
                                  yield_all_metadata):
-    """FIXME"""
+    """
+    Test that the metadata reader can get the parameters metadata.
+
+    Parameters
+    ----------
+    yield_metadata_reader : MetadataReader
+        The metadata reader object
+    yield_all_metadata : DataFrame
+        The test metadata
+    """
     # FIXME: The parameter IDs are shown twice...no need for
     #  parameters.foo_id
     tables_to_keep = ('bar', 'baz', 'foo', 'parameters')
@@ -78,10 +119,18 @@ def test_get_parameters_metadata(yield_metadata_reader,
 
 
 def test_get_all_metadata(yield_metadata_reader, yield_all_metadata):
-    """FIXME"""
+    """
+    Test that the metadata reader can get all metadata.
+
+    Parameters
+    ----------
+    yield_metadata_reader : MetadataReader
+        The metadata reader object
+    yield_all_metadata : DataFrame
+        The test metadata
+    """
     expected = yield_all_metadata
     metadata_reader = yield_metadata_reader
     all_metadata = \
         metadata_reader.get_all_metadata()
     assert all_metadata.equals(expected)
-
