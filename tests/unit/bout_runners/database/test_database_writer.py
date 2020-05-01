@@ -43,4 +43,5 @@ def test_database_writer(make_test_schema):
     assert (values == np.dtype('int64')).all()
 
     for key, value in dummy_split_dict.items():
-        assert table.loc[0, key] == value  # pylint: disable=no-member
+        # pylint: disable=no-member
+        assert table.loc[0, key] == value
