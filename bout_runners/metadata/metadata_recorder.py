@@ -192,11 +192,12 @@ class MetadataRecorder:
 
         # Update the system info
         system_info_dict = get_system_info()
-        run_dict['host_id'] = self.__database_reader.get_entry_id(
-            'system_info', system_info_dict)
-        if run_dict['host_id'] is None:
-            run_dict['host_id'] = self.create_entry('system_info',
-                                                    system_info_dict)
+        run_dict['system_info_id'] = \
+            self.__database_reader.get_entry_id('system_info',
+                                                system_info_dict)
+        if run_dict['system_info_id'] is None:
+            run_dict['system_info_id'] = \
+                self.create_entry('system_info', system_info_dict)
 
         # Update the run
         run_id = self.__database_reader.get_entry_id('run', run_dict)

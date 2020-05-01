@@ -98,7 +98,7 @@ class DatabaseReader:
         """
         self.database_connector = database_connector
 
-    def query(self, query_str):
+    def query(self, query_str, **kwargs):
         """
         Make a query to the database.
 
@@ -106,6 +106,8 @@ class DatabaseReader:
         ----------
         query_str : str
             The query to execute
+        kwargs
+            Additional keyword parameters to pd.read_sql_query
 
         Returns
         -------
@@ -113,7 +115,8 @@ class DatabaseReader:
             The result of a query as a DataFrame
         """
         table = pd.read_sql_query(query_str,
-                                  self.database_connector.connection)
+                                  self.database_connector.connection,
+                                  **kwargs)
         return table
 
     def get_latest_row_id(self):

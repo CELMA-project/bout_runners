@@ -1,10 +1,11 @@
 """Global fixtures for the test routines."""
 
 
+import shutil
 from distutils.dir_util import copy_tree
 from distutils.dir_util import remove_tree
-import shutil
 from pathlib import Path
+import pandas as pd
 import pytest
 from bout_runners.make.make import Make
 from bout_runners.parameters.default_parameters import DefaultParameters
@@ -14,6 +15,7 @@ from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_creator import DatabaseCreator
 from bout_runners.database.database_writer import DatabaseWriter
 from bout_runners.executor.bout_paths import BoutPaths
+from bout_runners.metadata.metadata_reader import MetadataReader
 
 
 @pytest.fixture(scope='session', name='yield_bout_path')
@@ -459,3 +461,47 @@ def yield_number_of_rows_for_all_tables():
             number_of_rows_dict[table_name] = table.loc[0, 'rows']
         return number_of_rows_dict
     yield _get_number_of_rows_for_all_tables
+
+
+@pytest.fixture(scope='session')
+def yield_metadata_reader(get_test_data_path):
+    """
+    Yield the connection to the test database.
+
+    Parameters
+    ----------
+    get_test_data_path : Path
+        Path to the test data
+
+    Yields
+    ------
+    MetadataReader
+        The instance to read the metadata
+    """
+    test_db_connection =\
+        DatabaseConnector(name='test',
+                          database_root_path=get_test_data_path)
+    yield MetadataReader(test_db_connection, drop_id=None)
+
+
+@pytest.fixture(scope='session')
+def yield_all_metadata(get_test_data_path):
+    """
+    Yield the test metadata.
+
+    Parameters
+    ----------
+    get_test_data_path : Path
+        Path to the test data
+
+    Yields
+    ------
+    all_metadata : DataFrame
+        A DataFrame containing the test metadata
+    """
+    dates = MetadataReader.date_columns
+    all_metadata = \
+        pd.read_json(get_test_data_path.joinpath('all_metadata.json'),
+                     orient='split',
+                     convert_dates=dates)
+    yield all_metadata
