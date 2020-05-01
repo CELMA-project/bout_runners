@@ -86,8 +86,6 @@ def test_get_parameters_metadata(yield_metadata_reader,
     yield_all_metadata : DataFrame
         The test metadata
     """
-    # FIXME: The parameter IDs are shown twice...no need for
-    #  parameters.foo_id
     tables_to_keep = ('bar', 'baz', 'foo', 'parameters')
     cols_to_keep = [col for col in yield_all_metadata.columns
                     if col.split('.')[0] in tables_to_keep]
@@ -101,7 +99,7 @@ def test_get_parameters_metadata(yield_metadata_reader,
 
 def test_get_all_metadata(yield_metadata_reader, yield_all_metadata):
     """
-    Test that the metadata reader can get all metadata.
+    Test that the metadata reader and the drop_id decorator works.
 
     Parameters
     ----------
@@ -115,3 +113,27 @@ def test_get_all_metadata(yield_metadata_reader, yield_all_metadata):
     all_metadata = \
         metadata_reader.get_all_metadata()
     assert all_metadata.equals(expected)
+
+    metadata_reader.drop_id = 'parameters'
+    no_parameters_df = \
+        metadata_reader.get_all_metadata()
+    no_parameter_columns = [col for col in tuple(expected.columns)
+                            if not col.startswith('parameters.')]
+    assert list(no_parameters_df.columns) == no_parameter_columns
+
+    metadata_reader.drop_id = 'keep_run_id'
+    only_run_id_df = \
+        metadata_reader.get_all_metadata()
+    only_run_id_columns = \
+        [col for col in no_parameter_columns
+         if not ((col.endswith('.id') and not col == 'run.id')
+                 or col.endswith('_id'))]
+    assert list(only_run_id_df.columns) == only_run_id_columns
+
+    metadata_reader.drop_id = 'all_id'
+    all_id_df = \
+        metadata_reader.get_all_metadata()
+    all_id = \
+        [col for col in only_run_id_columns
+         if not col == 'run.id']
+    assert list(all_id_df.columns) == all_id

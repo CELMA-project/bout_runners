@@ -481,7 +481,7 @@ def yield_metadata_reader(get_test_data_path):
     test_db_connection =\
         DatabaseConnector(name='test',
                           database_root_path=get_test_data_path)
-    yield MetadataReader(test_db_connection)
+    yield MetadataReader(test_db_connection, drop_id=None)
 
 
 @pytest.fixture(scope='session')
@@ -499,7 +499,7 @@ def yield_all_metadata(get_test_data_path):
     all_metadata : DataFrame
         A DataFrame containing the test metadata
     """
-    dates = MetadataReader.dates
+    dates = MetadataReader.date_columns
     all_metadata = \
         pd.read_json(get_test_data_path.joinpath('all_metadata.json'),
                      orient='split',

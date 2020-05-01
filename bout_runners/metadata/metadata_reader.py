@@ -6,40 +6,181 @@ from bout_runners.database.database_reader import DatabaseReader
 
 
 def drop_ids(func):
-    """FIXME."""
-    def drop(self, *args, **kwargs):
-        """FIXME."""
-        dataframe = func(self, *args, **kwargs)
+    """
+    Return a function which remove excessive ids.
 
-        if self.drop_id:
-            # Remove the id's here
-            pass
-        return dataframe
+    Parameters
+    ----------
+    func : function
+        A function returning a DataFrame
+
+    Returns
+    -------
+    drop : function
+        The function dropping the ids
+    """
+    def drop(self, *args, **kwargs):
+        """
+        Drop columns inplace.
+
+        Parameters
+        ----------
+        self
+            Self reference to the instance the function is belonging to
+            Must contain self.drop_id
+        args
+            Arguments belonging to the input function
+        kwargs
+            Keyword arguments to the input function
+
+        Returns
+        -------
+        data_frame : DataFrame
+            The DataFrame where the ids has been dropped
+        """
+        data_frame = func(self, *args, **kwargs)
+        columns = tuple(data_frame.columns)
+        drop_columns = list()
+
+        if self.drop_id == 'parameters':
+            drop_columns = [col for col in columns
+                            if col.startswith('parameters.')]
+
+        elif self.drop_id == 'keep_run_id':
+            drop_columns = \
+                [col for col in columns
+                 if (col.endswith('.id') and not col == 'run.id')
+                 or col.endswith('_id')]
+
+        elif self.drop_id == 'all_id':
+            drop_columns = \
+                [col for col in columns
+                 if col.endswith('.id')
+                 or col.endswith('_id')]
+
+        if self.drop_id is not None:
+            data_frame.drop(drop_columns, axis=1, inplace=True)
+
+        return data_frame
 
     return drop
 
 
 class MetadataReader:
-    """
+    r"""
     Class for reading the metadata from the database.
 
-    FIXME
+    Attributes
+    ----------
+    __database_reader : DatabaseConnector
+        The connection to the database
+    __table_names : tuple
+        Getter variable for table_names
+    __table_column_dict : dict of tuple
+        Getter variable for table_column_dict
+    __table_connections : dict of tuple
+        Getter variable for table_connections
+    __sorted_columns : tuple
+        Getter variable for sorted_columns
+    table_names : tuple
+         A tuple containing all names of the tables
+    table_column_dict : dict of tuple
+        A dict where the keys are table names, and the values are
+        corresponding column names
+    table_connections : dict of tuple
+        A dict where the keys are tables, and the values are tuples
+        of tables connected to the key table
+    sorted_columns : tuple
+        A tuple of the column names as they will be sorted in the
+        all_metadata DataFrame
+    date_columns : tuple
+        Columns containing dates
+    drop_id : None or str
+        Specifies what id columns should be dropped when obtaining
+        the metadata
+
+    Methods
+    -------
+    get_all_metadata()
+        Return all of the run metadata
+    get_parameters_metadata()
+        Return only the parameter part of the run metadata
+    get_join_query(from_statement, columns, alias_columns,
+                   table_connections)
+        Return the query string of a `SELECT` query with `INNER JOIN`
+    __get_parameters_query()
+        Return the parameters query string
+    __get_sorted_columns()
+        Return all columns sorted
+    __get_table_connections()
+        Return a dict containing the table connections
+    __get_all_table_names()
+        Return all the table names in the schema
+    __get_table_column_dict()
+        Return all the column names of the specified tables
+
+    Examples
+    --------
+    >>> from bout_runners.database.database_connector import \
+    ...     DatabaseConnector
+    >>> database_connector = DatabaseConnector('test')
+    >>> metadata_reader = MetadataReader(database_connector)
+    >>> metadata_reader.get_parameters_metadata()
+       bar.id  bar.foo  ... parameters.baz_id  parameters.foo_id
+    0       1        1  ...                 1                  1
+    1       2       10  ...                 1                  2
+    2       2       10  ...                 1                  1
+
+    [3 rows x 16 columns]
+    >>> metadata_reader.get_all_metadata()
+       run.id  ...                  system_info.version
+    0       1  ...  #1 SMP Thu Oct 17 19:31:58 UTC 2019
+    1       2  ...  #1 SMP Thu Oct 17 19:31:58 UTC 2019
+    2       3  ...  #1 SMP Thu Oct 17 19:31:58 UTC 2019
+    3       4  ...  #1 SMP Thu Oct 17 19:31:58 UTC 2019
+    4       5  ...  #1 SMP Thu Oct 17 19:31:58 UTC 2019
+    5       6  ...  #1 SMP Thu Oct 17 19:31:58 UTC 2019
+    6       7  ...  #1 SMP Thu Oct 17 19:31:58 UTC 2019
+
+    [7 rows x 43 columns]
+    >>> metadata_reader.drop_id = 'all_id'
+    >>> metadata_reader.get_all_metadata()
+      run.latest_status  ...                  system_info.version
+    0          complete  ...  #1 SMP Thu Oct 17 19:31:58 UTC 2019
+    1          complete  ...  #1 SMP Thu Oct 17 19:31:58 UTC 2019
+    2          complete  ...  #1 SMP Thu Oct 17 19:31:58 UTC 2019
+    3          complete  ...  #1 SMP Thu Oct 17 19:31:58 UTC 2019
+    4             error  ...  #1 SMP Thu Oct 17 19:31:58 UTC 2019
+    5           running  ...  #1 SMP Thu Oct 17 19:31:58 UTC 2019
+    6         submitted  ...  #1 SMP Thu Oct 17 19:31:58 UTC 2019
+
+    [7 rows x 28 columns]
     """
 
-    dates = ('run.start_time',
-             'run.stop_time',
-             'run.submitted_time',
-             'file_modification.bout_lib_modified',
-             'file_modification.project_executable_modified',
-             'file_modification.project_makefile_modified')
+    date_columns = ('run.start_time',
+                    'run.stop_time',
+                    'run.submitted_time',
+                    'file_modification.bout_lib_modified',
+                    'file_modification.project_executable_modified',
+                    'file_modification.project_makefile_modified')
 
-    def __init__(self, database_connector, drop_id=False):
+    def __init__(self, database_connector, drop_id='keep_run_id'):
         """
         Set the database to use.
 
         Parameters
         ----------
-        FIXME
+        database_connector : DatabaseConnector
+            The connection to the database
+        drop_id : None or 'parameters' or 'all'
+            Specifies what id columns should be dropped when
+            obtaining the metadata
+            - None : No columns will be dropped
+            - 'parameters' : All columns containing parameters ids
+              will be dropped
+            - 'keep_run_id' : Only the run.id of the id columns will be
+              kept
+            - 'all_id' : All id columns will be removed
         """
         self.drop_id = drop_id
         self.__database_reader = DatabaseReader(database_connector)
@@ -89,7 +230,7 @@ class MetadataReader:
 
         Returns
         -------
-        self.__table_connections : dict og tuple
+        self.__table_connections : dict of tuple
             A dict where the keys are tables, and the values are
             tuples of tables connected to the key table
         """
@@ -111,7 +252,7 @@ class MetadataReader:
     @drop_ids
     def get_all_metadata(self):
         """
-        Return only all of the run metadata.
+        Return all of the run metadata.
 
         Returns
         -------
@@ -152,18 +293,7 @@ class MetadataReader:
             replace('= parameters.id', '= subquery."parameters.id"')
 
         return self.__database_reader.query(all_metadata_query,
-                                            parse_dates=self.dates)
-
-    def __get_parameters_query(self):
-        """Return the parameters query string."""
-        parameter_connections = \
-            {'parameters': self.__table_connections['parameters']}
-        parameters_query = \
-            self.get_join_query('parameters',
-                                self.__parameters_columns,
-                                self.__parameters_columns,
-                                parameter_connections)
-        return parameters_query
+                                            parse_dates=self.date_columns)
 
     @drop_ids
     def get_parameters_metadata(self):
@@ -232,6 +362,17 @@ class MetadataReader:
                           f'{right_table}_id = {right_table}.id\n')
         return query
 
+    def __get_parameters_query(self):
+        """Return the parameters query string."""
+        parameter_connections = \
+            {'parameters': self.__table_connections['parameters']}
+        parameters_query = \
+            self.get_join_query('parameters',
+                                self.__parameters_columns,
+                                self.__parameters_columns,
+                                parameter_connections)
+        return parameters_query
+
     def __get_sorted_columns(self):
         """
         Return all columns sorted.
@@ -272,14 +413,6 @@ class MetadataReader:
     def __get_table_connections(self):
         """
         Return a dict containing the table connections.
-
-        Parameters
-        ----------
-        table_column_dict : dict of tuple
-            Dict containing the column names
-            On the form
-            >>> {'table_1': ('table_1_column_1', ...),
-            ...  'table_2': ('table_2_column_1', ...), ...}
 
         Returns
         -------
