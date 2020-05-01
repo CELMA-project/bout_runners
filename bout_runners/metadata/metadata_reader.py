@@ -41,21 +41,21 @@ class MetadataReader:
         ----------
         FIXME
         """
-        self.__database_reader = DatabaseReader(database_connector)
         self.drop_id = drop_id
+        self.__database_reader = DatabaseReader(database_connector)
 
         self.__table_names = self.__get_all_table_names()
         self.__table_column_dict = self.__get_table_column_dict()
         self.__table_connections = self.__get_table_connections()
         self.__sorted_columns = self.__get_sorted_columns()
 
-        self.__parameter_connections = \
+        parameters_connections = \
             {'parameters': self.__table_connections['parameters']}
-        self.__parameter_tables = \
-            ('parameters', *self.__parameter_connections['parameters'])
-        self.__parameter_columns = \
+        parameters_tables = \
+            ('parameters', *parameters_connections['parameters'])
+        self.__parameters_columns = \
             tuple(col for col in self.__sorted_columns
-                  if col.split('.')[0] in self.__parameter_tables)
+                  if col.split('.')[0] in parameters_tables)
 
     @property
     def table_names(self):
@@ -118,15 +118,11 @@ class MetadataReader:
         DataFrame
             The DataFrame of the run metadata
         """
-        parameter_query = \
-            self.get_join_query('parameters',
-                                self.__parameter_columns,
-                                self.__parameter_columns,
-                                self.__parameter_connections)
+        parameters_query = self.__get_parameters_query()
 
         # Adding spaces and parenthesis
         parameter_sub_query = '\n'.join([f'{" " * 6}{line}' for line in
-                                         parameter_query.split('\n')])
+                                         parameters_query.split('\n')])
         parameter_sub_query =\
             (f'{parameter_sub_query[:5]}({parameter_sub_query[6:-1]}) '
              f'AS subquery')
@@ -136,7 +132,7 @@ class MetadataReader:
         #       sorted_columns. Hence the `columns` field and
         #       `alias_columns` field appears swapped
         subquery_columns = \
-            [f'subquery."{col}"' if col in self.__parameter_columns
+            [f'subquery."{col}"' if col in self.__parameters_columns
              else col
              for col in self.sorted_columns]
         # Remove the parameters from the table_connection to avoid
@@ -158,6 +154,17 @@ class MetadataReader:
         return self.__database_reader.query(all_metadata_query,
                                             parse_dates=self.dates)
 
+    def __get_parameters_query(self):
+        """Return the parameters query string."""
+        parameter_connections = \
+            {'parameters': self.__table_connections['parameters']}
+        parameters_query = \
+            self.get_join_query('parameters',
+                                self.__parameters_columns,
+                                self.__parameters_columns,
+                                parameter_connections)
+        return parameters_query
+
     @drop_ids
     def get_parameters_metadata(self):
         """
@@ -168,12 +175,9 @@ class MetadataReader:
         DataFrame
             The DataFrame of the parameter metadata
         """
-        query = self.get_join_query('parameters',
-                                    self.__parameter_columns,
-                                    self.__parameter_columns,
-                                    self.__parameter_connections)
+        parameters_query = self.__get_parameters_query()
 
-        return self.__database_reader.query(query)
+        return self.__database_reader.query(parameters_query)
 
     @staticmethod
     def get_join_query(from_statement,
