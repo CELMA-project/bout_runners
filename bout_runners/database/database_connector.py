@@ -67,7 +67,7 @@ class DatabaseConnector:
     @property
     def database_path(self):
         """
-        Set the properties of self.database_path.
+        Get the properties of self.database_path.
 
         Returns
         -------
@@ -84,7 +84,7 @@ class DatabaseConnector:
     @property
     def connection(self):
         """
-        Set the properties of self.connection.
+        Get the properties of self.connection.
 
         Returns
         -------

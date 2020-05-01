@@ -2,7 +2,10 @@
 
 
 import logging
+from bout_runners.executor.executor import Executor
+from bout_runners.parameters.final_parameters import FinalParameters
 from bout_runners.database.database_creator import DatabaseCreator
+from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.metadata.metadata_recorder import \
     MetadataRecorder
 
@@ -14,13 +17,21 @@ class BoutRunner:
     Attributes
     ----------
     self.__executor : Executor
-        Object used to execute the run
+        Getter variable for executor
+    self.__database_connector : DatabaseConnector
+        Getter variable for database_connector
+    self.__final_parameters : FinalParameters
+        Getter variable for final_parameters
     self.__database_creator : DatabaseCreator
         Object used to create the database
-    self.__final_parameters : FinalParameters
-        Object containing the parameters to use
     self.__metadata_recorder : MetadataRecorder
         Object used to record the metadata about a run
+    self.executor : Executor
+        Object used to execute the run
+    self.database_creator : DatabaseCreator
+        Object used to create the database
+    self.final_parameters : FinalParameters
+        Object containing the parameters to use
 
     Methods
     -------
@@ -31,6 +42,16 @@ class BoutRunner:
 
     Examples
     --------
+    The easiest way to use BoutRunner is to run a script from the
+    root directory of the project (i.e. where the `Makefile` and
+    `data` directory are normally situated. The script can simply call
+    >>> BoutRunner().run()
+
+    and `BoutRunner` takes care of the rest.
+
+    A more elaborate example where all the dependency objects are
+    built manually:
+
     Import dependencies
     >>> from pathlib import Path
     >>> from bout_runners.executor.bout_paths import BoutPaths
@@ -75,37 +96,82 @@ class BoutRunner:
     """
 
     def __init__(self,
-                 executor,
-                 database_connector,
-                 final_parameters):
+                 executor=None,
+                 database_connector=DatabaseConnector(),
+                 final_parameters=None):
         """
         Set the member data.
 
         Parameters
         ----------
-        executor : Executor
+        executor : Executor or None
             Object executing the run
+            If None, default parameters will be used
         database_connector : DatabaseConnector
             The connection to the database
-        final_parameters : FinalParameters
+        final_parameters : FinalParameters or None
             The object containing the parameters which are going to
             be used in the run
+            If None, default parameters will be used
         """
         # Set member data
-        self.__executor = executor
-        self.__database_creator = DatabaseCreator(database_connector)
-        self.__final_parameters = final_parameters
+        # NOTE: We are not setting the default as a keyword argument
+        #       as this would mess up the paths
+        self.__executor = \
+            executor if executor is not None else Executor()
+        self.__final_parameters = \
+            final_parameters if final_parameters is not None else \
+            FinalParameters()
+        self.__database_connector = database_connector
+        self.__database_creator = \
+            DatabaseCreator(self.database_connector)
         self.__metadata_recorder = \
             MetadataRecorder(database_connector,
-                             executor.bout_paths,
-                             self.__final_parameters)
+                             self.executor.bout_paths,
+                             self.final_parameters)
+
+    @property
+    def executor(self):
+        """
+        Get the properties of self.executor.
+
+        Returns
+        -------
+        self.__executor : Executor
+            The executor object
+        """
+        return self.__executor
+
+    @property
+    def final_parameters(self):
+        """
+        Get the properties of self.final_parameters.
+
+        Returns
+        -------
+        self.__final_parameters : FinalParameters
+            The object containing the parameters used in the run
+        """
+        return self.__final_parameters
+
+    @property
+    def database_connector(self):
+        """
+        Get the properties of self.database_connector.
+
+        Returns
+        -------
+        self.__database_connector : DatabaseConnector
+            The object holding the database connection
+        """
+        return self.__database_connector
 
     def create_schema(self):
         """Create the schema."""
         final_parameters_dict = \
-            self.__final_parameters.get_final_parameters()
+            self.final_parameters.get_final_parameters()
         final_parameters_as_sql_types = \
-            self.__final_parameters. \
+            self.final_parameters. \
             cast_parameters_to_sql_type(final_parameters_dict)
         self.__database_creator.create_all_schema_tables(
             final_parameters_as_sql_types)
@@ -133,11 +199,11 @@ class BoutRunner:
 
         if run_id is None:
             logging.info('Executing the run')
-            self.__executor.execute()
+            self.executor.execute()
         else:
             logging.warning('Run with the same configuration has been '
                             'executed before, see run with run_id %d',
                             run_id)
             if force:
                 logging.info('Executing the run as force==True')
-                self.__executor.execute()
+                self.executor.execute()
