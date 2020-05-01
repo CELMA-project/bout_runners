@@ -449,6 +449,7 @@ class MetadataReader:
                  "WHERE\n"
                  "    type ='table' AND\n"
                  "    name NOT LIKE 'sqlite_%'")
+        # pylint: disable=no-member
         return tuple(self.__database_reader.query(query).loc[:, 'name'])
 
     def __get_table_column_dict(self):
@@ -468,6 +469,7 @@ class MetadataReader:
         query = "SELECT name FROM pragma_table_info('{}')"
 
         for table_name in self.table_names:
+            # pylint: disable=no-member
             table_column_dict[table_name] = tuple(
                 self.__database_reader.query(
                     query.format(table_name)).loc[:, 'name'])
