@@ -1,6 +1,10 @@
 """Module containing the StatusChecker class."""
 
 
+import logging
+from bout_runners.database.database_reader import DatabaseReader
+
+
 class StatusChecker:
     """
     FIXME
@@ -13,11 +17,79 @@ class StatusChecker:
     # writer
     # Can also be called independently
 
+    def __init__(self, database_connector, bout_paths):
+        """FIXME"""
+        self.__database_reader = DatabaseReader(database_connector)
+        self.__bout_paths = bout_paths
+
     def check_status(self):
         """FIXME"""
         # Check that run table exist
+        if not self.__database_reader.check_tables_created():
+            logging.warning(
+                'No tables found in %s',
+                self.__database_reader.database_connector.database_path)
+            # FIXME: What should the exit be here?
+
+        query = (
+            "SELECT name FROM run WHERE\n"
+            "latest_status = 'submitted'")
+        submitted_to_check = self.__database_reader.query(query)
+
+        latest_status = 'submitted'
+        for name in submitted_to_check.loc[:, 'name']:
+            log_path = self.__bout_paths.joinpath(name, 'BOUT.log.0')
+            log_reader = LogReader(log_path)
+            if log_path.is_file():
+                if log_reader.started(log_path):
+                    start_time = log_reader.start_time
+                    metadata_updater.update_start_time(start_time)
+                    if log_reader.ended():
+                        end_time = log_reader.end_time
+                        metadata_updater.update_end_time(end_time)
+                        latest_status = 'complete'
+                    else:
+                        # Check if the process is still running
+                        pid = log_reader.get_pid(log_path)
+                        # FIXME: Consider using pid, else
+                        #  https://stackoverflow.com/questions/568271/how-to-check-if-there-exists-a-process-with-a-given-pid-in-python
+                        if exist_pid(pid):
+                            latest_status = 'running'
+                        else:
+                            # FIXME: Check that the process didn't
+                            #  errored or finished in the meantime
+                            latest_status = 'error'
+                else:
+                    # No started time is found in the log
+                    if log_reader.get_pid(log_path) is not None:
+                        # FIXME: This is the same as above
+                        pid = log_reader.get_pid(log_path)
+                        if exist_pid(pid):
+                            latest_status = 'running'
+                        else:
+                            # FIXME: Check that the process didn't
+                            #  errored or finished in the meantime
+                            latest_status = 'error'
+                    else:
+                        # FIXME: Wait and check again, if fails ->
+                        #  possible crash. If possible_crash,
+                        #  this should also be queried for
+                        pass
+            else:
+                # No log file exists
+                # FIXME: Either queued or failed...how to find out if
+                #  queued? If queued -> need to check for these
+                pass
+        # FIXME: You are here
+
+        metadata_updater.update_latest_status(latest_status)
+
+        query = (
+            "SELECT name FROM run WHERE\n"
+            "latest_status = 'running'")
+        running_to_check = self.__database_reader.query(query)
         # Use DatabaseReader to check for status submitted or
-        #    possible crash in run table
+        #    possible_crash in run table
         # From there get dir to check in
         # Check for BOUT.log.0
         # If BOUT.log.0 exist -> can search for pid
