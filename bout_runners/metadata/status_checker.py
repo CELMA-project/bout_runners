@@ -3,6 +3,7 @@
 
 import logging
 from bout_runners.database.database_reader import DatabaseReader
+from bout_runners.log.log_reader import LogReader
 
 
 class StatusChecker:
@@ -41,7 +42,7 @@ class StatusChecker:
             log_path = self.__bout_paths.joinpath(name, 'BOUT.log.0')
             log_reader = LogReader(log_path)
             if log_path.is_file():
-                if log_reader.started(log_path):
+                if log_reader.started():
                     start_time = log_reader.start_time
                     metadata_updater.update_start_time(start_time)
                     if log_reader.ended():
@@ -50,6 +51,7 @@ class StatusChecker:
                         latest_status = 'complete'
                     else:
                         # Check if the process is still running
+                        # FIXME: You are here
                         pid = log_reader.get_pid(log_path)
                         # FIXME: Consider using pid, else
                         #  https://stackoverflow.com/questions/568271/how-to-check-if-there-exists-a-process-with-a-given-pid-in-python

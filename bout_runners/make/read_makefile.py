@@ -5,7 +5,7 @@ import re
 from pathlib import Path
 
 
-class ReadMakefileError(Exception):
+class MakefileReaderError(Exception):
     """Error class indicating that this is a ReadMakefile error."""
 
     def __init__(self, variable, path):
@@ -24,7 +24,7 @@ class ReadMakefileError(Exception):
         super().__init__(message)
 
 
-class ReadBoutMakefile:
+class BoutMakefileReader:
     """
     Class which reads a BOUT++ Makefile.
 
@@ -64,8 +64,8 @@ class ReadBoutMakefile:
         """Get the value of the variable."""
 
 
-class BoutMakefileVariable(ReadBoutMakefile):
-    """
+class BoutMakefileVariableReader(BoutMakefileReader):
+    r"""
     Class which reads a variable from a BOUT++ Makefile.
 
     Attributes
@@ -93,7 +93,8 @@ class BoutMakefileVariable(ReadBoutMakefile):
     ```
 
     Script
-    >>> BoutMakefileVariable('SOURCEC', 'Makefile').get_variable_value()
+    >>> BoutMakefileVariableReader('SOURCEC', 'Makefile').\
+    ...     get_variable_value()
     'bout_model.cxx'
     """
 
@@ -108,7 +109,7 @@ class BoutMakefileVariable(ReadBoutMakefile):
         variable_name : str
             The variable under consideration
         """
-        super(BoutMakefileVariable, self).__init__(path)
+        super(BoutMakefileVariableReader, self).__init__(path)
 
         self.variable_name = variable_name
         self.variable_value = None
@@ -124,7 +125,7 @@ class BoutMakefileVariable(ReadBoutMakefile):
 
         Raises
         ------
-        ReadMakefileError
+        MakefileReaderError
             If self.variable is not found
 
         Examples
@@ -135,7 +136,7 @@ class BoutMakefileVariable(ReadBoutMakefile):
         ... foo   = foobar.qux # foo = quux.quuz
 
         Script
-        >>> BoutMakefileVariable('foo', 'Makefile').get_variable_value()
+        >>> BoutMakefileVariableReader('foo', 'Makefile').get_variable_value()
         'foobar.qux'
         """
         # Build the match function for the regex
@@ -162,7 +163,7 @@ class BoutMakefileVariable(ReadBoutMakefile):
         matches = re.findall(pattern, self.content, re.M)
 
         if len(matches) == 0:
-            raise ReadMakefileError(self.variable_name, self.path)
+            raise MakefileReaderError(self.variable_name, self.path)
 
         # Only the last line of the variable will be considered by
         # the Makefile

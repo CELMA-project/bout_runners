@@ -2,21 +2,22 @@
 
 
 import pytest
-from bout_runners.make.read_makefile import ReadBoutMakefile
-from bout_runners.make.read_makefile import BoutMakefileVariable
-from bout_runners.make.read_makefile import ReadMakefileError
+from bout_runners.make.read_makefile import BoutMakefileReader
+from bout_runners.make.read_makefile import BoutMakefileVariableReader
+from bout_runners.make.read_makefile import MakefileReaderError
 
 
 def test_read_bout_makefile(get_test_data_path):
     """
-    Test that ReadBoutMakefile can read a file.
+    Test that BoutMakefileReader can read a file.
 
     Parameters
     ----------
     get_test_data_path : Path
         Path to the test data
     """
-    reader = ReadBoutMakefile(get_test_data_path.joinpath('test_read'))
+    reader = \
+        BoutMakefileReader(get_test_data_path.joinpath('test_read'))
     assert reader.content == 'This is some text'
 
 
@@ -36,7 +37,7 @@ def test_get_variable_value(filename, expected, get_test_data_path):
     get_test_data_path :  Path
         Path to the test data
     """
-    var = BoutMakefileVariable(get_test_data_path.joinpath(filename),
+    var = BoutMakefileVariableReader(get_test_data_path.joinpath(filename),
                                'VAR')
     val = var.get_variable_value()
 
@@ -45,16 +46,16 @@ def test_get_variable_value(filename, expected, get_test_data_path):
 
 def test_get_variable_value_raises(get_test_data_path):
     """
-    Test that ReadMakefileError is properly raised.
+    Test that MakefileReaderError is properly raised.
 
     Parameters
     ----------
     get_test_data_path :  Path
         Path to the test data
     """
-    var = BoutMakefileVariable(get_test_data_path.joinpath(
+    var = BoutMakefileVariableReader(get_test_data_path.joinpath(
         'Makefile_only_comment'),
                                'VAR')
 
-    with pytest.raises(ReadMakefileError):
+    with pytest.raises(MakefileReaderError):
         var.get_variable_value()
