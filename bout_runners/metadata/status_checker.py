@@ -52,7 +52,7 @@ class StatusChecker:
                     else:
                         # Check if the process is still running
                         # FIXME: You are here
-                        pid = log_reader.get_pid(log_path)
+                        pid = log_reader.pid
                         # FIXME: Consider using pid, else
                         #  https://stackoverflow.com/questions/568271/how-to-check-if-there-exists-a-process-with-a-given-pid-in-python
                         if exist_pid(pid):
@@ -63,9 +63,9 @@ class StatusChecker:
                             latest_status = 'error'
                 else:
                     # No started time is found in the log
-                    if log_reader.get_pid(log_path) is not None:
+                    if log_reader.pid_exist():
                         # FIXME: This is the same as above
-                        pid = log_reader.get_pid(log_path)
+                        pid = log_reader.pid
                         if exist_pid(pid):
                             latest_status = 'running'
                         else:
