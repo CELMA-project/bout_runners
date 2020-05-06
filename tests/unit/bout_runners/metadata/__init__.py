@@ -1,1 +1,1 @@
-"""Package containing the unit test for the bokkeeper package."""
+"""Package containing the unit test for the metadata package."""

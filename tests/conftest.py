@@ -505,3 +505,37 @@ def yield_all_metadata(get_test_data_path):
                      orient='split',
                      convert_dates=dates)
     yield all_metadata
+
+
+@pytest.fixture(scope='session')
+def yield_logs(get_test_data_path):
+    """
+    Yield the different types of execution logs.
+
+    Parameters
+    ----------
+    get_test_data_path : Path
+        Path to the test data
+
+    Yields
+    ------
+    log_paths : dict of Path
+        A dictionary containing the log paths used for testing
+    """
+    log_paths = dict()
+    log_paths['success_log'] = get_test_data_path.joinpath('BOUT.log.0')
+    log_paths['fail_log'] = \
+        get_test_data_path.joinpath('BOUT.log.0.fail')
+    log_paths['unfinished_log'] = \
+        get_test_data_path.joinpath('BOUT.log.0.unfinished')
+
+    with Path(log_paths['success_log']).open('r') as log_file:
+        # Read only the first couple of lines
+        unfinished_log = ''.join(log_file.readlines()[:5])
+        with log_paths['unfinished_log'].open('w') as unfinished_file:
+            unfinished_file.write(unfinished_log)
+
+    yield log_paths
+
+    # Clean-up
+    log_paths['unfinished_log'].unlink()

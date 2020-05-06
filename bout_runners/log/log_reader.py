@@ -38,7 +38,7 @@ class LogReader:
 
     Examples
     --------
-    FIXME: YOU ARE HERE: MAKE TESTS
+    FIXME: YOU ARE HERE: MAKE EXAMPLES
     """
 
     def __init__(self, log_path):
@@ -97,7 +97,7 @@ class LogReader:
         datetime or None
             The start time on date time format
         """
-        if self.started:
+        if self.started():
             return self.__find_locale_time(r'^Run started at  : (.*)')
         else:
             return None
@@ -112,7 +112,7 @@ class LogReader:
         datetime or None
             The end time on date time format
         """
-        if self.ended:
+        if self.ended():
             return self.__find_locale_time(r'^Run finished at  : (.*)')
         else:
             return None
@@ -129,7 +129,12 @@ class LogReader:
         """
         if self.pid_exist():
             pattern = r'^pid:\s*(\d*)\s*$'
-            return int(re.match(pattern, self.file_str).group(1))
+            # Using search as match will only search the beginning of
+            # the string
+            # https://stackoverflow.com/a/32134461/2786884
+            return int(re.search(pattern,
+                                 self.file_str,
+                                 flags=re.MULTILINE).group(1))
         else:
             return None
 
@@ -147,7 +152,10 @@ class LogReader:
         bool
             True if pattern exist
         """
-        match = re.match(pattern, self.file_str)
+        # Using search as match will only search the beginning of the
+        # string
+        # https://stackoverflow.com/a/32134461/2786884
+        match = re.search(pattern, self.file_str, flags=re.MULTILINE)
         if match is None:
             return False
         else:
@@ -167,6 +175,11 @@ class LogReader:
         time : datetime
             The locale datetime
         """
-        time_str = re.match(pattern, self.file_str).group(1)
+        # Using search as match will only search the beginning of the
+        # string
+        # https://stackoverflow.com/a/32134461/2786884
+        time_str = re.search(pattern,
+                             self.file_str,
+                             flags=re.MULTILINE).group(1)
         time = datetime.strptime(time_str, '%c')
         return time
