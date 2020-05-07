@@ -38,7 +38,17 @@ class LogReader:
 
     Examples
     --------
-    FIXME: YOU ARE HERE: MAKE EXAMPLES
+    >>> from pathlib import Path
+    >>> path = Path().joinpath('path', 'to', 'BOUT.0.log')
+    >>> log_reader = LogReader(path)
+    >>> log_reader.start_time
+    '2020-05-01 17:07:10'
+
+    >>> log_reader.end_time
+    '2020-05-01 17:07:14'
+
+    >>> log_reader.pid
+    1190
     """
 
     def __init__(self, log_path):

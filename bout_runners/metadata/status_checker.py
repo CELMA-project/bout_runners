@@ -33,18 +33,26 @@ class StatusChecker:
             # FIXME: What should the exit be here?
 
         query = (
-            "SELECT name FROM run WHERE\n"
+            "SELECT name, id AS run_id FROM run WHERE\n"
             "latest_status = 'submitted'")
         submitted_to_check = self.__database_reader.query(query)
 
         latest_status = 'submitted'
-        for name in submitted_to_check.loc[:, 'name']:
+        for name, run_id in submitted_to_check.itertuples(index=False):
+            # FIXME: YOU ARE HERE: SHOULD MetadataUpdater be
+            #  constructed with name and run_id which can be updated
+            #  every time? In any case the database_connector needs
+            #  to be updated
+
+
+
             log_path = self.__bout_paths.joinpath(name, 'BOUT.log.0')
             log_reader = LogReader(log_path)
             if log_path.is_file():
                 if log_reader.started():
                     start_time = log_reader.start_time
-                    metadata_updater.update_start_time(start_time)
+                    metadata_updater.update_start_time(run_id,
+                                                       start_time)
                     if log_reader.ended():
                         end_time = log_reader.end_time
                         metadata_updater.update_end_time(end_time)
