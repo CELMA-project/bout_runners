@@ -4,6 +4,7 @@
 import logging
 from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.log.log_reader import LogReader
+from bout_runners.metadata.metadata_updater import MetadataUpdater
 
 
 class StatusChecker:
@@ -19,8 +20,23 @@ class StatusChecker:
     # Can also be called independently
 
     def __init__(self, database_connector, bout_paths):
-        """FIXME"""
-        self.__database_reader = DatabaseReader(database_connector)
+        """
+        FIXME
+
+        Notes
+        -----
+        The StatusChecker instance only checks the project belonging
+        to the same database schema grouped together by the
+        database_connector
+
+        Parameters
+        ----------
+        database_connector
+        bout_paths
+        """
+        self.__database_connector = database_connector
+        self.__database_reader = \
+            DatabaseReader(self.__database_connector)
         self.__bout_paths = bout_paths
 
     def check_status(self):
@@ -38,21 +54,19 @@ class StatusChecker:
         submitted_to_check = self.__database_reader.query(query)
 
         latest_status = 'submitted'
+
+        metadata_updater = \
+            MetadataUpdater(self.__database_connector, run_id=-1)
+
         for name, run_id in submitted_to_check.itertuples(index=False):
-            # FIXME: YOU ARE HERE: SHOULD MetadataUpdater be
-            #  constructed with name and run_id which can be updated
-            #  every time? In any case the database_connector needs
-            #  to be updated
-
-
+            metadata_updater.run_id = run_id
 
             log_path = self.__bout_paths.joinpath(name, 'BOUT.log.0')
             log_reader = LogReader(log_path)
             if log_path.is_file():
                 if log_reader.started():
                     start_time = log_reader.start_time
-                    metadata_updater.update_start_time(run_id,
-                                                       start_time)
+                    metadata_updater.update_start_time(start_time)
                     if log_reader.ended():
                         end_time = log_reader.end_time
                         metadata_updater.update_end_time(end_time)

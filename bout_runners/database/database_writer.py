@@ -176,11 +176,12 @@ class DatabaseWriter:
         pattern = r'UPDATE (\w*)'
         table_name = re.match(pattern, update_str).group(1)
         pattern = r'WHERE (.*)'
-        condition = re.match(pattern, update_str).group(1)
+        condition = re.search(pattern, update_str).group(1)
 
         self.database_connector.execute_statement(update_str, *values)
 
-        logging.info('Updated table %s, where', table_name, condition)
+        logging.info('Updated table %s, where %s',
+                     table_name, condition)
 
     def create_entry(self, table_name, entries_dict):
         """

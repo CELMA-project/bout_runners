@@ -12,10 +12,12 @@ from bout_runners.parameters.default_parameters import DefaultParameters
 from bout_runners.parameters.final_parameters import FinalParameters
 from bout_runners.utils.paths import get_bout_path
 from bout_runners.database.database_connector import DatabaseConnector
+from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.database.database_creator import DatabaseCreator
 from bout_runners.database.database_writer import DatabaseWriter
 from bout_runners.executor.bout_paths import BoutPaths
 from bout_runners.metadata.metadata_reader import MetadataReader
+from bout_runners.metadata.metadata_updater import MetadataUpdater
 
 
 @pytest.fixture(scope='session', name='yield_bout_path')
@@ -141,19 +143,33 @@ def fixture_get_test_data_path():
     return Path(__file__).absolute().parent.joinpath('data')
 
 
-@pytest.fixture(scope='session', name='make_test_database')
-def fixture_make_test_database():
+@pytest.fixture(scope='session', name='get_tmp_db_dir')
+def fixture_get_tmp_db_dir():
     """
-    Return the wrapped function for the database connection.
+    Return the directory for the temporary databases
 
     Yields
     ------
+    tmp_db_dir : Path
+        Path to the temporary database directory
+    """
+    tmp_db_dir = Path(__file__).absolute().parent.joinpath('delme')
+    tmp_db_dir.mkdir(exist_ok=True, parents=True)
+    yield tmp_db_dir
+
+    shutil.rmtree(tmp_db_dir)
+
+
+@pytest.fixture(scope='session', name='make_test_database')
+def fixture_make_test_database(get_tmp_db_dir):
+    """
+    Return the wrapped function for the database connection.
+
+    Returns
+    -------
     _make_db : function
         The function making the database
     """
-    db_dir = Path(__file__).absolute().parent.joinpath('delme')
-    db_dir.mkdir(exist_ok=True, parents=True)
-
     def _make_db(db_name=None):
         """
         Make a database.
@@ -172,11 +188,8 @@ def fixture_make_test_database():
             The database connection object
         """
         return DatabaseConnector(name=db_name,
-                                 database_root_path=db_dir)
-
-    yield _make_db
-
-    shutil.rmtree(db_dir)
+                                 database_root_path=get_tmp_db_dir)
+    return _make_db
 
 
 @pytest.fixture(scope='session', name='get_default_parameters')
@@ -539,3 +552,55 @@ def yield_logs(get_test_data_path):
 
     # Clean-up
     log_paths['unfinished_log'].unlink()
+
+
+@pytest.fixture(scope='function')
+def get_metadata_updater_and_db_reader(get_tmp_db_dir,
+                                       get_test_data_path,
+                                       make_test_database):
+    """
+    Return an instance of metadata_updater.
+
+    The metadata_updater is connected to an isolated database
+
+    Parameters
+    ----------
+    get_tmp_db_dir : Path
+        Path to directory of temporary databases
+    get_test_data_path : Path
+        Path to test files
+    make_test_database : DatabaseConnector
+        Database connector to a database located in the temporary
+        database directory
+
+    Returns
+    -------
+    _get_metadata_updater_and_database_reader : function
+        Function which returns the number of rows for all tables in a
+        schema
+    """
+    source = get_test_data_path.joinpath('test.db')
+
+    def _get_metadata_updater_and_database_reader(name):
+        """
+        Return a metadata_updater and its database_connector.
+
+        Parameters
+        ----------
+        name : str
+            Name of the temporary database
+
+        Returns
+        -------
+        metadata_updater : MetadataUpdater
+            Object to update the database with
+        db_reader : DatabaseReader
+            The corresponding database reader
+        """
+        destination = get_tmp_db_dir.joinpath(f'{name}.db')
+        shutil.copy(source, destination)
+        db_connector = make_test_database(name)
+        db_reader = DatabaseReader(db_connector)
+        metadata_updater = MetadataUpdater(db_connector, 1)
+        return metadata_updater, db_reader
+    return _get_metadata_updater_and_database_reader

@@ -5,62 +5,89 @@ from bout_runners.database.database_writer import DatabaseWriter
 
 
 class MetadataUpdater:
-    """
-    FIXME
-    """
-    # FIXME: YOU ARE HERE: MAKE TESTS
+    r"""
+    Class which updates dynamic data about the run
 
-    def __init__(self, database_connector):
+    Attributes
+    ----------
+    __database_writer : DatabaseWriter
+        Class used to write to the database
+    run_id : int
+        The id of the run to update
+
+    Methods
+    -------
+    update_start_time(start_time)
+        Update the start time
+    update_end_time(end_time)
+        Update the end time
+    update_latest_status(status)
+        Update the latest status
+
+    Examples
+    --------
+    >>> from pathlib import Path
+    >>> from datetime import datetime
+    >>> from bout_runners.database.database_connector import \
+    ...     DatabaseConnector
+    >>> database_root_path = Path().joinpath('path', 'to', 'db_root')
+    >>> database_connector = DatabaseConnector('name_of_db',
+    ...                                        database_root_path)
+    >>> run_id = 1  # This must be a valid id in the run table
+    >>> metadata_updater = MetadataUpdater(database_connector, run_id)
+    >>> metadata_updater.update_start_time(datetime.now())
+    >>> metadata_updater.update_end_time(datetime.now())
+    >>> metadata_updater.update_latest_status('error')
+    """
+
+    def __init__(self, database_connector, run_id):
         """
-        Set the database to use.
+        Set the database and id to use.
 
         Parameters
         ----------
         database_connector : DatabaseConnector
             The database connector
+        run_id : int
+            The id of the run to update
         """
         self.__database_writer = DatabaseWriter(database_connector)
+        self.run_id = run_id
 
-    def update_start_time(self, start_time, run_id):
+    def update_start_time(self, start_time):
         """
-        Updates the start time.
+        Update the start time.
 
         Parameters
         ----------
         start_time : datetime
             The start time of the execution
-        run_id : int
-            The id of the run to update
         """
-        self.update_column_with_run_id('start_time', start_time, run_id)
+        self.update_column('start_time', start_time)
 
-    def update_end_time(self, end_time, run_id):
+    def update_end_time(self, end_time):
         """
-        Updates the end time.
+        Update the end time.
 
         Parameters
         ----------
         end_time : datetime
             The end time of the execution
-        run_id : int
-            The id of the run to update
         """
-        self.update_column_with_run_id('end_time', end_time, run_id)
+        self.update_column('end_time', end_time)
 
-    def update_latest_status(self, status, run_id):
+    def update_latest_status(self, status):
         """
-        Updates the latest status.
+        Update the latest status.
 
         Parameters
         ----------
         status : str
             The latest status
-        run_id : int
-            The id of the run to update
         """
-        self.update_column_with_run_id('latest_status', status, run_id)
+        self.update_column('latest_status', status)
 
-    def update_column_with_run_id(self, column, value, run_id):
+    def update_column(self, column, value):
         """
         Updates a field with a certain row in the run table.
 
@@ -70,12 +97,10 @@ class MetadataUpdater:
             The column to update
         value : object
             The updating value
-        run_id : int
-            The id of the run to update
         """
         update_str = self.__database_writer.create_update_string(
             field_names=(column,),
             table_name='run',
-            search_condition=f'id = {run_id}'
+            search_condition=f'id = {self.run_id}'
         )
         self.__database_writer.update(update_str, (value,))
