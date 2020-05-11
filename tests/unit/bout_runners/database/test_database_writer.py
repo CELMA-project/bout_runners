@@ -15,6 +15,7 @@ def test_database_writer(make_test_schema):
     2. That only one record is made
     3. That the type is correct
     4. Check that the values are correct
+    5. Check that it's possible to update the values
 
     Parameters
     ----------
@@ -26,12 +27,13 @@ def test_database_writer(make_test_schema):
     db_reader = DatabaseReader(db_connection)
 
     db_writer = DatabaseWriter(db_connection)
+    table_name = 'split'
     dummy_split_dict = {'number_of_processors': 41,
                         'number_of_nodes': 42,
                         'processors_per_node': 43}
     db_writer.create_entry('split', dummy_split_dict)
 
-    table = db_reader.query('SELECT * FROM split')
+    table = db_reader.query(f'SELECT * FROM {table_name}')
 
     # Check that the shape is expected (note that one column is
     # assigned to the id)
@@ -44,3 +46,16 @@ def test_database_writer(make_test_schema):
 
     for key, value in dummy_split_dict.items():
         assert table.loc[0, key] == value  # pylint: disable=no-member
+
+    update_fields = ('number_of_processors', 'number_of_nodes')
+    search_condition = (f'processors_per_node = '
+                        f'{dummy_split_dict["processors_per_node"]}')
+    values = \
+        tuple(dummy_split_dict[field]-10 for field in update_fields)
+    update_str = db_writer.create_update_string(update_fields,
+                                                table_name,
+                                                search_condition)
+    db_writer.update(update_str, values)
+    table = db_reader.query(f'SELECT * FROM {table_name}')
+    for nr, field in enumerate(update_fields):
+        assert table.loc[:, field].values[0] == values[nr]

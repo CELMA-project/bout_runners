@@ -576,8 +576,9 @@ def get_metadata_updater_and_db_reader(get_tmp_db_dir,
     Returns
     -------
     _get_metadata_updater_and_database_reader : function
-        Function which returns the number of rows for all tables in a
-        schema
+        Function which returns the MetadataUpdater object with
+        initialized with connection to the database and a
+        corresponding DatabaseReader object
     """
     source = get_test_data_path.joinpath('test.db')
 

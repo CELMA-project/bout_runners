@@ -36,7 +36,7 @@ class MetadataUpdater:
     >>> run_id = 1  # This must be a valid id in the run table
     >>> metadata_updater = MetadataUpdater(database_connector, run_id)
     >>> metadata_updater.update_start_time(datetime.now())
-    >>> metadata_updater.update_end_time(datetime.now())
+    >>> metadata_updater.update_stop_time(datetime.now())
     >>> metadata_updater.update_latest_status('error')
     """
 
@@ -65,7 +65,7 @@ class MetadataUpdater:
         """
         self.update_column('start_time', start_time)
 
-    def update_end_time(self, end_time):
+    def update_stop_time(self, end_time):
         """
         Update the end time.
 
@@ -74,7 +74,7 @@ class MetadataUpdater:
         end_time : datetime
             The end time of the execution
         """
-        self.update_column('end_time', end_time)
+        self.update_column('stop_time', end_time)
 
     def update_latest_status(self, status):
         """

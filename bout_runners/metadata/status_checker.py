@@ -69,7 +69,7 @@ class StatusChecker:
                     metadata_updater.update_start_time(start_time)
                     if log_reader.ended():
                         end_time = log_reader.end_time
-                        metadata_updater.update_end_time(end_time)
+                        metadata_updater.update_stop_time(end_time)
                         latest_status = 'complete'
                     else:
                         # Check if the process is still running

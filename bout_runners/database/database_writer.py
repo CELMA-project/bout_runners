@@ -131,10 +131,11 @@ class DatabaseWriter:
         insert_str : str
             The string to be used for update
         """
-        # FIXME: Make test for this
         placeholders = ''
         for col in field_names:
-            placeholders += f'{" " * 4}{col} = ?\n'
+            placeholders += f'{" " * 4}{col} = ?,\n'
+        # Remove last comma
+        placeholders = f'{placeholders[:-2]}\n'
 
         update_str = (f'UPDATE {table_name}\n' 
                       f'SET\n{placeholders}' 
@@ -171,7 +172,6 @@ class DatabaseWriter:
         values : tuple
             Values to be inserted in the query
         """
-        # FIXME: Make test for this
         # Obtain the table name
         pattern = r'UPDATE (\w*)'
         table_name = re.match(pattern, update_str).group(1)
