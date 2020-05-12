@@ -3,6 +3,7 @@ pyyaml==5.1.2
 numpy==1.17.4
 pandas==0.25.3
 python-dotenv==0.10.3
+psutil==5.7.0
 # Optional
 numexpr==2.7.0  # Faster evaluation of numpy
 Bottleneck==1.3.1  # Accelerating nan evaluation
