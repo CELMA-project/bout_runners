@@ -169,4 +169,3 @@ class StatusChecker:
         else:
             latest_status = 'error'
         return latest_status
-

@@ -109,8 +109,7 @@ class LogReader:
         """
         if self.started():
             return self.__find_locale_time(r'^Run started at  : (.*)')
-        else:
-            return None
+        return None
 
     @property
     def end_time(self):
@@ -124,8 +123,7 @@ class LogReader:
         """
         if self.ended():
             return self.__find_locale_time(r'^Run finished at  : (.*)')
-        else:
-            return None
+        return None
 
     @property
     def pid(self):
@@ -145,8 +143,7 @@ class LogReader:
             return int(re.search(pattern,
                                  self.file_str,
                                  flags=re.MULTILINE).group(1))
-        else:
-            return None
+        return None
 
     def __is_str_in_file(self, pattern):
         """
@@ -168,8 +165,7 @@ class LogReader:
         match = re.search(pattern, self.file_str, flags=re.MULTILINE)
         if match is None:
             return False
-        else:
-            return True
+        return True
 
     def __find_locale_time(self, pattern):
         """

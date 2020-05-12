@@ -31,7 +31,7 @@ def test_database_writer(make_test_schema):
     dummy_split_dict = {'number_of_processors': 41,
                         'number_of_nodes': 42,
                         'processors_per_node': 43}
-    db_writer.create_entry('split', dummy_split_dict)
+    db_writer.create_entry(table_name, dummy_split_dict)
 
     table = db_reader.query(f'SELECT * FROM {table_name}')
 
@@ -52,10 +52,10 @@ def test_database_writer(make_test_schema):
                         f'{dummy_split_dict["processors_per_node"]}')
     values = \
         tuple(dummy_split_dict[field]-10 for field in update_fields)
-    update_str = db_writer.create_update_string(update_fields,
-                                                table_name,
-                                                search_condition)
-    db_writer.update(update_str, values)
+    db_writer.update(db_writer.create_update_string(update_fields,
+                                                    table_name,
+                                                    search_condition),
+                     values)
     table = db_reader.query(f'SELECT * FROM {table_name}')
-    for nr, field in enumerate(update_fields):
-        assert table.loc[:, field].values[0] == values[nr]
+    for index, field in enumerate(update_fields):
+        assert table.loc[:, field].values[0] == values[index]

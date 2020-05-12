@@ -1,4 +1,4 @@
-"""Contains unittests for the metadata_updater."""
+"""Contains unittests for the MetadataUpdater."""
 
 
 from datetime import datetime

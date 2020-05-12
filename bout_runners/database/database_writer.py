@@ -137,8 +137,8 @@ class DatabaseWriter:
         # Remove last comma
         placeholders = f'{placeholders[:-2]}\n'
 
-        update_str = (f'UPDATE {table_name}\n' 
-                      f'SET\n{placeholders}' 
+        update_str = (f'UPDATE {table_name}\n'
+                      f'SET\n{placeholders}'
                       f'WHERE {search_condition}')
         return update_str
 

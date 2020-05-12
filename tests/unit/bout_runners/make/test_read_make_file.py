@@ -37,8 +37,8 @@ def test_get_variable_value(filename, expected, get_test_data_path):
     get_test_data_path :  Path
         Path to the test data
     """
-    var = BoutMakefileVariableReader(get_test_data_path.joinpath(filename),
-                               'VAR')
+    var = BoutMakefileVariableReader(
+        get_test_data_path.joinpath(filename), 'VAR')
     val = var.get_variable_value()
 
     assert val == expected
@@ -54,8 +54,7 @@ def test_get_variable_value_raises(get_test_data_path):
         Path to the test data
     """
     var = BoutMakefileVariableReader(get_test_data_path.joinpath(
-        'Makefile_only_comment'),
-                               'VAR')
+        'Makefile_only_comment'), 'VAR')
 
     with pytest.raises(MakefileReaderError):
         var.get_variable_value()
