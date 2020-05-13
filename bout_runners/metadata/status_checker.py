@@ -13,7 +13,7 @@ class StatusChecker:
     FIXME
     """
 
-    def __init__(self, database_connector, bout_paths):
+    def __init__(self, database_connector, project_path):
         """
         Setup the status checker with a connector, reader and paths
 
@@ -27,13 +27,14 @@ class StatusChecker:
         ----------
         database_connector : DatabaseConnector
             Connection to the database
-        bout_paths : BoutPaths
-            Object containing paths to the project
+        project_path : Path
+            Path to the project (the root directory with which
+            usually contains the makefile and the executable)
         """
         self.__database_connector = database_connector
         self.__database_reader = \
             DatabaseReader(self.__database_connector)
-        self.__bout_paths = bout_paths
+        self.project_path = project_path
 
     def check_and_update_status(self):
         """Check and update the status for the schema."""
@@ -80,7 +81,7 @@ class StatusChecker:
         for name, run_id in submitted_to_check.itertuples(index=False):
             metadata_updater.run_id = run_id
 
-            log_path = self.__bout_paths.joinpath(name, 'BOUT.log.0')
+            log_path = self.project_path.joinpath(name, 'BOUT.log.0')
             log_reader = LogReader(log_path)
 
             if log_path.is_file():
@@ -118,7 +119,7 @@ class StatusChecker:
         """
         for name, run_id in running_to_check.itertuples(index=False):
             metadata_updater.run_id = run_id
-            log_path = self.__bout_paths.joinpath(name, 'BOUT.log.0')
+            log_path = self.project_path.joinpath(name, 'BOUT.log.0')
             log_reader = LogReader(log_path)
             latest_status = self.check_if_running_or_errored(log_reader)
             metadata_updater.update_latest_status(latest_status)
