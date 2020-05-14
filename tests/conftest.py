@@ -7,6 +7,7 @@ from distutils.dir_util import remove_tree
 from pathlib import Path
 import pandas as pd
 import pytest
+import psutil
 from bout_runners.make.make import Make
 from bout_runners.parameters.default_parameters import DefaultParameters
 from bout_runners.parameters.final_parameters import FinalParameters
@@ -726,3 +727,124 @@ def copy_log_file(get_test_data_path):
 
     for path in paths_to_remove:
         shutil.rmtree(path)
+
+
+@pytest.fixture(scope='function')
+def mock_pid_exists(monkeypatch):
+    """
+    Return a function for setting up a monkeypatch of psutil.pid_exists.
+
+    Parameters
+    ----------
+    monkeypatch : MonkeyPatch
+        MonkeyPatch from pytest
+    """
+
+    def mock_wrapper(test_case):
+        """
+        Setup a monkeypatch for psutil.pid_exists.
+
+        Note that this function wrap the mock function in order to set
+        test_case
+
+        Parameters
+        ----------
+        test_case : str
+            Description of the test on the form
+            >>> ('<log_file_present>_<pid_present_in_log>_'
+            ...  '<started_time_present_in_log>_'
+            ...  '<ended_time_present_in_log>_'
+            ...  '<whether_pid_exists>_<new_status>')
+        """
+        def _pid_exists_mock(pid):
+            """
+            Mock psutil.pid_exists.
+
+            Parameters
+            ----------
+            pid : int or None
+                Processor id to check
+
+            Returns
+            -------
+            bool
+                Whether or not the pid exists (in a mocked form)
+            """
+            return True if (pid == 10 and 'no_mock_pid' not in
+                            test_case) or pid == 11 else False
+
+        monkeypatch.setattr(psutil, 'pid_exists', _pid_exists_mock)
+    return mock_wrapper
+
+
+@pytest.fixture(scope='function')
+def copy_test_case_log_file(copy_log_file,
+                            get_test_data_path,
+                            yield_logs):
+    """
+    Return the function for copying the test case log files.
+
+    Parameters
+    ----------
+    copy_log_file : function
+        Function which copies log files
+    get_test_data_path : Path
+        Path to test data
+    yield_logs : dict
+        Dict containing paths to logs (these will be copied by
+        copy_log_file)
+    """
+
+    def _copy_test_case_log_file(test_case):
+        """
+        Copy the test case log files.
+
+        Parameters
+        ----------
+        test_case : str
+            Description of the test on the form
+            >>> ('<log_file_present>_<pid_present_in_log>_'
+            ...  '<started_time_present_in_log>_'
+            ...  '<ended_time_present_in_log>'
+            ...  '_<whether_pid_exists>_<new_status>')
+        """
+        success_log_name = yield_logs['success_log'].name
+        failed_log_name = yield_logs['fail_log'].name
+        # This corresponds to the names in the `run` table in `test.db`
+        name_where_status_is_running = 'testdata_5'
+        name_where_status_is_submitted = 'testdata_6'
+        copy_log_file(yield_logs['unfinished_started_log_pid_11'].name,
+                      name_where_status_is_running)
+        if 'no_log' in test_case:
+            # Copy directory and file, then deleting file in order for
+            # the destructor to delete the dir
+            copy_log_file(success_log_name,
+                          name_where_status_is_submitted)
+            get_test_data_path.joinpath(name_where_status_is_submitted,
+                                        success_log_name).unlink()
+        else:
+            # A log file should be copied
+            if 'no_pid' in test_case:
+                copy_log_file(yield_logs['unfinished_no_pid_log'].name,
+                              name_where_status_is_submitted)
+            else:
+                if 'not_started' in test_case:
+                    copy_log_file(
+                        yield_logs['unfinished_not_started_log'].name,
+                        name_where_status_is_submitted)
+                else:
+                    if 'not_ended' in test_case:
+                        copy_log_file(
+                            yield_logs['unfinished_started_log'].name,
+                            name_where_status_is_submitted)
+                    else:
+                        if 'error' in test_case:
+                            copy_log_file(
+                                failed_log_name,
+                                name_where_status_is_submitted)
+                        else:
+                            copy_log_file(
+                                success_log_name,
+                                name_where_status_is_submitted)
+
+    return _copy_test_case_log_file
