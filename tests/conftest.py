@@ -585,10 +585,10 @@ def yield_logs(get_test_data_path):
     log_paths['unfinished_started_log_pid_11'].unlink()
 
 
-@pytest.fixture(scope='function')
-def get_test_db_copy(get_tmp_db_dir,
-                     get_test_data_path,
-                     make_test_database):
+@pytest.fixture(scope='function', name='get_test_db_copy')
+def fixture_get_test_db_copy(get_tmp_db_dir,
+                             get_test_data_path,
+                             make_test_database):
     """
     Return a DatabaseConnector connected to a copy of test.db.
 
@@ -634,6 +634,7 @@ def get_test_db_copy(get_tmp_db_dir,
 
 @pytest.fixture(scope='function')
 def get_metadata_updater_and_db_reader(get_tmp_db_dir,
+                                       get_test_db_copy,
                                        get_test_data_path,
                                        make_test_database):
     """
@@ -645,6 +646,9 @@ def get_metadata_updater_and_db_reader(get_tmp_db_dir,
     ----------
     get_tmp_db_dir : Path
         Path to directory of temporary databases
+    get_test_db_copy : function
+        Function which returns a a database connector to the copy of the
+        test database
     get_test_data_path : Path
         Path to test files
     make_test_database : DatabaseConnector

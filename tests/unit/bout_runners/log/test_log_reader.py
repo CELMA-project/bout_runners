@@ -121,7 +121,7 @@ def test_pid(yield_logs):
     """
     log_paths = yield_logs
     success_log_reader = LogReader(log_paths['success_log'])
-    assert success_log_reader.pid == 1190
+    assert success_log_reader.pid == 1191
 
     failed_log_reader = LogReader(log_paths['fail_log'])
     assert failed_log_reader.pid == 1190
