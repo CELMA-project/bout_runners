@@ -52,17 +52,15 @@ class StatusChecker:
             MetadataUpdater(self.__database_connector, run_id=-1)
 
         # Check runs with status 'submitted'
-        query = (
-            "SELECT name, id AS run_id FROM run WHERE\n"
-            "latest_status = 'submitted'")
+        query = ("SELECT name, id AS run_id FROM run WHERE\n"
+                 "latest_status = 'submitted'")
         submitted_to_check = self.__database_reader.query(query)
         self.__check_submitted(metadata_updater,
                                submitted_to_check)
 
         # Check runs with status 'running'
-        query = (
-            "SELECT name FROM run WHERE\n"
-            "latest_status = 'running'")
+        query = ("SELECT name, id FROM run WHERE\n"
+                 "latest_status = 'running'")
         running_to_check = self.__database_reader.query(query)
         self.__check_running(metadata_updater, running_to_check)
 
@@ -82,9 +80,9 @@ class StatusChecker:
             metadata_updater.run_id = run_id
 
             log_path = self.project_path.joinpath(name, 'BOUT.log.0')
-            log_reader = LogReader(log_path)
 
             if log_path.is_file():
+                log_reader = LogReader(log_path)
                 if log_reader.started():
                     start_time = log_reader.start_time
                     metadata_updater.update_start_time(start_time)
@@ -161,11 +159,14 @@ class StatusChecker:
 
         Returns
         -------
-        latest_status : 'running' or 'error'
+        latest_status : 'running' or 'error' or 'submitted'
             The latest status
         """
         pid = log_reader.pid
-        if psutil.pid_exists(pid):
+        if pid is None:
+            # FIXME: Check for these statuses as well
+            latest_status = 'created'
+        elif psutil.pid_exists(pid):
             latest_status = 'running'
         else:
             latest_status = 'error'

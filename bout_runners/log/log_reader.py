@@ -39,7 +39,7 @@ class LogReader:
     Examples
     --------
     >>> from pathlib import Path
-    >>> path = Path().joinpath('path', 'to', 'BOUT.0.log')
+    >>> path = Path().joinpath('path', 'to', 'BOUT.log.0')
     >>> log_reader = LogReader(path)
     >>> log_reader.start_time
     '2020-05-01 17:07:10'

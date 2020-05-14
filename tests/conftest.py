@@ -539,19 +539,82 @@ def yield_logs(get_test_data_path):
     log_paths['success_log'] = get_test_data_path.joinpath('BOUT.log.0')
     log_paths['fail_log'] = \
         get_test_data_path.joinpath('BOUT.log.0.fail')
-    log_paths['unfinished_log'] = \
-        get_test_data_path.joinpath('BOUT.log.0.unfinished')
+    log_paths['unfinished_no_pid_log'] = \
+        get_test_data_path.joinpath('BOUT.log.0.unfinished_no_pid')
+    log_paths['unfinished_not_started_log'] = \
+        get_test_data_path.joinpath('BOUT.log.0.unfinished_not_started')
+    log_paths['unfinished_started_log'] = \
+        get_test_data_path.joinpath('BOUT.log.0.unfinished_started')
 
     with Path(log_paths['success_log']).open('r') as log_file:
         # Read only the first couple of lines
-        unfinished_log = ''.join(log_file.readlines()[:5])
-        with log_paths['unfinished_log'].open('w') as unfinished_file:
-            unfinished_file.write(unfinished_log)
+        all_lines = log_file.readlines()
+        unfinished_no_pid_log = ''.join(all_lines[:5])
+        unfinished_not_started_log = ''.join(all_lines[:100])
+        unfinished_started_log = ''.join(all_lines[:200])
+        with log_paths['unfinished_no_pid_log'].open('w') as \
+                unfinished_file:
+            unfinished_file.write(unfinished_no_pid_log)
+        with log_paths['unfinished_not_started_log'].open('w') as \
+                unfinished_file:
+            unfinished_file.write(unfinished_not_started_log)
+        with log_paths['unfinished_started_log'].open('w') as \
+                unfinished_file:
+            unfinished_file.write(unfinished_started_log)
 
     yield log_paths
 
     # Clean-up
-    log_paths['unfinished_log'].unlink()
+    log_paths['unfinished_no_pid_log'].unlink()
+    log_paths['unfinished_not_started_log'].unlink()
+    log_paths['unfinished_started_log'].unlink()
+
+
+@pytest.fixture(scope='function')
+def get_test_db_copy(get_tmp_db_dir,
+                     get_test_data_path,
+                     make_test_database):
+    """
+    Return a DatabaseConnector connected to a copy of test.db.
+
+    Parameters
+    ----------
+    get_tmp_db_dir : Path
+        Path to directory of temporary databases
+    get_test_data_path : Path
+        Path to test files
+    make_test_database : DatabaseConnector
+        Database connector to a database located in the temporary
+        database directory
+
+    Returns
+    -------
+    _get_test_db_copy : function
+        Function which returns a a database connector to the copy of the
+        test database
+    """
+    source = get_test_data_path.joinpath('test.db')
+
+    def _get_test_db_copy(name):
+        """
+        Return a database connector to the copy of the test database.
+
+        Parameters
+        ----------
+        name : str
+            Name of the temporary database
+
+        Returns
+        -------
+        db_connector : DatabaseConnector
+            DatabaseConnector to the copy of the test database
+        """
+        destination = get_tmp_db_dir.joinpath(f'{name}.db')
+        shutil.copy(source, destination)
+        db_connector = make_test_database(name)
+        return db_connector
+
+    return _get_test_db_copy
 
 
 @pytest.fixture(scope='function')
@@ -559,7 +622,7 @@ def get_metadata_updater_and_db_reader(get_tmp_db_dir,
                                        get_test_data_path,
                                        make_test_database):
     """
-    Return an instance of metadata_updater.
+    Return an instance of MetadataUpdater.
 
     The metadata_updater is connected to an isolated database
 
@@ -580,11 +643,9 @@ def get_metadata_updater_and_db_reader(get_tmp_db_dir,
         initialized with connection to the database and a
         corresponding DatabaseReader object
     """
-    source = get_test_data_path.joinpath('test.db')
-
     def _get_metadata_updater_and_database_reader(name):
         """
-        Return a metadata_updater and its database_connector.
+        Return a MetadataUpdater and its DatabaseConnector.
 
         Parameters
         ----------
@@ -598,10 +659,56 @@ def get_metadata_updater_and_db_reader(get_tmp_db_dir,
         db_reader : DatabaseReader
             The corresponding database reader
         """
-        destination = get_tmp_db_dir.joinpath(f'{name}.db')
-        shutil.copy(source, destination)
-        db_connector = make_test_database(name)
+        db_connector = get_test_db_copy(name)
         db_reader = DatabaseReader(db_connector)
         metadata_updater = MetadataUpdater(db_connector, 1)
         return metadata_updater, db_reader
+
     return _get_metadata_updater_and_database_reader
+
+
+@pytest.fixture(scope='function')
+def copy_log_file(get_test_data_path):
+    """
+    Return a function which copy log files to a temporary directory.
+
+    Parameters
+    ----------
+    get_test_data_path : Path
+        Path to test files
+
+    Returns
+    -------
+    _copy_logfile : function
+        Function which copy log files to a temporary directory
+    """
+    # NOTE: This corresponds to names in test.db
+    paths_to_remove = list()
+
+    def _copy_log_file(log_file_to_copy, destination_dir_name):
+        """
+        Copy log files to a temporary directory.
+
+        Parameters
+        ----------
+        log_file_to_copy : Path
+            Path to log file to copy
+        destination_dir_name : str
+            Name of directory to copy relative to the test data dir
+
+        Returns
+        -------
+        db_connector : DatabaseConnector
+            DatabaseConnector to the copy of the test database
+        """
+        destination_dir = \
+            get_test_data_path.joinpath(destination_dir_name)
+        destination_dir.mkdir(exist_ok=True)
+        destination_path = destination_dir.joinpath('BOUT.log.0')
+        shutil.copy(get_test_data_path.joinpath(log_file_to_copy),
+                    destination_path)
+        paths_to_remove.append(destination_dir)
+    yield _copy_log_file
+
+    for path in paths_to_remove:
+        shutil.rmtree(path)

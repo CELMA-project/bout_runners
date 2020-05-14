@@ -21,8 +21,9 @@ def test_started(yield_logs):
     failed_log_reader = LogReader(log_paths['fail_log'])
     assert failed_log_reader.started()
 
-    unfinished_log_reader = LogReader(log_paths['unfinished_log'])
-    assert unfinished_log_reader.started() is False
+    unfinished_no_pid_log_reader = \
+        LogReader(log_paths['unfinished_no_pid_log'])
+    assert unfinished_no_pid_log_reader.started() is False
 
 
 def test_ended(yield_logs):
@@ -41,8 +42,9 @@ def test_ended(yield_logs):
     failed_log_reader = LogReader(log_paths['fail_log'])
     assert failed_log_reader.ended() is False
 
-    unfinished_log_reader = LogReader(log_paths['unfinished_log'])
-    assert unfinished_log_reader.ended() is False
+    unfinished_no_pid_log_reader = \
+        LogReader(log_paths['unfinished_no_pid_log'])
+    assert unfinished_no_pid_log_reader.ended() is False
 
 
 def test_pid_exist(yield_logs):
@@ -61,8 +63,9 @@ def test_pid_exist(yield_logs):
     failed_log_reader = LogReader(log_paths['fail_log'])
     assert failed_log_reader.pid_exist()
 
-    unfinished_log_reader = LogReader(log_paths['unfinished_log'])
-    assert unfinished_log_reader.ended() is False
+    unfinished_no_pid_log_reader = \
+        LogReader(log_paths['unfinished_no_pid_log'])
+    assert unfinished_no_pid_log_reader.ended() is False
 
 
 def test_start_time(yield_logs):
@@ -82,8 +85,8 @@ def test_start_time(yield_logs):
     failed_log_reader = LogReader(log_paths['fail_log'])
     assert failed_log_reader.start_time == start_time
 
-    unfinished_log_reader = LogReader(log_paths['unfinished_log'])
-    assert unfinished_log_reader.start_time is None
+    unfinished_no_pid_log_reader = LogReader(log_paths['unfinished_no_pid_log'])
+    assert unfinished_no_pid_log_reader.start_time is None
 
 
 def test_end_time(yield_logs):
@@ -103,8 +106,8 @@ def test_end_time(yield_logs):
     failed_log_reader = LogReader(log_paths['fail_log'])
     assert failed_log_reader.end_time is None
 
-    unfinished_log_reader = LogReader(log_paths['unfinished_log'])
-    assert unfinished_log_reader.end_time is None
+    unfinished_no_pid_log_reader = LogReader(log_paths['unfinished_no_pid_log'])
+    assert unfinished_no_pid_log_reader.end_time is None
 
 
 def test_pid(yield_logs):
@@ -123,5 +126,5 @@ def test_pid(yield_logs):
     failed_log_reader = LogReader(log_paths['fail_log'])
     assert failed_log_reader.pid == 1190
 
-    unfinished_log_reader = LogReader(log_paths['unfinished_log'])
-    assert unfinished_log_reader.pid is None
+    unfinished_no_pid_log_reader = LogReader(log_paths['unfinished_no_pid_log'])
+    assert unfinished_no_pid_log_reader.pid is None
