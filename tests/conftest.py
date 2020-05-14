@@ -545,6 +545,9 @@ def yield_logs(get_test_data_path):
         get_test_data_path.joinpath('BOUT.log.0.unfinished_not_started')
     log_paths['unfinished_started_log'] = \
         get_test_data_path.joinpath('BOUT.log.0.unfinished_started')
+    log_paths['unfinished_started_log_pid_11'] = \
+        get_test_data_path.joinpath(
+            'BOUT.log.0.unfinished_started_pid_11')
 
     with Path(log_paths['success_log']).open('r') as log_file:
         # Read only the first couple of lines
@@ -557,9 +560,19 @@ def yield_logs(get_test_data_path):
             unfinished_file.write(unfinished_no_pid_log)
         with log_paths['unfinished_not_started_log'].open('w') as \
                 unfinished_file:
+            unfinished_not_started_log = \
+                unfinished_not_started_log.replace('pid: 1191',
+                                                   'pid: 10')
             unfinished_file.write(unfinished_not_started_log)
         with log_paths['unfinished_started_log'].open('w') as \
                 unfinished_file:
+            unfinished_started_log = unfinished_started_log.replace(
+                'pid: 1191', 'pid: 10')
+            unfinished_file.write(unfinished_started_log)
+        with log_paths['unfinished_started_log_pid_11'].open('w') as \
+                unfinished_file:
+            unfinished_started_log = unfinished_started_log.replace(
+                'pid: 10', 'pid: 11')
             unfinished_file.write(unfinished_started_log)
 
     yield log_paths
@@ -568,6 +581,7 @@ def yield_logs(get_test_data_path):
     log_paths['unfinished_no_pid_log'].unlink()
     log_paths['unfinished_not_started_log'].unlink()
     log_paths['unfinished_started_log'].unlink()
+    log_paths['unfinished_started_log_pid_11'].unlink()
 
 
 @pytest.fixture(scope='function')
