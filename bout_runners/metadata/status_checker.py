@@ -9,13 +9,47 @@ from bout_runners.metadata.metadata_updater import MetadataUpdater
 
 
 class StatusChecker:
-    """
-    FIXME
+    r"""
+    Class to check and update the status of runs.
+
+    Attributes
+    ----------
+    __database_connector : DatabaseConnector
+        Connection to the database under consideration
+    __database_reader : DatabaseReader
+        Object to read the database with
+    project_path : Path
+        Path to the project
+
+    Methods
+    -------
+    check_and_update_status()
+        Check and update the status for the schema
+    __check_submitted(metadata_updater, submitted_to_check)
+        Check the status of all runs which has status `submitted`
+    __check_running(metadata_updater, running_to_check)
+        Check the status of all runs which has status `running`
+     __check_if_stopped(log_reader, metadata_updater)
+        Check if a run has stopped
+    check_if_running_or_errored(log_reader)
+        Check if a run is still running or has errored
+
+    Examples
+    --------
+    >>> from pathlib import Path
+    >>> from bout_runners.database.database_connector import \
+    ...     DatabaseConnector
+    >>> db_connector = DatabaseConnector('name_of_db')
+    >>> project_path = Path('path').joinpath('to', 'project')
+    >>> status_checker = StatusChecker(db_connector, project_path)
+    >>> status_checker.check_and_update_status()
+
+    Any updates to the runs will be written to the database
     """
 
     def __init__(self, database_connector, project_path):
         """
-        Setup the status checker with a connector, reader and paths
+        Set connector, reader and a project path.
 
         Notes
         -----
@@ -53,7 +87,8 @@ class StatusChecker:
 
         # Check runs with status 'submitted'
         query = ("SELECT name, id AS run_id FROM run WHERE\n"
-                 "latest_status = 'submitted'")
+                 "latest_status = 'submitted' OR \n"
+                 "latest_status = 'created'")
         submitted_to_check = self.__database_reader.query(query)
         self.__check_submitted(metadata_updater,
                                submitted_to_check)
@@ -124,7 +159,7 @@ class StatusChecker:
 
     def __check_if_stopped(self, log_reader, metadata_updater):
         """
-        Check if a run is still running or has errored.
+        Check if a run has stopped.
 
         Parameters
         ----------
@@ -164,7 +199,6 @@ class StatusChecker:
         """
         pid = log_reader.pid
         if pid is None:
-            # FIXME: Check for these statuses as well
             latest_status = 'created'
         elif psutil.pid_exists(pid):
             latest_status = 'running'

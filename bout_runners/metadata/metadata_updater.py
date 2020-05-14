@@ -6,7 +6,7 @@ from bout_runners.database.database_writer import DatabaseWriter
 
 class MetadataUpdater:
     r"""
-    Class which updates dynamic data about the run
+    Class which updates dynamic data about the run.
 
     Attributes
     ----------
@@ -89,7 +89,7 @@ class MetadataUpdater:
 
     def update_column(self, column, value):
         """
-        Updates a field with a certain row in the run table.
+        Update a field with a certain row in the run table.
 
         Parameters
         ----------

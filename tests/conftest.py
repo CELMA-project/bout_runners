@@ -147,7 +147,7 @@ def fixture_get_test_data_path():
 @pytest.fixture(scope='session', name='get_tmp_db_dir')
 def fixture_get_tmp_db_dir():
     """
-    Return the directory for the temporary databases
+    Return the directory for the temporary databases.
 
     Yields
     ------
@@ -521,8 +521,8 @@ def yield_all_metadata(get_test_data_path):
     yield all_metadata
 
 
-@pytest.fixture(scope='session')
-def yield_logs(get_test_data_path):
+@pytest.fixture(scope='session', name='yield_logs')
+def fixture_yield_logs(get_test_data_path):
     """
     Yield the different types of execution logs.
 
@@ -633,10 +633,7 @@ def fixture_get_test_db_copy(get_tmp_db_dir,
 
 
 @pytest.fixture(scope='function')
-def get_metadata_updater_and_db_reader(get_tmp_db_dir,
-                                       get_test_db_copy,
-                                       get_test_data_path,
-                                       make_test_database):
+def get_metadata_updater_and_db_reader(get_test_db_copy):
     """
     Return an instance of MetadataUpdater.
 
@@ -644,16 +641,9 @@ def get_metadata_updater_and_db_reader(get_tmp_db_dir,
 
     Parameters
     ----------
-    get_tmp_db_dir : Path
-        Path to directory of temporary databases
     get_test_db_copy : function
         Function which returns a a database connector to the copy of the
         test database
-    get_test_data_path : Path
-        Path to test files
-    make_test_database : DatabaseConnector
-        Database connector to a database located in the temporary
-        database directory
 
     Returns
     -------
@@ -686,8 +676,8 @@ def get_metadata_updater_and_db_reader(get_tmp_db_dir,
     return _get_metadata_updater_and_database_reader
 
 
-@pytest.fixture(scope='function')
-def copy_log_file(get_test_data_path):
+@pytest.fixture(scope='function', name='copy_log_file')
+def fixture_copy_log_file(get_test_data_path):
     """
     Return a function which copy log files to a temporary directory.
 
@@ -743,10 +733,9 @@ def mock_pid_exists(monkeypatch):
     monkeypatch : MonkeyPatch
         MonkeyPatch from pytest
     """
-
     def mock_wrapper(test_case):
         """
-        Setup a monkeypatch for psutil.pid_exists.
+        Return monkeypatch for psutil.pid_exists.
 
         Note that this function wrap the mock function in order to set
         test_case
@@ -774,8 +763,8 @@ def mock_pid_exists(monkeypatch):
             bool
                 Whether or not the pid exists (in a mocked form)
             """
-            return True if (pid == 10 and 'no_mock_pid' not in
-                            test_case) or pid == 11 else False
+            return (pid == 10 and 'no_mock_pid' not in test_case) \
+                or pid == 11
 
         monkeypatch.setattr(psutil, 'pid_exists', _pid_exists_mock)
     return mock_wrapper
@@ -798,7 +787,6 @@ def copy_test_case_log_file(copy_log_file,
         Dict containing paths to logs (these will be copied by
         copy_log_file)
     """
-
     def _copy_test_case_log_file(test_case):
         """
         Copy the test case log files.
