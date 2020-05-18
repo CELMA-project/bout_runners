@@ -3,6 +3,7 @@
 
 import logging
 import psutil
+import time
 from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.log.log_reader import LogReader
 from bout_runners.metadata.metadata_updater import MetadataUpdater
@@ -25,6 +26,8 @@ class StatusChecker:
     -------
     check_and_update_status()
         Check and update the status for the schema
+    check_and_update_status_until_complete()
+        Check and update the status until all runs are stopped
     __check_submitted(metadata_updater, submitted_to_check)
         Check the status of all runs which has status `submitted`
     __check_running(metadata_updater, running_to_check)
@@ -87,7 +90,7 @@ class StatusChecker:
 
         # Check runs with status 'submitted'
         query = ("SELECT name, id AS run_id FROM run WHERE\n"
-                 "latest_status = 'submitted' OR \n"
+                 "latest_status = 'submitted' OR\n"
                  "latest_status = 'created'")
         submitted_to_check = self.__database_reader.query(query)
         self.__check_submitted(metadata_updater,
@@ -98,6 +101,18 @@ class StatusChecker:
                  "latest_status = 'running'")
         running_to_check = self.__database_reader.query(query)
         self.__check_running(metadata_updater, running_to_check)
+
+    def check_and_update_until_complete(self):
+        """Check and update the status until all runs are stopped."""
+        query = ("SELECT name, id AS run_id FROM run WHERE\n"
+                 "latest_status = 'submitted' OR\n"
+                 "latest_status = 'created' OR\n"
+                 "latest_status = 'running'")
+        while len(self.__database_reader.query(query).index) != 0:
+            self.check_and_update_status()
+            logging.error(self.__database_reader.query(query))
+            time.sleep(5)
+            logging.error('again')
 
     def __check_submitted(self, metadata_updater, submitted_to_check):
         """

@@ -1,5 +1,7 @@
 """Contains unittests for the StatusChecker."""
 
+import signal
+import functools
 from pathlib import Path
 from datetime import datetime
 import pytest
@@ -39,7 +41,7 @@ def test_status_checker(test_case,
                         mock_pid_exists,
                         copy_test_case_log_file):
     """
-    Test the StatusChecker exhaustively (excluding raises).
+    Test the StatusChecker exhaustively (excluding raises and loop).
 
     Parameters
     ----------
@@ -102,3 +104,61 @@ def test_status_checker(test_case,
             "'testdata_6'"
         ).loc[0, 'stop_time']
         assert str(expected) == result
+
+
+# https://www.saltycrane.com/blog/2010/04/using-python-timeout-decorator-uploading-s3/
+def timeout(seconds_before_timeout):
+    def decorate(f):
+        def handler(_, __):
+            raise TimeoutError()
+
+        @functools.wraps(f)
+        def new_f(*args, **kwargs):
+            old = signal.signal(signal.SIGALRM, handler)
+            signal.alarm(seconds_before_timeout)
+            try:
+                result = f(*args, **kwargs)
+            finally:
+                # reinstall the old signal handler
+                signal.signal(signal.SIGALRM, old)
+                # cancel the alarm
+                signal.alarm(0)
+            return result
+        new_f.__name__ = f.__name__
+        return new_f
+    return decorate
+
+
+@timeout(1)
+def test_status_checker_until_complete(get_test_data_path,
+                                       get_test_db_copy,
+                                       mock_pid_exists,
+                                       copy_test_case_log_file):
+    """
+    Test the StatusChecker loop.
+
+    Parameters
+    ----------
+    get_test_data_path
+    get_test_db_copy
+    mock_pid_exists
+    copy_test_case_log_file
+    """
+    test_case = \
+        'log_file_pid_started_ended_no_mock_pid_complete'
+
+    project_path = get_test_data_path
+    db_connector = get_test_db_copy(test_case)
+    mock_pid_exists(test_case)
+    copy_test_case_log_file(test_case)
+
+    db_reader = DatabaseReader(db_connector)
+
+    status_checker = StatusChecker(db_connector, project_path)
+    status_checker.check_and_update_until_complete()
+
+    query = ("SELECT name, id AS run_id FROM run WHERE\n"
+             "latest_status = 'submitted' OR\n"
+             "latest_status = 'created' OR\n"
+             "latest_status = 'running'")
+    assert len(db_reader.query(query).index) == 0
