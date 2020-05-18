@@ -58,4 +58,5 @@ def test_database_writer(make_test_schema):
                      values)
     table = db_reader.query(f'SELECT * FROM {table_name}')
     for index, field in enumerate(update_fields):
+        # pylint: disable=no-member
         assert table.loc[:, field].values[0] == values[index]

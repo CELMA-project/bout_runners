@@ -70,12 +70,14 @@ def test_status_checker(test_case,
 
     # Check that the correct status has been assigned to "submitted"
     expected = test_case.split('_')[-1]
+    # pylint: disable=no-member
     result = db_reader.query(
         "SELECT latest_status FROM run WHERE name = "
         "'testdata_6'").loc[0, 'latest_status']
     assert result == expected
 
     # Check that the correct status has been assigned to "running"
+    # pylint: disable=no-member
     result = db_reader.query(
         "SELECT latest_status FROM run WHERE name = "
         "'testdata_5'").loc[0, 'latest_status']
@@ -84,6 +86,7 @@ def test_status_checker(test_case,
     # Check that correct start_time has been set
     if 'not_started' not in test_case:
         expected = datetime(2020, 5, 1, 17, 7, 10)
+        # pylint: disable=no-member
         result = db_reader.query(
             "SELECT start_time FROM run WHERE name = "
             "'testdata_6'"
@@ -93,6 +96,7 @@ def test_status_checker(test_case,
     # Check that correct end_time has been set
     if 'not_ended' not in test_case and 'complete' in test_case:
         expected = datetime(2020, 5, 1, 17, 7, 14)
+        # pylint: disable=no-member
         result = db_reader.query(
             "SELECT stop_time FROM run WHERE name = "
             "'testdata_6'"
