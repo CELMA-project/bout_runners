@@ -8,4 +8,4 @@ psutil==5.7.0
 numexpr==2.7.0  # Faster evaluation of numpy
 Bottleneck==1.3.1  # Accelerating nan evaluation
 pytest==5.3.0  # Testing
-pytest-timeout==1.3.7  # Adding timeout functionality
+pytest-timeout==1.3.4  # Adding timeout functionality
