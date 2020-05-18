@@ -1,7 +1,5 @@
 """Contains unittests for the StatusChecker."""
 
-import signal
-import functools
 from pathlib import Path
 from datetime import datetime
 import pytest
@@ -70,6 +68,13 @@ def test_status_checker(test_case,
     status_checker = StatusChecker(db_connector, project_path)
     status_checker.check_and_update_status()
 
+    # Check that the correct status has been assigned to "running"
+    # pylint: disable=no-member
+    result = db_reader.query(
+        "SELECT latest_status FROM run WHERE name = "
+        "'testdata_5'").loc[0, 'latest_status']
+    assert result == 'running'
+
     # Check that the correct status has been assigned to "submitted"
     expected = test_case.split('_')[-1]
     # pylint: disable=no-member
@@ -77,13 +82,6 @@ def test_status_checker(test_case,
         "SELECT latest_status FROM run WHERE name = "
         "'testdata_6'").loc[0, 'latest_status']
     assert result == expected
-
-    # Check that the correct status has been assigned to "running"
-    # pylint: disable=no-member
-    result = db_reader.query(
-        "SELECT latest_status FROM run WHERE name = "
-        "'testdata_5'").loc[0, 'latest_status']
-    assert result == 'running'
 
     # Check that correct start_time has been set
     if 'not_started' not in test_case:
@@ -106,51 +104,31 @@ def test_status_checker(test_case,
         assert str(expected) == result
 
 
-# https://www.saltycrane.com/blog/2010/04/using-python-timeout-decorator-uploading-s3/
-def timeout(seconds_before_timeout):
-    def decorate(f):
-        def handler(_, __):
-            raise TimeoutError()
-
-        @functools.wraps(f)
-        def new_f(*args, **kwargs):
-            old = signal.signal(signal.SIGALRM, handler)
-            signal.alarm(seconds_before_timeout)
-            try:
-                result = f(*args, **kwargs)
-            finally:
-                # reinstall the old signal handler
-                signal.signal(signal.SIGALRM, old)
-                # cancel the alarm
-                signal.alarm(0)
-            return result
-        new_f.__name__ = f.__name__
-        return new_f
-    return decorate
-
-
-@timeout(1)
-def test_status_checker_until_complete(get_test_data_path,
-                                       get_test_db_copy,
-                                       mock_pid_exists,
-                                       copy_test_case_log_file):
+@pytest.mark.timeout(60)
+def test_status_checker_until_complete_infinite(
+        get_test_data_path,
+        get_test_db_copy,
+        copy_test_case_log_file):
     """
-    Test the StatusChecker loop.
+    Test the infinite loop of StatusChecker.
 
     Parameters
     ----------
     get_test_data_path
     get_test_db_copy
-    mock_pid_exists
     copy_test_case_log_file
     """
     test_case = \
-        'log_file_pid_started_ended_no_mock_pid_complete'
+        'infinite_log_file_pid_started_ended_no_mock_pid_complete'
 
     project_path = get_test_data_path
     db_connector = get_test_db_copy(test_case)
-    mock_pid_exists(test_case)
     copy_test_case_log_file(test_case)
+
+    # Remove row which has status running (as it will always have
+    # this status)
+    db_connector.execute_statement(
+        "DELETE FROM run WHERE name = 'testdata_5'")
 
     db_reader = DatabaseReader(db_connector)
 

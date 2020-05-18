@@ -110,9 +110,7 @@ class StatusChecker:
                  "latest_status = 'running'")
         while len(self.__database_reader.query(query).index) != 0:
             self.check_and_update_status()
-            logging.error(self.__database_reader.query(query))
             time.sleep(5)
-            logging.error('again')
 
     def __check_submitted(self, metadata_updater, submitted_to_check):
         """
