@@ -1,8 +1,8 @@
 """Module containing functions to extract names."""
 
 from pathlib import Path
-from bout_runners.make.read_makefile import BoutMakefileVariable
-from bout_runners.make.read_makefile import ReadMakefileError
+from bout_runners.make.read_makefile import BoutMakefileVariableReader
+from bout_runners.make.read_makefile import MakefileReaderError
 
 
 def get_exec_name(makefile_path):
@@ -24,10 +24,10 @@ def get_exec_name(makefile_path):
         Name of the executable
     """
     try:
-        exec_name = BoutMakefileVariable(makefile_path, 'TARGET')\
+        exec_name = BoutMakefileVariableReader(makefile_path, 'TARGET')\
             .get_variable_value()
-    except ReadMakefileError:
-        exec_name = BoutMakefileVariable(makefile_path, 'SOURCEC')\
+    except MakefileReaderError:
+        exec_name = BoutMakefileVariableReader(makefile_path, 'SOURCEC')\
             .get_variable_value()
         # Strip the name from the last .c*
         split_by = '.c'

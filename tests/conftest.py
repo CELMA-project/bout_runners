@@ -7,15 +7,18 @@ from distutils.dir_util import remove_tree
 from pathlib import Path
 import pandas as pd
 import pytest
+import psutil
 from bout_runners.make.make import Make
 from bout_runners.parameters.default_parameters import DefaultParameters
 from bout_runners.parameters.final_parameters import FinalParameters
 from bout_runners.utils.paths import get_bout_path
 from bout_runners.database.database_connector import DatabaseConnector
+from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.database.database_creator import DatabaseCreator
 from bout_runners.database.database_writer import DatabaseWriter
 from bout_runners.executor.bout_paths import BoutPaths
 from bout_runners.metadata.metadata_reader import MetadataReader
+from bout_runners.metadata.metadata_updater import MetadataUpdater
 
 
 @pytest.fixture(scope='session', name='yield_bout_path')
@@ -141,19 +144,33 @@ def fixture_get_test_data_path():
     return Path(__file__).absolute().parent.joinpath('data')
 
 
-@pytest.fixture(scope='session', name='make_test_database')
-def fixture_make_test_database():
+@pytest.fixture(scope='session', name='get_tmp_db_dir')
+def fixture_get_tmp_db_dir():
     """
-    Return the wrapped function for the database connection.
+    Return the directory for the temporary databases.
 
     Yields
     ------
+    tmp_db_dir : Path
+        Path to the temporary database directory
+    """
+    tmp_db_dir = Path(__file__).absolute().parent.joinpath('delme')
+    tmp_db_dir.mkdir(exist_ok=True, parents=True)
+    yield tmp_db_dir
+
+    shutil.rmtree(tmp_db_dir)
+
+
+@pytest.fixture(scope='session', name='make_test_database')
+def fixture_make_test_database(get_tmp_db_dir):
+    """
+    Return the wrapped function for the database connection.
+
+    Returns
+    -------
     _make_db : function
         The function making the database
     """
-    db_dir = Path(__file__).absolute().parent.joinpath('delme')
-    db_dir.mkdir(exist_ok=True, parents=True)
-
     def _make_db(db_name=None):
         """
         Make a database.
@@ -172,11 +189,8 @@ def fixture_make_test_database():
             The database connection object
         """
         return DatabaseConnector(name=db_name,
-                                 database_root_path=db_dir)
-
-    yield _make_db
-
-    shutil.rmtree(db_dir)
+                                 database_root_path=get_tmp_db_dir)
+    return _make_db
 
 
 @pytest.fixture(scope='session', name='get_default_parameters')
@@ -505,3 +519,324 @@ def yield_all_metadata(get_test_data_path):
                      orient='split',
                      convert_dates=dates)
     yield all_metadata
+
+
+@pytest.fixture(scope='session', name='yield_logs')
+def fixture_yield_logs(get_test_data_path):
+    """
+    Yield the different types of execution logs.
+
+    Parameters
+    ----------
+    get_test_data_path : Path
+        Path to the test data
+
+    Yields
+    ------
+    log_paths : dict of Path
+        A dictionary containing the log paths used for testing
+    """
+    log_paths = dict()
+    log_paths['success_log'] = get_test_data_path.joinpath('BOUT.log.0')
+    log_paths['fail_log'] = \
+        get_test_data_path.joinpath('BOUT.log.0.fail')
+    log_paths['unfinished_no_pid_log'] = \
+        get_test_data_path.joinpath('BOUT.log.0.unfinished_no_pid')
+    log_paths['unfinished_not_started_log'] = \
+        get_test_data_path.joinpath('BOUT.log.0.unfinished_not_started')
+    log_paths['unfinished_started_log'] = \
+        get_test_data_path.joinpath('BOUT.log.0.unfinished_started')
+    log_paths['unfinished_started_log_pid_11'] = \
+        get_test_data_path.joinpath(
+            'BOUT.log.0.unfinished_started_pid_11')
+
+    with Path(log_paths['success_log']).open('r') as log_file:
+        # Read only the first couple of lines
+        all_lines = log_file.readlines()
+        unfinished_no_pid_log = ''.join(all_lines[:5])
+        unfinished_not_started_log = ''.join(all_lines[:100])
+        unfinished_started_log = ''.join(all_lines[:200])
+        with log_paths['unfinished_no_pid_log'].open('w') as \
+                unfinished_file:
+            unfinished_file.write(unfinished_no_pid_log)
+        with log_paths['unfinished_not_started_log'].open('w') as \
+                unfinished_file:
+            unfinished_not_started_log = \
+                unfinished_not_started_log.replace('pid: 1191',
+                                                   'pid: 10')
+            unfinished_file.write(unfinished_not_started_log)
+        with log_paths['unfinished_started_log'].open('w') as \
+                unfinished_file:
+            unfinished_started_log = unfinished_started_log.replace(
+                'pid: 1191', 'pid: 10')
+            unfinished_file.write(unfinished_started_log)
+        with log_paths['unfinished_started_log_pid_11'].open('w') as \
+                unfinished_file:
+            unfinished_started_log = unfinished_started_log.replace(
+                'pid: 10', 'pid: 11')
+            unfinished_file.write(unfinished_started_log)
+
+    yield log_paths
+
+    # Clean-up
+    log_paths['unfinished_no_pid_log'].unlink()
+    log_paths['unfinished_not_started_log'].unlink()
+    log_paths['unfinished_started_log'].unlink()
+    log_paths['unfinished_started_log_pid_11'].unlink()
+
+
+@pytest.fixture(scope='function', name='get_test_db_copy')
+def fixture_get_test_db_copy(get_tmp_db_dir,
+                             get_test_data_path,
+                             make_test_database):
+    """
+    Return a DatabaseConnector connected to a copy of test.db.
+
+    Parameters
+    ----------
+    get_tmp_db_dir : Path
+        Path to directory of temporary databases
+    get_test_data_path : Path
+        Path to test files
+    make_test_database : DatabaseConnector
+        Database connector to a database located in the temporary
+        database directory
+
+    Returns
+    -------
+    _get_test_db_copy : function
+        Function which returns a a database connector to the copy of the
+        test database
+    """
+    source = get_test_data_path.joinpath('test.db')
+
+    def _get_test_db_copy(name):
+        """
+        Return a database connector to the copy of the test database.
+
+        Parameters
+        ----------
+        name : str
+            Name of the temporary database
+
+        Returns
+        -------
+        db_connector : DatabaseConnector
+            DatabaseConnector to the copy of the test database
+        """
+        destination = get_tmp_db_dir.joinpath(f'{name}.db')
+        shutil.copy(source, destination)
+        db_connector = make_test_database(name)
+        return db_connector
+
+    return _get_test_db_copy
+
+
+@pytest.fixture(scope='function')
+def get_metadata_updater_and_db_reader(get_test_db_copy):
+    """
+    Return an instance of MetadataUpdater.
+
+    The metadata_updater is connected to an isolated database
+
+    Parameters
+    ----------
+    get_test_db_copy : function
+        Function which returns a a database connector to the copy of the
+        test database
+
+    Returns
+    -------
+    _get_metadata_updater_and_database_reader : function
+        Function which returns the MetadataUpdater object with
+        initialized with connection to the database and a
+        corresponding DatabaseReader object
+    """
+    def _get_metadata_updater_and_database_reader(name):
+        """
+        Return a MetadataUpdater and its DatabaseConnector.
+
+        Parameters
+        ----------
+        name : str
+            Name of the temporary database
+
+        Returns
+        -------
+        metadata_updater : MetadataUpdater
+            Object to update the database with
+        db_reader : DatabaseReader
+            The corresponding database reader
+        """
+        db_connector = get_test_db_copy(name)
+        db_reader = DatabaseReader(db_connector)
+        metadata_updater = MetadataUpdater(db_connector, 1)
+        return metadata_updater, db_reader
+
+    return _get_metadata_updater_and_database_reader
+
+
+@pytest.fixture(scope='function', name='copy_log_file')
+def fixture_copy_log_file(get_test_data_path):
+    """
+    Return a function which copy log files to a temporary directory.
+
+    Parameters
+    ----------
+    get_test_data_path : Path
+        Path to test files
+
+    Returns
+    -------
+    _copy_logfile : function
+        Function which copy log files to a temporary directory
+    """
+    # NOTE: This corresponds to names in test.db
+    paths_to_remove = list()
+
+    def _copy_log_file(log_file_to_copy, destination_dir_name):
+        """
+        Copy log files to a temporary directory.
+
+        Parameters
+        ----------
+        log_file_to_copy : Path
+            Path to log file to copy
+        destination_dir_name : str
+            Name of directory to copy relative to the test data dir
+
+        Returns
+        -------
+        db_connector : DatabaseConnector
+            DatabaseConnector to the copy of the test database
+        """
+        destination_dir = \
+            get_test_data_path.joinpath(destination_dir_name)
+        destination_dir.mkdir(exist_ok=True)
+        destination_path = destination_dir.joinpath('BOUT.log.0')
+        shutil.copy(get_test_data_path.joinpath(log_file_to_copy),
+                    destination_path)
+        paths_to_remove.append(destination_dir)
+    yield _copy_log_file
+
+    for path in paths_to_remove:
+        shutil.rmtree(path)
+
+
+@pytest.fixture(scope='function')
+def mock_pid_exists(monkeypatch):
+    """
+    Return a function for setting up a monkeypatch of psutil.pid_exists.
+
+    Parameters
+    ----------
+    monkeypatch : MonkeyPatch
+        MonkeyPatch from pytest
+    """
+    def mock_wrapper(test_case):
+        """
+        Return monkeypatch for psutil.pid_exists.
+
+        Note that this function wrap the mock function in order to set
+        test_case
+
+        Parameters
+        ----------
+        test_case : str
+            Description of the test on the form
+            >>> ('<log_file_present>_<pid_present_in_log>_'
+            ...  '<started_time_present_in_log>_'
+            ...  '<ended_time_present_in_log>_'
+            ...  '<whether_pid_exists>_<new_status>')
+        """
+        def _pid_exists_mock(pid):
+            """
+            Mock psutil.pid_exists.
+
+            Parameters
+            ----------
+            pid : int or None
+                Processor id to check
+
+            Returns
+            -------
+            bool
+                Whether or not the pid exists (in a mocked form)
+            """
+            return (pid == 10 and 'no_mock_pid' not in test_case) \
+                or pid == 11
+
+        monkeypatch.setattr(psutil, 'pid_exists', _pid_exists_mock)
+    return mock_wrapper
+
+
+@pytest.fixture(scope='function')
+def copy_test_case_log_file(copy_log_file,
+                            get_test_data_path,
+                            yield_logs):
+    """
+    Return the function for copying the test case log files.
+
+    Parameters
+    ----------
+    copy_log_file : function
+        Function which copies log files
+    get_test_data_path : Path
+        Path to test data
+    yield_logs : dict
+        Dict containing paths to logs (these will be copied by
+        copy_log_file)
+    """
+    def _copy_test_case_log_file(test_case):
+        """
+        Copy the test case log files.
+
+        Parameters
+        ----------
+        test_case : str
+            Description of the test on the form
+            >>> ('<log_file_present>_<pid_present_in_log>_'
+            ...  '<started_time_present_in_log>_'
+            ...  '<ended_time_present_in_log>'
+            ...  '_<whether_pid_exists>_<new_status>')
+        """
+        success_log_name = yield_logs['success_log'].name
+        failed_log_name = yield_logs['fail_log'].name
+        # This corresponds to the names in the `run` table in `test.db`
+        name_where_status_is_running = 'testdata_5'
+        name_where_status_is_submitted = 'testdata_6'
+        copy_log_file(yield_logs['unfinished_started_log_pid_11'].name,
+                      name_where_status_is_running)
+        if 'no_log' in test_case:
+            # Copy directory and file, then deleting file in order for
+            # the destructor to delete the dir
+            copy_log_file(success_log_name,
+                          name_where_status_is_submitted)
+            get_test_data_path.joinpath(name_where_status_is_submitted,
+                                        success_log_name).unlink()
+        else:
+            # A log file should be copied
+            if 'no_pid' in test_case:
+                copy_log_file(yield_logs['unfinished_no_pid_log'].name,
+                              name_where_status_is_submitted)
+            else:
+                if 'not_started' in test_case:
+                    copy_log_file(
+                        yield_logs['unfinished_not_started_log'].name,
+                        name_where_status_is_submitted)
+                else:
+                    if 'not_ended' in test_case:
+                        copy_log_file(
+                            yield_logs['unfinished_started_log'].name,
+                            name_where_status_is_submitted)
+                    else:
+                        if 'error' in test_case:
+                            copy_log_file(
+                                failed_log_name,
+                                name_where_status_is_submitted)
+                        else:
+                            copy_log_file(
+                                success_log_name,
+                                name_where_status_is_submitted)
+
+    return _copy_test_case_log_file
