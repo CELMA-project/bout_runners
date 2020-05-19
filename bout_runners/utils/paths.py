@@ -1,9 +1,9 @@
 """Contains methods which return common paths."""
-import os
-import time
-from pathlib import Path
 
-from dotenv import load_dotenv
+
+import time
+import configparser
+from pathlib import Path
 
 
 def get_root_path():
@@ -25,12 +25,12 @@ def get_config_path():
     Returns
     -------
     Path
-        The path to the reports bout_runners
+        The path to the configuration directory
     """
     return get_root_path().joinpath('config')
 
 
-def get_logger_path():
+def get_logger_config_path():
     """
     Return the absolute path to the logger configuration.
 
@@ -40,6 +40,18 @@ def get_logger_path():
         The path to the logger configuration file
     """
     return get_config_path().joinpath('logging_config.yaml')
+
+
+def get_bout_runners_config_path():
+    """
+    Return the absolute path to the bout_runners configuration.
+
+    Returns
+    -------
+    Path
+        The path to the bout_runners configuration file
+    """
+    return get_config_path().joinpath('bout_runners.ini')
 
 
 def get_log_file_path(name=time.strftime('%Y%m%d.log')):
@@ -73,7 +85,11 @@ def get_bout_path():
     bout_path : Path
         Path to the BOUT++ repository
     """
-    # Setup
-    load_dotenv()
-    bout_path = Path(os.getenv('BOUT_PATH')).absolute()
+    config = configparser.ConfigParser()
+    config.read(get_bout_runners_config_path())
+    path_str = config['bout++']['path']
+    if '$HOME/' or '${HOME}/' in path_str.lower():
+        path_str = '/'.join(path_str.split('/')[1:])
+        path_str = f'{Path.home()}/{path_str}'
+    bout_path = Path(path_str).absolute()
     return bout_path
