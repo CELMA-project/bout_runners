@@ -1,9 +1,9 @@
 """Module containing the StatusChecker class."""
 
 
+import time
 import logging
 import psutil
-import time
 from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.log.log_reader import LogReader
 from bout_runners.metadata.metadata_updater import MetadataUpdater
@@ -47,7 +47,10 @@ class StatusChecker:
     >>> status_checker = StatusChecker(db_connector, project_path)
     >>> status_checker.check_and_update_status()
 
-    Any updates to the runs will be written to the database
+    Any updates to the runs will be written to the database.
+    Alternatively, one can run the program until all jobs have
+    stopped by calling
+    >>> status_checker.check_and_update_until_complete()
     """
 
     def __init__(self, database_connector, project_path):
@@ -102,15 +105,22 @@ class StatusChecker:
         running_to_check = self.__database_reader.query(query)
         self.__check_running(metadata_updater, running_to_check)
 
-    def check_and_update_until_complete(self):
-        """Check and update the status until all runs are stopped."""
+    def check_and_update_until_complete(self, seconds_between_update=5):
+        """
+        Check and update the status until all runs are stopped.
+
+        Parameters
+        ----------
+        seconds_between_update : int
+            Number of seconds before a new status check is performed
+        """
         query = ("SELECT name, id AS run_id FROM run WHERE\n"
                  "latest_status = 'submitted' OR\n"
                  "latest_status = 'created' OR\n"
                  "latest_status = 'running'")
         while len(self.__database_reader.query(query).index) != 0:
             self.check_and_update_status()
-            time.sleep(5)
+            time.sleep(seconds_between_update)
 
     def __check_submitted(self, metadata_updater, submitted_to_check):
         """
