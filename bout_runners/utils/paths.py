@@ -18,16 +18,16 @@ def get_root_path():
     return Path(__file__).absolute().parents[2]
 
 
-def get_bout_runners_path():
+def get_config_path():
     """
-    Return the absolute path to the bout_runners package.
+    Return the absolute path to the configurations.
 
     Returns
     -------
     Path
         The path to the reports bout_runners
     """
-    return get_root_path().joinpath('bout_runners')
+    return get_root_path().joinpath('config')
 
 
 def get_logger_path():
@@ -39,7 +39,7 @@ def get_logger_path():
     Path
         The path to the logger configuration file
     """
-    return get_bout_runners_path().joinpath('logging_config.yaml')
+    return get_config_path().joinpath('logging_config.yaml')
 
 
 def get_log_file_path(name=time.strftime('%Y%m%d.log')):
