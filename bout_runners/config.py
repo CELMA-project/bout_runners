@@ -70,7 +70,6 @@ def set_log_level(level=None):
         log_file.write(yaml.dump(config))
 
     set_up_logger(config)
-
     logging.info('Logging level set to %s', level)
 
 
@@ -92,17 +91,19 @@ def set_log_file_directory(log_dir=None):
              f'Empty input will reuse the current directory '
              f'{current_dir}\n')
         answer = input(question)
-        if answer is not None:
-            answer = int(answer)
         if answer is None:
-            config['bout++']['directory'] = str(log_dir)
+            config['log']['directory'] = str(current_dir)
+        else:
+            config['log']['directory'] = answer
     else:
-        config['bout++']['directory'] = str(log_dir)
+        config['log']['directory'] = str(log_dir)
 
     with get_bout_runners_config_path().open('w') as configfile:
         config.write(configfile)
 
     set_up_logger()
+    logging.info('Logging directory set to %s',
+                 config['log']['directory'])
 
 
 def set_bout_directory(bout_path=None):

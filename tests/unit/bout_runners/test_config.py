@@ -6,6 +6,7 @@ from bout_runners.config import set_log_level
 from bout_runners.config import set_log_file_directory
 from bout_runners.utils.logs import get_log_config
 from bout_runners.utils.paths import get_bout_runners_configuration
+from bout_runners.utils.paths import get_log_file_directory
 
 
 def test_set_log_level(protect_config, monkeypatch):
@@ -64,21 +65,23 @@ def test_set_log_file_directory(protect_config, monkeypatch):
         MonkeyPatch from pytest
     """
     config_path, _ = protect_config
-    log_dir = config_path.joinpath('test_with_parameter')
-
-    # Test with parameter input
-    set_log_file_directory(log_dir)
-    config = get_bout_runners_configuration()
-    assert config['bout++']['directory'] == str(log_dir)
+    original_dir = get_log_file_directory()
 
     # Test with empty input
     monkeypatch.setattr('builtins.input', lambda _: None)
     set_log_file_directory()
-    config = get_log_config()
-    assert config['bout++']['directory'] == str(log_dir)
+    config = get_bout_runners_configuration()
+    assert config['log']['directory'] == str(original_dir)
+
+    # Test with parameter input
+    log_dir = config_path.joinpath('test_with_parameter')
+    set_log_file_directory(log_dir)
+    config = get_bout_runners_configuration()
+    assert config['log']['directory'] == str(log_dir)
 
     # Test with non-empty input
+    log_dir = config_path.joinpath('test_with_parameter_2')
     monkeypatch.setattr('builtins.input', lambda _: str(log_dir))
     set_log_file_directory()
-    config = get_log_config()
-    assert config['bout++']['directory'] == str(log_dir)
+    config = get_bout_runners_configuration()
+    assert config['log']['directory'] == str(log_dir)
