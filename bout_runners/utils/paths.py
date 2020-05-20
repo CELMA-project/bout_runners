@@ -117,7 +117,6 @@ def get_log_file_path(log_file_dir=get_log_file_directory(),
     log_file_path : Path
         The path to the log file
     """
-
     log_file_path = log_file_dir.joinpath(name)
 
     return log_file_path

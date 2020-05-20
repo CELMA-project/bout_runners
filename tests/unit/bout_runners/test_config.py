@@ -100,7 +100,7 @@ def test_set_bout_directory(protect_config, monkeypatch):
     monkeypatch : MonkeyPatch
         MonkeyPatch from pytest
     """
-    config_path, _ = protect_config
+    _ = protect_config
     original_dir = get_bout_directory()
 
     # Test with empty input

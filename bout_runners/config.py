@@ -34,14 +34,13 @@ def set_log_level(level=None):
     if level is None:
         current_level = config['root']['level']
 
-        possibilities_map = \
-            {nr: option for nr, option in enumerate(possibilities)}
+        possibilities_map = dict(enumerate(possibilities))
         question = \
             (f'Please set the log level by entering a number:\n'
              f'   (empty input will reuse the current level '
              f'[{current_level}])\n')
-        for nr, option in possibilities_map.items():
-            question += f'{" "*3}({nr}) - {option}\n'
+        for key, val in possibilities_map.items():
+            question += f'{" "*3}({key}) - {val}\n'
         # Set an answer to start the wile loop
         answer = -1
         possibilities_keys = possibilities_map.keys()
