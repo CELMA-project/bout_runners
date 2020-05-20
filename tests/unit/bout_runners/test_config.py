@@ -11,19 +11,19 @@ from bout_runners.utils.paths import get_log_file_directory
 from bout_runners.utils.paths import get_bout_directory
 
 
-def test_set_log_level(protect_config, monkeypatch):
+def test_set_log_level(get_mock_config_path, monkeypatch):
     """
     Test that the log level is changeable.
 
     Parameters
     ----------
-    protect_config : tuple
-        Tuple containing the config_path and copied_path
+    get_mock_config_path : Path
+        The mocked config directory
     monkeypatch : MonkeyPatch
         MonkeyPatch from pytest
     """
     # Test with parameter input
-    _ = protect_config
+    _ = get_mock_config_path
     level = 'CRITICAL'
     level_number = 5
     set_log_level(level)
@@ -55,18 +55,18 @@ def test_set_log_level(protect_config, monkeypatch):
     assert config['root']['level'] == level
 
 
-def test_set_log_file_directory(protect_config, monkeypatch):
+def test_set_log_file_directory(get_mock_config_path, monkeypatch):
     """
     Test that the log file directory is changeable.
 
     Parameters
     ----------
-    protect_config : tuple
-        Tuple containing the config_path and copied_path
+    get_mock_config_path : Path
+        The mocked config directory
     monkeypatch : MonkeyPatch
         MonkeyPatch from pytest
     """
-    config_path, _ = protect_config
+    config_path = get_mock_config_path
     original_dir = get_log_file_directory()
 
     # Test with empty input
@@ -89,18 +89,18 @@ def test_set_log_file_directory(protect_config, monkeypatch):
     assert config['log']['directory'] == str(log_dir)
 
 
-def test_set_bout_directory(protect_config, monkeypatch):
+def test_set_bout_directory(get_mock_config_path, monkeypatch):
     """
     Test that the BOUT++ directory is changeable.
 
     Parameters
     ----------
-    protect_config : tuple
-        Tuple containing the config_path and copied_path
+    get_mock_config_path : Path
+        The mocked config directory
     monkeypatch : MonkeyPatch
         MonkeyPatch from pytest
     """
-    _ = protect_config
+    _ = get_mock_config_path
     original_dir = get_bout_directory()
 
     # Test with empty input

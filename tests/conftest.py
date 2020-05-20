@@ -843,26 +843,33 @@ def copy_test_case_log_file(copy_log_file,
     return _copy_test_case_log_file
 
 
-@pytest.fixture(scope='session')
-def protect_config():
+# NOTE: MonkeyPatch is function scoped
+@pytest.fixture(scope='function')
+def get_mock_config_path(monkeypatch):
     """
-    Protect the config directory.
+    Return a mock path for the config dir and redirects get_config_path.
+
+    Parameters
+    ----------
+    monkeypatch : MonkeyPatch
+        MonkeyPatch from pytest
 
     Yields
     ------
-    config_path : Path
-        The modifiable config directory
+    mock_config_path : Path
+        The mocked config directory
         This will be deleted in the teardown
-    copied_path : Path
-        The original config directory
-        This will be copied back to config_path in the teardown
     """
     config_path = get_config_path()
-    copied_path = config_path.parent.joinpath('copied_config_for_test')
-    shutil.copytree(config_path, copied_path)
+    mock_config_path = \
+        config_path.parent.joinpath('delme_config_for_test')
+    shutil.copytree(config_path, mock_config_path)
 
-    yield config_path, copied_path
+    # Redirect reading of config_files to mock_config_path for these
+    # tests
+    monkeypatch.setattr('bout_runners.utils.paths.get_config_path',
+                        lambda: mock_config_path)
 
-    shutil.rmtree(config_path)
-    shutil.copytree(copied_path, config_path)
-    shutil.rmtree(copied_path)
+    yield mock_config_path
+
+    shutil.rmtree(mock_config_path)
