@@ -2,6 +2,7 @@
 
 
 import logging
+from pathlib import Path
 import yaml
 from bout_runners.utils.paths import get_bout_runners_configuration
 from bout_runners.utils.paths import get_bout_runners_config_path
@@ -87,7 +88,7 @@ def set_log_file_directory(log_dir=None):
     if log_dir is None:
         current_dir = get_log_file_directory()
         question = \
-            (f'Please entering the directory for log paths:\n'
+            (f'Please entering the directory for log files:\n'
              f'Empty input will reuse the current directory '
              f'{current_dir}\n')
         answer = input(question)
@@ -106,18 +107,41 @@ def set_log_file_directory(log_dir=None):
                  config['log']['directory'])
 
 
-def set_bout_directory(bout_path=None):
+def set_bout_directory(bout_dir=None):
     """
     Set the path to the BOUT++ directory.
 
     Parameters
     ----------
-    bout_path : None or Path
+    bout_dir : None or Path
         The path to the BOUT++ directory
         If None, the caller will be prompted
     """
-    # FIXME: You are here
-    pass
+    config = get_bout_runners_configuration()
+    if bout_dir is None:
+        current_dir = get_bout_directory()
+        question = \
+            (f'Please entering the directory for the root of BOUT++:\n'
+             f'Empty input will reuse the current directory '
+             f'{current_dir}\n')
+        answer = input(question)
+        if answer is None:
+            config['bout++']['directory'] = str(current_dir)
+        else:
+            config['bout++']['directory'] = answer
+    else:
+        config['bout++']['directory'] = str(bout_dir)
+
+    if not Path(config['bout++']['directory']).is_dir():
+        msg = f'BOUT++ not found in {config["bout++"]["directory"]}'
+        raise ValueError(msg)
+
+    with get_bout_runners_config_path().open('w') as configfile:
+        config.write(configfile)
+
+    set_up_logger()
+    logging.info('BOUT++ directory set to %s',
+                 config['log']['directory'])
 
 
 if __name__ == '__main__':
