@@ -62,7 +62,7 @@ class LogReader:
         """
         with Path(log_path).open('r') as log_file:
             self.file_str = log_file.read()
-            logging.debug('Opened logfile %s', log_path)
+            logging.debug('Opened log_file %s', log_path)
 
     def started(self):
         """

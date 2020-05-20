@@ -54,15 +54,61 @@ def get_bout_runners_config_path():
     return get_config_path().joinpath('bout_runners.ini')
 
 
-def get_log_file_path(logfile_dir=get_root_path().joinpath('logs'),
+def get_bout_log_config_path():
+    """
+    Return the absolute path to the log configuration.
+
+    Returns
+    -------
+    Path
+        The path to the bout_runners configuration file
+    """
+    return get_config_path().joinpath('logging_config.yaml')
+
+
+def get_bout_runners_configuration():
+    """
+    Return the bout_runners configuration.
+
+    Returns
+    -------
+    config : FIXME
+        The configuration of bout_runners
+    """
+    config = configparser.ConfigParser()
+    config.read(get_bout_runners_config_path())
+    return config
+
+
+def get_log_file_directory():
+    """
+    Return the log_file directory.
+
+    Returns
+    -------
+    log_file_directory : Path
+        Path to the log_file directory
+    """
+    config = get_bout_runners_configuration()
+    path_str = config['log']['directory']
+    if path_str == 'None':
+        log_file_dir = get_root_path().joinpath('logs')
+    else:
+        log_file_dir = Path(path_str)
+
+    log_file_dir.mkdir(exist_ok=True, parents=True)
+    return log_file_dir
+
+
+def get_log_file_path(log_file_dir=get_log_file_directory(),
                       name=time.strftime('%Y%m%d.log')):
     """
     Return the absolute path to the log file path.
 
     Parameters
     ----------
-    logfile_dir : Path
-        Path to the logfile directory
+    log_file_dir : Path
+        Path to the log file directory
     name : str
         Name of the log file
 
@@ -71,25 +117,23 @@ def get_log_file_path(logfile_dir=get_root_path().joinpath('logs'),
     log_file_path : Path
         The path to the log file
     """
-    logfile_dir.mkdir(exist_ok=True, parents=True)
 
-    log_file_path = logfile_dir.joinpath(name)
+    log_file_path = log_file_dir.joinpath(name)
 
     return log_file_path
 
 
-def get_bout_path():
+def get_bout_directory():
     """
-    Load the dot-env file and yield the bout_path.
+    Load the BOUT++ directory from the configuration file.
 
     Returns
     -------
     bout_path : Path
         Path to the BOUT++ repository
     """
-    config = configparser.ConfigParser()
-    config.read(get_bout_runners_config_path())
-    path_str = config['bout++']['path']
+    config = get_bout_runners_configuration()
+    path_str = config['bout++']['directory']
     if '$HOME/' or '${HOME}/' in path_str.lower():
         path_str = '/'.join(path_str.split('/')[1:])
         path_str = f'{Path.home()}/{path_str}'

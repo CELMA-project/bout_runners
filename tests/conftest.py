@@ -12,7 +12,7 @@ from bout_runners.make.make import Make
 from bout_runners.parameters.default_parameters import DefaultParameters
 from bout_runners.parameters.final_parameters import FinalParameters
 from bout_runners.utils.paths import get_config_path
-from bout_runners.utils.paths import get_bout_path
+from bout_runners.utils.paths import get_bout_directory
 from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.database.database_creator import DatabaseCreator
@@ -32,7 +32,7 @@ def fixture_yield_bout_path():
     bout_path : Path
         Path to the BOUT++ repository
     """
-    bout_path = get_bout_path()
+    bout_path = get_bout_directory()
 
     yield bout_path
 
@@ -80,7 +80,7 @@ def make_make_object(yield_bout_path):
 
     See Also
     --------
-    tests.bout_runners.conftest.get_bout_path : Fixture which returns
+    tests.bout_runners.conftest.get_bout_directory : Fixture which returns
     the BOUT++ path
     """
     # Setup
@@ -689,7 +689,7 @@ def fixture_copy_log_file(get_test_data_path):
 
     Returns
     -------
-    _copy_logfile : function
+    _copy_log_file : function
         Function which copy log files to a temporary directory
     """
     # NOTE: This corresponds to names in test.db
@@ -865,3 +865,4 @@ def protect_config():
 
     shutil.rmtree(config_path)
     shutil.copytree(copied_path, config_path)
+    shutil.rmtree(copied_path)

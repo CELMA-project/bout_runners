@@ -1,9 +1,13 @@
 """Module for configuring bout_runners."""
 
 
-import yaml
 import logging
-from bout_runners.utils.paths import get_log_file_path
+import yaml
+from bout_runners.utils.paths import get_bout_runners_configuration
+from bout_runners.utils.paths import get_bout_runners_config_path
+from bout_runners.utils.paths import get_bout_directory
+from bout_runners.utils.paths import get_log_file_directory
+from bout_runners.utils.paths import get_bout_log_config_path
 from bout_runners.utils.logs import get_log_config
 from bout_runners.utils.logs import set_up_logger
 
@@ -19,6 +23,7 @@ def set_log_level(level=None):
         If None the caller will be prompted
     """
     config = get_log_config()
+
     possibilities = ('DEBUG',
                      'INFO',
                      'WARNING',
@@ -26,42 +31,81 @@ def set_log_level(level=None):
                      'CRITICAL')
 
     if level is None:
+        current_level = config['root']['level']
+
         possibilities_map = \
             {nr: option for nr, option in enumerate(possibilities)}
-        question = 'Please set the log level by entering a number:\n'
+        question = \
+            (f'Please set the log level by entering a number:\n'
+             f'   (empty input will reuse the current level '
+             f'[{current_level}])\n')
         for nr, option in possibilities_map.items():
             question += f'{" "*3}({nr}) - {option}\n'
         # Set an answer to start the wile loop
         answer = -1
         possibilities_keys = possibilities_map.keys()
         while answer not in possibilities_keys:
-            answer = int(input(question))
-    else:
-        if level not in possibilities:
-            msg = (f'`level` in `set_log_level` must be one of '
-                   f'{possibilities}')
-            raise ValueError(msg)
+            answer = input(question)
+            if answer is not None:
+                answer = int(answer)
+            if answer is None:
+                # Reverse the dict
+                answer = \
+                    list(possibilities_map.keys())[
+                        list(possibilities_map.values()
+                             ).index(current_level)]
+                break
+        level = possibilities_map[answer]
+
+    if level not in possibilities:
+        msg = (f'`level` in `set_log_level` must be one of '
+               f'{possibilities}')
+        raise ValueError(msg)
 
     config['handlers']['file_handler']['level'] = level
     config['handlers']['console_handler']['level'] = level
+    config['root']['level'] = level
 
-    with get_log_file_path(name='bout_runners.log').open() as log_file:
+    with get_bout_log_config_path().open('w') as log_file:
         log_file.write(yaml.dump(config))
 
     set_up_logger(config)
 
     logging.info('Logging level set to %s', level)
 
-# FIXME: If this is to be implemented, the log path needs also to be
-#  set in bout++.ini
-def set_log_path(log_path):
+
+def set_log_file_directory(log_dir=None):
     """
     Set the directory of the log files.
+
+    Parameters
+    ----------
+    log_dir : None or Path
+        The directory to keep the log files
+        If None the caller will be prompted
     """
-    pass
+    config = get_bout_runners_configuration()
+    if log_dir is None:
+        current_dir = get_log_file_directory()
+        question = \
+            (f'Please entering the directory for log paths:\n'
+             f'Empty input will reuse the current directory '
+             f'{current_dir}\n')
+        answer = input(question)
+        if answer is not None:
+            answer = int(answer)
+        if answer is None:
+            config['bout++']['directory'] = str(log_dir)
+    else:
+        config['bout++']['directory'] = str(log_dir)
+
+    with get_bout_runners_config_path().open('w') as configfile:
+        config.write(configfile)
+
+    set_up_logger()
 
 
-def set_bout_path(bout_path=None):
+def set_bout_directory(bout_path=None):
     """
     Set the path to the BOUT++ directory.
 
@@ -71,8 +115,11 @@ def set_bout_path(bout_path=None):
         The path to the BOUT++ directory
         If None, the caller will be prompted
     """
+    # FIXME: You are here
     pass
 
 
 if __name__ == '__main__':
-    pass
+    set_log_level()
+    set_log_file_directory()
+    set_bout_directory()
