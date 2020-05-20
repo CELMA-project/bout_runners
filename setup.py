@@ -19,7 +19,7 @@ INSTALL_REQUIRES = ['pyyaml',
 
 ROOT_PATH = Path(__file__).parent
 INIT_PATH = ROOT_PATH.joinpath(NAME, '__init__.py')
-README_PATH = ROOT_PATH.joinpath('README.md')
+README_PATH = ROOT_PATH.joinpath('README.rst')
 
 # https://packaging.python.org/guides/single-sourcing-package-version/
 with INIT_PATH.open('r') as f:
