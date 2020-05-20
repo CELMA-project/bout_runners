@@ -5,7 +5,7 @@ import logging
 import platform
 import subprocess
 from bout_runners.utils.file_operations import get_modified_time
-from bout_runners.utils.paths import get_bout_path
+from bout_runners.utils.paths import get_bout_directory
 from bout_runners.submitter.local_submitter import LocalSubmitter
 
 
@@ -59,7 +59,7 @@ def get_file_modification(project_path, makefile_path, exec_name):
 
     file_modification['project_git_sha'] = get_git_sha(project_path)
 
-    bout_path = get_bout_path()
+    bout_path = get_bout_directory()
     file_modification['bout_lib_modified'] = \
         get_modified_time(bout_path.joinpath('lib', 'libbout++.a'))
     file_modification['bout_git_sha'] = get_git_sha(bout_path)

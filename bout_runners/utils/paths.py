@@ -1,9 +1,9 @@
 """Contains methods which return common paths."""
-import os
-import time
-from pathlib import Path
 
-from dotenv import load_dotenv
+
+import time
+import configparser
+from pathlib import Path
 
 
 def get_root_path():
@@ -18,19 +18,19 @@ def get_root_path():
     return Path(__file__).absolute().parents[2]
 
 
-def get_bout_runners_path():
+def get_config_path():
     """
-    Return the absolute path to the bout_runners package.
+    Return the absolute path to the configurations.
 
     Returns
     -------
     Path
-        The path to the reports bout_runners
+        The path to the configuration directory
     """
-    return get_root_path().joinpath('bout_runners')
+    return get_root_path().joinpath('config')
 
 
-def get_logger_path():
+def get_logger_config_path():
     """
     Return the absolute path to the logger configuration.
 
@@ -39,15 +39,76 @@ def get_logger_path():
     Path
         The path to the logger configuration file
     """
-    return get_bout_runners_path().joinpath('logging_config.yaml')
+    return get_config_path().joinpath('logging_config.yaml')
 
 
-def get_log_file_path(name=time.strftime('%Y%m%d.log')):
+def get_bout_runners_config_path():
+    """
+    Return the absolute path to the bout_runners configuration.
+
+    Returns
+    -------
+    Path
+        The path to the bout_runners configuration file
+    """
+    return get_config_path().joinpath('bout_runners.ini')
+
+
+def get_bout_log_config_path():
+    """
+    Return the absolute path to the log configuration.
+
+    Returns
+    -------
+    Path
+        The path to the bout_runners configuration file
+    """
+    return get_config_path().joinpath('logging_config.yaml')
+
+
+def get_bout_runners_configuration():
+    """
+    Return the bout_runners configuration.
+
+    Returns
+    -------
+    config : FIXME
+        The configuration of bout_runners
+    """
+    config = configparser.ConfigParser()
+    config.read(get_bout_runners_config_path())
+    return config
+
+
+def get_log_file_directory():
+    """
+    Return the log_file directory.
+
+    Returns
+    -------
+    log_file_directory : Path
+        Path to the log_file directory
+    """
+    config = get_bout_runners_configuration()
+    path_str = config['log']['directory']
+    if path_str == 'None':
+        log_file_dir = get_root_path().joinpath('logs')
+    else:
+        log_file_dir = Path(path_str)
+
+    log_file_dir.mkdir(exist_ok=True, parents=True)
+    return log_file_dir
+
+
+def get_log_file_path(log_file_dir=get_log_file_directory(),
+                      name=time.strftime('%Y%m%d.log')):
     """
     Return the absolute path to the log file path.
 
     Parameters
     ----------
+    log_file_dir : Path
+        Path to the log file directory
     name : str
         Name of the log file
 
@@ -56,24 +117,24 @@ def get_log_file_path(name=time.strftime('%Y%m%d.log')):
     log_file_path : Path
         The path to the log file
     """
-    logfile_dir = get_root_path().joinpath('logs')
-    logfile_dir.mkdir(exist_ok=True, parents=True)
-
-    log_file_path = logfile_dir.joinpath(name)
+    log_file_path = log_file_dir.joinpath(name)
 
     return log_file_path
 
 
-def get_bout_path():
+def get_bout_directory():
     """
-    Load the dot-env file and yield the bout_path.
+    Load the BOUT++ directory from the configuration file.
 
     Returns
     -------
     bout_path : Path
         Path to the BOUT++ repository
     """
-    # Setup
-    load_dotenv()
-    bout_path = Path(os.getenv('BOUT_PATH')).absolute()
+    config = get_bout_runners_configuration()
+    path_str = config['bout++']['directory']
+    if '$HOME/' or '${HOME}/' in path_str.lower():
+        path_str = '/'.join(path_str.split('/')[1:])
+        path_str = f'{Path.home()}/{path_str}'
+    bout_path = Path(path_str).absolute()
     return bout_path

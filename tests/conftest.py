@@ -11,7 +11,8 @@ import psutil
 from bout_runners.make.make import Make
 from bout_runners.parameters.default_parameters import DefaultParameters
 from bout_runners.parameters.final_parameters import FinalParameters
-from bout_runners.utils.paths import get_bout_path
+from bout_runners.utils.paths import get_config_path
+from bout_runners.utils.paths import get_bout_directory
 from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.database.database_creator import DatabaseCreator
@@ -31,7 +32,7 @@ def fixture_yield_bout_path():
     bout_path : Path
         Path to the BOUT++ repository
     """
-    bout_path = get_bout_path()
+    bout_path = get_bout_directory()
 
     yield bout_path
 
@@ -79,7 +80,7 @@ def make_make_object(yield_bout_path):
 
     See Also
     --------
-    tests.bout_runners.conftest.get_bout_path : Fixture which returns
+    tests.bout_runners.conftest.get_bout_directory : Fixture which returns
     the BOUT++ path
     """
     # Setup
@@ -688,7 +689,7 @@ def fixture_copy_log_file(get_test_data_path):
 
     Returns
     -------
-    _copy_logfile : function
+    _copy_log_file : function
         Function which copy log files to a temporary directory
     """
     # NOTE: This corresponds to names in test.db
@@ -840,3 +841,35 @@ def copy_test_case_log_file(copy_log_file,
                                 name_where_status_is_submitted)
 
     return _copy_test_case_log_file
+
+
+# NOTE: MonkeyPatch is function scoped
+@pytest.fixture(scope='function')
+def get_mock_config_path(monkeypatch):
+    """
+    Return a mock path for the config dir and redirects get_config_path.
+
+    Parameters
+    ----------
+    monkeypatch : MonkeyPatch
+        MonkeyPatch from pytest
+
+    Yields
+    ------
+    mock_config_path : Path
+        The mocked config directory
+        This will be deleted in the teardown
+    """
+    config_path = get_config_path()
+    mock_config_path = \
+        config_path.parent.joinpath('delme_config_for_test')
+    shutil.copytree(config_path, mock_config_path)
+
+    # Redirect reading of config_files to mock_config_path for these
+    # tests
+    monkeypatch.setattr('bout_runners.utils.paths.get_config_path',
+                        lambda: mock_config_path)
+
+    yield mock_config_path
+
+    shutil.rmtree(mock_config_path)
