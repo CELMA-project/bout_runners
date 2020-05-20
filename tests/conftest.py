@@ -11,6 +11,7 @@ import psutil
 from bout_runners.make.make import Make
 from bout_runners.parameters.default_parameters import DefaultParameters
 from bout_runners.parameters.final_parameters import FinalParameters
+from bout_runners.utils.paths import get_config_path
 from bout_runners.utils.paths import get_bout_path
 from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_reader import DatabaseReader
@@ -840,3 +841,27 @@ def copy_test_case_log_file(copy_log_file,
                                 name_where_status_is_submitted)
 
     return _copy_test_case_log_file
+
+
+@pytest.fixture(scope='session')
+def protect_config():
+    """
+    Protect the config directory.
+
+    Yields
+    ------
+    config_path : Path
+        The modifiable config directory
+        This will be deleted in the teardown
+    copied_path : Path
+        The original config directory
+        This will be copied back to config_path in the teardown
+    """
+    config_path = get_config_path()
+    copied_path = config_path.parent.joinpath('copied_config_for_test')
+    shutil.copytree(config_path, copied_path)
+
+    yield config_path, copied_path
+
+    shutil.rmtree(config_path)
+    shutil.copytree(copied_path, config_path)

@@ -54,12 +54,15 @@ def get_bout_runners_config_path():
     return get_config_path().joinpath('bout_runners.ini')
 
 
-def get_log_file_path(name=time.strftime('%Y%m%d.log')):
+def get_log_file_path(logfile_dir=get_root_path().joinpath('logs'),
+                      name=time.strftime('%Y%m%d.log')):
     """
     Return the absolute path to the log file path.
 
     Parameters
     ----------
+    logfile_dir : Path
+        Path to the logfile directory
     name : str
         Name of the log file
 
@@ -68,7 +71,6 @@ def get_log_file_path(name=time.strftime('%Y%m%d.log')):
     log_file_path : Path
         The path to the log file
     """
-    logfile_dir = get_root_path().joinpath('logs')
     logfile_dir.mkdir(exist_ok=True, parents=True)
 
     log_file_path = logfile_dir.joinpath(name)
