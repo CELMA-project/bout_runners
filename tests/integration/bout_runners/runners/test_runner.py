@@ -125,7 +125,7 @@ def test_bout_runners_from_directory(make_project, yield_number_of_rows_for_all_
         runner.run()
 
         bout_paths = runner.executor.bout_paths
-        db_connection = runner.database_connector
+        db_connection = runner.db_connector
     # Assert that the run went well
     db_reader = assert_first_run(bout_paths, db_connection)
     # Assert that all the values are 1

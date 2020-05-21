@@ -15,9 +15,9 @@ class StatusChecker:
 
     Attributes
     ----------
-    __database_connector : DatabaseConnector
+    __db_connector : DatabaseConnector
         Connection to the database under consideration
-    __database_reader : DatabaseReader
+    __db_reader : DatabaseReader
         Object to read the database with
     project_path : Path
         Path to the project
@@ -40,7 +40,7 @@ class StatusChecker:
     Examples
     --------
     >>> from pathlib import Path
-    >>> from bout_runners.database.database_connector import \
+    >>> from bout_runners.database.db_connector import \
     ...     DatabaseConnector
     >>> db_connector = DatabaseConnector('name_of_db')
     >>> project_path = Path('path').joinpath('to', 'project')
@@ -53,7 +53,7 @@ class StatusChecker:
     >>> status_checker.check_and_update_until_complete()
     """
 
-    def __init__(self, database_connector, project_path):
+    def __init__(self, db_connector, project_path):
         """
         Set connector, reader and a project path.
 
@@ -61,33 +61,32 @@ class StatusChecker:
         -----
         The StatusChecker instance only checks the project belonging
         to the same database schema grouped together by the
-        database_connector
+        db_connector
 
         Parameters
         ----------
-        database_connector : DatabaseConnector
+        db_connector : DatabaseConnector
             Connection to the database
         project_path : Path
             Path to the project (the root directory with which
             usually contains the makefile and the executable)
         """
-        self.__database_connector = database_connector
-        self.__database_reader = DatabaseReader(self.__database_connector)
+        self.__db_connector = db_connector
+        self.__db_reader = DatabaseReader(self.__db_connector)
         self.project_path = project_path
 
     def check_and_update_status(self):
         """Check and update the status for the schema."""
         # Check that run table exist
-        if not self.__database_reader.check_tables_created():
+        if not self.__db_reader.check_tables_created():
             logging.error(
-                "No tables found in %s",
-                self.__database_reader.database_connector.database_path,
+                "No tables found in %s", self.__db_reader.db_connector.db_path,
             )
             message = "Can not check the status of schemas that does " "not exist"
             raise RuntimeError(message)
 
         # Create place holder metadata_updater
-        metadata_updater = MetadataUpdater(self.__database_connector, run_id=-1)
+        metadata_updater = MetadataUpdater(self.__db_connector, run_id=-1)
 
         # Check runs with status 'submitted'
         query = (
@@ -95,12 +94,12 @@ class StatusChecker:
             "latest_status = 'submitted' OR\n"
             "latest_status = 'created'"
         )
-        submitted_to_check = self.__database_reader.query(query)
+        submitted_to_check = self.__db_reader.query(query)
         self.__check_submitted(metadata_updater, submitted_to_check)
 
         # Check runs with status 'running'
         query = "SELECT name, id FROM run WHERE\n" "latest_status = 'running'"
-        running_to_check = self.__database_reader.query(query)
+        running_to_check = self.__db_reader.query(query)
         self.__check_running(metadata_updater, running_to_check)
 
     def check_and_update_until_complete(self, seconds_between_update=5):
@@ -118,7 +117,7 @@ class StatusChecker:
             "latest_status = 'created' OR\n"
             "latest_status = 'running'"
         )
-        while len(self.__database_reader.query(query).index) != 0:
+        while len(self.__db_reader.query(query).index) != 0:
             self.check_and_update_status()
             time.sleep(seconds_between_update)
 

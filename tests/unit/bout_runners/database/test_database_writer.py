@@ -6,7 +6,7 @@ from bout_runners.database.database_writer import DatabaseWriter
 from bout_runners.database.database_reader import DatabaseReader
 
 
-def test_database_writer(make_test_schema):
+def test_db_writer(make_test_schema):
     """
     Test we can create write to the database schemas.
 

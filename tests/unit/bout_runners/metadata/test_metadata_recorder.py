@@ -59,7 +59,7 @@ def test_metadata_recorder(
     assert run_id is None
     # Assert that all the values are 1
     number_of_rows_dict = yield_number_of_rows_for_all_tables(
-        metadata_recorder.database_reader
+        metadata_recorder.db_reader
     )
     assert sum(number_of_rows_dict.values()) == len(number_of_rows_dict.keys())
 
@@ -68,7 +68,7 @@ def test_metadata_recorder(
     assert run_id == 1
     # Assert that all the values are 1
     number_of_rows_dict = yield_number_of_rows_for_all_tables(
-        metadata_recorder.database_reader
+        metadata_recorder.db_reader
     )
     assert sum(number_of_rows_dict.values()) == len(number_of_rows_dict.keys())
 
@@ -87,7 +87,7 @@ def test_metadata_recorder(
     # Assert that a new entry has been made
     assert run_id == 2
     number_of_rows_dict = yield_number_of_rows_for_all_tables(
-        metadata_recorder.database_reader
+        metadata_recorder.db_reader
     )
     tables_with_2 = dict()
     tables_with_2["split"] = number_of_rows_dict.pop("split")

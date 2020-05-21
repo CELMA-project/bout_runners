@@ -7,7 +7,7 @@ from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.database.database_creator import DatabaseCreator
 
 
-def test_database_creator(make_test_database, make_test_schema):
+def test_db_creator(make_test_database, make_test_schema):
     """
     Test we can create the database schemas.
 

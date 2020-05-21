@@ -66,7 +66,7 @@ class FinalParameters:
     10, ...}}
 
     >>> final_parameters.\
-    ...     cast_parameters_to_sql_type(final_parameters_dict)
+    ...     cast_to_sql_type(final_parameters_dict)
     {'global': {'append': TEXT, 'async_send': TETX, ..., 'nout':
     INTEGER, ...}}
     """
@@ -123,7 +123,7 @@ class FinalParameters:
         return final_parameters_dict
 
     @staticmethod
-    def cast_parameters_to_sql_type(parameter_dict):
+    def cast_to_sql_type(parameter_dict):
         """
         Cast the values of a parameter dict to valid SQL types.
 

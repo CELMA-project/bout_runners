@@ -10,7 +10,7 @@ class MetadataUpdater:
 
     Attributes
     ----------
-    __database_writer : DatabaseWriter
+    __db_writer : DatabaseWriter
         Class used to write to the database
     run_id : int
         The id of the run to update
@@ -28,30 +28,30 @@ class MetadataUpdater:
     --------
     >>> from pathlib import Path
     >>> from datetime import datetime
-    >>> from bout_runners.database.database_connector import \
+    >>> from bout_runners.database.db_connector import \
     ...     DatabaseConnector
-    >>> database_root_path = Path().joinpath('path', 'to', 'db_root')
-    >>> database_connector = DatabaseConnector('name_of_db',
-    ...                                        database_root_path)
+    >>> db_root_path = Path().joinpath('path', 'to', 'db_root')
+    >>> db_connector = DatabaseConnector('name_of_db',
+    ...                                        db_root_path)
     >>> run_id = 1  # This must be a valid id in the run table
-    >>> metadata_updater = MetadataUpdater(database_connector, run_id)
+    >>> metadata_updater = MetadataUpdater(db_connector, run_id)
     >>> metadata_updater.update_start_time(datetime.now())
     >>> metadata_updater.update_stop_time(datetime.now())
     >>> metadata_updater.update_latest_status('error')
     """
 
-    def __init__(self, database_connector, run_id):
+    def __init__(self, db_connector, run_id):
         """
         Set the database and id to use.
 
         Parameters
         ----------
-        database_connector : DatabaseConnector
+        db_connector : DatabaseConnector
             The database connector
         run_id : int
             The id of the run to update
         """
-        self.__database_writer = DatabaseWriter(database_connector)
+        self.__db_writer = DatabaseWriter(db_connector)
         self.run_id = run_id
 
     def update_start_time(self, start_time):
@@ -98,9 +98,9 @@ class MetadataUpdater:
         value : object
             The updating value
         """
-        update_str = self.__database_writer.create_update_string(
+        update_str = self.__db_writer.create_update_string(
             field_names=(column,),
             table_name="run",
             search_condition=f"id = {self.run_id}",
         )
-        self.__database_writer.update(update_str, (value,))
+        self.__db_writer.update(update_str, (value,))

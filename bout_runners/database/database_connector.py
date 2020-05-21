@@ -13,18 +13,18 @@ class DatabaseConnector:
 
     Attributes
     ----------
-    __database_path : None or Path
-        Getter variable for database_path
+    __db_path : None or Path
+        Getter variable for db_path
     __connection : Connection
         Getter variable for connection
-    database_path : Path
+    db_path : Path
         Path to database
     connection : Connection
         The connection to the database
 
     Methods
     -------
-    create_db_path(name, database_root_path)
+    create_db_path(name, db_root_path)
         Create the database path
     execute_statement(sql_statement, *parameters)
         Execute a statement in the database
@@ -35,7 +35,7 @@ class DatabaseConnector:
     >>> database.execute_statement('CREATE TABLE my_table (col INT)')
     """
 
-    def __init__(self, name=None, database_root_path=None):
+    def __init__(self, name=None, db_root_path=None):
         """
         Set the path to the data base.
 
@@ -45,32 +45,32 @@ class DatabaseConnector:
             Name of the database (excluding .db)
             If set to None, the name of the caller directory will be
             used
-        database_root_path : Path or str or None
+        db_root_path : Path or str or None
             Path to database
             If None is set, the path will be set to $HOME/BOUT_db
         """
         # Declare variables to be used in the getters and setters
-        self.__database_path = None
+        self.__db_path = None
 
         # Set the database path
-        self.__database_path = self.create_db_path(name, database_root_path)
-        logging.info("database_path set to %s", self.database_path)
+        self.__db_path = self.create_db_path(name, db_root_path)
+        logging.info("db_path set to %s", self.db_path)
 
         # Open the connection
-        self.__connection = sqlite3.connect(str(self.database_path))
+        self.__connection = sqlite3.connect(str(self.db_path))
 
     def __del__(self):
         """Close the connection."""
         self.__connection.close()
 
     @property
-    def database_path(self):
+    def db_path(self):
         """
-        Get the properties of self.database_path.
+        Get the properties of self.db_path.
 
         Returns
         -------
-        self.__database_path : Path
+        self.__db_path : Path
             Absolute path to the database
 
         Notes
@@ -78,7 +78,7 @@ class DatabaseConnector:
         To avoid corrupting data between databases, the setting this
         parameter outside the constructor is disabled
         """
-        return self.__database_path
+        return self.__db_path
 
     @property
     def connection(self):
@@ -98,7 +98,7 @@ class DatabaseConnector:
         return self.__connection
 
     @staticmethod
-    def create_db_path(name, database_root_path):
+    def create_db_path(name, db_root_path):
         """
         Create the database path.
 
@@ -108,32 +108,32 @@ class DatabaseConnector:
             Name of the database (excluding .db)
             If set to None, the name of the caller directory will be
             used
-        database_root_path : Path or str or None
+        db_root_path : Path or str or None
             Path to database
             If None is set, the path will be set to $HOME/BOUT_db
 
         Returns
         -------
-        database_path : Path
+        db_path : Path
             Path to the database
         """
         if name is None:
             name = get_caller_dir().name
 
-        if database_root_path is None:
-            database_root_path = Path().home().joinpath("BOUT_db")
+        if db_root_path is None:
+            db_root_path = Path().home().joinpath("BOUT_db")
 
-        database_root_path = Path(database_root_path)
+        db_root_path = Path(db_root_path)
 
-        database_root_path.mkdir(exist_ok=True, parents=True)
+        db_root_path.mkdir(exist_ok=True, parents=True)
         # NOTE: sqlite does not support schemas (except through an
         #       ephemeral ATTACH connection)
         #       Thus we will make one database per project
         # https://www.sqlite.org/lang_attach.html
         # https://stackoverflow.com/questions/30897377/python-sqlite3-create-a-schema-without-having-to-use-a-second-database
-        database_path = database_root_path.joinpath(f"{name}.db")
+        db_path = db_root_path.joinpath(f"{name}.db")
 
-        return database_path
+        return db_path
 
     def execute_statement(self, sql_statement, *parameters):
         """

@@ -12,7 +12,7 @@ class DatabaseCreator:
 
     Attributes
     ----------
-    database_connector : DatabaseConnector
+    db_connector : DatabaseConnector
         The database object to write to
 
     Methods
@@ -44,7 +44,7 @@ class DatabaseCreator:
     ...     DefaultParameters
     >>> from bout_runners.parameters.final_parameters import \
     ...     FinalParameters
-    >>> from bout_runners.database.database_connector import \
+    >>> from bout_runners.database.db_connector import \
     ...     DatabaseConnector
 
     Create the `bout_paths` object
@@ -62,7 +62,7 @@ class DatabaseCreator:
     >>> final_parameters = FinalParameters(default_parameters)
     >>> final_parameters_dict = final_parameters.get_final_parameters()
     >>> final_parameters_as_sql_types = \
-    ...     final_parameters.cast_parameters_to_sql_type(
+    ...     final_parameters.cast_to_sql_type(
     ...     final_parameters_dict)
 
     Create the database
@@ -72,16 +72,16 @@ class DatabaseCreator:
     ...     final_parameters_as_sql_types)
     """
 
-    def __init__(self, database_connector):
+    def __init__(self, db_connector):
         """
         Set the database to use.
 
         Parameters
         ----------
-        database_connector : DatabaseConnector
+        db_connector : DatabaseConnector
             The database object to write to
         """
-        self.database_connector = database_connector
+        self.db_connector = db_connector
 
     def create_all_schema_tables(self, parameters_as_sql_types):
         """
@@ -101,7 +101,7 @@ class DatabaseCreator:
         [1] https://www.databasestar.com/database-normalization/
         [2] http://www.bkent.net/Doc/simple5.htm
         """
-        logging.info("Creating tables in %s", self.database_connector.database_path)
+        logging.info("Creating tables in %s", self.db_connector.db_path)
 
         # Check if tables are created
         self._create_system_info_table()
@@ -110,7 +110,7 @@ class DatabaseCreator:
         self._create_parameter_tables(parameters_as_sql_types)
         self._create_run_table()
 
-        logging.info("Tables created in %s", self.database_connector.database_path)
+        logging.info("Tables created in %s", self.db_connector.db_path)
 
     @staticmethod
     def get_create_table_statement(
@@ -191,7 +191,7 @@ class DatabaseCreator:
         pattern = r"CREATE TABLE (\w*)"
         table_name = re.match(pattern, table_str).group(1)
 
-        self.database_connector.execute_statement(table_str)
+        self.db_connector.execute_statement(table_str)
 
         logging.info("Created table %s", table_name)
 

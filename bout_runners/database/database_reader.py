@@ -10,7 +10,7 @@ class DatabaseReader:
 
     Attributes
     ----------
-    database_connector : DatabaseConnector
+    db_connector : DatabaseConnector
         The database object to read from
 
     Methods
@@ -33,11 +33,11 @@ class DatabaseReader:
     ...     DefaultParameters
     >>> from bout_runners.parameters.final_parameters import \
     ...     FinalParameters
-    >>> from bout_runners.database.database_connector import \
+    >>> from bout_runners.database.db_connector import \
     ...     DatabaseConnector
-    >>> from bout_runners.database.database_creator import \
+    >>> from bout_runners.database.db_creator import \
     ...     DatabaseCreator
-    >>> from bout_runners.database.database_writer import \
+    >>> from bout_runners.database.db_writer import \
     ...     DatabaseWriter
 
     Create the `bout_paths` object
@@ -55,7 +55,7 @@ class DatabaseReader:
     >>> final_parameters = FinalParameters(default_parameters)
     >>> final_parameters_dict = final_parameters.get_final_parameters()
     >>> final_parameters_as_sql_types = \
-    ...     final_parameters.cast_parameters_to_sql_type(
+    ...     final_parameters.cast_to_sql_type(
     ...     final_parameters_dict)
 
     Create the database
@@ -87,16 +87,16 @@ class DatabaseReader:
     True
     """
 
-    def __init__(self, database_connector):
+    def __init__(self, db_connector):
         """
         Set the database to use.
 
         Parameters
         ----------
-        database_connector : DatabaseConnector
+        db_connector : DatabaseConnector
             The database object to read from
         """
-        self.database_connector = database_connector
+        self.db_connector = db_connector
 
     def query(self, query_str, **kwargs):
         """
@@ -114,9 +114,7 @@ class DatabaseReader:
         table : DataFrame
             The result of a query as a DataFrame
         """
-        table = pd.read_sql_query(
-            query_str, self.database_connector.connection, **kwargs
-        )
+        table = pd.read_sql_query(query_str, self.db_connector.connection, **kwargs)
         return table
 
     def get_latest_row_id(self):

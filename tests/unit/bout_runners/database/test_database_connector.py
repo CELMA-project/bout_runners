@@ -5,7 +5,7 @@ import sqlite3
 import pytest
 
 
-def test_database_connector(make_test_database):
+def test_db_connector(make_test_database):
     """
     Test the connection.
 
@@ -13,7 +13,7 @@ def test_database_connector(make_test_database):
     1. Check that the connection is open
     2. Check that one can execute a statement
     3. Check that it raises error on an invalid statement
-    4. Check that it is not possible to change the database_path
+    4. Check that it is not possible to change the db_path
     4. Check that it is not possible to change the connection
 
     Parameters
@@ -31,7 +31,7 @@ def test_database_connector(make_test_database):
         db_connection.execute_statement("THIS IS AN INVALID STATEMENT")
 
     with pytest.raises(AttributeError):
-        db_connection.database_path = "invalid"
+        db_connection.db_path = "invalid"
 
     with pytest.raises(AttributeError):
         db_connection.connection = "invalid"

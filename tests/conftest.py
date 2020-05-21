@@ -190,7 +190,7 @@ def fixture_make_test_database(get_tmp_db_dir):
         DatabaseConnector
             The database connection object
         """
-        return DatabaseConnector(name=db_name, database_root_path=get_tmp_db_dir)
+        return DatabaseConnector(name=db_name, db_root_path=get_tmp_db_dir)
 
     return _make_db
 
@@ -254,7 +254,7 @@ def fixture_make_test_schema(get_default_parameters, make_test_database):
         default_parameters = get_default_parameters
         final_parameters = FinalParameters(default_parameters)
         final_parameters_dict = final_parameters.get_final_parameters()
-        final_parameters_as_sql_types = final_parameters.cast_parameters_to_sql_type(
+        final_parameters_as_sql_types = final_parameters.cast_to_sql_type(
             final_parameters_dict
         )
 
@@ -452,13 +452,13 @@ def yield_number_of_rows_for_all_tables():
         schema
     """
 
-    def _get_number_of_rows_for_all_tables(database_reader):
+    def _get_number_of_rows_for_all_tables(db_reader):
         """
         Return the number of rows for all tables in a schema.
 
         Parameters
         ----------
-        database_reader : DatabaseReader
+        db_reader : DatabaseReader
             The object used read from the database
 
         Returns
@@ -473,11 +473,11 @@ def yield_number_of_rows_for_all_tables():
             "    WHERE type ='table'\n"
             "    AND name NOT LIKE 'sqlite_%'"
         )
-        table_of_tables = database_reader.query(query_str)
+        table_of_tables = db_reader.query(query_str)
         for _, table_name_as_series in table_of_tables.iterrows():
             table_name = table_name_as_series["name"]
             query_str = f"SELECT COUNT(*) AS rows FROM {table_name}"
-            table = database_reader.query(query_str)
+            table = db_reader.query(query_str)
             number_of_rows_dict[table_name] = table.loc[0, "rows"]
         return number_of_rows_dict
 
@@ -499,9 +499,7 @@ def yield_metadata_reader(get_test_data_path):
     MetadataReader
         The instance to read the metadata
     """
-    test_db_connection = DatabaseConnector(
-        name="test", database_root_path=get_test_data_path
-    )
+    test_db_connection = DatabaseConnector(name="test", db_root_path=get_test_data_path)
     yield MetadataReader(test_db_connection, drop_id=None)
 
 
@@ -653,13 +651,13 @@ def get_metadata_updater_and_db_reader(get_test_db_copy):
 
     Returns
     -------
-    _get_metadata_updater_and_database_reader : function
+    _get_metadata_updater_and_db_reader : function
         Function which returns the MetadataUpdater object with
         initialized with connection to the database and a
         corresponding DatabaseReader object
     """
 
-    def _get_metadata_updater_and_database_reader(name):
+    def _get_metadata_updater_and_db_reader(name):
         """
         Return a MetadataUpdater and its DatabaseConnector.
 
@@ -680,7 +678,7 @@ def get_metadata_updater_and_db_reader(get_test_db_copy):
         metadata_updater = MetadataUpdater(db_connector, 1)
         return metadata_updater, db_reader
 
-    return _get_metadata_updater_and_database_reader
+    return _get_metadata_updater_and_db_reader
 
 
 @pytest.fixture(scope="function", name="copy_log_file")

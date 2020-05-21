@@ -72,7 +72,7 @@ class MetadataReader:
 
     Attributes
     ----------
-    __database_reader : DatabaseConnector
+    __db_reader : DatabaseConnector
         The connection to the database
     __table_names : tuple
         Getter variable for table_names
@@ -121,10 +121,10 @@ class MetadataReader:
 
     Examples
     --------
-    >>> from bout_runners.database.database_connector import \
+    >>> from bout_runners.database.db_connector import \
     ...     DatabaseConnector
-    >>> database_connector = DatabaseConnector('test')
-    >>> metadata_reader = MetadataReader(database_connector)
+    >>> db_connector = DatabaseConnector('test')
+    >>> metadata_reader = MetadataReader(db_connector)
     >>> metadata_reader.get_parameters_metadata()
        bar.id  bar.foo  ... parameters.baz_id  parameters.foo_id
     0       1        1  ...                 1                  1
@@ -166,13 +166,13 @@ class MetadataReader:
         "file_modification.project_makefile_modified",
     )
 
-    def __init__(self, database_connector, drop_id="keep_run_id"):
+    def __init__(self, db_connector, drop_id="keep_run_id"):
         """
         Set the database to use.
 
         Parameters
         ----------
-        database_connector : DatabaseConnector
+        db_connector : DatabaseConnector
             The connection to the database
         drop_id : None or 'parameters' or 'all'
             Specifies what id columns should be dropped when
@@ -185,7 +185,7 @@ class MetadataReader:
             - 'all_id' : All id columns will be removed
         """
         self.drop_id = drop_id
-        self.__database_reader = DatabaseReader(database_connector)
+        self.__db_reader = DatabaseReader(db_connector)
 
         self.__table_names = self.__get_all_table_names()
         self.__table_column_dict = self.__get_table_column_dict()
@@ -292,9 +292,7 @@ class MetadataReader:
             " parameters ", f"\n{parameter_sub_query}\n"
         ).replace("= parameters.id", '= subquery."parameters.id"')
 
-        return self.__database_reader.query(
-            all_metadata_query, parse_dates=self.date_columns
-        )
+        return self.__db_reader.query(all_metadata_query, parse_dates=self.date_columns)
 
     @drop_ids
     def get_parameters_metadata(self):
@@ -308,7 +306,7 @@ class MetadataReader:
         """
         parameters_query = self.__get_parameters_query()
 
-        return self.__database_reader.query(parameters_query)
+        return self.__db_reader.query(parameters_query)
 
     @staticmethod
     def get_join_query(from_statement, columns, alias_columns, table_connections):
@@ -450,7 +448,7 @@ class MetadataReader:
             "    name NOT LIKE 'sqlite_%'"
         )
         # pylint: disable=no-member
-        return tuple(self.__database_reader.query(query).loc[:, "name"])
+        return tuple(self.__db_reader.query(query).loc[:, "name"])
 
     def __get_table_column_dict(self):
         """
@@ -471,7 +469,7 @@ class MetadataReader:
         for table_name in self.table_names:
             # pylint: disable=no-member
             table_column_dict[table_name] = tuple(
-                self.__database_reader.query(query.format(table_name)).loc[:, "name"]
+                self.__db_reader.query(query.format(table_name)).loc[:, "name"]
             )
 
         return table_column_dict

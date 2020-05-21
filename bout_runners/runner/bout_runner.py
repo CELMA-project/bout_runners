@@ -17,17 +17,17 @@ class BoutRunner:
     ----------
     self.__executor : Executor
         Getter variable for executor
-    self.__database_connector : DatabaseConnector
-        Getter variable for database_connector
+    self.__db_connector : DatabaseConnector
+        Getter variable for db_connector
     self.__final_parameters : FinalParameters
         Getter variable for final_parameters
-    self.__database_creator : DatabaseCreator
+    self.__db_creator : DatabaseCreator
         Object used to create the database
     self.__metadata_recorder : MetadataRecorder
         Object used to record the metadata about a run
     self.executor : Executor
         Object used to execute the run
-    self.database_creator : DatabaseCreator
+    self.db_creator : DatabaseCreator
         Object used to create the database
     self.final_parameters : FinalParameters
         Object containing the parameters to use
@@ -55,7 +55,7 @@ class BoutRunner:
     >>> from pathlib import Path
     >>> from bout_runners.executor.bout_paths import BoutPaths
     >>> from bout_runners.executor.executor import Executor
-    >>> from bout_runners.database.database_connector import \
+    >>> from bout_runners.database.db_connector import \
     ...     DatabaseConnector
     >>> from bout_runners.parameters.default_parameters import \
     ...     DefaultParameters
@@ -95,10 +95,7 @@ class BoutRunner:
     """
 
     def __init__(
-        self,
-        executor=None,
-        database_connector=DatabaseConnector(),
-        final_parameters=None,
+        self, executor=None, db_connector=DatabaseConnector(), final_parameters=None,
     ):
         """
         Set the member data.
@@ -108,7 +105,7 @@ class BoutRunner:
         executor : Executor or None
             Object executing the run
             If None, default parameters will be used
-        database_connector : DatabaseConnector
+        db_connector : DatabaseConnector
             The connection to the database
         final_parameters : FinalParameters or None
             The object containing the parameters which are going to
@@ -122,10 +119,10 @@ class BoutRunner:
         self.__final_parameters = (
             final_parameters if final_parameters is not None else FinalParameters()
         )
-        self.__database_connector = database_connector
-        self.__database_creator = DatabaseCreator(self.database_connector)
+        self.__db_connector = db_connector
+        self.__db_creator = DatabaseCreator(self.db_connector)
         self.__metadata_recorder = MetadataRecorder(
-            database_connector, self.executor.bout_paths, self.final_parameters
+            db_connector, self.executor.bout_paths, self.final_parameters
         )
 
     @property
@@ -153,24 +150,24 @@ class BoutRunner:
         return self.__final_parameters
 
     @property
-    def database_connector(self):
+    def db_connector(self):
         """
-        Get the properties of self.database_connector.
+        Get the properties of self.db_connector.
 
         Returns
         -------
-        self.__database_connector : DatabaseConnector
+        self.__db_connector : DatabaseConnector
             The object holding the database connection
         """
-        return self.__database_connector
+        return self.__db_connector
 
     def create_schema(self):
         """Create the schema."""
         final_parameters_dict = self.final_parameters.get_final_parameters()
-        final_parameters_as_sql_types = self.final_parameters.cast_parameters_to_sql_type(
+        final_parameters_as_sql_types = self.final_parameters.cast_to_sql_type(
             final_parameters_dict
         )
-        self.__database_creator.create_all_schema_tables(final_parameters_as_sql_types)
+        self.__db_creator.create_all_schema_tables(final_parameters_as_sql_types)
 
     def run(self, force=False):
         """
@@ -182,10 +179,10 @@ class BoutRunner:
             Execute the run even if has been performed with the same
             parameters
         """
-        if not self.__metadata_recorder.database_reader.check_tables_created():
+        if not self.__metadata_recorder.db_reader.check_tables_created():
             logging.info(
                 "Creating schema as no tables were found in " "%s",
-                self.__metadata_recorder.database_reader.database_connector.database_path,
+                self.__metadata_recorder.db_reader.db_connector.db_path,
             )
             self.create_schema()
 

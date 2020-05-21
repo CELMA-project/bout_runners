@@ -11,7 +11,7 @@ class DatabaseWriter:
 
     Attributes
     ----------
-    database_connector : DatabaseConnector
+    db_connector : DatabaseConnector
         The database object to write to
 
     Methods
@@ -32,9 +32,9 @@ class DatabaseWriter:
     ...     DefaultParameters
     >>> from bout_runners.parameters.final_parameters import \
     ...     FinalParameters
-    >>> from bout_runners.database.database_connector import \
+    >>> from bout_runners.database.db_connector import \
     ...     DatabaseConnector
-    >>> from bout_runners.database.database_creator import \
+    >>> from bout_runners.database.db_creator import \
     ...     DatabaseCreator
 
     Create the `bout_paths` object
@@ -52,7 +52,7 @@ class DatabaseWriter:
     >>> final_parameters = FinalParameters(default_parameters)
     >>> final_parameters_dict = final_parameters.get_final_parameters()
     >>> final_parameters_as_sql_types = \
-    ...     final_parameters.cast_parameters_to_sql_type(
+    ...     final_parameters.cast_to_sql_type(
     ...     final_parameters_dict)
 
     Create the database
@@ -69,16 +69,16 @@ class DatabaseWriter:
     >>> db_writer.create_entry('split', dummy_split_dict)
     """
 
-    def __init__(self, database_connector):
+    def __init__(self, db_connector):
         """
         Set the database to use.
 
         Parameters
         ----------
-        database_connector : DatabaseConnector
+        db_connector : DatabaseConnector
             The database object to write to
         """
-        self.database_connector = database_connector
+        self.db_connector = db_connector
 
     @staticmethod
     def create_insert_string(field_names, table_name):
@@ -157,7 +157,7 @@ class DatabaseWriter:
         pattern = r"INSERT INTO (\w*)"
         table_name = re.match(pattern, insert_str).group(1)
 
-        self.database_connector.execute_statement(insert_str, *values)
+        self.db_connector.execute_statement(insert_str, *values)
 
         logging.info("Made insertion to %s", table_name)
 
@@ -178,7 +178,7 @@ class DatabaseWriter:
         pattern = r"WHERE (.*)"
         condition = re.search(pattern, update_str).group(1)
 
-        self.database_connector.execute_statement(update_str, *values)
+        self.db_connector.execute_statement(update_str, *values)
 
         logging.info("Updated table %s, where %s", table_name, condition)
 

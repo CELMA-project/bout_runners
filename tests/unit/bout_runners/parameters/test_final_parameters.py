@@ -34,9 +34,7 @@ def test_cast_parameters_to_sql_type(get_default_parameters):
     default_parameters = get_default_parameters
     final_parameters = FinalParameters(default_parameters)
     final_parameters_dict = final_parameters.get_final_parameters()
-    parameter_as_sql = final_parameters.cast_parameters_to_sql_type(
-        final_parameters_dict
-    )
+    parameter_as_sql = final_parameters.cast_to_sql_type(final_parameters_dict)
     assert isinstance(parameter_as_sql, dict)
     assert "global" in parameter_as_sql.keys()
     assert isinstance(parameter_as_sql["global"], dict)
