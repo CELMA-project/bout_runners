@@ -72,7 +72,7 @@ class Executor:
     >>> executor.execute()
     """
 
-    def __init__(self, bout_paths=None, submitter=None, run_parameters=RunParameters()):
+    def __init__(self, bout_paths=None, submitter=None, run_parameters=None):
         """
         Set the input parameters.
 
@@ -83,15 +83,18 @@ class Executor:
             If None, default BoutPaths values will be used
         submitter : AbstractSubmitter
             Object containing the submitter
-        run_parameters : RunParameters
+        run_parameters : RunParameters or None
             Object containing the run parameters
+            If None, default parameters will be used
         """
         # Set member data
         # NOTE: We are not setting the default as a keyword argument
         #       as this would mess up the paths
         self.submitter = submitter if submitter is not None else LocalSubmitter()
         self.__bout_paths = bout_paths if bout_paths is not None else BoutPaths()
-        self.__run_parameters = run_parameters
+        self.__run_parameters = (
+            run_parameters if run_parameters is not None else RunParameters()
+        )
         self.__make = Make(self.__bout_paths.project_path)
         self.__command = self.get_execute_command()
 

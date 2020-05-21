@@ -1,9 +1,7 @@
 """Contains unittests for the executor."""
 
 
-from bout_runners.executor.executor import Executor
-from bout_runners.parameters.run_parameters import RunParameters
-from bout_runners.submitter.local_submitter import LocalSubmitter
+from bout_runners.parameters.default_parameters import DefaultParameters
 
 
 def test_executor(make_project, yield_bout_path_conduction):
@@ -23,12 +21,7 @@ def test_executor(make_project, yield_bout_path_conduction):
 
     # Make the executor
     bout_paths = yield_bout_path_conduction("test_executor")
-    run_parameters = RunParameters({"global": {"nout": 0}})
-    executor = Executor(
-        bout_paths=bout_paths,
-        submitter=LocalSubmitter(bout_paths.project_path),
-        run_parameters=run_parameters,
-    )
+    executor = DefaultParameters.get_test_executor(bout_paths)
 
     executor.execute()
 

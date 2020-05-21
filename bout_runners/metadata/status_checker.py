@@ -82,7 +82,7 @@ class StatusChecker:
             logging.error(
                 "No tables found in %s", self.__db_reader.db_connector.db_path,
             )
-            message = "Can not check the status of schemas that does " "not exist"
+            message = "Can not check the status of schemas that does not exist"
             raise RuntimeError(message)
 
         # Create place holder metadata_updater
@@ -98,7 +98,7 @@ class StatusChecker:
         self.__check_submitted(metadata_updater, submitted_to_check)
 
         # Check runs with status 'running'
-        query = "SELECT name, id FROM run WHERE\n" "latest_status = 'running'"
+        query = 'SELECT name, id FROM run WHERE latest_status = "running"'
         running_to_check = self.__db_reader.query(query)
         self.__check_running(metadata_updater, running_to_check)
 

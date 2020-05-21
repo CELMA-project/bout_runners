@@ -41,7 +41,7 @@ class LocalSubmitter(AbstractSubmitter):
     test_submitter_factory.py\n', stderr=b'')
     """
 
-    def __init__(self, path=None, processor_split=ProcessorSplit()):
+    def __init__(self, path=None, processor_split=None):
         """
         Set the path from where the calls are made from.
 
@@ -50,13 +50,16 @@ class LocalSubmitter(AbstractSubmitter):
         path : Path or str or None
             Directory to run the command from
             If None, the calling directory will be used
-        processor_split : ProcessorSplit
+        processor_split : ProcessorSplit or None
             Object containing the processor split
+            If None, default values will be used
         """
         # NOTE: We are not setting the default as a keyword argument
         #       as this would mess up the paths
         self.__path = Path(path).absolute() if path is not None else get_caller_dir()
-        self.processor_split = processor_split
+        self.processor_split = (
+            processor_split if processor_split is not None else ProcessorSplit()
+        )
         self.__pid = None
 
     @property

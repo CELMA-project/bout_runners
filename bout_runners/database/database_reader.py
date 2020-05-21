@@ -178,7 +178,7 @@ class DatabaseReader:
         bool
             Whether or not the tables are created
         """
-        query_str = "SELECT name FROM sqlite_master " '   WHERE type="table"'
+        query_str = 'SELECT name FROM sqlite_master WHERE type="table"'
 
         table = self.query(query_str)
         return len(table.index) != 0

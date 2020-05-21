@@ -95,7 +95,7 @@ class BoutRunner:
     """
 
     def __init__(
-        self, executor=None, db_connector=DatabaseConnector(), final_parameters=None,
+        self, executor=None, db_connector=None, final_parameters=None,
     ):
         """
         Set the member data.
@@ -105,8 +105,9 @@ class BoutRunner:
         executor : Executor or None
             Object executing the run
             If None, default parameters will be used
-        db_connector : DatabaseConnector
+        db_connector : DatabaseConnector or None
             The connection to the database
+            If None: Default database connector will be used
         final_parameters : FinalParameters or None
             The object containing the parameters which are going to
             be used in the run
@@ -119,7 +120,9 @@ class BoutRunner:
         self.__final_parameters = (
             final_parameters if final_parameters is not None else FinalParameters()
         )
-        self.__db_connector = db_connector
+        self.__db_connector = (
+            db_connector if db_connector is not None else DatabaseConnector()
+        )
         self.__db_creator = DatabaseCreator(self.db_connector)
         self.__metadata_recorder = MetadataRecorder(
             db_connector, self.executor.bout_paths, self.final_parameters

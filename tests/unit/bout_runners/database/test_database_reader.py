@@ -1,7 +1,7 @@
 """Contains unittests for the database reader."""
 
 
-from bout_runners.database.db_reader import DatabaseReader
+from bout_runners.database.database_reader import DatabaseReader
 
 
 def test_db_reader(make_test_database, write_to_split):

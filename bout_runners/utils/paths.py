@@ -100,24 +100,28 @@ def get_log_file_directory():
     return log_file_dir
 
 
-def get_log_file_path(
-    log_file_dir=get_log_file_directory(), name=time.strftime("%Y%m%d.log")
-):
+def get_log_file_path(log_file_dir=None, name=None):
     """
     Return the absolute path to the log file path.
 
     Parameters
     ----------
-    log_file_dir : Path
+    log_file_dir : Path or None
         Path to the log file directory
-    name : str
+        If None, default log file directory will be used
+    name : str or None
         Name of the log file
+        If None, current date will be used
 
     Returns
     -------
     log_file_path : Path
         The path to the log file
     """
+    log_file_dir = (
+        log_file_dir if log_file_dir is not None else get_log_file_directory()
+    )
+    name = name if name is not None else time.strftime("%Y%m%d.log")
     log_file_path = log_file_dir.joinpath(name)
 
     return log_file_path

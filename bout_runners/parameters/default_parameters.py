@@ -116,16 +116,34 @@ class DefaultParameters:
         else:
             bout_paths.bout_inp_dst_dir = "settings_run"
 
+        executor = self.get_test_executor(bout_paths)
+
+        executor.execute()
+
+        self.__settings_path = bout_paths.bout_inp_dst_dir.joinpath("BOUT.settings")
+
+    @staticmethod
+    def get_test_executor(bout_paths):
+        """
+        Return the executor used for test (i.e. where nout=0).
+
+        Parameters
+        ----------
+        bout_paths : BoutPaths
+            Object containing the BOUT++ paths
+
+        Returns
+        -------
+        executor : Executor
+            Executor instantiated with the test set up
+        """
         run_parameters = RunParameters({"global": {"nout": 0}})
         executor = Executor(
             bout_paths=bout_paths,
             submitter=LocalSubmitter(bout_paths.project_path),
             run_parameters=run_parameters,
         )
-
-        executor.execute()
-
-        self.__settings_path = bout_paths.bout_inp_dst_dir.joinpath("BOUT.settings")
+        return executor
 
     def get_default_parameters(self):
         """

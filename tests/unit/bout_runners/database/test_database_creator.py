@@ -54,7 +54,7 @@ def test_db_creator(make_test_database, make_test_schema):
     parameter_tables = set(
         el.replace(":", "_") for el in final_parameters_as_sql_types.keys()
     )
-    query_str = "SELECT name FROM sqlite_master\n" '   WHERE type="table"'
+    query_str = 'SELECT name FROM sqlite_master WHERE type="table"'
     table = db_reader_schema.query(query_str)
 
     actual = table.loc[:, "name"].values  # pylint: disable=no-member

@@ -71,7 +71,7 @@ class FinalParameters:
     INTEGER, ...}}
     """
 
-    def __init__(self, default_parameters=None, run_parameters=RunParameters()):
+    def __init__(self, default_parameters=None, run_parameters=None):
         """
         Set the member data.
 
@@ -80,16 +80,19 @@ class FinalParameters:
         default_parameters : DefaultParameters or None
             Object dealing with default parameters (i.e. standard
             BOUT++ parameters, or those given in BOUT.inp)
-        run_parameters : RunParameters
+        run_parameters : RunParameters or None
             Object dealing with run parameters (i.e. parameters set
             in bout_runner which has precedence over BOUT.inp)
+            If None, default parameters will be used
         """
         self.__default_parameters = (
             default_parameters
             if default_parameters is not None
             else DefaultParameters()
         )
-        self.__run_parameters = run_parameters
+        self.__run_parameters = (
+            run_parameters if run_parameters is not None else RunParameters()
+        )
 
     def get_final_parameters(self):
         """

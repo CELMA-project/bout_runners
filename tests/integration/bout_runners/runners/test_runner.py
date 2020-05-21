@@ -176,10 +176,9 @@ def test_full_bout_runner(make_project, yield_number_of_rows_for_all_tables):
     run_parameters = RunParameters({"global": {"nout": 0}})
     default_parameters = DefaultParameters(bout_paths)
     final_parameters = FinalParameters(default_parameters, run_parameters)
+    submitter = LocalSubmitter(bout_paths.project_path)
     executor = Executor(
-        bout_paths=bout_paths,
-        submitter=LocalSubmitter(bout_paths.project_path),
-        run_parameters=run_parameters,
+        bout_paths=bout_paths, submitter=submitter, run_parameters=run_parameters,
     )
     db_connection = DatabaseConnector(name)
 
