@@ -121,7 +121,7 @@ class MetadataReader:
 
     Examples
     --------
-    >>> from bout_runners.database.db_connector import \
+    >>> from bout_runners.database.database_connector import \
     ...     DatabaseConnector
     >>> db_connector = DatabaseConnector('test')
     >>> metadata_reader = MetadataReader(db_connector)

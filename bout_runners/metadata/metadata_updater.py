@@ -28,7 +28,7 @@ class MetadataUpdater:
     --------
     >>> from pathlib import Path
     >>> from datetime import datetime
-    >>> from bout_runners.database.db_connector import \
+    >>> from bout_runners.database.database_connector import \
     ...     DatabaseConnector
     >>> db_root_path = Path().joinpath('path', 'to', 'db_root')
     >>> db_connector = DatabaseConnector('name_of_db',

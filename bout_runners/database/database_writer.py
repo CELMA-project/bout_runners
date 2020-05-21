@@ -32,9 +32,9 @@ class DatabaseWriter:
     ...     DefaultParameters
     >>> from bout_runners.parameters.final_parameters import \
     ...     FinalParameters
-    >>> from bout_runners.database.db_connector import \
+    >>> from bout_runners.database.database_connector import \
     ...     DatabaseConnector
-    >>> from bout_runners.database.db_creator import \
+    >>> from bout_runners.database.database_creator import \
     ...     DatabaseCreator
 
     Create the `bout_paths` object

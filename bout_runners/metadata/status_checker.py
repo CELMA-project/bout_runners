@@ -40,7 +40,7 @@ class StatusChecker:
     Examples
     --------
     >>> from pathlib import Path
-    >>> from bout_runners.database.db_connector import \
+    >>> from bout_runners.database.database_connector import \
     ...     DatabaseConnector
     >>> db_connector = DatabaseConnector('name_of_db')
     >>> project_path = Path('path').joinpath('to', 'project')

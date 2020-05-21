@@ -55,7 +55,7 @@ class BoutRunner:
     >>> from pathlib import Path
     >>> from bout_runners.executor.bout_paths import BoutPaths
     >>> from bout_runners.executor.executor import Executor
-    >>> from bout_runners.database.db_connector import \
+    >>> from bout_runners.database.database_connector import \
     ...     DatabaseConnector
     >>> from bout_runners.parameters.default_parameters import \
     ...     DefaultParameters
@@ -125,7 +125,7 @@ class BoutRunner:
         )
         self.__db_creator = DatabaseCreator(self.db_connector)
         self.__metadata_recorder = MetadataRecorder(
-            db_connector, self.executor.bout_paths, self.final_parameters
+            self.__db_connector, self.executor.bout_paths, self.final_parameters
         )
 
     @property
