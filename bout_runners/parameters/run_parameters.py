@@ -81,25 +81,25 @@ class RunParameters:
     @run_parameters_dict.setter
     def run_parameters_dict(self, run_parameters_dict):
         # Set the run parameters
-        self.__run_parameters_dict = run_parameters_dict if \
-            run_parameters_dict is not None else dict()
+        self.__run_parameters_dict = (
+            run_parameters_dict if run_parameters_dict is not None else dict()
+        )
 
         # Generate the string
         sections = list(self.run_parameters_dict.keys())
-        self.__run_parameters_str = ''
-        if 'global' in sections:
+        self.__run_parameters_str = ""
+        if "global" in sections:
             # Removing global, as this is something added in
             # obtain_project_parameters
-            sections.remove('global')
-            global_option = self.run_parameters_dict['global']
+            sections.remove("global")
+            global_option = self.run_parameters_dict["global"]
             for key, val in global_option.items():
-                self.__run_parameters_str += f'{key}={val} '
+                self.__run_parameters_str += f"{key}={val} "
 
         for section in sections:
             for key, val in run_parameters_dict[section].items():
-                self.__run_parameters_str += f'{section}.{key}={val} '
-        logging.debug('Parameters set to %s',
-                      self.__run_parameters_str)
+                self.__run_parameters_str += f"{section}.{key}={val} "
+        logging.debug("Parameters set to %s", self.__run_parameters_str)
 
     @property
     def run_parameters_str(self):
@@ -120,7 +120,9 @@ class RunParameters:
 
     @run_parameters_str.setter
     def run_parameters_str(self, _):
-        msg = (f'The run_parameters_str is read only, and is '
-               f'set in run_parameters_dict (currently in use: '
-               f'{self.run_parameters_str})')
+        msg = (
+            f"The run_parameters_str is read only, and is "
+            f"set in run_parameters_dict (currently in use: "
+            f"{self.run_parameters_str})"
+        )
         raise AttributeError(msg)

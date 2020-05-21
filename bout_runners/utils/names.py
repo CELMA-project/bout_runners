@@ -24,17 +24,18 @@ def get_exec_name(makefile_path):
         Name of the executable
     """
     try:
-        exec_name = BoutMakefileVariableReader(makefile_path, 'TARGET')\
-            .get_variable_value()
+        exec_name = BoutMakefileVariableReader(
+            makefile_path, "TARGET"
+        ).get_variable_value()
     except MakefileReaderError:
-        exec_name = BoutMakefileVariableReader(makefile_path, 'SOURCEC')\
-            .get_variable_value()
+        exec_name = BoutMakefileVariableReader(
+            makefile_path, "SOURCEC"
+        ).get_variable_value()
         # Strip the name from the last .c*
-        split_by = '.c'
+        split_by = ".c"
         split_list = exec_name.split(split_by)
-        split_to_join = \
-            split_list if len(split_list) == 1 else split_list[:-1]
-        exec_name = f'{split_by}'.join(split_to_join)
+        split_to_join = split_list if len(split_list) == 1 else split_list[:-1]
+        exec_name = f"{split_by}".join(split_to_join)
 
     return exec_name
 
@@ -83,9 +84,7 @@ def get_makefile_name(makefile_root_path):
     FileNotFoundError
         If none of the valid makefile names are found
     """
-    possible_names = ('GNUmakefile',
-                      'Makefile',
-                      'makefile')
+    possible_names = ("GNUmakefile", "Makefile", "makefile")
 
     makefile_name = None
 
@@ -95,9 +94,11 @@ def get_makefile_name(makefile_root_path):
             break
 
     if makefile_name is None:
-        msg = f'Could not find a valid Makefile name in ' \
-              f'{makefile_root_path}. Valid Makefile names are ' \
-              f'{" ,".join(possible_names)}'
+        msg = (
+            f"Could not find a valid Makefile name in "
+            f"{makefile_root_path}. Valid Makefile names are "
+            f'{" ,".join(possible_names)}'
+        )
         raise FileNotFoundError(msg)
 
     return makefile_name

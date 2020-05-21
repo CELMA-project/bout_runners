@@ -10,7 +10,7 @@ class DatabaseReader:
 
     Attributes
     ----------
-    database_connector : DatabaseConnector
+    db_connector : DatabaseConnector
         The database object to read from
 
     Methods
@@ -55,7 +55,7 @@ class DatabaseReader:
     >>> final_parameters = FinalParameters(default_parameters)
     >>> final_parameters_dict = final_parameters.get_final_parameters()
     >>> final_parameters_as_sql_types = \
-    ...     final_parameters.cast_parameters_to_sql_type(
+    ...     final_parameters.cast_to_sql_type(
     ...     final_parameters_dict)
 
     Create the database
@@ -87,16 +87,16 @@ class DatabaseReader:
     True
     """
 
-    def __init__(self, database_connector):
+    def __init__(self, db_connector):
         """
         Set the database to use.
 
         Parameters
         ----------
-        database_connector : DatabaseConnector
+        db_connector : DatabaseConnector
             The database object to read from
         """
-        self.database_connector = database_connector
+        self.db_connector = db_connector
 
     def query(self, query_str, **kwargs):
         """
@@ -114,9 +114,7 @@ class DatabaseReader:
         table : DataFrame
             The result of a query as a DataFrame
         """
-        table = pd.read_sql_query(query_str,
-                                  self.database_connector.connection,
-                                  **kwargs)
+        table = pd.read_sql_query(query_str, self.db_connector.connection, **kwargs)
         return table
 
     def get_latest_row_id(self):
@@ -130,8 +128,7 @@ class DatabaseReader:
         """
         # https://stackoverflow.com/questions/3442033/sqlite-how-to-get-value-of-auto-increment-primary-key-after-insert-other-than
         # pylint: disable=no-member
-        row_id = \
-            self.query('SELECT last_insert_rowid() AS id').loc[0, 'id']
+        row_id = self.query("SELECT last_insert_rowid() AS id").loc[0, "id"]
         return row_id
 
     def get_entry_id(self, table_name, entries_dict):
@@ -159,19 +156,16 @@ class DatabaseReader:
         for field, val in entries_dict.items():
             val = f'"{val}"' if isinstance(val, str) else val
             where_statements.append(f'{" "*7}AND {field}={val}')
-        where_statements[0] = where_statements[0].replace('AND',
-                                                          'WHERE')
-        where_statements = '\n'.join(where_statements)
+        where_statements[0] = where_statements[0].replace("AND", "WHERE")
+        where_statements = "\n".join(where_statements)
 
-        query_str = \
-            (f'SELECT id\n'
-             f'FROM {table_name}\n{where_statements}')
+        query_str = f"SELECT id\n" f"FROM {table_name}\n{where_statements}"
 
         table = self.query(query_str)
         # NOTE: We explicitly cast to int, as sqlite3 will cast
         #       np.int64 to bytes
         # pylint: disable=no-member
-        row_id = None if table.empty else int(table.loc[0, 'id'])
+        row_id = None if table.empty else int(table.loc[0, "id"])
 
         return row_id
 
@@ -184,8 +178,7 @@ class DatabaseReader:
         bool
             Whether or not the tables are created
         """
-        query_str = ('SELECT name FROM sqlite_master '
-                     '   WHERE type="table"')
+        query_str = 'SELECT name FROM sqlite_master WHERE type="table"'
 
         table = self.query(query_str)
         return len(table.index) != 0

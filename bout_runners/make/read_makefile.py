@@ -19,7 +19,7 @@ class MakefileReaderError(Exception):
         path : Path or str
             Path searched at
         """
-        message = f'Could not find {variable} in {path}'
+        message = f"Could not find {variable} in {path}"
 
         super().__init__(message)
 
@@ -57,7 +57,7 @@ class BoutMakefileReader:
         str
             Content of the Makefile
         """
-        with Path(self.path).open('r') as make_file:
+        with Path(self.path).open("r") as make_file:
             return make_file.read()
 
     def get_variable_value(self):
@@ -140,17 +140,19 @@ class BoutMakefileVariableReader(BoutMakefileReader):
         'foobar.qux'
         """
         # Build the match function for the regex
-        no_comment_line = r'^\s*(?!#)'
-        must_contain_eq_sign = r'\s*=\s*'
+        no_comment_line = r"^\s*(?!#)"
+        must_contain_eq_sign = r"\s*=\s*"
         # As we are using the MULTILINE modifier we should exclude
         # newlines
-        capture_all_except_comment_and_newline = r'([.]*[^#\n]*)'
-        avoid_trailing_whitespace = r'(?<!\s)'
+        capture_all_except_comment_and_newline = r"([.]*[^#\n]*)"
+        avoid_trailing_whitespace = r"(?<!\s)"
 
-        pattern = f'{no_comment_line}{self.variable_name}' \
-                  f'{must_contain_eq_sign}' \
-                  f'{capture_all_except_comment_and_newline}' \
-                  f'{avoid_trailing_whitespace}'
+        pattern = (
+            f"{no_comment_line}{self.variable_name}"
+            f"{must_contain_eq_sign}"
+            f"{capture_all_except_comment_and_newline}"
+            f"{avoid_trailing_whitespace}"
+        )
 
         # NOTE: match() checks for match only at the beginning of a
         #       string

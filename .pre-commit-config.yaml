@@ -1,0 +1,43 @@
+# NOTE: The versions can be updated by calling
+#        pre-commit autoupdate
+repos:
+  - repo: https://github.com/psf/black
+    rev: 19.10b0
+    hooks:
+      - id: black
+
+  - repo: https://gitlab.com/pycqa/flake8
+    rev: 3.8.1
+    hooks:
+      - id: flake8
+        additional_dependencies:
+          - flake8-bugbear
+          - flake8-docstrings
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.1.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v0.770
+    hooks:
+      - id: mypy
+        exclude: ^docs/conf.py
+
+  - repo: https://github.com/prettier/prettier
+    rev: 2.0.5
+    hooks:
+      - id: prettier
+        args: [--prose-wrap=always, --print-width=88]
+
+  # NOTE: pylint must be run on local repo
+  # https://github.com/pre-commit/pre-commit-hooks/issues/157
+  - repo: local
+    hooks:
+      - id: pylint
+        name: pylint
+        entry: pylint
+        language: system
+        types: [python]

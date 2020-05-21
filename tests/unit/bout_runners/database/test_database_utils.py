@@ -1,7 +1,6 @@
 """Contains unittests for the database utils."""
 
-from bout_runners.database.database_utils import \
-    get_system_info_as_sql_type
+from bout_runners.database.database_utils import get_system_info_as_sql_type
 
 
 def test_get_system_info_as_sql_type():

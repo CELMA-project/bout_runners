@@ -60,9 +60,9 @@ class LogReader:
         log_path : str or Path
             Absolute path to log file
         """
-        with Path(log_path).open('r') as log_file:
+        with Path(log_path).open("r") as log_file:
             self.file_str = log_file.read()
-            logging.debug('Opened log_file %s', log_path)
+            logging.debug("Opened log_file %s", log_path)
 
     def started(self):
         """
@@ -73,7 +73,7 @@ class LogReader:
         bool
             True if the start signature is found in the file
         """
-        return self.__is_str_in_file(r'^Run started at')
+        return self.__is_str_in_file(r"^Run started at")
 
     def ended(self):
         """
@@ -84,7 +84,7 @@ class LogReader:
         bool
             True if the end signature is found in the file
         """
-        return self.__is_str_in_file(r'^Run finished at')
+        return self.__is_str_in_file(r"^Run finished at")
 
     def pid_exist(self):
         """
@@ -95,7 +95,7 @@ class LogReader:
         bool
             True if the pid is found
         """
-        return self.__is_str_in_file(r'^pid\s*:\s*')
+        return self.__is_str_in_file(r"^pid\s*:\s*")
 
     @property
     def start_time(self):
@@ -108,7 +108,7 @@ class LogReader:
             The start time on date time format
         """
         if self.started():
-            return self.__find_locale_time(r'^Run started at  : (.*)')
+            return self.__find_locale_time(r"^Run started at  : (.*)")
         return None
 
     @property
@@ -122,7 +122,7 @@ class LogReader:
             The end time on date time format
         """
         if self.ended():
-            return self.__find_locale_time(r'^Run finished at  : (.*)')
+            return self.__find_locale_time(r"^Run finished at  : (.*)")
         return None
 
     @property
@@ -136,13 +136,11 @@ class LogReader:
             The pid of the process
         """
         if self.pid_exist():
-            pattern = r'^pid:\s*(\d*)\s*$'
+            pattern = r"^pid:\s*(\d*)\s*$"
             # Using search as match will only search the beginning of
             # the string
             # https://stackoverflow.com/a/32134461/2786884
-            return int(re.search(pattern,
-                                 self.file_str,
-                                 flags=re.MULTILINE).group(1))
+            return int(re.search(pattern, self.file_str, flags=re.MULTILINE).group(1))
         return None
 
     def __is_str_in_file(self, pattern):
@@ -184,8 +182,6 @@ class LogReader:
         # Using search as match will only search the beginning of the
         # string
         # https://stackoverflow.com/a/32134461/2786884
-        time_str = re.search(pattern,
-                             self.file_str,
-                             flags=re.MULTILINE).group(1)
-        time = datetime.strptime(time_str, '%c')
+        time_str = re.search(pattern, self.file_str, flags=re.MULTILINE).group(1)
+        time = datetime.strptime(time_str, "%c")
         return time

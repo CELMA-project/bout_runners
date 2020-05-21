@@ -16,7 +16,7 @@ def test_status_checker_run_time_error(make_test_database):
     make_test_database : DatabaseConnector
         Connection to the test database
     """
-    db_connector = make_test_database('status_checker_no_table')
+    db_connector = make_test_database("status_checker_no_table")
     status_checker = StatusChecker(db_connector, Path())
 
     with pytest.raises(RuntimeError):
@@ -24,20 +24,25 @@ def test_status_checker_run_time_error(make_test_database):
 
 
 @pytest.mark.parametrize(
-    'test_case',
-    ('no_log_file_no_pid_not_started_not_ended_no_mock_pid_submitted',
-     'log_file_no_pid_not_started_not_ended_no_mock_pid_created',
-     'log_file_pid_not_started_not_ended_no_mock_pid_error',
-     'log_file_pid_not_started_not_ended_mock_pid_running',
-     'log_file_pid_started_not_ended_no_mock_pid_error',
-     'log_file_pid_started_not_ended_mock_pid_running',
-     'log_file_pid_started_ended_no_mock_pid_error',
-     'log_file_pid_started_ended_no_mock_pid_complete'))
-def test_status_checker(test_case,
-                        get_test_data_path,
-                        get_test_db_copy,
-                        mock_pid_exists,
-                        copy_test_case_log_file):
+    "test_case",
+    (
+        "no_log_file_no_pid_not_started_not_ended_no_mock_pid_submitted",
+        "log_file_no_pid_not_started_not_ended_no_mock_pid_created",
+        "log_file_pid_not_started_not_ended_no_mock_pid_error",
+        "log_file_pid_not_started_not_ended_mock_pid_running",
+        "log_file_pid_started_not_ended_no_mock_pid_error",
+        "log_file_pid_started_not_ended_mock_pid_running",
+        "log_file_pid_started_ended_no_mock_pid_error",
+        "log_file_pid_started_ended_no_mock_pid_complete",
+    ),
+)
+def test_status_checker(
+    test_case,
+    get_test_data_path,
+    get_test_db_copy,
+    mock_pid_exists,
+    copy_test_case_log_file,
+):
     """
     Test the StatusChecker exhaustively (excluding raises and loop).
 
@@ -71,44 +76,41 @@ def test_status_checker(test_case,
     # Check that the correct status has been assigned to "running"
     # pylint: disable=no-member
     result = db_reader.query(
-        "SELECT latest_status FROM run WHERE name = "
-        "'testdata_5'").loc[0, 'latest_status']
-    assert result == 'running'
+        "SELECT latest_status FROM run WHERE name = " "'testdata_5'"
+    ).loc[0, "latest_status"]
+    assert result == "running"
 
     # Check that the correct status has been assigned to "submitted"
-    expected = test_case.split('_')[-1]
+    expected = test_case.split("_")[-1]
     # pylint: disable=no-member
     result = db_reader.query(
-        "SELECT latest_status FROM run WHERE name = "
-        "'testdata_6'").loc[0, 'latest_status']
+        "SELECT latest_status FROM run WHERE name = " "'testdata_6'"
+    ).loc[0, "latest_status"]
     assert result == expected
 
     # Check that correct start_time has been set
-    if 'not_started' not in test_case:
+    if "not_started" not in test_case:
         expected = datetime(2020, 5, 1, 17, 7, 10)
         # pylint: disable=no-member
         result = db_reader.query(
-            "SELECT start_time FROM run WHERE name = "
-            "'testdata_6'"
-        ).loc[0, 'start_time']
+            "SELECT start_time FROM run WHERE name = " "'testdata_6'"
+        ).loc[0, "start_time"]
         assert str(expected) == result
 
     # Check that correct end_time has been set
-    if 'not_ended' not in test_case and 'complete' in test_case:
+    if "not_ended" not in test_case and "complete" in test_case:
         expected = datetime(2020, 5, 1, 17, 7, 14)
         # pylint: disable=no-member
         result = db_reader.query(
-            "SELECT stop_time FROM run WHERE name = "
-            "'testdata_6'"
-        ).loc[0, 'stop_time']
+            "SELECT stop_time FROM run WHERE name = " "'testdata_6'"
+        ).loc[0, "stop_time"]
         assert str(expected) == result
 
 
 @pytest.mark.timeout(60)
 def test_status_checker_until_complete_infinite(
-        get_test_data_path,
-        get_test_db_copy,
-        copy_test_case_log_file):
+    get_test_data_path, get_test_db_copy, copy_test_case_log_file
+):
     """
     Test the infinite loop of StatusChecker.
 
@@ -118,8 +120,7 @@ def test_status_checker_until_complete_infinite(
     get_test_db_copy
     copy_test_case_log_file
     """
-    test_case = \
-        'infinite_log_file_pid_started_ended_no_mock_pid_complete'
+    test_case = "infinite_log_file_pid_started_ended_no_mock_pid_complete"
 
     project_path = get_test_data_path
     db_connector = get_test_db_copy(test_case)
@@ -127,16 +128,17 @@ def test_status_checker_until_complete_infinite(
 
     # Remove row which has status running (as it will always have
     # this status)
-    db_connector.execute_statement(
-        "DELETE FROM run WHERE name = 'testdata_5'")
+    db_connector.execute_statement("DELETE FROM run WHERE name = 'testdata_5'")
 
     db_reader = DatabaseReader(db_connector)
 
     status_checker = StatusChecker(db_connector, project_path)
     status_checker.check_and_update_until_complete()
 
-    query = ("SELECT name, id AS run_id FROM run WHERE\n"
-             "latest_status = 'submitted' OR\n"
-             "latest_status = 'created' OR\n"
-             "latest_status = 'running'")
+    query = (
+        "SELECT name, id AS run_id FROM run WHERE\n"
+        "latest_status = 'submitted' OR\n"
+        "latest_status = 'created' OR\n"
+        "latest_status = 'running'"
+    )
     assert len(db_reader.query(query).index) == 0

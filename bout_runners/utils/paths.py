@@ -27,7 +27,7 @@ def get_config_path():
     Path
         The path to the configuration directory
     """
-    return get_root_path().joinpath('config')
+    return get_root_path().joinpath("config")
 
 
 def get_logger_config_path():
@@ -39,7 +39,7 @@ def get_logger_config_path():
     Path
         The path to the logger configuration file
     """
-    return get_config_path().joinpath('logging_config.yaml')
+    return get_config_path().joinpath("logging_config.yaml")
 
 
 def get_bout_runners_config_path():
@@ -51,7 +51,7 @@ def get_bout_runners_config_path():
     Path
         The path to the bout_runners configuration file
     """
-    return get_config_path().joinpath('bout_runners.ini')
+    return get_config_path().joinpath("bout_runners.ini")
 
 
 def get_bout_log_config_path():
@@ -63,7 +63,7 @@ def get_bout_log_config_path():
     Path
         The path to the bout_runners configuration file
     """
-    return get_config_path().joinpath('logging_config.yaml')
+    return get_config_path().joinpath("logging_config.yaml")
 
 
 def get_bout_runners_configuration():
@@ -90,9 +90,9 @@ def get_log_file_directory():
         Path to the log_file directory
     """
     config = get_bout_runners_configuration()
-    path_str = config['log']['directory']
-    if path_str == 'None':
-        log_file_dir = get_root_path().joinpath('logs')
+    path_str = config["log"]["directory"]
+    if path_str == "None":
+        log_file_dir = get_root_path().joinpath("logs")
     else:
         log_file_dir = Path(path_str)
 
@@ -100,23 +100,28 @@ def get_log_file_directory():
     return log_file_dir
 
 
-def get_log_file_path(log_file_dir=get_log_file_directory(),
-                      name=time.strftime('%Y%m%d.log')):
+def get_log_file_path(log_file_dir=None, name=None):
     """
     Return the absolute path to the log file path.
 
     Parameters
     ----------
-    log_file_dir : Path
+    log_file_dir : Path or None
         Path to the log file directory
-    name : str
+        If None, default log file directory will be used
+    name : str or None
         Name of the log file
+        If None, current date will be used
 
     Returns
     -------
     log_file_path : Path
         The path to the log file
     """
+    log_file_dir = (
+        log_file_dir if log_file_dir is not None else get_log_file_directory()
+    )
+    name = name if name is not None else time.strftime("%Y%m%d.log")
     log_file_path = log_file_dir.joinpath(name)
 
     return log_file_path
@@ -132,9 +137,9 @@ def get_bout_directory():
         Path to the BOUT++ repository
     """
     config = get_bout_runners_configuration()
-    path_str = config['bout++']['directory']
-    if '$HOME/' or '${HOME}/' in path_str.lower():
-        path_str = '/'.join(path_str.split('/')[1:])
-        path_str = f'{Path.home()}/{path_str}'
+    path_str = config["bout++"]["directory"]
+    if "$HOME/" or "${HOME}/" in path_str.lower():
+        path_str = "/".join(path_str.split("/")[1:])
+        path_str = f"{Path.home()}/{path_str}"
     bout_path = Path(path_str).absolute()
     return bout_path

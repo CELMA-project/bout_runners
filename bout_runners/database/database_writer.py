@@ -11,7 +11,7 @@ class DatabaseWriter:
 
     Attributes
     ----------
-    database_connector : DatabaseConnector
+    db_connector : DatabaseConnector
         The database object to write to
 
     Methods
@@ -52,7 +52,7 @@ class DatabaseWriter:
     >>> final_parameters = FinalParameters(default_parameters)
     >>> final_parameters_dict = final_parameters.get_final_parameters()
     >>> final_parameters_as_sql_types = \
-    ...     final_parameters.cast_parameters_to_sql_type(
+    ...     final_parameters.cast_to_sql_type(
     ...     final_parameters_dict)
 
     Create the database
@@ -69,16 +69,16 @@ class DatabaseWriter:
     >>> db_writer.create_entry('split', dummy_split_dict)
     """
 
-    def __init__(self, database_connector):
+    def __init__(self, db_connector):
         """
         Set the database to use.
 
         Parameters
         ----------
-        database_connector : DatabaseConnector
+        db_connector : DatabaseConnector
             The database object to write to
         """
-        self.database_connector = database_connector
+        self.db_connector = db_connector
 
     @staticmethod
     def create_insert_string(field_names, table_name):
@@ -101,11 +101,11 @@ class DatabaseWriter:
         """
         # From
         # https://stackoverflow.com/a/14108554/2786884
-        columns = ', '.join(field_names)
-        placeholders = ', '.join('?' * len(field_names))
-        insert_str = (f'INSERT INTO {table_name} '
-                      f'({columns}) '
-                      f'VALUES ({placeholders})')
+        columns = ", ".join(field_names)
+        placeholders = ", ".join("?" * len(field_names))
+        insert_str = (
+            f"INSERT INTO {table_name} " f"({columns}) " f"VALUES ({placeholders})"
+        )
         return insert_str
 
     @staticmethod
@@ -131,15 +131,15 @@ class DatabaseWriter:
         insert_str : str
             The string to be used for update
         """
-        placeholders = ''
+        placeholders = ""
         for col in field_names:
             placeholders += f'{" " * 4}{col} = ?,\n'
         # Remove last comma
-        placeholders = f'{placeholders[:-2]}\n'
+        placeholders = f"{placeholders[:-2]}\n"
 
-        update_str = (f'UPDATE {table_name}\n'
-                      f'SET\n{placeholders}'
-                      f'WHERE {search_condition}')
+        update_str = (
+            f"UPDATE {table_name}\n" f"SET\n{placeholders}" f"WHERE {search_condition}"
+        )
         return update_str
 
     def insert(self, insert_str, values):
@@ -154,12 +154,12 @@ class DatabaseWriter:
             Values to be inserted in the query
         """
         # Obtain the table name
-        pattern = r'INSERT INTO (\w*)'
+        pattern = r"INSERT INTO (\w*)"
         table_name = re.match(pattern, insert_str).group(1)
 
-        self.database_connector.execute_statement(insert_str, *values)
+        self.db_connector.execute_statement(insert_str, *values)
 
-        logging.info('Made insertion to %s', table_name)
+        logging.info("Made insertion to %s", table_name)
 
     def update(self, update_str, values):
         """
@@ -173,15 +173,14 @@ class DatabaseWriter:
             Values to be inserted in the query
         """
         # Obtain the table name
-        pattern = r'UPDATE (\w*)'
+        pattern = r"UPDATE (\w*)"
         table_name = re.match(pattern, update_str).group(1)
-        pattern = r'WHERE (.*)'
+        pattern = r"WHERE (.*)"
         condition = re.search(pattern, update_str).group(1)
 
-        self.database_connector.execute_statement(update_str, *values)
+        self.db_connector.execute_statement(update_str, *values)
 
-        logging.info('Updated table %s, where %s',
-                     table_name, condition)
+        logging.info("Updated table %s, where %s", table_name, condition)
 
     def create_entry(self, table_name, entries_dict):
         """
