@@ -2,9 +2,10 @@
 
 
 from bout_runners.database.database_reader import DatabaseReader
+from typing import Callable
 
 
-def test_db_reader(make_test_database, write_to_split):
+def test_db_reader(make_test_database: Callable, write_to_split: Callable) -> None:
     """
     Test we can create read from the database.
 

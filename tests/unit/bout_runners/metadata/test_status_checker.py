@@ -1,13 +1,14 @@
 """Contains unittests for the StatusChecker."""
 
-from pathlib import Path
+from pathlib import PosixPath, Path
 from datetime import datetime
 import pytest
 from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.metadata.status_checker import StatusChecker
+from typing import Callable
 
 
-def test_status_checker_run_time_error(make_test_database):
+def test_status_checker_run_time_error(make_test_database: Callable) -> None:
     """
     Test that the status checker raises RuntimeError without tables.
 
@@ -37,12 +38,12 @@ def test_status_checker_run_time_error(make_test_database):
     ),
 )
 def test_status_checker(
-    test_case,
-    get_test_data_path,
-    get_test_db_copy,
-    mock_pid_exists,
-    copy_test_case_log_file,
-):
+    test_case: str,
+    get_test_data_path: PosixPath,
+    get_test_db_copy: Callable,
+    mock_pid_exists: Callable,
+    copy_test_case_log_file: Callable,
+) -> None:
     """
     Test the StatusChecker exhaustively (excluding raises and loop).
 
@@ -109,8 +110,10 @@ def test_status_checker(
 
 @pytest.mark.timeout(60)
 def test_status_checker_until_complete_infinite(
-    get_test_data_path, get_test_db_copy, copy_test_case_log_file
-):
+    get_test_data_path: PosixPath,
+    get_test_db_copy: Callable,
+    copy_test_case_log_file: Callable,
+) -> None:
     """
     Test the infinite loop of StatusChecker.
 

@@ -3,8 +3,10 @@
 
 import sqlite3
 import logging
-from pathlib import Path
+from pathlib import PosixPath, Path
 from bout_runners.utils.file_operations import get_caller_dir
+from sqlite3 import Connection
+from typing import Optional
 
 
 class DatabaseConnector:
@@ -35,7 +37,9 @@ class DatabaseConnector:
     >>> database.execute_statement('CREATE TABLE my_table (col INT)')
     """
 
-    def __init__(self, name=None, db_root_path=None):
+    def __init__(
+        self, name: Optional[str] = None, db_root_path: Optional[PosixPath] = None
+    ) -> None:
         """
         Set the path to the data base.
 
@@ -59,12 +63,12 @@ class DatabaseConnector:
         # Open the connection
         self.__connection = sqlite3.connect(str(self.db_path))
 
-    def __del__(self):
+    def __del__(self) -> None:
         """Close the connection."""
         self.__connection.close()
 
     @property
-    def db_path(self):
+    def db_path(self) -> PosixPath:
         """
         Get the properties of self.db_path.
 
@@ -81,7 +85,7 @@ class DatabaseConnector:
         return self.__db_path
 
     @property
-    def connection(self):
+    def connection(self) -> Connection:
         """
         Get the properties of self.connection.
 
@@ -98,7 +102,9 @@ class DatabaseConnector:
         return self.__connection
 
     @staticmethod
-    def create_db_path(name, db_root_path):
+    def create_db_path(
+        name: Optional[str], db_root_path: Optional[PosixPath]
+    ) -> PosixPath:
         """
         Create the database path.
 
@@ -135,7 +141,7 @@ class DatabaseConnector:
 
         return db_path
 
-    def execute_statement(self, sql_statement, *parameters):
+    def execute_statement(self, sql_statement: str, *parameters) -> None:
         """
         Execute a statement in the database.
 

@@ -5,11 +5,12 @@ import re
 import ast
 import logging
 import configparser
-from pathlib import Path
+from pathlib import PosixPath, Path
 from bout_runners.executor.bout_paths import BoutPaths
 from bout_runners.parameters.run_parameters import RunParameters
 from bout_runners.executor.executor import Executor
 from bout_runners.submitter.local_submitter import LocalSubmitter
+from typing import Any, Dict, Optional
 
 
 class DefaultParameters:
@@ -64,7 +65,11 @@ class DefaultParameters:
     {'global': {'append': False, 'async_send': False, ...}}
     """
 
-    def __init__(self, bout_paths=None, settings_path=None):
+    def __init__(
+        self,
+        bout_paths: Optional[BoutPaths] = None,
+        settings_path: Optional[PosixPath] = None,
+    ) -> None:
         """
         Set the member data.
 
@@ -99,7 +104,7 @@ class DefaultParameters:
             )
             self.run_parameters_run(self.__bout_paths)
 
-    def run_parameters_run(self, bout_paths):
+    def run_parameters_run(self, bout_paths: Optional[BoutPaths]) -> None:
         """
         Execute a run to obtain the default parameters.
 
@@ -123,7 +128,7 @@ class DefaultParameters:
         self.__settings_path = bout_paths.bout_inp_dst_dir.joinpath("BOUT.settings")
 
     @staticmethod
-    def get_test_executor(bout_paths):
+    def get_test_executor(bout_paths: BoutPaths) -> Executor:
         """
         Return the executor used for test (i.e. where nout=0).
 
@@ -145,7 +150,7 @@ class DefaultParameters:
         )
         return executor
 
-    def get_default_parameters(self):
+    def get_default_parameters(self) -> Dict[str, Any]:
         """
         Return the default parameters from the settings file.
 

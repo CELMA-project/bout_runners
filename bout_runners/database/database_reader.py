@@ -2,6 +2,10 @@
 
 
 import pandas as pd
+from bout_runners.database.database_connector import DatabaseConnector
+from numpy import int64
+from pandas.core.frame import DataFrame
+from typing import Dict, Optional, Union
 
 
 class DatabaseReader:
@@ -87,7 +91,7 @@ class DatabaseReader:
     True
     """
 
-    def __init__(self, db_connector):
+    def __init__(self, db_connector: DatabaseConnector) -> None:
         """
         Set the database to use.
 
@@ -98,7 +102,7 @@ class DatabaseReader:
         """
         self.db_connector = db_connector
 
-    def query(self, query_str, **kwargs):
+    def query(self, query_str: str, **kwargs) -> DataFrame:
         """
         Make a query to the database.
 
@@ -117,7 +121,7 @@ class DatabaseReader:
         table = pd.read_sql_query(query_str, self.db_connector.connection, **kwargs)
         return table
 
-    def get_latest_row_id(self):
+    def get_latest_row_id(self) -> int64:
         """
         Return the latest row id.
 
@@ -131,7 +135,9 @@ class DatabaseReader:
         row_id = self.query("SELECT last_insert_rowid() AS id").loc[0, "id"]
         return row_id
 
-    def get_entry_id(self, table_name, entries_dict):
+    def get_entry_id(
+        self, table_name: str, entries_dict: Dict[str, Union[int, str, float]]
+    ) -> Optional[int]:
         """
         Get the id of a table entry.
 
@@ -169,7 +175,7 @@ class DatabaseReader:
 
         return row_id
 
-    def check_tables_created(self):
+    def check_tables_created(self) -> bool:
         """
         Check if the tables is created in the database.
 

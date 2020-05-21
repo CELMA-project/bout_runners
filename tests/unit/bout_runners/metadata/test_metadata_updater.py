@@ -2,9 +2,10 @@
 
 
 from datetime import datetime
+from typing import Callable
 
 
-def test_update_start_time(get_metadata_updater_and_db_reader):
+def test_update_start_time(get_metadata_updater_and_db_reader: Callable) -> None:
     """
     Test if it's possible to update the start time.
 
@@ -23,7 +24,7 @@ def test_update_start_time(get_metadata_updater_and_db_reader):
     assert result_df.loc[0, "start_time"] == str(now)
 
 
-def test_update_stop_time(get_metadata_updater_and_db_reader):
+def test_update_stop_time(get_metadata_updater_and_db_reader: Callable) -> None:
     """
     Test if it's possible to update the stop time.
 
@@ -42,7 +43,7 @@ def test_update_stop_time(get_metadata_updater_and_db_reader):
     assert result_df.loc[0, "stop_time"] == str(now)
 
 
-def test_update_latest_status(get_metadata_updater_and_db_reader):
+def test_update_latest_status(get_metadata_updater_and_db_reader: Callable) -> None:
     """
     Test if it's possible to update the latest status.
 

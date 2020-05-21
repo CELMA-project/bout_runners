@@ -4,9 +4,10 @@
 import numpy as np
 from bout_runners.database.database_writer import DatabaseWriter
 from bout_runners.database.database_reader import DatabaseReader
+from typing import Callable
 
 
-def test_db_writer(make_test_schema):
+def test_db_writer(make_test_schema: Callable) -> None:
     """
     Test we can create write to the database schemas.
 

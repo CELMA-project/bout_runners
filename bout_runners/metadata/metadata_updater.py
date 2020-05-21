@@ -2,6 +2,9 @@
 
 
 from bout_runners.database.database_writer import DatabaseWriter
+from bout_runners.database.database_connector import DatabaseConnector
+from datetime import datetime
+from typing import Union
 
 
 class MetadataUpdater:
@@ -40,7 +43,7 @@ class MetadataUpdater:
     >>> metadata_updater.update_latest_status('error')
     """
 
-    def __init__(self, db_connector, run_id):
+    def __init__(self, db_connector: DatabaseConnector, run_id: int) -> None:
         """
         Set the database and id to use.
 
@@ -54,7 +57,7 @@ class MetadataUpdater:
         self.__db_writer = DatabaseWriter(db_connector)
         self.run_id = run_id
 
-    def update_start_time(self, start_time):
+    def update_start_time(self, start_time: datetime) -> None:
         """
         Update the start time.
 
@@ -65,7 +68,7 @@ class MetadataUpdater:
         """
         self.update_column("start_time", start_time)
 
-    def update_stop_time(self, end_time):
+    def update_stop_time(self, end_time: datetime) -> None:
         """
         Update the end time.
 
@@ -76,7 +79,7 @@ class MetadataUpdater:
         """
         self.update_column("stop_time", end_time)
 
-    def update_latest_status(self, status):
+    def update_latest_status(self, status: str) -> None:
         """
         Update the latest status.
 
@@ -87,7 +90,7 @@ class MetadataUpdater:
         """
         self.update_column("latest_status", status)
 
-    def update_column(self, column, value):
+    def update_column(self, column: str, value: Union[datetime, str]) -> None:
         """
         Update a field with a certain row in the run table.
 

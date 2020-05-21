@@ -6,7 +6,7 @@ import pytest
 from bout_runners.submitter.local_submitter import LocalSubmitter
 
 
-def test_local_submitter():
+def test_local_submitter() -> None:
     """Test that LocalSubmitter can run a command and raise an error."""
     submitter = LocalSubmitter()
     result = submitter.submit_command("ls")

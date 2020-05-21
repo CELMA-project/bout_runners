@@ -3,10 +3,12 @@
 
 import time
 import configparser
-from pathlib import Path
+from pathlib import PosixPath, Path
+from configparser import ConfigParser
+from typing import Optional
 
 
-def get_root_path():
+def get_root_path() -> PosixPath:
     """
     Return the absolute path to the root of this repository.
 
@@ -18,7 +20,7 @@ def get_root_path():
     return Path(__file__).absolute().parents[2]
 
 
-def get_config_path():
+def get_config_path() -> PosixPath:
     """
     Return the absolute path to the configurations.
 
@@ -30,7 +32,7 @@ def get_config_path():
     return get_root_path().joinpath("config")
 
 
-def get_logger_config_path():
+def get_logger_config_path() -> PosixPath:
     """
     Return the absolute path to the logger configuration.
 
@@ -42,7 +44,7 @@ def get_logger_config_path():
     return get_config_path().joinpath("logging_config.yaml")
 
 
-def get_bout_runners_config_path():
+def get_bout_runners_config_path() -> PosixPath:
     """
     Return the absolute path to the bout_runners configuration.
 
@@ -54,7 +56,7 @@ def get_bout_runners_config_path():
     return get_config_path().joinpath("bout_runners.ini")
 
 
-def get_bout_log_config_path():
+def get_bout_log_config_path() -> PosixPath:
     """
     Return the absolute path to the log configuration.
 
@@ -66,7 +68,7 @@ def get_bout_log_config_path():
     return get_config_path().joinpath("logging_config.yaml")
 
 
-def get_bout_runners_configuration():
+def get_bout_runners_configuration() -> ConfigParser:
     """
     Return the bout_runners configuration.
 
@@ -80,7 +82,7 @@ def get_bout_runners_configuration():
     return config
 
 
-def get_log_file_directory():
+def get_log_file_directory() -> PosixPath:
     """
     Return the log_file directory.
 
@@ -100,7 +102,9 @@ def get_log_file_directory():
     return log_file_dir
 
 
-def get_log_file_path(log_file_dir=None, name=None):
+def get_log_file_path(
+    log_file_dir: None = None, name: Optional[str] = None
+) -> PosixPath:
     """
     Return the absolute path to the log file path.
 
@@ -127,7 +131,7 @@ def get_log_file_path(log_file_dir=None, name=None):
     return log_file_path
 
 
-def get_bout_directory():
+def get_bout_directory() -> PosixPath:
     """
     Load the BOUT++ directory from the configuration file.
 

@@ -3,9 +3,11 @@
 
 import re
 from bout_runners.database.database_reader import DatabaseReader
+from bout_runners.database.database_connector import DatabaseConnector
+from typing import Callable, Dict, List, Tuple, Union
 
 
-def drop_ids(func):
+def drop_ids(func: Callable) -> Callable:
     """
     Return a function which remove excessive ids.
 
@@ -166,7 +168,9 @@ class MetadataReader:
         "file_modification.project_makefile_modified",
     )
 
-    def __init__(self, db_connector, drop_id="keep_run_id"):
+    def __init__(
+        self, db_connector: DatabaseConnector, drop_id: None = "keep_run_id"
+    ) -> None:
         """
         Set the database to use.
 
@@ -201,7 +205,7 @@ class MetadataReader:
         )
 
     @property
-    def table_names(self):
+    def table_names(self) -> Tuple[str, str, str, str, str, str, str, str]:
         """
         Set the properties of self.table_names.
 
@@ -213,7 +217,17 @@ class MetadataReader:
         return self.__table_names
 
     @property
-    def table_column_dict(self):
+    def table_column_dict(
+        self,
+    ) -> Dict[
+        str,
+        Union[
+            Tuple[str, str, str, str, str, str, str],
+            Tuple[str, str, str, str],
+            Tuple[str, str, str, str, str, str],
+            Tuple[str, str, str, str, str, str, str, str, str, str],
+        ],
+    ]:
         """
         Set the properties of self.table_column_dict.
 
@@ -226,7 +240,9 @@ class MetadataReader:
         return self.__table_column_dict
 
     @property
-    def table_connection(self):
+    def table_connection(
+        self,
+    ) -> Dict[str, Union[Tuple[str, str, str], Tuple[str, str, str, str]]]:
         """
         Set the properties of self.table_connections.
 
@@ -239,7 +255,53 @@ class MetadataReader:
         return self.__table_connections
 
     @property
-    def sorted_columns(self):
+    def sorted_columns(
+        self,
+    ) -> Tuple[
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+        str,
+    ]:
         """
         Set the properties of self.sorted_columns.
 
@@ -309,7 +371,98 @@ class MetadataReader:
         return self.__db_reader.query(parameters_query)
 
     @staticmethod
-    def get_join_query(from_statement, columns, alias_columns, table_connections):
+    def get_join_query(
+        from_statement: str,
+        columns: Union[
+            Tuple[
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+            ],
+            List[str],
+        ],
+        alias_columns: Union[
+            Tuple[
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+            ],
+            Tuple[
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+                str,
+            ],
+        ],
+        table_connections: Dict[
+            str, Union[Tuple[str, str, str], Tuple[str, str, str, str]]
+        ],
+    ) -> str:
         """
         Return the query string of a `SELECT` query with `INNER JOIN`.
 

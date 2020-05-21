@@ -40,8 +40,11 @@ class ProcessorSplit:
     """
 
     def __init__(
-        self, number_of_processors=1, number_of_nodes=1, processors_per_node=1
-    ):
+        self,
+        number_of_processors: int = 1,
+        number_of_nodes: int = 1,
+        processors_per_node: int = 1,
+    ) -> None:
         """
         Set the parameters.
 

@@ -2,13 +2,13 @@
 
 
 import re
-from pathlib import Path
+from pathlib import PosixPath, Path
 
 
 class MakefileReaderError(Exception):
     """Error class indicating that this is a ReadMakefile error."""
 
-    def __init__(self, variable, path):
+    def __init__(self, variable: str, path: PosixPath) -> None:
         """
         Construct a string and call the super constructor.
 
@@ -36,7 +36,7 @@ class BoutMakefileReader:
         The content of the Makefile as a string
     """
 
-    def __init__(self, path):
+    def __init__(self, path: PosixPath) -> None:
         """
         Read the content of a Makefile and store it into self.content.
 
@@ -48,7 +48,7 @@ class BoutMakefileReader:
         self.path = path
         self.content = self.read()
 
-    def read(self):
+    def read(self) -> str:
         """
         Read the makefile.
 
@@ -98,7 +98,7 @@ class BoutMakefileVariableReader(BoutMakefileReader):
     'bout_model.cxx'
     """
 
-    def __init__(self, path, variable_name):
+    def __init__(self, path: PosixPath, variable_name: str) -> None:
         """
         Set the variable name of the instance.
 
@@ -114,7 +114,7 @@ class BoutMakefileVariableReader(BoutMakefileReader):
         self.variable_name = variable_name
         self.variable_value = None
 
-    def get_variable_value(self):
+    def get_variable_value(self) -> str:
         """
         Get the value of the variable.
 

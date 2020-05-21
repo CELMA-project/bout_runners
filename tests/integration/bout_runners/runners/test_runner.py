@@ -2,7 +2,7 @@
 
 import os
 import contextlib
-from pathlib import Path
+from pathlib import PosixPath, Path
 from bout_runners.executor.bout_paths import BoutPaths
 from bout_runners.executor.executor import Executor
 from bout_runners.database.database_connector import DatabaseConnector
@@ -12,10 +12,11 @@ from bout_runners.parameters.run_parameters import RunParameters
 from bout_runners.parameters.final_parameters import FinalParameters
 from bout_runners.submitter.local_submitter import LocalSubmitter
 from bout_runners.runner.bout_runner import BoutRunner
+from typing import Callable, Iterator
 
 
 @contextlib.contextmanager
-def change_directory(new_path):
+def change_directory(new_path: PosixPath) -> Iterator[None]:
     """
     Change working directory and return to previous directory on exit.
 
@@ -41,7 +42,9 @@ def change_directory(new_path):
         os.chdir(str(previous_path))
 
 
-def assert_first_run(bout_paths, db_connection):
+def assert_first_run(
+    bout_paths: BoutPaths, db_connection: DatabaseConnector
+) -> DatabaseReader:
     """
     Assert that the first run went well.
 
@@ -63,7 +66,9 @@ def assert_first_run(bout_paths, db_connection):
     return db_reader
 
 
-def assert_tables_has_len_1(db_reader, yield_number_of_rows_for_all_tables):
+def assert_tables_has_len_1(
+    db_reader: DatabaseReader, yield_number_of_rows_for_all_tables: Callable
+) -> None:
     """
     Assert that tables has length 1.
 
@@ -79,7 +84,9 @@ def assert_tables_has_len_1(db_reader, yield_number_of_rows_for_all_tables):
     assert sum(number_of_rows_dict.values()) == len(number_of_rows_dict.keys())
 
 
-def assert_force_run(db_reader, yield_number_of_rows_for_all_tables):
+def assert_force_run(
+    db_reader: DatabaseReader, yield_number_of_rows_for_all_tables: Callable
+) -> None:
     """
     Assert that the force run is effective.
 
@@ -101,8 +108,10 @@ def assert_force_run(db_reader, yield_number_of_rows_for_all_tables):
 
 
 def test_bout_runners_from_directory(
-    make_project, yield_number_of_rows_for_all_tables, clean_default_db_dir
-):
+    make_project: PosixPath,
+    yield_number_of_rows_for_all_tables: Callable,
+    clean_default_db_dir: PosixPath,
+) -> None:
     """
     Test that the minimal BoutRunners setup works.
 
@@ -149,8 +158,10 @@ def test_bout_runners_from_directory(
 
 
 def test_full_bout_runner(
-    make_project, yield_number_of_rows_for_all_tables, clean_default_db_dir
-):
+    make_project: PosixPath,
+    yield_number_of_rows_for_all_tables: Callable,
+    clean_default_db_dir: PosixPath,
+) -> None:
     """
     Test that the BoutRunner can execute a run.
 

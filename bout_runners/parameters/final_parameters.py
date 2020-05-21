@@ -4,6 +4,7 @@
 import ast
 from bout_runners.parameters.run_parameters import RunParameters
 from bout_runners.parameters.default_parameters import DefaultParameters
+from typing import Dict, Optional, Union
 
 
 class FinalParameters:
@@ -71,7 +72,11 @@ class FinalParameters:
     INTEGER, ...}}
     """
 
-    def __init__(self, default_parameters=None, run_parameters=None):
+    def __init__(
+        self,
+        default_parameters: Optional[DefaultParameters] = None,
+        run_parameters: Optional[RunParameters] = None,
+    ) -> None:
         """
         Set the member data.
 
@@ -94,7 +99,17 @@ class FinalParameters:
             run_parameters if run_parameters is not None else RunParameters()
         )
 
-    def get_final_parameters(self):
+    def get_final_parameters(
+        self,
+    ) -> Dict[
+        str,
+        Union[
+            Dict[str, Union[int, str, float]],
+            Dict[str, float],
+            Dict[str, int],
+            Dict[str, str],
+        ],
+    ]:
         """
         Obtain the final parameters that will be used in a run.
 
@@ -126,7 +141,17 @@ class FinalParameters:
         return final_parameters_dict
 
     @staticmethod
-    def cast_to_sql_type(parameter_dict):
+    def cast_to_sql_type(
+        parameter_dict: Dict[
+            str,
+            Union[
+                Dict[str, Union[int, str, float]],
+                Dict[str, float],
+                Dict[str, int],
+                Dict[str, str],
+            ],
+        ]
+    ) -> Dict[str, Dict[str, str]]:
         """
         Cast the values of a parameter dict to valid SQL types.
 

@@ -7,6 +7,11 @@ from bout_runners.database.database_writer import DatabaseWriter
 from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.database.database_utils import get_file_modification
 from bout_runners.database.database_utils import get_system_info
+from bout_runners.database.database_connector import DatabaseConnector
+from bout_runners.executor.bout_paths import BoutPaths
+from bout_runners.parameters.final_parameters import FinalParameters
+from bout_runners.submitter.processor_split import ProcessorSplit
+from typing import Dict, Optional, Union
 
 
 class MetadataRecorder:
@@ -74,7 +79,12 @@ class MetadataRecorder:
     None
     """
 
-    def __init__(self, db_connector, bout_paths, final_parameters):
+    def __init__(
+        self,
+        db_connector: DatabaseConnector,
+        bout_paths: BoutPaths,
+        final_parameters: FinalParameters,
+    ) -> None:
         """
         Set the database to use.
 
@@ -94,7 +104,7 @@ class MetadataRecorder:
         self.__make = Make(self.__bout_paths.project_path)
 
     @property
-    def db_reader(self):
+    def db_reader(self) -> DatabaseReader:
         """
         Set the properties of self.db_reader.
 
@@ -125,7 +135,9 @@ class MetadataRecorder:
         """
         return self.__db_writer
 
-    def capture_new_data_from_run(self, processor_split, force=False):
+    def capture_new_data_from_run(
+        self, processor_split: ProcessorSplit, force: bool = False
+    ) -> Optional[int]:
         """
         Capture new data from a run.
 
@@ -201,7 +213,9 @@ class MetadataRecorder:
 
         return run_id
 
-    def create_entry(self, table_name, entries_dict):
+    def create_entry(
+        self, table_name: str, entries_dict: Dict[str, Union[int, str, float]]
+    ) -> int:
         """
         Create a database entry and return the entry id.
 
@@ -221,7 +235,18 @@ class MetadataRecorder:
         entry_id = self.__db_reader.get_entry_id(table_name, entries_dict)
         return entry_id
 
-    def _create_parameter_tables_entry(self, parameters_dict):
+    def _create_parameter_tables_entry(
+        self,
+        parameters_dict: Dict[
+            str,
+            Union[
+                Dict[str, Union[int, str, float]],
+                Dict[str, float],
+                Dict[str, int],
+                Dict[str, str],
+            ],
+        ],
+    ) -> int:
         """
         Insert the parameters into a the parameter tables.
 

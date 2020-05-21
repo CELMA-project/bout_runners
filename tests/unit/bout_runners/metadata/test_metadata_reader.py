@@ -1,7 +1,12 @@
+from bout_runners.metadata.metadata_reader import MetadataReader
+from pandas.core.frame import DataFrame
+
 """Contains unittests for the metadata_reader."""
 
 
-def test_get_table_column_dict(yield_metadata_reader, yield_all_metadata):
+def test_get_table_column_dict(
+    yield_metadata_reader: MetadataReader, yield_all_metadata: DataFrame
+) -> None:
     """
     Test that the metadata reader retrieves the table column dict.
 
@@ -34,7 +39,7 @@ def test_get_table_column_dict(yield_metadata_reader, yield_all_metadata):
         assert set(columns) == set(expected_columns)
 
 
-def test_get_table_connections(yield_metadata_reader):
+def test_get_table_connections(yield_metadata_reader: MetadataReader) -> None:
     """
     Test that the metadata reader retrieves the table connections.
 
@@ -51,7 +56,9 @@ def test_get_table_connections(yield_metadata_reader):
     assert table_connections == expected_connections
 
 
-def test_get_sorted_columns(yield_metadata_reader, yield_all_metadata):
+def test_get_sorted_columns(
+    yield_metadata_reader: MetadataReader, yield_all_metadata: DataFrame
+) -> None:
     """
     Test that the metadata reader retrieves sorted columns.
 
@@ -67,7 +74,9 @@ def test_get_sorted_columns(yield_metadata_reader, yield_all_metadata):
     assert sorted_columns == expected
 
 
-def test_get_parameters_metadata(yield_metadata_reader, yield_all_metadata):
+def test_get_parameters_metadata(
+    yield_metadata_reader: MetadataReader, yield_all_metadata: DataFrame
+) -> None:
     """
     Test that the metadata reader can get the parameters metadata.
 
@@ -89,7 +98,9 @@ def test_get_parameters_metadata(yield_metadata_reader, yield_all_metadata):
     assert parameters_metadata.equals(expected)
 
 
-def test_get_all_metadata(yield_metadata_reader, yield_all_metadata):
+def test_get_all_metadata(
+    yield_metadata_reader: MetadataReader, yield_all_metadata: DataFrame
+) -> None:
     """
     Test that the metadata reader and the drop_id decorator works.
 

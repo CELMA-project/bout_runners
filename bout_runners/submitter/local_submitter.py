@@ -3,10 +3,12 @@
 
 import logging
 import subprocess
-from pathlib import Path
+from pathlib import PosixPath, Path
 from bout_runners.submitter.abstract_submitter import AbstractSubmitter
 from bout_runners.submitter.processor_split import ProcessorSplit
 from bout_runners.utils.file_operations import get_caller_dir
+from subprocess import CompletedProcess
+from typing import Optional
 
 
 class LocalSubmitter(AbstractSubmitter):
@@ -41,7 +43,9 @@ class LocalSubmitter(AbstractSubmitter):
     test_submitter_factory.py\n', stderr=b'')
     """
 
-    def __init__(self, path=None, processor_split=None):
+    def __init__(
+        self, path: Optional[PosixPath] = None, processor_split: None = None
+    ) -> None:
         """
         Set the path from where the calls are made from.
 
@@ -63,11 +67,11 @@ class LocalSubmitter(AbstractSubmitter):
         self.__pid = None
 
     @property
-    def pid(self):
+    def pid(self) -> int:
         """Return the process id."""
         return self.__pid
 
-    def submit_command(self, command):
+    def submit_command(self, command: str) -> CompletedProcess:
         """
         Run a subprocess.
 

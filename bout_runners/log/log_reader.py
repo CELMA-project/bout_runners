@@ -4,7 +4,8 @@
 import re
 import logging
 from datetime import datetime
-from pathlib import Path
+from pathlib import PosixPath, Path
+from typing import Optional
 
 
 class LogReader:
@@ -51,7 +52,7 @@ class LogReader:
     1190
     """
 
-    def __init__(self, log_path):
+    def __init__(self, log_path: PosixPath) -> None:
         """
         Open and read a log file.
 
@@ -64,7 +65,7 @@ class LogReader:
             self.file_str = log_file.read()
             logging.debug("Opened log_file %s", log_path)
 
-    def started(self):
+    def started(self) -> bool:
         """
         Check whether the run has a start time.
 
@@ -75,7 +76,7 @@ class LogReader:
         """
         return self.__is_str_in_file(r"^Run started at")
 
-    def ended(self):
+    def ended(self) -> bool:
         """
         Check whether the run has an end time.
 
@@ -86,7 +87,7 @@ class LogReader:
         """
         return self.__is_str_in_file(r"^Run finished at")
 
-    def pid_exist(self):
+    def pid_exist(self) -> bool:
         """
         Check whether a process id exist.
 
@@ -98,7 +99,7 @@ class LogReader:
         return self.__is_str_in_file(r"^pid\s*:\s*")
 
     @property
-    def start_time(self):
+    def start_time(self) -> Optional[datetime]:
         """
         Return the start time of the process.
 
@@ -112,7 +113,7 @@ class LogReader:
         return None
 
     @property
-    def end_time(self):
+    def end_time(self) -> Optional[datetime]:
         """
         Return the end time of the process.
 
@@ -126,7 +127,7 @@ class LogReader:
         return None
 
     @property
-    def pid(self):
+    def pid(self) -> Optional[int]:
         """
         Return the pid of the process.
 

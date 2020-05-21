@@ -5,9 +5,10 @@ import pytest
 from bout_runners.make.read_makefile import BoutMakefileReader
 from bout_runners.make.read_makefile import BoutMakefileVariableReader
 from bout_runners.make.read_makefile import MakefileReaderError
+from pathlib import PosixPath
 
 
-def test_read_bout_makefile(get_test_data_path):
+def test_read_bout_makefile(get_test_data_path: PosixPath) -> None:
     """
     Test that BoutMakefileReader can read a file.
 
@@ -24,7 +25,9 @@ def test_read_bout_makefile(get_test_data_path):
     "filename,expected",
     [("Makefile_value", "val 123 val.cxx.foo"), ("Makefile_multiple_value", "not_val")],
 )
-def test_get_variable_value(filename, expected, get_test_data_path):
+def test_get_variable_value(
+    filename: str, expected: str, get_test_data_path: PosixPath
+) -> None:
     """
     Test that get_variable is reading variables properly.
 
@@ -43,7 +46,7 @@ def test_get_variable_value(filename, expected, get_test_data_path):
     assert val == expected
 
 
-def test_get_variable_value_raises(get_test_data_path):
+def test_get_variable_value_raises(get_test_data_path: PosixPath) -> None:
     """
     Test that MakefileReaderError is properly raised.
 

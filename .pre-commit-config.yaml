@@ -20,6 +20,11 @@ repos:
       - id: trailing-whitespace
       - id: end-of-file-fixer
 
+  # NOTE: MonkeyType can automatically annotate
+  #       monkeytype run `which pytest`
+  #       for i in $(monkeytype list-modules); do
+  #           monkeytype apply "$i"
+  #       done
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v0.770
     hooks:

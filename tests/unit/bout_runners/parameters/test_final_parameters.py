@@ -2,9 +2,10 @@
 
 from bout_runners.parameters.final_parameters import FinalParameters
 from bout_runners.parameters.run_parameters import RunParameters
+from bout_runners.parameters.default_parameters import DefaultParameters
 
 
-def test_final_parameters(get_default_parameters):
+def test_final_parameters(get_default_parameters: DefaultParameters) -> None:
     """
     Test that RunParameters overwrites DefaultParameters.
 
@@ -22,7 +23,7 @@ def test_final_parameters(get_default_parameters):
     assert final_parameters_dict["global"]["timestep"] == 0
 
 
-def test_cast_parameters_to_sql_type(get_default_parameters):
+def test_cast_parameters_to_sql_type(get_default_parameters: DefaultParameters) -> None:
     """
     Test that obtain_project_parameters returns expected output.
 

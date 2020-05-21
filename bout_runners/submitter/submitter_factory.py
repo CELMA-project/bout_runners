@@ -5,7 +5,7 @@ import logging
 from bout_runners.submitter.local_submitter import LocalSubmitter
 
 
-def get_submitter(name, *args, **kwargs):
+def get_submitter(name: str, *args, **kwargs) -> LocalSubmitter:
     """
     Return a Submitter object.
 

@@ -2,6 +2,7 @@
 
 
 import logging
+from typing import Dict, Optional, Union
 
 
 class RunParameters:
@@ -32,7 +33,16 @@ class RunParameters:
     internally in the setter of run_parameters_dict
     """
 
-    def __init__(self, run_parameters_dict=None):
+    def __init__(
+        self,
+        run_parameters_dict: Optional[
+            Union[
+                Dict[str, Dict[str, int]],
+                Dict[str, Dict[str, bool]],
+                Dict[str, Union[Dict[str, bool], Dict[str, int]]],
+            ]
+        ] = None,
+    ) -> None:
         """
         Set the parameters.
 

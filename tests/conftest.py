@@ -4,7 +4,7 @@
 import shutil
 from distutils.dir_util import copy_tree
 from distutils.dir_util import remove_tree
-from pathlib import Path
+from pathlib import PosixPath, Path
 import pandas as pd
 import pytest
 import psutil
@@ -20,10 +20,13 @@ from bout_runners.database.database_writer import DatabaseWriter
 from bout_runners.executor.bout_paths import BoutPaths
 from bout_runners.metadata.metadata_reader import MetadataReader
 from bout_runners.metadata.metadata_updater import MetadataUpdater
+from _pytest.monkeypatch import MonkeyPatch
+from pandas.core.frame import DataFrame
+from typing import Callable, Dict, Iterator, Tuple
 
 
 @pytest.fixture(scope="session", name="yield_bout_path")
-def fixture_yield_bout_path():
+def fixture_yield_bout_path() -> Iterator[PosixPath]:
     """
     Load the dot-env file and yield the bout_path.
 
@@ -38,7 +41,7 @@ def fixture_yield_bout_path():
 
 
 @pytest.fixture(scope="session", name="yield_conduction_path")
-def fixture_yield_conduction_path(yield_bout_path):
+def fixture_yield_conduction_path(yield_bout_path: PosixPath) -> Iterator[PosixPath]:
     """
     Yield the conduction path.
 
@@ -54,7 +57,7 @@ def fixture_yield_conduction_path(yield_bout_path):
 
 
 @pytest.fixture(scope="function")
-def make_make_object(yield_bout_path):
+def make_make_object(yield_bout_path: PosixPath) -> Iterator[Tuple[Make, PosixPath]]:
     """
     Set up and tear down the make-object.
 
@@ -102,7 +105,7 @@ def make_make_object(yield_bout_path):
 
 
 @pytest.fixture(scope="session")
-def make_project(yield_conduction_path):
+def make_project(yield_conduction_path: PosixPath) -> Iterator[PosixPath]:
     """
     Set up and tear down the Make object.
 
@@ -133,7 +136,7 @@ def make_project(yield_conduction_path):
 
 
 @pytest.fixture(scope="session", name="get_test_data_path")
-def fixture_get_test_data_path():
+def fixture_get_test_data_path() -> PosixPath:
     """
     Return the test data path.
 
@@ -146,7 +149,7 @@ def fixture_get_test_data_path():
 
 
 @pytest.fixture(scope="session", name="get_tmp_db_dir")
-def fixture_get_tmp_db_dir():
+def fixture_get_tmp_db_dir() -> Iterator[PosixPath]:
     """
     Return the directory for the temporary databases.
 
@@ -163,7 +166,7 @@ def fixture_get_tmp_db_dir():
 
 
 @pytest.fixture(scope="session", name="make_test_database")
-def fixture_make_test_database(get_tmp_db_dir):
+def fixture_make_test_database(get_tmp_db_dir: PosixPath) -> Callable:
     """
     Return the wrapped function for the database connection.
 
@@ -196,7 +199,7 @@ def fixture_make_test_database(get_tmp_db_dir):
 
 
 @pytest.fixture(scope="session", name="get_default_parameters")
-def fixture_get_default_parameters(get_test_data_path):
+def fixture_get_default_parameters(get_test_data_path: PosixPath) -> DefaultParameters:
     """
     Return the default parameters object.
 
@@ -216,7 +219,9 @@ def fixture_get_default_parameters(get_test_data_path):
 
 
 @pytest.fixture(scope="session", name="make_test_schema")
-def fixture_make_test_schema(get_default_parameters, make_test_database):
+def fixture_make_test_schema(
+    get_default_parameters: DefaultParameters, make_test_database: Callable
+) -> Iterator[Callable]:
     """
     Return the wrapped function for schema creation.
 
@@ -268,7 +273,7 @@ def fixture_make_test_schema(get_default_parameters, make_test_database):
 
 
 @pytest.fixture(scope="session")
-def write_to_split(make_test_schema):
+def write_to_split(make_test_schema: Callable) -> Iterator[Callable]:
     """
     Return the wrapped function for writing to the split table.
 
@@ -314,7 +319,7 @@ def write_to_split(make_test_schema):
 
 
 @pytest.fixture(scope="session")
-def copy_bout_inp():
+def copy_bout_inp() -> Iterator[Callable]:
     """
     Copy BOUT.inp to a temporary directory.
 
@@ -363,7 +368,7 @@ def copy_bout_inp():
 
 
 @pytest.fixture(scope="function")
-def yield_bout_path_conduction(yield_conduction_path):
+def yield_bout_path_conduction(yield_conduction_path: PosixPath) -> Iterator[Callable]:
     """
     Make the bout_path object and clean up after use.
 
@@ -408,7 +413,7 @@ def yield_bout_path_conduction(yield_conduction_path):
 
 
 @pytest.fixture(scope="function")
-def copy_makefile(get_test_data_path):
+def copy_makefile(get_test_data_path: PosixPath) -> Iterator[PosixPath]:
     """
     Set up and tear down a copy of Makefile to my_makefile.
 
@@ -441,7 +446,7 @@ def copy_makefile(get_test_data_path):
 
 
 @pytest.fixture(scope="function")
-def yield_number_of_rows_for_all_tables():
+def yield_number_of_rows_for_all_tables() -> Iterator[Callable]:
     """
     Yield the function used to count number of rows in a table.
 
@@ -485,7 +490,7 @@ def yield_number_of_rows_for_all_tables():
 
 
 @pytest.fixture(scope="session")
-def yield_metadata_reader(get_test_data_path):
+def yield_metadata_reader(get_test_data_path: PosixPath) -> Iterator[MetadataReader]:
     """
     Yield the connection to the test database.
 
@@ -504,7 +509,7 @@ def yield_metadata_reader(get_test_data_path):
 
 
 @pytest.fixture(scope="session")
-def yield_all_metadata(get_test_data_path):
+def yield_all_metadata(get_test_data_path: PosixPath) -> Iterator[DataFrame]:
     """
     Yield the test metadata.
 
@@ -528,7 +533,7 @@ def yield_all_metadata(get_test_data_path):
 
 
 @pytest.fixture(scope="session", name="yield_logs")
-def fixture_yield_logs(get_test_data_path):
+def fixture_yield_logs(get_test_data_path: PosixPath) -> Iterator[Dict[str, PosixPath]]:
     """
     Yield the different types of execution logs.
 
@@ -592,7 +597,11 @@ def fixture_yield_logs(get_test_data_path):
 
 
 @pytest.fixture(scope="function", name="get_test_db_copy")
-def fixture_get_test_db_copy(get_tmp_db_dir, get_test_data_path, make_test_database):
+def fixture_get_test_db_copy(
+    get_tmp_db_dir: PosixPath,
+    get_test_data_path: PosixPath,
+    make_test_database: Callable,
+) -> Callable:
     """
     Return a DatabaseConnector connected to a copy of test.db.
 
@@ -637,7 +646,7 @@ def fixture_get_test_db_copy(get_tmp_db_dir, get_test_data_path, make_test_datab
 
 
 @pytest.fixture(scope="function")
-def get_metadata_updater_and_db_reader(get_test_db_copy):
+def get_metadata_updater_and_db_reader(get_test_db_copy: Callable) -> Callable:
     """
     Return an instance of MetadataUpdater.
 
@@ -682,7 +691,7 @@ def get_metadata_updater_and_db_reader(get_test_db_copy):
 
 
 @pytest.fixture(scope="function", name="copy_log_file")
-def fixture_copy_log_file(get_test_data_path):
+def fixture_copy_log_file(get_test_data_path: PosixPath) -> Iterator[Callable]:
     """
     Return a function which copy log files to a temporary directory.
 
@@ -728,7 +737,7 @@ def fixture_copy_log_file(get_test_data_path):
 
 
 @pytest.fixture(scope="function")
-def mock_pid_exists(monkeypatch):
+def mock_pid_exists(monkeypatch: MonkeyPatch) -> Callable:
     """
     Return a function for setting up a monkeypatch of psutil.pid_exists.
 
@@ -777,7 +786,11 @@ def mock_pid_exists(monkeypatch):
 
 
 @pytest.fixture(scope="function")
-def copy_test_case_log_file(copy_log_file, get_test_data_path, yield_logs):
+def copy_test_case_log_file(
+    copy_log_file: Callable,
+    get_test_data_path: PosixPath,
+    yield_logs: Dict[str, PosixPath],
+) -> Callable:
     """
     Return the function for copying the test case log files.
 
@@ -855,7 +868,7 @@ def copy_test_case_log_file(copy_log_file, get_test_data_path, yield_logs):
 
 # NOTE: MonkeyPatch is function scoped
 @pytest.fixture(scope="function")
-def get_mock_config_path(monkeypatch):
+def get_mock_config_path(monkeypatch: MonkeyPatch) -> Iterator[PosixPath]:
     """
     Return a mock path for the config dir and redirects get_config_path.
 
@@ -886,7 +899,7 @@ def get_mock_config_path(monkeypatch):
 
 
 @pytest.fixture(scope="session")
-def clean_default_db_dir():
+def clean_default_db_dir() -> Iterator[PosixPath]:
     """
     Yield the default database dir, and clean it during the teardown.
 

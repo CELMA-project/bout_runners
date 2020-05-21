@@ -7,6 +7,8 @@ import psutil
 from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.log.log_reader import LogReader
 from bout_runners.metadata.metadata_updater import MetadataUpdater
+from bout_runners.database.database_connector import DatabaseConnector
+from pathlib import PosixPath
 
 
 class StatusChecker:
@@ -53,7 +55,9 @@ class StatusChecker:
     >>> status_checker.check_and_update_until_complete()
     """
 
-    def __init__(self, db_connector, project_path):
+    def __init__(
+        self, db_connector: DatabaseConnector, project_path: PosixPath
+    ) -> None:
         """
         Set connector, reader and a project path.
 
@@ -75,7 +79,7 @@ class StatusChecker:
         self.__db_reader = DatabaseReader(self.__db_connector)
         self.project_path = project_path
 
-    def check_and_update_status(self):
+    def check_and_update_status(self) -> None:
         """Check and update the status for the schema."""
         # Check that run table exist
         if not self.__db_reader.check_tables_created():
@@ -102,7 +106,7 @@ class StatusChecker:
         running_to_check = self.__db_reader.query(query)
         self.__check_running(metadata_updater, running_to_check)
 
-    def check_and_update_until_complete(self, seconds_between_update=5):
+    def check_and_update_until_complete(self, seconds_between_update: int = 5) -> None:
         """
         Check and update the status until all runs are stopped.
 
@@ -203,7 +207,7 @@ class StatusChecker:
         return latest_status
 
     @staticmethod
-    def check_if_running_or_errored(log_reader):
+    def check_if_running_or_errored(log_reader: LogReader) -> str:
         """
         Check if a run is still running or has errored.
 

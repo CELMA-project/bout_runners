@@ -2,9 +2,13 @@
 
 
 from bout_runners.parameters.default_parameters import DefaultParameters
+from pathlib import PosixPath
+from typing import Callable
 
 
-def test_executor(make_project, yield_bout_path_conduction):
+def test_executor(
+    make_project: PosixPath, yield_bout_path_conduction: Callable
+) -> None:
     """
     Test that we are able to execute the conduction example.
 

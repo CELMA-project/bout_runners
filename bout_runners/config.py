@@ -2,7 +2,7 @@
 
 
 import logging
-from pathlib import Path
+from pathlib import PosixPath, Path
 import yaml
 from bout_runners.utils.paths import get_bout_runners_configuration
 from bout_runners.utils.paths import get_bout_runners_config_path
@@ -11,9 +11,10 @@ from bout_runners.utils.paths import get_log_file_directory
 from bout_runners.utils.paths import get_bout_log_config_path
 from bout_runners.utils.logs import get_log_config
 from bout_runners.utils.logs import set_up_logger
+from typing import Optional
 
 
-def set_log_level(level=None):
+def set_log_level(level: Optional[str] = None) -> None:
     """
     Set the log level.
 
@@ -68,7 +69,7 @@ def set_log_level(level=None):
     logging.info("Logging level set to %s", level)
 
 
-def set_log_file_directory(log_dir=None):
+def set_log_file_directory(log_dir: Optional[PosixPath] = None) -> None:
     """
     Set the directory of the log files.
 
@@ -101,7 +102,7 @@ def set_log_file_directory(log_dir=None):
     logging.info("Logging directory set to %s", config["log"]["directory"])
 
 
-def set_bout_directory(bout_dir=None):
+def set_bout_directory(bout_dir: Optional[PosixPath] = None) -> None:
     """
     Set the path to the BOUT++ directory.
 

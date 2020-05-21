@@ -6,9 +6,18 @@ import logging.config
 import yaml
 from bout_runners.utils.paths import get_logger_config_path
 from bout_runners.utils.paths import get_log_file_path
+from typing import Dict, List, Optional, Union
 
 
-def get_log_config():
+def get_log_config() -> Dict[
+    str,
+    Union[
+        int,
+        Dict[str, Dict[str, str]],
+        Dict[str, Union[Dict[str, str], Dict[str, Union[str, int]]]],
+        Dict[str, Union[str, List[str]]],
+    ],
+]:
     """
     Get the logging configuration.
 
@@ -24,7 +33,19 @@ def get_log_config():
     return config
 
 
-def set_up_logger(config=None):
+def set_up_logger(
+    config: Optional[
+        Dict[
+            str,
+            Union[
+                int,
+                Dict[str, Dict[str, str]],
+                Dict[str, Union[Dict[str, str], Dict[str, Union[str, int]]]],
+                Dict[str, Union[str, List[str]]],
+            ],
+        ]
+    ] = None
+) -> None:
     """
     Set up the logger.
 

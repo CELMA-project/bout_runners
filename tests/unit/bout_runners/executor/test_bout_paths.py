@@ -3,9 +3,11 @@
 
 import pytest
 from bout_runners.executor.bout_paths import BoutPaths
+from pathlib import PosixPath
+from typing import Callable
 
 
-def test_bout_path(yield_conduction_path, copy_bout_inp):
+def test_bout_path(yield_conduction_path: PosixPath, copy_bout_inp: Callable) -> None:
     """
     Test that BoutPath is copying BOUT.inp.
 

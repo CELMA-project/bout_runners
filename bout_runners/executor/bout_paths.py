@@ -4,8 +4,9 @@
 import logging
 import shutil
 from datetime import datetime
-from pathlib import Path
+from pathlib import PosixPath, Path
 from bout_runners.utils.file_operations import get_caller_dir
+from typing import Optional, Union
 
 
 class BoutPaths:
@@ -48,7 +49,12 @@ class BoutPaths:
     PosixPath(/root/BOUT-dev/examples/conduction/foo)
     """
 
-    def __init__(self, project_path=None, bout_inp_src_dir=None, bout_inp_dst_dir=None):
+    def __init__(
+        self,
+        project_path: Optional[PosixPath] = None,
+        bout_inp_src_dir: Optional[PosixPath] = None,
+        bout_inp_dst_dir: Optional[Union[PosixPath, str]] = None,
+    ) -> None:
         """
         Set the paths.
 
@@ -192,7 +198,7 @@ class BoutPaths:
 
         self._copy_inp()
 
-    def _copy_inp(self):
+    def _copy_inp(self) -> None:
         """Copy BOUT.inp from bout_inp_src_dir to bout_inp_dst_dir."""
         if self.bout_inp_src_dir != self.bout_inp_dst_dir:
             src = self.bout_inp_src_dir.joinpath("BOUT.inp")

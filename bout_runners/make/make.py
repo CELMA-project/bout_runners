@@ -2,11 +2,12 @@
 
 
 import logging
-from pathlib import Path
+from pathlib import PosixPath, Path
 from bout_runners.utils.file_operations import get_caller_dir
 from bout_runners.utils.names import get_exec_name
 from bout_runners.utils.names import get_makefile_path
 from bout_runners.submitter.local_submitter import LocalSubmitter
+from typing import Optional
 
 
 class MakeError(Exception):
@@ -44,7 +45,9 @@ class Make:
     ... make_obj.run_make(force=True)
     """
 
-    def __init__(self, makefile_root_path=None, makefile_name=None):
+    def __init__(
+        self, makefile_root_path: Optional[PosixPath] = None, makefile_name: None = None
+    ) -> None:
         """
         Call the make file.
 
@@ -71,7 +74,7 @@ class Make:
         self.exec_name = get_exec_name(self.makefile_path)
         self.submitter = LocalSubmitter(self.makefile_root_path)
 
-    def run_make(self, force=False):
+    def run_make(self, force: bool = False) -> None:
         """
         Execute the makefile.
 
@@ -102,7 +105,7 @@ class Make:
             command = f"{make_str}"
             self.submitter.submit_command(command)
 
-    def run_clean(self):
+    def run_clean(self) -> None:
         """Run make clean."""
         make_str = (
             "make" if self.makefile_name is None else f"make -f {self.makefile_name}"

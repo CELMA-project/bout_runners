@@ -3,6 +3,9 @@
 
 import re
 import logging
+from bout_runners.database.database_connector import DatabaseConnector
+from datetime import datetime
+from typing import Any, Dict, Tuple, Union
 
 
 class DatabaseWriter:
@@ -69,7 +72,7 @@ class DatabaseWriter:
     >>> db_writer.create_entry('split', dummy_split_dict)
     """
 
-    def __init__(self, db_connector):
+    def __init__(self, db_connector: DatabaseConnector) -> None:
         """
         Set the database to use.
 
@@ -109,7 +112,11 @@ class DatabaseWriter:
         return insert_str
 
     @staticmethod
-    def create_update_string(field_names, table_name, search_condition):
+    def create_update_string(
+        field_names: Union[Tuple[str, str], Tuple[str]],
+        table_name: str,
+        search_condition: str,
+    ) -> str:
         """
         Create a question mark style string for database update.
 
@@ -142,7 +149,7 @@ class DatabaseWriter:
         )
         return update_str
 
-    def insert(self, insert_str, values):
+    def insert(self, insert_str: str, values: Any) -> None:
         """
         Insert to the database.
 
@@ -161,7 +168,11 @@ class DatabaseWriter:
 
         logging.info("Made insertion to %s", table_name)
 
-    def update(self, update_str, values):
+    def update(
+        self,
+        update_str: str,
+        values: Union[Tuple[int, int], Tuple[datetime], Tuple[str]],
+    ) -> None:
         """
         Insert to the database.
 
@@ -182,7 +193,9 @@ class DatabaseWriter:
 
         logging.info("Updated table %s, where %s", table_name, condition)
 
-    def create_entry(self, table_name, entries_dict):
+    def create_entry(
+        self, table_name: str, entries_dict: Dict[str, Union[int, str, float]]
+    ) -> None:
         """
         Create a database entry.
 

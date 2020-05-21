@@ -3,9 +3,10 @@
 
 import sqlite3
 import pytest
+from typing import Callable
 
 
-def test_db_connector(make_test_database):
+def test_db_connector(make_test_database: Callable) -> None:
     """
     Test the connection.
 
