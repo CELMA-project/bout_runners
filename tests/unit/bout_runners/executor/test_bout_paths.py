@@ -20,19 +20,18 @@ def test_bout_path(yield_conduction_path, copy_bout_inp):
         more details.
     """
     project_path = yield_conduction_path
-    tmp_path_name = 'tmp_BoutPath_test'
+    tmp_path_name = "tmp_BoutPath_test"
 
     # NOTE: We use the fixture here to automatically remove the
     # directory after the test
     tmp_path_dir = copy_bout_inp(project_path, tmp_path_name)
 
     # We remove the BOUT.inp to verify that BoutPaths copied the file
-    tmp_path_dir.joinpath('BOUT.inp').unlink()
+    tmp_path_dir.joinpath("BOUT.inp").unlink()
 
-    bout_paths = BoutPaths(project_path=project_path,
-                           bout_inp_dst_dir=tmp_path_name)
+    bout_paths = BoutPaths(project_path=project_path, bout_inp_dst_dir=tmp_path_name)
 
-    assert project_path.joinpath(tmp_path_name, 'BOUT.inp').is_file()
+    assert project_path.joinpath(tmp_path_name, "BOUT.inp").is_file()
 
     with pytest.raises(FileNotFoundError):
-        bout_paths.bout_inp_src_dir = 'dir_without_BOUT_inp'
+        bout_paths.bout_inp_src_dir = "dir_without_BOUT_inp"

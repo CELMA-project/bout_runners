@@ -26,17 +26,17 @@ def test_database_reader(make_test_database, write_to_split):
         Function returning the database connection where `split` has
         been populated
     """
-    empty_db_connection = make_test_database('empty_read_test')
+    empty_db_connection = make_test_database("empty_read_test")
     empty_db_reader = DatabaseReader(empty_db_connection)
 
     # Check that we can make a query
-    table = empty_db_reader.query('SELECT 1+1 AS col')
-    assert table.loc[0, 'col'] == 2  # pylint: disable=no-member
+    table = empty_db_reader.query("SELECT 1+1 AS col")
+    assert table.loc[0, "col"] == 2  # pylint: disable=no-member
 
     # Check that the tables has not been created in an empty db
     assert not empty_db_reader.check_tables_created()
 
-    db_connection = write_to_split('read_test')
+    db_connection = write_to_split("read_test")
     db_reader = DatabaseReader(db_connection)
 
     # Check that tables exist
@@ -44,18 +44,18 @@ def test_database_reader(make_test_database, write_to_split):
 
     # As write_to_split writes to the split table, we can get the
     # written values with the following query
-    table = db_reader.query('SELECT * FROM split')
-    entries_dict = table.to_dict(orient='records')[0]
+    table = db_reader.query("SELECT * FROM split")
+    entries_dict = table.to_dict(orient="records")[0]
 
     # Remove the 'id'
-    entries_dict.pop('id')
+    entries_dict.pop("id")
 
-    row_id = db_reader.get_entry_id('split', entries_dict)
+    row_id = db_reader.get_entry_id("split", entries_dict)
     assert row_id == 1
 
     # Modify entries_dict so that row_id returns None
     entries_dict[list(entries_dict.keys())[0]] += 1
-    new_row_id = db_reader.get_entry_id('split', entries_dict)
+    new_row_id = db_reader.get_entry_id("split", entries_dict)
     assert new_row_id is None
 
     # Assert that get_latest_row_id is working

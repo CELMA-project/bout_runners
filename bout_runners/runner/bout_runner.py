@@ -6,8 +6,7 @@ from bout_runners.executor.executor import Executor
 from bout_runners.parameters.final_parameters import FinalParameters
 from bout_runners.database.database_creator import DatabaseCreator
 from bout_runners.database.database_connector import DatabaseConnector
-from bout_runners.metadata.metadata_recorder import \
-    MetadataRecorder
+from bout_runners.metadata.metadata_recorder import MetadataRecorder
 
 
 class BoutRunner:
@@ -95,10 +94,12 @@ class BoutRunner:
     >>> runner.run()
     """
 
-    def __init__(self,
-                 executor=None,
-                 database_connector=DatabaseConnector(),
-                 final_parameters=None):
+    def __init__(
+        self,
+        executor=None,
+        database_connector=DatabaseConnector(),
+        final_parameters=None,
+    ):
         """
         Set the member data.
 
@@ -117,18 +118,15 @@ class BoutRunner:
         # Set member data
         # NOTE: We are not setting the default as a keyword argument
         #       as this would mess up the paths
-        self.__executor = \
-            executor if executor is not None else Executor()
-        self.__final_parameters = \
-            final_parameters if final_parameters is not None else \
-            FinalParameters()
+        self.__executor = executor if executor is not None else Executor()
+        self.__final_parameters = (
+            final_parameters if final_parameters is not None else FinalParameters()
+        )
         self.__database_connector = database_connector
-        self.__database_creator = \
-            DatabaseCreator(self.database_connector)
-        self.__metadata_recorder = \
-            MetadataRecorder(database_connector,
-                             self.executor.bout_paths,
-                             self.final_parameters)
+        self.__database_creator = DatabaseCreator(self.database_connector)
+        self.__metadata_recorder = MetadataRecorder(
+            database_connector, self.executor.bout_paths, self.final_parameters
+        )
 
     @property
     def executor(self):
@@ -168,13 +166,11 @@ class BoutRunner:
 
     def create_schema(self):
         """Create the schema."""
-        final_parameters_dict = \
-            self.final_parameters.get_final_parameters()
-        final_parameters_as_sql_types = \
-            self.final_parameters. \
-            cast_parameters_to_sql_type(final_parameters_dict)
-        self.__database_creator.create_all_schema_tables(
-            final_parameters_as_sql_types)
+        final_parameters_dict = self.final_parameters.get_final_parameters()
+        final_parameters_as_sql_types = self.final_parameters.cast_parameters_to_sql_type(
+            final_parameters_dict
+        )
+        self.__database_creator.create_all_schema_tables(final_parameters_as_sql_types)
 
     def run(self, force=False):
         """
@@ -186,24 +182,26 @@ class BoutRunner:
             Execute the run even if has been performed with the same
             parameters
         """
-        if not self.__metadata_recorder.database_reader.\
-                check_tables_created():
-            logging.info('Creating schema as no tables were found in '
-                         '%s',
-                         self.__metadata_recorder.database_reader.
-                         database_connector.database_path)
+        if not self.__metadata_recorder.database_reader.check_tables_created():
+            logging.info(
+                "Creating schema as no tables were found in " "%s",
+                self.__metadata_recorder.database_reader.database_connector.database_path,
+            )
             self.create_schema()
 
         run_id = self.__metadata_recorder.capture_new_data_from_run(
-            self.__executor.submitter.processor_split, force)
+            self.__executor.submitter.processor_split, force
+        )
 
         if run_id is None:
-            logging.info('Executing the run')
+            logging.info("Executing the run")
             self.executor.execute()
         else:
-            logging.warning('Run with the same configuration has been '
-                            'executed before, see run with run_id %d',
-                            run_id)
+            logging.warning(
+                "Run with the same configuration has been "
+                "executed before, see run with run_id %d",
+                run_id,
+            )
             if force:
-                logging.info('Executing the run as force==True')
+                logging.info("Executing the run as force==True")
                 self.executor.execute()

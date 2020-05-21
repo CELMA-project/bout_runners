@@ -22,15 +22,16 @@ def test_executor(make_project, yield_bout_path_conduction):
     _ = make_project
 
     # Make the executor
-    bout_paths = yield_bout_path_conduction('test_executor')
-    run_parameters = RunParameters({'global': {'nout': 0}})
-    executor = Executor(bout_paths=bout_paths,
-                        submitter=LocalSubmitter(
-                            bout_paths.project_path),
-                        run_parameters=run_parameters)
+    bout_paths = yield_bout_path_conduction("test_executor")
+    run_parameters = RunParameters({"global": {"nout": 0}})
+    executor = Executor(
+        bout_paths=bout_paths,
+        submitter=LocalSubmitter(bout_paths.project_path),
+        run_parameters=run_parameters,
+    )
 
     executor.execute()
 
-    log_path = bout_paths.bout_inp_dst_dir.joinpath('BOUT.log.0')
+    log_path = bout_paths.bout_inp_dst_dir.joinpath("BOUT.log.0")
 
     assert log_path.is_file()

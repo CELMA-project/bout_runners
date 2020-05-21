@@ -5,10 +5,8 @@ from datetime import datetime
 from bout_runners.make.make import Make
 from bout_runners.database.database_writer import DatabaseWriter
 from bout_runners.database.database_reader import DatabaseReader
-from bout_runners.database.database_utils import \
-    get_file_modification
-from bout_runners.database.database_utils import \
-    get_system_info
+from bout_runners.database.database_utils import get_file_modification
+from bout_runners.database.database_utils import get_system_info
 
 
 class MetadataRecorder:
@@ -76,10 +74,7 @@ class MetadataRecorder:
     None
     """
 
-    def __init__(self,
-                 database_connector,
-                 bout_paths,
-                 final_parameters):
+    def __init__(self, database_connector, bout_paths, final_parameters):
         """
         Set the database to use.
 
@@ -156,55 +151,53 @@ class MetadataRecorder:
             executed, this will return None, else the run_id is returned
         """
         # Initiate the run_dict (will be filled with the ids)
-        run_dict = {'name': self.__bout_paths.bout_inp_dst_dir.name}
+        run_dict = {"name": self.__bout_paths.bout_inp_dst_dir.name}
 
         # Update the parameters
         parameters_dict = self.__final_parameters.get_final_parameters()
 
-        run_dict['parameters_id'] = \
-            self._create_parameter_tables_entry(parameters_dict)
+        run_dict["parameters_id"] = self._create_parameter_tables_entry(parameters_dict)
 
         # Update the file_modification
-        file_modification_dict = \
-            get_file_modification(self.__bout_paths.project_path,
-                                  self.__make.makefile_path,
-                                  self.__make.exec_name)
-        run_dict['file_modification_id'] = \
-            self.__database_reader.get_entry_id('file_modification',
-                                                file_modification_dict)
-        if run_dict['file_modification_id'] is None:
-            run_dict['file_modification_id'] = \
-                self.create_entry('file_modification',
-                                  file_modification_dict)
+        file_modification_dict = get_file_modification(
+            self.__bout_paths.project_path,
+            self.__make.makefile_path,
+            self.__make.exec_name,
+        )
+        run_dict["file_modification_id"] = self.__database_reader.get_entry_id(
+            "file_modification", file_modification_dict
+        )
+        if run_dict["file_modification_id"] is None:
+            run_dict["file_modification_id"] = self.create_entry(
+                "file_modification", file_modification_dict
+            )
 
         # Update the split
-        split_dict = {'number_of_processors':
-                      processor_split.number_of_processors,
-                      'number_of_nodes':
-                      processor_split.number_of_nodes,
-                      'processors_per_node':
-                      processor_split.processors_per_node}
-        run_dict['split_id'] = \
-            self.__database_reader.get_entry_id('split', split_dict)
-        if run_dict['split_id'] is None:
-            run_dict['split_id'] = self.create_entry('split',
-                                                     split_dict)
+        split_dict = {
+            "number_of_processors": processor_split.number_of_processors,
+            "number_of_nodes": processor_split.number_of_nodes,
+            "processors_per_node": processor_split.processors_per_node,
+        }
+        run_dict["split_id"] = self.__database_reader.get_entry_id("split", split_dict)
+        if run_dict["split_id"] is None:
+            run_dict["split_id"] = self.create_entry("split", split_dict)
 
         # Update the system info
         system_info_dict = get_system_info()
-        run_dict['system_info_id'] = \
-            self.__database_reader.get_entry_id('system_info',
-                                                system_info_dict)
-        if run_dict['system_info_id'] is None:
-            run_dict['system_info_id'] = \
-                self.create_entry('system_info', system_info_dict)
+        run_dict["system_info_id"] = self.__database_reader.get_entry_id(
+            "system_info", system_info_dict
+        )
+        if run_dict["system_info_id"] is None:
+            run_dict["system_info_id"] = self.create_entry(
+                "system_info", system_info_dict
+            )
 
         # Update the run
-        run_id = self.__database_reader.get_entry_id('run', run_dict)
+        run_id = self.__database_reader.get_entry_id("run", run_dict)
         if force or run_id is None:
-            run_dict['latest_status'] = 'submitted'
-            run_dict['submitted_time'] = datetime.now().isoformat()
-            _ = self.create_entry('run', run_dict)
+            run_dict["latest_status"] = "submitted"
+            run_dict["submitted_time"] = datetime.now().isoformat()
+            _ = self.create_entry("run", run_dict)
 
         return run_id
 
@@ -225,8 +218,7 @@ class MetadataRecorder:
             The id of the newly created entry
         """
         self.__database_writer.create_entry(table_name, entries_dict)
-        entry_id = self.__database_reader.get_entry_id(table_name,
-                                                       entries_dict)
+        entry_id = self.__database_reader.get_entry_id(table_name, entries_dict)
         return entry_id
 
     def _create_parameter_tables_entry(self, parameters_dict):
@@ -253,23 +245,21 @@ class MetadataRecorder:
 
         for section in parameter_sections:
             # Replace bad characters for SQL
-            section_name = section.replace(':', '_')
+            section_name = section.replace(":", "_")
             section_parameters = parameters_dict[section]
-            section_id = \
-                self.__database_reader.get_entry_id(section_name,
-                                                    section_parameters)
+            section_id = self.__database_reader.get_entry_id(
+                section_name, section_parameters
+            )
             if section_id is None:
-                section_id = self.create_entry(section_name,
-                                               section_parameters)
+                section_id = self.create_entry(section_name, section_parameters)
 
-            parameters_foreign_keys[f'{section_name}_id'] = section_id
+            parameters_foreign_keys[f"{section_name}_id"] = section_id
 
         # Update the parameters table
-        parameters_id = \
-            self.__database_reader.get_entry_id('parameters',
-                                                parameters_foreign_keys)
+        parameters_id = self.__database_reader.get_entry_id(
+            "parameters", parameters_foreign_keys
+        )
         if parameters_id is None:
-            parameters_id = \
-                self.create_entry('parameters', parameters_foreign_keys)
+            parameters_id = self.create_entry("parameters", parameters_foreign_keys)
 
         return parameters_id

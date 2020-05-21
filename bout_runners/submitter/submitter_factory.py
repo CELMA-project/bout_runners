@@ -25,15 +25,14 @@ def get_submitter(name, *args, **kwargs):
     submitter : AbstractSubmitter
         The implemented submitter class
     """
-    implemented = ('local',)
+    implemented = ("local",)
 
-    if name == 'local':
+    if name == "local":
         submitter = LocalSubmitter(*args, **kwargs)
     else:
-        msg = (f'{name} is not a valid submitter class, choose '
-               f'from {implemented}')
+        msg = f"{name} is not a valid submitter class, choose " f"from {implemented}"
         raise NotImplementedError(msg)
 
-    logging.debug('%s submitter selected', name)
+    logging.debug("%s submitter selected", name)
 
     return submitter

@@ -25,20 +25,17 @@ def set_log_level(level=None):
     """
     config = get_log_config()
 
-    possibilities = ('DEBUG',
-                     'INFO',
-                     'WARNING',
-                     'ERROR',
-                     'CRITICAL')
+    possibilities = ("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL")
 
     if level is None:
-        current_level = config['root']['level']
+        current_level = config["root"]["level"]
 
         possibilities_map = dict(enumerate(possibilities))
-        question = \
-            (f'Please set the log level by entering a number:\n'
-             f'   (empty input will reuse the current level '
-             f'[{current_level}])\n')
+        question = (
+            f"Please set the log level by entering a number:\n"
+            f"   (empty input will reuse the current level "
+            f"[{current_level}])\n"
+        )
         for key, val in possibilities_map.items():
             question += f'{" "*3}({key}) - {val}\n'
         # Set an answer to start the wile loop
@@ -50,27 +47,25 @@ def set_log_level(level=None):
                 answer = int(answer)
             if answer is None:
                 # Reverse the dict
-                answer = \
-                    list(possibilities_map.keys())[
-                        list(possibilities_map.values()
-                             ).index(current_level)]
+                answer = list(possibilities_map.keys())[
+                    list(possibilities_map.values()).index(current_level)
+                ]
                 break
         level = possibilities_map[answer]
 
     if level not in possibilities:
-        msg = (f'`level` in `set_log_level` must be one of '
-               f'{possibilities}')
+        msg = f"`level` in `set_log_level` must be one of " f"{possibilities}"
         raise ValueError(msg)
 
-    config['handlers']['file_handler']['level'] = level
-    config['handlers']['console_handler']['level'] = level
-    config['root']['level'] = level
+    config["handlers"]["file_handler"]["level"] = level
+    config["handlers"]["console_handler"]["level"] = level
+    config["root"]["level"] = level
 
-    with get_bout_log_config_path().open('w') as log_file:
+    with get_bout_log_config_path().open("w") as log_file:
         log_file.write(yaml.dump(config))
 
     set_up_logger(config)
-    logging.info('Logging level set to %s', level)
+    logging.info("Logging level set to %s", level)
 
 
 def set_log_file_directory(log_dir=None):
@@ -86,24 +81,24 @@ def set_log_file_directory(log_dir=None):
     config = get_bout_runners_configuration()
     if log_dir is None:
         current_dir = get_log_file_directory()
-        question = \
-            (f'Please entering the directory for log files:\n'
-             f'Empty input will reuse the current directory '
-             f'{current_dir}\n')
+        question = (
+            f"Please entering the directory for log files:\n"
+            f"Empty input will reuse the current directory "
+            f"{current_dir}\n"
+        )
         answer = input(question)
         if answer is None:
-            config['log']['directory'] = str(current_dir)
+            config["log"]["directory"] = str(current_dir)
         else:
-            config['log']['directory'] = answer
+            config["log"]["directory"] = answer
     else:
-        config['log']['directory'] = str(log_dir)
+        config["log"]["directory"] = str(log_dir)
 
-    with get_bout_runners_config_path().open('w') as configfile:
+    with get_bout_runners_config_path().open("w") as configfile:
         config.write(configfile)
 
     set_up_logger()
-    logging.info('Logging directory set to %s',
-                 config['log']['directory'])
+    logging.info("Logging directory set to %s", config["log"]["directory"])
 
 
 def set_bout_directory(bout_dir=None):
@@ -119,31 +114,31 @@ def set_bout_directory(bout_dir=None):
     config = get_bout_runners_configuration()
     if bout_dir is None:
         current_dir = get_bout_directory()
-        question = \
-            (f'Please entering the directory for the root of BOUT++:\n'
-             f'Empty input will reuse the current directory '
-             f'{current_dir}\n')
+        question = (
+            f"Please entering the directory for the root of BOUT++:\n"
+            f"Empty input will reuse the current directory "
+            f"{current_dir}\n"
+        )
         answer = input(question)
         if answer is None:
-            config['bout++']['directory'] = str(current_dir)
+            config["bout++"]["directory"] = str(current_dir)
         else:
-            config['bout++']['directory'] = answer
+            config["bout++"]["directory"] = answer
     else:
-        config['bout++']['directory'] = str(bout_dir)
+        config["bout++"]["directory"] = str(bout_dir)
 
-    if not Path(config['bout++']['directory']).is_dir():
+    if not Path(config["bout++"]["directory"]).is_dir():
         msg = f'BOUT++ not found in {config["bout++"]["directory"]}'
         raise ValueError(msg)
 
-    with get_bout_runners_config_path().open('w') as configfile:
+    with get_bout_runners_config_path().open("w") as configfile:
         config.write(configfile)
 
     set_up_logger()
-    logging.info('BOUT++ directory set to %s',
-                 config['log']['directory'])
+    logging.info("BOUT++ directory set to %s", config["log"]["directory"])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     set_log_level()
     set_log_file_directory()
     set_bout_directory()

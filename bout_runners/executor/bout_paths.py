@@ -48,10 +48,7 @@ class BoutPaths:
     PosixPath(/root/BOUT-dev/examples/conduction/foo)
     """
 
-    def __init__(self,
-                 project_path=None,
-                 bout_inp_src_dir=None,
-                 bout_inp_dst_dir=None):
+    def __init__(self, project_path=None, bout_inp_src_dir=None, bout_inp_dst_dir=None):
         """
         Set the paths.
 
@@ -109,7 +106,7 @@ class BoutPaths:
             project_path = get_caller_dir()
         project_path.absolute()
         self.__project_path = project_path
-        logging.debug('self.project_path set to %s', project_path)
+        logging.debug("self.project_path set to %s", project_path)
 
     @property
     def bout_inp_src_dir(self):
@@ -142,19 +139,18 @@ class BoutPaths:
 
     @bout_inp_src_dir.setter
     def bout_inp_src_dir(self, bout_inp_src_dir):
-        bout_inp_src_dir = \
-            Path(bout_inp_src_dir) if bout_inp_src_dir is not None\
-            else Path('data')
+        bout_inp_src_dir = (
+            Path(bout_inp_src_dir) if bout_inp_src_dir is not None else Path("data")
+        )
 
-        self.__bout_inp_src_dir = \
-            self.project_path.joinpath(bout_inp_src_dir)
+        self.__bout_inp_src_dir = self.project_path.joinpath(bout_inp_src_dir)
 
-        if not self.__bout_inp_src_dir.joinpath('BOUT.inp').is_file():
-            raise FileNotFoundError(f'No BOUT.inp file found in '
-                                    f'{self.__bout_inp_src_dir}')
+        if not self.__bout_inp_src_dir.joinpath("BOUT.inp").is_file():
+            raise FileNotFoundError(
+                f"No BOUT.inp file found in " f"{self.__bout_inp_src_dir}"
+            )
 
-        logging.debug('self.bout_inp_src_dir set to %s',
-                      self.__bout_inp_src_dir)
+        logging.debug("self.bout_inp_src_dir set to %s", self.__bout_inp_src_dir)
 
         # Copy file to bout_inp_dst_dir if set
         if self.bout_inp_dst_dir is not None:
@@ -186,22 +182,20 @@ class BoutPaths:
     @bout_inp_dst_dir.setter
     def bout_inp_dst_dir(self, bout_inp_dst_dir):
         time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S_%f")
-        bout_inp_dst_dir = \
-            Path(bout_inp_dst_dir) if bout_inp_dst_dir is not None \
-            else Path(time)
+        bout_inp_dst_dir = (
+            Path(bout_inp_dst_dir) if bout_inp_dst_dir is not None else Path(time)
+        )
 
-        self.__bout_inp_dst_dir = \
-            self.project_path.joinpath(bout_inp_dst_dir)
+        self.__bout_inp_dst_dir = self.project_path.joinpath(bout_inp_dst_dir)
         self.__bout_inp_dst_dir.mkdir(exist_ok=True, parents=True)
-        logging.debug('self.bout_inp_dst_dir set to %s',
-                      self.__bout_inp_dst_dir)
+        logging.debug("self.bout_inp_dst_dir set to %s", self.__bout_inp_dst_dir)
 
         self._copy_inp()
 
     def _copy_inp(self):
         """Copy BOUT.inp from bout_inp_src_dir to bout_inp_dst_dir."""
         if self.bout_inp_src_dir != self.bout_inp_dst_dir:
-            src = self.bout_inp_src_dir.joinpath('BOUT.inp')
+            src = self.bout_inp_src_dir.joinpath("BOUT.inp")
             dst = self.bout_inp_dst_dir.joinpath(src.name)
             shutil.copy(src, dst)
-            logging.debug('Copied %s to %s', src, dst)
+            logging.debug("Copied %s to %s", src, dst)

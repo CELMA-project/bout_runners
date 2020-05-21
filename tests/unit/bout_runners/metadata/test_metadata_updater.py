@@ -15,14 +15,12 @@ def test_update_start_time(get_metadata_updater_and_db_reader):
         initialized with connection to the database and a
         corresponding DatabaseReader object
     """
-    metadata_updater, db_reader = \
-        get_metadata_updater_and_db_reader('start_time')
+    metadata_updater, db_reader = get_metadata_updater_and_db_reader("start_time")
     now = datetime.now()
     run_id = metadata_updater.run_id
     metadata_updater.update_start_time(now)
-    result_df = db_reader.query(
-        f'SELECT start_time FROM run WHERE id = {run_id}')
-    assert result_df.loc[0, 'start_time'] == str(now)
+    result_df = db_reader.query(f"SELECT start_time FROM run WHERE id = {run_id}")
+    assert result_df.loc[0, "start_time"] == str(now)
 
 
 def test_update_stop_time(get_metadata_updater_and_db_reader):
@@ -36,14 +34,12 @@ def test_update_stop_time(get_metadata_updater_and_db_reader):
         initialized with connection to the database and a
         corresponding DatabaseReader object
     """
-    metadata_updater, db_reader = \
-        get_metadata_updater_and_db_reader('stop_time')
+    metadata_updater, db_reader = get_metadata_updater_and_db_reader("stop_time")
     now = datetime.now()
     run_id = metadata_updater.run_id
     metadata_updater.update_stop_time(now)
-    result_df = db_reader.query(
-        f'SELECT stop_time FROM run WHERE id = {run_id}')
-    assert result_df.loc[0, 'stop_time'] == str(now)
+    result_df = db_reader.query(f"SELECT stop_time FROM run WHERE id = {run_id}")
+    assert result_df.loc[0, "stop_time"] == str(now)
 
 
 def test_update_latest_status(get_metadata_updater_and_db_reader):
@@ -57,11 +53,9 @@ def test_update_latest_status(get_metadata_updater_and_db_reader):
         initialized with connection to the database and a
         corresponding DatabaseReader object
     """
-    metadata_updater, db_reader = \
-        get_metadata_updater_and_db_reader('latest_status')
-    latest_status = 'foobar'
+    metadata_updater, db_reader = get_metadata_updater_and_db_reader("latest_status")
+    latest_status = "foobar"
     run_id = metadata_updater.run_id
     metadata_updater.update_latest_status(latest_status)
-    result_df = db_reader.query(
-        f'SELECT latest_status FROM run WHERE id = {run_id}')
-    assert result_df.loc[0, 'latest_status'] == latest_status
+    result_df = db_reader.query(f"SELECT latest_status FROM run WHERE id = {run_id}")
+    assert result_df.loc[0, "latest_status"] == latest_status

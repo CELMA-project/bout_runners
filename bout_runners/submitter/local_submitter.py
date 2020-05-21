@@ -55,9 +55,7 @@ class LocalSubmitter(AbstractSubmitter):
         """
         # NOTE: We are not setting the default as a keyword argument
         #       as this would mess up the paths
-        self.__path = \
-            Path(path).absolute() if path is not None else \
-            get_caller_dir()
+        self.__path = Path(path).absolute() if path is not None else get_caller_dir()
         self.processor_split = processor_split
         self.__pid = None
 
@@ -80,20 +78,20 @@ class LocalSubmitter(AbstractSubmitter):
         result : subprocess.CompletedProcess
             The result of the subprocess call
         """
-        logging.info('Executing %s in %s', command, self.__path)
+        logging.info("Executing %s in %s", command, self.__path)
         # This is a simplified subprocess.run(), with the exception
         # that we capture the process id
-        process = subprocess.Popen(command.split(),
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE,
-                                   cwd=self.__path)
+        process = subprocess.Popen(
+            command.split(),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            cwd=self.__path,
+        )
         std_out, std_err = process.communicate()
         return_code = process.poll()
-        result = \
-            subprocess.CompletedProcess(process.args,
-                                        return_code,
-                                        std_out,
-                                        std_err)
+        result = subprocess.CompletedProcess(
+            process.args, return_code, std_out, std_err
+        )
         self.__pid = process.pid
 
         if result.returncode != 0:
@@ -110,9 +108,9 @@ class LocalSubmitter(AbstractSubmitter):
         result : subprocess.CompletedProcess
             The result from the subprocess
         """
-        logging.error('Subprocess failed with stdout:')
+        logging.error("Subprocess failed with stdout:")
         logging.error(result.stdout)
-        logging.error('and stderr:')
+        logging.error("and stderr:")
         logging.error(result.stderr)
 
         result.check_returncode()

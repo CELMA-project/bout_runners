@@ -72,8 +72,7 @@ class StatusChecker:
             usually contains the makefile and the executable)
         """
         self.__database_connector = database_connector
-        self.__database_reader = \
-            DatabaseReader(self.__database_connector)
+        self.__database_reader = DatabaseReader(self.__database_connector)
         self.project_path = project_path
 
     def check_and_update_status(self):
@@ -81,27 +80,26 @@ class StatusChecker:
         # Check that run table exist
         if not self.__database_reader.check_tables_created():
             logging.error(
-                'No tables found in %s',
-                self.__database_reader.database_connector.database_path)
-            message = ('Can not check the status of schemas that does '
-                       'not exist')
+                "No tables found in %s",
+                self.__database_reader.database_connector.database_path,
+            )
+            message = "Can not check the status of schemas that does " "not exist"
             raise RuntimeError(message)
 
         # Create place holder metadata_updater
-        metadata_updater = \
-            MetadataUpdater(self.__database_connector, run_id=-1)
+        metadata_updater = MetadataUpdater(self.__database_connector, run_id=-1)
 
         # Check runs with status 'submitted'
-        query = ("SELECT name, id AS run_id FROM run WHERE\n"
-                 "latest_status = 'submitted' OR\n"
-                 "latest_status = 'created'")
+        query = (
+            "SELECT name, id AS run_id FROM run WHERE\n"
+            "latest_status = 'submitted' OR\n"
+            "latest_status = 'created'"
+        )
         submitted_to_check = self.__database_reader.query(query)
-        self.__check_submitted(metadata_updater,
-                               submitted_to_check)
+        self.__check_submitted(metadata_updater, submitted_to_check)
 
         # Check runs with status 'running'
-        query = ("SELECT name, id FROM run WHERE\n"
-                 "latest_status = 'running'")
+        query = "SELECT name, id FROM run WHERE\n" "latest_status = 'running'"
         running_to_check = self.__database_reader.query(query)
         self.__check_running(metadata_updater, running_to_check)
 
@@ -114,10 +112,12 @@ class StatusChecker:
         seconds_between_update : int
             Number of seconds before a new status check is performed
         """
-        query = ("SELECT name, id AS run_id FROM run WHERE\n"
-                 "latest_status = 'submitted' OR\n"
-                 "latest_status = 'created' OR\n"
-                 "latest_status = 'running'")
+        query = (
+            "SELECT name, id AS run_id FROM run WHERE\n"
+            "latest_status = 'submitted' OR\n"
+            "latest_status = 'created' OR\n"
+            "latest_status = 'running'"
+        )
         while len(self.__database_reader.query(query).index) != 0:
             self.check_and_update_status()
             time.sleep(seconds_between_update)
@@ -137,27 +137,26 @@ class StatusChecker:
         for name, run_id in submitted_to_check.itertuples(index=False):
             metadata_updater.run_id = run_id
 
-            log_path = self.project_path.joinpath(name, 'BOUT.log.0')
+            log_path = self.project_path.joinpath(name, "BOUT.log.0")
 
             if log_path.is_file():
                 log_reader = LogReader(log_path)
                 if log_reader.started():
                     start_time = log_reader.start_time
                     metadata_updater.update_start_time(start_time)
-                    latest_status = \
-                        self.__check_if_stopped(log_reader,
-                                                metadata_updater)
+                    latest_status = self.__check_if_stopped(
+                        log_reader, metadata_updater
+                    )
 
                 else:
                     # No started time is found in the log
-                    latest_status = \
-                        self.check_if_running_or_errored(log_reader)
+                    latest_status = self.check_if_running_or_errored(log_reader)
             else:
                 # No log file exists
                 # NOTE: This means that the execution is either in a
                 #       queue or has failed the submission.
                 #       For now, we still consider this as submitted
-                latest_status = 'submitted'
+                latest_status = "submitted"
 
             metadata_updater.update_latest_status(latest_status)
 
@@ -175,7 +174,7 @@ class StatusChecker:
         """
         for name, run_id in running_to_check.itertuples(index=False):
             metadata_updater.run_id = run_id
-            log_path = self.project_path.joinpath(name, 'BOUT.log.0')
+            log_path = self.project_path.joinpath(name, "BOUT.log.0")
             log_reader = LogReader(log_path)
             latest_status = self.check_if_running_or_errored(log_reader)
             metadata_updater.update_latest_status(latest_status)
@@ -199,10 +198,9 @@ class StatusChecker:
         if log_reader.ended():
             end_time = log_reader.end_time
             metadata_updater.update_stop_time(end_time)
-            latest_status = 'complete'
+            latest_status = "complete"
         else:
-            latest_status = \
-                self.check_if_running_or_errored(log_reader)
+            latest_status = self.check_if_running_or_errored(log_reader)
         return latest_status
 
     @staticmethod
@@ -222,9 +220,9 @@ class StatusChecker:
         """
         pid = log_reader.pid
         if pid is None:
-            latest_status = 'created'
+            latest_status = "created"
         elif psutil.pid_exists(pid):
-            latest_status = 'running'
+            latest_status = "running"
         else:
-            latest_status = 'error'
+            latest_status = "error"
         return latest_status

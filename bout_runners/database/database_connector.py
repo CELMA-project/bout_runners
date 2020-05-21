@@ -53,9 +53,8 @@ class DatabaseConnector:
         self.__database_path = None
 
         # Set the database path
-        self.__database_path = \
-            self.create_db_path(name, database_root_path)
-        logging.info('database_path set to %s', self.database_path)
+        self.__database_path = self.create_db_path(name, database_root_path)
+        logging.info("database_path set to %s", self.database_path)
 
         # Open the connection
         self.__connection = sqlite3.connect(str(self.database_path))
@@ -122,7 +121,7 @@ class DatabaseConnector:
             name = get_caller_dir().name
 
         if database_root_path is None:
-            database_root_path = Path().home().joinpath('BOUT_db')
+            database_root_path = Path().home().joinpath("BOUT_db")
 
         database_root_path = Path(database_root_path)
 
@@ -132,7 +131,7 @@ class DatabaseConnector:
         #       Thus we will make one database per project
         # https://www.sqlite.org/lang_attach.html
         # https://stackoverflow.com/questions/30897377/python-sqlite3-create-a-schema-without-having-to-use-a-second-database
-        database_path = database_root_path.joinpath(f'{name}.db')
+        database_path = database_root_path.joinpath(f"{name}.db")
 
         return database_path
 

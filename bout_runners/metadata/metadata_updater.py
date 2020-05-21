@@ -63,7 +63,7 @@ class MetadataUpdater:
         start_time : datetime
             The start time of the execution
         """
-        self.update_column('start_time', start_time)
+        self.update_column("start_time", start_time)
 
     def update_stop_time(self, end_time):
         """
@@ -74,7 +74,7 @@ class MetadataUpdater:
         end_time : datetime
             The end time of the execution
         """
-        self.update_column('stop_time', end_time)
+        self.update_column("stop_time", end_time)
 
     def update_latest_status(self, status):
         """
@@ -85,7 +85,7 @@ class MetadataUpdater:
         status : str
             The latest status
         """
-        self.update_column('latest_status', status)
+        self.update_column("latest_status", status)
 
     def update_column(self, column, value):
         """
@@ -100,7 +100,7 @@ class MetadataUpdater:
         """
         update_str = self.__database_writer.create_update_string(
             field_names=(column,),
-            table_name='run',
-            search_condition=f'id = {self.run_id}'
+            table_name="run",
+            search_condition=f"id = {self.run_id}",
         )
         self.__database_writer.update(update_str, (value,))

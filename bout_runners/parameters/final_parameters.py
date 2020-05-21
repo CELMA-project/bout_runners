@@ -71,9 +71,7 @@ class FinalParameters:
     INTEGER, ...}}
     """
 
-    def __init__(self,
-                 default_parameters=None,
-                 run_parameters=RunParameters()):
+    def __init__(self, default_parameters=None, run_parameters=RunParameters()):
         """
         Set the member data.
 
@@ -86,9 +84,11 @@ class FinalParameters:
             Object dealing with run parameters (i.e. parameters set
             in bout_runner which has precedence over BOUT.inp)
         """
-        self.__default_parameters = \
-            default_parameters if default_parameters is not None \
+        self.__default_parameters = (
+            default_parameters
+            if default_parameters is not None
             else DefaultParameters()
+        )
         self.__run_parameters = run_parameters
 
     def get_final_parameters(self):
@@ -103,8 +103,7 @@ class FinalParameters:
             ...  'mesh':  {'nx': 4},
             ...  'section_in_BOUT_inp': {'some_variable': 'some_value'}}
         """
-        final_parameters_dict = \
-            self.__default_parameters.get_default_parameters()
+        final_parameters_dict = self.__default_parameters.get_default_parameters()
         run_parameters_dict = self.__run_parameters.run_parameters_dict
         final_parameters_dict.update(run_parameters_dict)
 
@@ -142,10 +141,12 @@ class FinalParameters:
             On the form
             >>> {'section': {'parameter': 'value_type'}}
         """
-        type_map = {'bool': 'INTEGER',  # No bool type in SQLite
-                    'float': 'REAL',
-                    'int': 'INTEGER',
-                    'str': 'TEXT'}
+        type_map = {
+            "bool": "INTEGER",  # No bool type in SQLite
+            "float": "REAL",
+            "int": "INTEGER",
+            "str": "TEXT",
+        }
 
         parameter_dict_as_sql_types = parameter_dict.copy()
 
@@ -157,7 +158,6 @@ class FinalParameters:
                 except (SyntaxError, ValueError):
                     val_type = str
 
-                parameter_dict[section][key] = type_map[
-                    val_type.__name__]
+                parameter_dict[section][key] = type_map[val_type.__name__]
 
         return parameter_dict_as_sql_types

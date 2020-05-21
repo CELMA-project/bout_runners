@@ -39,10 +39,9 @@ class ProcessorSplit:
     number_of_processors = 2
     """
 
-    def __init__(self,
-                 number_of_processors=1,
-                 number_of_nodes=1,
-                 processors_per_node=1):
+    def __init__(
+        self, number_of_processors=1, number_of_nodes=1, processors_per_node=1
+    ):
         """
         Set the parameters.
 
@@ -90,12 +89,10 @@ class ProcessorSplit:
     @number_of_processors.setter
     def number_of_processors(self, number_of_processors):
         self.__number_of_processors = number_of_processors
-        if self.number_of_nodes is not None \
-                and self.processors_per_node is not None:
+        if self.number_of_nodes is not None and self.processors_per_node is not None:
             self.__enough_nodes_check()
 
-        logging.debug('number_of_processors set to %s',
-                      number_of_processors)
+        logging.debug("number_of_processors set to %s", number_of_processors)
 
     @property
     def number_of_nodes(self):
@@ -117,11 +114,12 @@ class ProcessorSplit:
     @number_of_nodes.setter
     def number_of_nodes(self, number_of_nodes):
         self.__number_of_nodes = number_of_nodes
-        if self.number_of_processors is not None \
-                and self.processors_per_node is not None:
+        if (
+            self.number_of_processors is not None
+            and self.processors_per_node is not None
+        ):
             self.__enough_nodes_check()
-        logging.debug('number_of_nodes set to %s',
-                      number_of_nodes)
+        logging.debug("number_of_nodes set to %s", number_of_nodes)
 
     @property
     def processors_per_node(self):
@@ -143,17 +141,17 @@ class ProcessorSplit:
     @processors_per_node.setter
     def processors_per_node(self, processors_per_node):
         self.__processors_per_node = processors_per_node
-        if self.number_of_processors is not None \
-                and self.number_of_nodes is not None:
+        if self.number_of_processors is not None and self.number_of_nodes is not None:
             self.__enough_nodes_check()
-        logging.debug('processors_per_node set to %s',
-                      processors_per_node)
+        logging.debug("processors_per_node set to %s", processors_per_node)
 
     def __enough_nodes_check(self):
         """Check that enough nodes are allocated."""
-        product = self.number_of_nodes*self.processors_per_node
+        product = self.number_of_nodes * self.processors_per_node
         if product < self.number_of_processors:
-            msg = (f'number_of_nodes*processors_per_node = {product}, '
-                   f'whereas number_of_processors = '
-                   f'{self.number_of_processors}')
+            msg = (
+                f"number_of_nodes*processors_per_node = {product}, "
+                f"whereas number_of_processors = "
+                f"{self.number_of_processors}"
+            )
             raise ValueError(msg)

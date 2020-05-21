@@ -7,9 +7,10 @@ from bout_runners.utils.names import get_makefile_name
 from bout_runners.utils.names import get_makefile_path
 
 
-@pytest.mark.parametrize('filename,expected',
-                         [(None, 'executable_bout_model'),
-                          ('Makefile_without_target', 'bout_model')])
+@pytest.mark.parametrize(
+    "filename,expected",
+    [(None, "executable_bout_model"), ("Makefile_without_target", "bout_model")],
+)
 def test_get_exec_name(filename, expected, get_test_data_path):
     """
     Test that the exec name is retrievable from the makefiles.
@@ -23,8 +24,7 @@ def test_get_exec_name(filename, expected, get_test_data_path):
     get_test_data_path : Path
         Path to the test data
     """
-    makefile_path = get_makefile_path(get_test_data_path,
-                                      makefile_name=filename)
+    makefile_path = get_makefile_path(get_test_data_path, makefile_name=filename)
     exec_name = get_exec_name(makefile_path)
     assert exec_name == expected
 
@@ -39,7 +39,7 @@ def test_get_makefile_name(get_test_data_path):
         Path to the test data
     """
     makefile_name = get_makefile_name(get_test_data_path)
-    assert makefile_name == 'Makefile'
+    assert makefile_name == "Makefile"
 
 
 def test_get_makefile_raises(copy_makefile):
