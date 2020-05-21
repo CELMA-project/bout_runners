@@ -100,7 +100,9 @@ def assert_force_run(db_reader, yield_number_of_rows_for_all_tables):
     assert sum(tables_with_2.values()) == 2 * len(tables_with_2.keys())
 
 
-def test_bout_runners_from_directory(make_project, yield_number_of_rows_for_all_tables):
+def test_bout_runners_from_directory(
+    make_project, yield_number_of_rows_for_all_tables, clean_default_db_dir
+):
     """
     Test that the minimal BoutRunners setup works.
 
@@ -117,7 +119,10 @@ def test_bout_runners_from_directory(make_project, yield_number_of_rows_for_all_
     yield_number_of_rows_for_all_tables : function
         Function which returns the number of rows for all tables in a
         schema
+    clean_default_db_dir : Path
+        Path to the default database directory
     """
+    _ = clean_default_db_dir
     # Make project to save time
     project_path = make_project
     with change_directory(project_path):
@@ -143,7 +148,9 @@ def test_bout_runners_from_directory(make_project, yield_number_of_rows_for_all_
     assert_force_run(db_reader, yield_number_of_rows_for_all_tables)
 
 
-def test_full_bout_runner(make_project, yield_number_of_rows_for_all_tables):
+def test_full_bout_runner(
+    make_project, yield_number_of_rows_for_all_tables, clean_default_db_dir
+):
     """
     Test that the BoutRunner can execute a run.
 
@@ -160,7 +167,10 @@ def test_full_bout_runner(make_project, yield_number_of_rows_for_all_tables):
     yield_number_of_rows_for_all_tables : function
         Function which returns the number of rows for all tables in a
         schema
+    clean_default_db_dir : Path
+        Path to the default database directory
     """
+    _ = clean_default_db_dir
     name = "test_bout_runner_integration"
     # Make project to save time
     project_path = make_project

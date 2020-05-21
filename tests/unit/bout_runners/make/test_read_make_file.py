@@ -17,7 +17,7 @@ def test_read_bout_makefile(get_test_data_path):
         Path to the test data
     """
     reader = BoutMakefileReader(get_test_data_path.joinpath("test_read"))
-    assert reader.content == "This is some text"
+    assert reader.content == "This is some text\n"
 
 
 @pytest.mark.parametrize(

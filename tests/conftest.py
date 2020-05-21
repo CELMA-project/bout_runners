@@ -883,3 +883,18 @@ def get_mock_config_path(monkeypatch):
     yield mock_config_path
 
     shutil.rmtree(mock_config_path)
+
+
+@pytest.fixture(scope="session")
+def clean_default_db_dir():
+    """
+    Yield the default database dir, and clean it during the teardown.
+
+    Yields
+    ------
+    default_dir : Path
+        Path to the default database directory
+    """
+    default_dir = Path().home().joinpath("BOUT_db")
+    yield default_dir
+    shutil.rmtree(default_dir)
