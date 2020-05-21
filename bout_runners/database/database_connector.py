@@ -3,7 +3,7 @@
 
 import sqlite3
 import logging
-from pathlib import PosixPath, Path
+from pathlib import Path
 from bout_runners.utils.file_operations import get_caller_dir
 from sqlite3 import Connection
 from typing import Optional
@@ -38,7 +38,7 @@ class DatabaseConnector:
     """
 
     def __init__(
-        self, name: Optional[str] = None, db_root_path: Optional[PosixPath] = None
+        self, name: Optional[str] = None, db_root_path: Optional[Path] = None
     ) -> None:
         """
         Set the path to the data base.
@@ -68,7 +68,7 @@ class DatabaseConnector:
         self.__connection.close()
 
     @property
-    def db_path(self) -> PosixPath:
+    def db_path(self) -> Path:
         """
         Get the properties of self.db_path.
 
@@ -102,9 +102,7 @@ class DatabaseConnector:
         return self.__connection
 
     @staticmethod
-    def create_db_path(
-        name: Optional[str], db_root_path: Optional[PosixPath]
-    ) -> PosixPath:
+    def create_db_path(name: Optional[str], db_root_path: Optional[Path]) -> Path:
         """
         Create the database path.
 

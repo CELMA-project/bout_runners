@@ -2,7 +2,7 @@
 
 import os
 import contextlib
-from pathlib import PosixPath, Path
+from pathlib import Path
 from bout_runners.executor.bout_paths import BoutPaths
 from bout_runners.executor.executor import Executor
 from bout_runners.database.database_connector import DatabaseConnector
@@ -16,7 +16,7 @@ from typing import Callable, Iterator
 
 
 @contextlib.contextmanager
-def change_directory(new_path: PosixPath) -> Iterator[None]:
+def change_directory(new_path: Path) -> Iterator[None]:
     """
     Change working directory and return to previous directory on exit.
 
@@ -108,9 +108,9 @@ def assert_force_run(
 
 
 def test_bout_runners_from_directory(
-    make_project: PosixPath,
+    make_project: Path,
     yield_number_of_rows_for_all_tables: Callable,
-    clean_default_db_dir: PosixPath,
+    clean_default_db_dir: Path,
 ) -> None:
     """
     Test that the minimal BoutRunners setup works.
@@ -158,9 +158,9 @@ def test_bout_runners_from_directory(
 
 
 def test_full_bout_runner(
-    make_project: PosixPath,
+    make_project: Path,
     yield_number_of_rows_for_all_tables: Callable,
-    clean_default_db_dir: PosixPath,
+    clean_default_db_dir: Path,
 ) -> None:
     """
     Test that the BoutRunner can execute a run.

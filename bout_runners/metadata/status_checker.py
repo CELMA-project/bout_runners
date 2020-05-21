@@ -8,7 +8,7 @@ from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.log.log_reader import LogReader
 from bout_runners.metadata.metadata_updater import MetadataUpdater
 from bout_runners.database.database_connector import DatabaseConnector
-from pathlib import PosixPath
+from pathlib import Path
 
 
 class StatusChecker:
@@ -55,9 +55,7 @@ class StatusChecker:
     >>> status_checker.check_and_update_until_complete()
     """
 
-    def __init__(
-        self, db_connector: DatabaseConnector, project_path: PosixPath
-    ) -> None:
+    def __init__(self, db_connector: DatabaseConnector, project_path: Path) -> None:
         """
         Set connector, reader and a project path.
 

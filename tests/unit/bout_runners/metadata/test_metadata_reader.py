@@ -1,7 +1,8 @@
+"""Contains unittests for the metadata_reader."""
+
+
 from bout_runners.metadata.metadata_reader import MetadataReader
 from pandas.core.frame import DataFrame
-
-"""Contains unittests for the metadata_reader."""
 
 
 def test_get_table_column_dict(

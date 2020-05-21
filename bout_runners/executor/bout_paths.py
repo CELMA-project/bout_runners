@@ -4,7 +4,7 @@
 import logging
 import shutil
 from datetime import datetime
-from pathlib import PosixPath, Path
+from pathlib import Path
 from bout_runners.utils.file_operations import get_caller_dir
 from typing import Optional, Union
 
@@ -37,23 +37,23 @@ class BoutPaths:
     --------
     >>> bout_paths = BoutPaths()
     >>> bout_paths.project_path
-    PosixPath(/root/BOUT-dev/examples/conduction)
+    Path(/root/BOUT-dev/examples/conduction)
 
     >>> bout_paths.bout_inp_src_dir
-    PosixPath(/root/BOUT-dev/examples/conduction/data)
+    Path(/root/BOUT-dev/examples/conduction/data)
 
     >>> bout_paths.bout_inp_dst_dir
-    PosixPath(/root/BOUT-dev/examples/conduction/2020-02-12_21-59-00_227295)
+    Path(/root/BOUT-dev/examples/conduction/2020-02-12_21-59-00_227295)
 
     >>> bout_paths.bout_inp_dst_dir = 'foo'
-    PosixPath(/root/BOUT-dev/examples/conduction/foo)
+    Path(/root/BOUT-dev/examples/conduction/foo)
     """
 
     def __init__(
         self,
-        project_path: Optional[PosixPath] = None,
-        bout_inp_src_dir: Optional[PosixPath] = None,
-        bout_inp_dst_dir: Optional[Union[PosixPath, str]] = None,
+        project_path: Optional[Path] = None,
+        bout_inp_src_dir: Optional[Path] = None,
+        bout_inp_dst_dir: Optional[Union[Path, str]] = None,
     ) -> None:
         """
         Set the paths.

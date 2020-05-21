@@ -5,7 +5,7 @@ import pytest
 from bout_runners.utils.names import get_exec_name
 from bout_runners.utils.names import get_makefile_name
 from bout_runners.utils.names import get_makefile_path
-from pathlib import PosixPath
+from pathlib import Path
 from typing import Optional
 
 
@@ -14,7 +14,7 @@ from typing import Optional
     [(None, "executable_bout_model"), ("Makefile_without_target", "bout_model")],
 )
 def test_get_exec_name(
-    filename: Optional[str], expected: str, get_test_data_path: PosixPath
+    filename: Optional[str], expected: str, get_test_data_path: Path
 ) -> None:
     """
     Test that the exec name is retrievable from the makefiles.
@@ -33,7 +33,7 @@ def test_get_exec_name(
     assert exec_name == expected
 
 
-def test_get_makefile_name(get_test_data_path: PosixPath) -> None:
+def test_get_makefile_name(get_test_data_path: Path) -> None:
     """
     Test that it is possible to find a makefile name.
 
@@ -46,7 +46,7 @@ def test_get_makefile_name(get_test_data_path: PosixPath) -> None:
     assert makefile_name == "Makefile"
 
 
-def test_get_makefile_raises(copy_makefile: PosixPath) -> None:
+def test_get_makefile_raises(copy_makefile: Path) -> None:
     """
     Test that get_makefile_name properly raises FileNotFoundError.
 

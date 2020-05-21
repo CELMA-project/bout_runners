@@ -2,7 +2,7 @@
 
 
 import logging
-from pathlib import PosixPath, Path
+from pathlib import Path
 from bout_runners.utils.file_operations import get_caller_dir
 from bout_runners.utils.names import get_exec_name
 from bout_runners.utils.names import get_makefile_path
@@ -46,7 +46,7 @@ class Make:
     """
 
     def __init__(
-        self, makefile_root_path: Optional[PosixPath] = None, makefile_name: None = None
+        self, makefile_root_path: Optional[Path] = None, makefile_name: None = None
     ) -> None:
         """
         Call the make file.

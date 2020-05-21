@@ -7,7 +7,7 @@ import subprocess
 from bout_runners.utils.file_operations import get_modified_time
 from bout_runners.utils.paths import get_bout_directory
 from bout_runners.submitter.local_submitter import LocalSubmitter
-from pathlib import PosixPath
+from pathlib import Path
 from typing import Dict
 
 
@@ -29,7 +29,7 @@ def get_system_info_as_sql_type() -> Dict[str, str]:
 
 
 def get_file_modification(
-    project_path: PosixPath, makefile_path: PosixPath, exec_name: str
+    project_path: Path, makefile_path: Path, exec_name: str
 ) -> Dict[str, str]:
     """
     Return the file modification info.
@@ -72,7 +72,7 @@ def get_file_modification(
     return file_modification
 
 
-def get_git_sha(path: PosixPath) -> str:
+def get_git_sha(path: Path) -> str:
     """
     Return the git hash.
 

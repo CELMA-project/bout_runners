@@ -1,12 +1,12 @@
 """Module containing functions to extract names."""
 
-from pathlib import PosixPath, Path
+from pathlib import Path
 from bout_runners.make.read_makefile import BoutMakefileVariableReader
 from bout_runners.make.read_makefile import MakefileReaderError
 from typing import Optional
 
 
-def get_exec_name(makefile_path: PosixPath) -> str:
+def get_exec_name(makefile_path: Path) -> str:
     """
     Return the name of the project executable.
 
@@ -41,9 +41,7 @@ def get_exec_name(makefile_path: PosixPath) -> str:
     return exec_name
 
 
-def get_makefile_path(
-    makefile_root_path: PosixPath, makefile_name: Optional[str]
-) -> PosixPath:
+def get_makefile_path(makefile_root_path: Path, makefile_name: Optional[str]) -> Path:
     """
     Return the makefile path.
 
@@ -67,7 +65,7 @@ def get_makefile_path(
     return makefile_path
 
 
-def get_makefile_name(makefile_root_path: PosixPath) -> str:
+def get_makefile_name(makefile_root_path: Path) -> str:
     """
     Search for a valid Makefile.
 

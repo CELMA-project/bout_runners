@@ -3,7 +3,7 @@
 
 import logging
 import subprocess
-from pathlib import PosixPath, Path
+from pathlib import Path
 from bout_runners.submitter.abstract_submitter import AbstractSubmitter
 from bout_runners.submitter.processor_split import ProcessorSplit
 from bout_runners.utils.file_operations import get_caller_dir
@@ -44,7 +44,7 @@ class LocalSubmitter(AbstractSubmitter):
     """
 
     def __init__(
-        self, path: Optional[PosixPath] = None, processor_split: None = None
+        self, path: Optional[Path] = None, processor_split: None = None
     ) -> None:
         """
         Set the path from where the calls are made from.

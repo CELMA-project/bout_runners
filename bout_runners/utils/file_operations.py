@@ -2,10 +2,10 @@
 
 
 from datetime import datetime
-from pathlib import PosixPath, Path
+from pathlib import Path
 
 
-def get_caller_dir() -> PosixPath:
+def get_caller_dir() -> Path:
     """
     Return the directory of the topmost caller file.
 
@@ -19,7 +19,7 @@ def get_caller_dir() -> PosixPath:
     return caller_dir
 
 
-def get_modified_time(file_path: PosixPath) -> str:
+def get_modified_time(file_path: Path) -> str:
     """
     Return the modification time of a file path.
 

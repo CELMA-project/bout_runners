@@ -4,7 +4,7 @@
 import re
 import logging
 from datetime import datetime
-from pathlib import PosixPath, Path
+from pathlib import Path
 from typing import Optional
 
 
@@ -52,7 +52,7 @@ class LogReader:
     1190
     """
 
-    def __init__(self, log_path: PosixPath) -> None:
+    def __init__(self, log_path: Path) -> None:
         """
         Open and read a log file.
 
@@ -141,7 +141,10 @@ class LogReader:
             # Using search as match will only search the beginning of
             # the string
             # https://stackoverflow.com/a/32134461/2786884
-            return int(re.search(pattern, self.file_str, flags=re.MULTILINE).group(1))
+            match = re.search(pattern, self.file_str, flags=re.MULTILINE)
+            if match is None:
+                return None
+            return int(match.group(1))
         return None
 
     def __is_str_in_file(self, pattern):

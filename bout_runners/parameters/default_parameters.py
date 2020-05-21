@@ -5,7 +5,7 @@ import re
 import ast
 import logging
 import configparser
-from pathlib import PosixPath, Path
+from pathlib import Path
 from bout_runners.executor.bout_paths import BoutPaths
 from bout_runners.parameters.run_parameters import RunParameters
 from bout_runners.executor.executor import Executor
@@ -68,7 +68,7 @@ class DefaultParameters:
     def __init__(
         self,
         bout_paths: Optional[BoutPaths] = None,
-        settings_path: Optional[PosixPath] = None,
+        settings_path: Optional[Path] = None,
     ) -> None:
         """
         Set the member data.
