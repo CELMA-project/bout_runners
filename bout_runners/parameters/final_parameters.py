@@ -100,13 +100,15 @@ class FinalParameters:
             run_parameters if run_parameters is not None else RunParameters()
         )
 
-    def get_final_parameters(self) -> Dict[str, Dict[str, Union[str, int, float]]]:
+    def get_final_parameters(
+        self,
+    ) -> Dict[str, Dict[str, Union[str, int, float, bool]]]:
         """
         Obtain the final parameters that will be used in a run.
 
         Returns
         -------
-        final_parameters_dict : dict of str, dict of str or int or float
+        final_parameters_dict : dict of str, dict of str or int or float or bool
             Parameters on the form
             >>> {'global':{'append': 'False', 'nout': 5},
             ...  'mesh':  {'nx': 4},
@@ -114,6 +116,8 @@ class FinalParameters:
         """
         final_parameters_dict = self.__default_parameters.get_default_parameters()
         run_parameters_dict = self.__run_parameters.run_parameters_dict
+        # Assert to prevent "Incompatible types in assignment" with Optional
+        assert run_parameters_dict is not None
         final_parameters_dict.update(run_parameters_dict)
 
         # Cast True to 1 and False to 0 as SQLite has no support for

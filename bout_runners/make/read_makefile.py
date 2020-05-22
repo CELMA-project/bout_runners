@@ -3,7 +3,6 @@
 
 import re
 from pathlib import Path
-from typing import Optional
 
 
 class MakefileReaderError(Exception):
@@ -75,7 +74,7 @@ class BoutMakefileVariableReader(BoutMakefileReader):
     ----------
     variable_name : str
         Name of the variable belonging to the instance
-    __value : str
+    value : str
         Value belonging to the variable of the instance
 
     Methods
@@ -114,7 +113,6 @@ class BoutMakefileVariableReader(BoutMakefileReader):
         super(BoutMakefileVariableReader, self).__init__(path)
 
         self.variable_name = variable_name
-        self.__value: Optional[str] = None
 
     @property
     def value(self) -> str:
@@ -123,7 +121,7 @@ class BoutMakefileVariableReader(BoutMakefileReader):
 
         Returns
         -------
-        self.variable_value : str
+        value : str
             The last match of the variable
 
         Raises
@@ -172,6 +170,6 @@ class BoutMakefileVariableReader(BoutMakefileReader):
 
         # Only the last line of the variable will be considered by
         # the Makefile
-        self._value = matches[-1]
+        value: str = matches[-1]
 
-        return self._value
+        return value

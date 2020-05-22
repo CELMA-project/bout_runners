@@ -113,9 +113,7 @@ class DatabaseWriter:
 
     @staticmethod
     def create_update_string(
-        field_names: Union[Tuple[str, str], Tuple[str]],
-        table_name: str,
-        search_condition: str,
+        field_names: Tuple[str, ...], table_name: str, search_condition: str,
     ) -> str:
         """
         Create a question mark style string for database update.
@@ -222,5 +220,5 @@ class DatabaseWriter:
         """
         keys = entries_dict.keys()
         values = tuple(entries_dict.values())
-        insert_str = self.create_insert_string(keys, table_name)
+        insert_str = self.create_insert_string(tuple(keys), table_name)
         self.insert(insert_str, values)

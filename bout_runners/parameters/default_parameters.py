@@ -152,7 +152,9 @@ class DefaultParameters:
         )
         return executor
 
-    def get_default_parameters(self,) -> Dict[str, Dict[str, Union[str, int, float]]]:
+    def get_default_parameters(
+        self,
+    ) -> Dict[str, Dict[str, Union[str, int, float, bool]]]:
         """
         Return the default parameters from the settings file.
 

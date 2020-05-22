@@ -186,6 +186,10 @@ class LogReader:
         # Using search as match will only search the beginning of the
         # string
         # https://stackoverflow.com/a/32134461/2786884
-        time_str = re.search(pattern, self.file_str, flags=re.MULTILINE).group(1)
+        match = re.search(pattern, self.file_str, flags=re.MULTILINE)
+        if match is None:
+            raise ValueError(f"No matches in {self.file_str} with pattern {pattern}")
+
+        time_str = match.group(1)
         time = datetime.strptime(time_str, "%c")
         return time

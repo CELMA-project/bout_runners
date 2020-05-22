@@ -148,6 +148,8 @@ class StatusChecker:
                 log_reader = LogReader(log_path)
                 if log_reader.started():
                     start_time = log_reader.start_time
+                    # Assert to prevent "Incompatible types in assignment" with Optional
+                    assert start_time is not None
                     metadata_updater.update_start_time(start_time)
                     latest_status = self.__check_if_stopped(
                         log_reader, metadata_updater
@@ -206,6 +208,8 @@ class StatusChecker:
         """
         if log_reader.ended():
             end_time = log_reader.end_time
+            # Assert to prevent "Incompatible types in assignment" with Optional
+            assert end_time is not None
             metadata_updater.update_stop_time(end_time)
             latest_status = "complete"
         else:

@@ -2,7 +2,7 @@
 
 
 import re
-from typing import Callable, Dict, List, Optional, Tuple, Union
+from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_reader import DatabaseReader
@@ -207,7 +207,7 @@ class MetadataReader:
         )
 
     @property
-    def table_names(self) -> Tuple[str]:
+    def table_names(self) -> Tuple[str, ...]:
         """
         Set the properties of self.table_names.
 
@@ -219,7 +219,7 @@ class MetadataReader:
         return self.__table_names
 
     @property
-    def table_column_dict(self,) -> Dict[str, Tuple[str]]:
+    def table_column_dict(self,) -> Dict[str, Tuple[str, ...]]:
         """
         Set the properties of self.table_column_dict.
 
@@ -232,7 +232,7 @@ class MetadataReader:
         return self.__table_column_dict
 
     @property
-    def table_connection(self,) -> Dict[str, Tuple[str]]:
+    def table_connection(self,) -> Dict[str, Tuple[str, ...]]:
         """
         Set the properties of self.table_connections.
 
@@ -245,7 +245,7 @@ class MetadataReader:
         return self.__table_connections
 
     @property
-    def sorted_columns(self,) -> Tuple[str]:
+    def sorted_columns(self) -> Tuple[str, ...]:
         """
         Set the properties of self.sorted_columns.
 
@@ -317,9 +317,9 @@ class MetadataReader:
     @staticmethod
     def get_join_query(
         from_statement: str,
-        columns: Union[Tuple[str], List[str]],
-        alias_columns: Union[Tuple[str], List[str]],
-        table_connections: Dict[str, Tuple[str]],
+        columns: Sequence[str],
+        alias_columns: Sequence[str],
+        table_connections: Dict[str, Tuple[str, ...]],
     ) -> str:
         """
         Return the query string of a `SELECT` query with `INNER JOIN`.
@@ -345,7 +345,7 @@ class MetadataReader:
             The name of the columns in the resulting table
             I.e.
             >>> f'SELECT {columns[0]} AS {alias_columns[0]} FROM *'
-        table_connections : dict of tuple
+        table_connections : dict of str, tuple of str
             A dict where the keys are the table names, and the values
             are tuples containing table names connected to the key table
             as described in the note above
@@ -390,7 +390,7 @@ class MetadataReader:
         )
         return parameters_query
 
-    def __get_sorted_columns(self) -> Tuple[str]:
+    def __get_sorted_columns(self) -> Tuple[str, ...]:
         """
         Return all columns sorted.
 
@@ -403,7 +403,7 @@ class MetadataReader:
 
         Returns
         -------
-        sorted_columns : tuple
+        tuple
             Dict containing the column names
             On the form
             >>> ('run.id',
@@ -413,7 +413,7 @@ class MetadataReader:
             ...  'table_name_1.column_name_1',
             ...  'table_name_1.column_name_2', ...)
         """
-        sorted_columns = list()
+        sorted_columns: List[str] = list()
         table_names = sorted(self.table_column_dict.keys())
         table_names.pop(table_names.index("run"))
         table_names.insert(0, "run")
@@ -426,7 +426,7 @@ class MetadataReader:
             sorted_columns = [*sorted_columns, *table_columns]
         return tuple(sorted_columns)
 
-    def __get_table_connections(self) -> Dict[str, Tuple[str]]:
+    def __get_table_connections(self) -> Dict[str, Tuple[str, ...]]:
         """
         Return a dict containing the table connections.
 
@@ -443,15 +443,21 @@ class MetadataReader:
         """
         table_connection_dict = dict()
         pattern = re.compile("(.*)_id")
+        ids: List[str] = list()
 
         for table, columns in self.table_column_dict.items():
-            ids = tuple(pattern.match(el)[1] for el in columns if "_id" in el)
+            for el in columns:
+                if "_id" in el:
+                    match = pattern.match(el)
+                    if match is None:
+                        raise RuntimeError(f'Pattern {pattern} could not match "_id"')
+                    ids.append(match[1])
             if len(ids) > 0:
-                table_connection_dict[table] = ids
+                table_connection_dict[table] = tuple(ids)
 
         return table_connection_dict
 
-    def __get_all_table_names(self) -> Tuple[str]:
+    def __get_all_table_names(self) -> Tuple[str, ...]:
         """
         Return all the table names in the schema.
 
@@ -469,7 +475,7 @@ class MetadataReader:
         # pylint: disable=no-member
         return tuple(self.__db_reader.query(query).loc[:, "name"])
 
-    def __get_table_column_dict(self) -> Dict[str, Tuple[str]]:
+    def __get_table_column_dict(self) -> Dict[str, Tuple[str, ...]]:
         """
         Return all the column names of the specified tables.
 
