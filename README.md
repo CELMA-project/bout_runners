@@ -1,4 +1,5 @@
-[![Test](https://github.com/CELMA-project/bout_runners/workflows/Pytest%20with%20codecov/badge.svg?branch=master)](https://github.com/CELMA-project/bout_runners/actions?query=workflow%3A%22Pytest+with+codecov%22)
+[![Lint](https://github.com/CELMA-project/bout_runners/workflows/Lint/badge.svg?branch=master)](https://github.com/CELMA-project/bout_runners/actions?query=workflow%3A%22Lint%22)
+[![Test](https://github.com/CELMA-project/bout_runners/workflows/Test/badge.svg?branch=master)](https://github.com/CELMA-project/bout_runners/actions?query=workflow%3A%22Test%22)
 [![Docker](https://github.com/CELMA-project/bout_runners/workflows/Docker%20Image%20CI/badge.svg?branch=master)](https://github.com/CELMA-project/bout_runners/actions?query=workflow%3A%22Docker+Image+CI%22)
 [![codecov](https://codecov.io/gh/CELMA-project/bout_runners/branch/master/graph/badge.svg)](https://codecov.io/gh/CELMA-project/bout_runners)
 
