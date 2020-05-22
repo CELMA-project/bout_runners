@@ -196,7 +196,12 @@ class DatabaseCreator:
         """
         # Obtain the table name
         pattern = r"CREATE TABLE (\w*)"
-        table_name = re.match(pattern, table_str).group(1)
+
+        match = re.match(pattern, table_str)
+        if match is None:
+            raise ValueError(f'table_str "{table_str}" not understood')
+
+        table_name = match.group(1)
 
         self.db_connector.execute_statement(table_str)
 

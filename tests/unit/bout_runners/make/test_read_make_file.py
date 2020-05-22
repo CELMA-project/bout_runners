@@ -41,7 +41,7 @@ def test_get_variable_value(
         Path to the test data
     """
     var = BoutMakefileVariableReader(get_test_data_path.joinpath(filename), "VAR")
-    val = var.get_variable_value()
+    val = var.value
 
     assert val == expected
 
@@ -60,4 +60,4 @@ def test_get_variable_value_raises(get_test_data_path: Path) -> None:
     )
 
     with pytest.raises(MakefileReaderError):
-        var.get_variable_value()
+        var.value

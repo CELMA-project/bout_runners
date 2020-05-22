@@ -36,11 +36,7 @@ class RunParameters:
     def __init__(
         self,
         run_parameters_dict: Optional[
-            Union[
-                Dict[str, Dict[str, int]],
-                Dict[str, Dict[str, bool]],
-                Dict[str, Union[Dict[str, bool], Dict[str, int]]],
-            ]
+            Dict[str, Dict[str, Union[int, bool, str]]]
         ] = None,
     ) -> None:
         """

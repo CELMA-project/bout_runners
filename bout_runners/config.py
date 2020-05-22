@@ -40,19 +40,19 @@ def set_log_level(level: Optional[str] = None) -> None:
         for key, val in possibilities_map.items():
             question += f'{" "*3}({key}) - {val}\n'
         # Set an answer to start the wile loop
-        answer = -1
+        answer_int = -1
         possibilities_keys = possibilities_map.keys()
-        while answer not in possibilities_keys:
-            answer = input(question)
-            if answer is not None:
-                answer = int(answer)
-            if answer is None:
+        while answer_int not in possibilities_keys:
+            answer_input = input(question)
+            if answer_input is not None:
+                answer_int = int(answer_input)
+            if answer_input is None:
                 # Reverse the dict
-                answer = list(possibilities_map.keys())[
+                answer_int = list(possibilities_map.keys())[
                     list(possibilities_map.values()).index(current_level)
                 ]
                 break
-        level = possibilities_map[answer]
+        level = possibilities_map[answer_int]
 
     if level not in possibilities:
         msg = f"`level` in `set_log_level` must be one of " f"{possibilities}"

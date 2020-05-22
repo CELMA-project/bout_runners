@@ -99,17 +99,7 @@ class FinalParameters:
             run_parameters if run_parameters is not None else RunParameters()
         )
 
-    def get_final_parameters(
-        self,
-    ) -> Dict[
-        str,
-        Union[
-            Dict[str, Union[int, str, float]],
-            Dict[str, float],
-            Dict[str, int],
-            Dict[str, str],
-        ],
-    ]:
+    def get_final_parameters(self,) -> Dict[str, Dict[str, Union[str, int, float]]]:
         """
         Obtain the final parameters that will be used in a run.
 
@@ -142,15 +132,7 @@ class FinalParameters:
 
     @staticmethod
     def cast_to_sql_type(
-        parameter_dict: Dict[
-            str,
-            Union[
-                Dict[str, Union[int, str, float]],
-                Dict[str, float],
-                Dict[str, int],
-                Dict[str, str],
-            ],
-        ]
+        parameter_dict: Dict[str, Dict[str, Union[str, int, float]]]
     ) -> Dict[str, Dict[str, str]]:
         """
         Cast the values of a parameter dict to valid SQL types.
@@ -176,7 +158,7 @@ class FinalParameters:
             "str": "TEXT",
         }
 
-        parameter_dict_as_sql_types = parameter_dict.copy()
+        parameter_dict_as_sql_types: Dict[str, Dict[str, str]] = dict()
 
         for section in parameter_dict.keys():
             for key, val in parameter_dict[section].items():
@@ -186,6 +168,6 @@ class FinalParameters:
                 except (SyntaxError, ValueError):
                     val_type = str
 
-                parameter_dict[section][key] = type_map[val_type.__name__]
+                parameter_dict_as_sql_types[section][key] = type_map[val_type.__name__]
 
         return parameter_dict_as_sql_types

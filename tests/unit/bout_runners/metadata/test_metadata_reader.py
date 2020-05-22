@@ -3,6 +3,7 @@
 
 from bout_runners.metadata.metadata_reader import MetadataReader
 from pandas.core.frame import DataFrame
+from typing import Dict, List
 
 
 def test_get_table_column_dict(
@@ -21,7 +22,7 @@ def test_get_table_column_dict(
     table_columns_dict = yield_metadata_reader.table_column_dict
     # Extract columns dict
     all_metadata = yield_all_metadata
-    expected_columns_dict = dict()
+    expected_columns_dict: Dict[str, List[str]] = dict()
     for pandas_col in all_metadata.columns:
         table, col = pandas_col.split(".")
         if table not in expected_columns_dict.keys():

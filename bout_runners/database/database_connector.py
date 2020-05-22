@@ -53,9 +53,6 @@ class DatabaseConnector:
             Path to database
             If None is set, the path will be set to $HOME/BOUT_db
         """
-        # Declare variables to be used in the getters and setters
-        self.__db_path = None
-
         # Set the database path
         self.__db_path = self.create_db_path(name, db_root_path)
         logging.info("db_path set to %s", self.db_path)
@@ -92,7 +89,7 @@ class DatabaseConnector:
         Returns
         -------
         self.__connection : Connection
-        The connection to the database
+            The connection to the database
 
         Notes
         -----

@@ -6,18 +6,14 @@ import logging.config
 import yaml
 from bout_runners.utils.paths import get_logger_config_path
 from bout_runners.utils.paths import get_log_file_path
-from typing import Dict, List, Optional, Union
+from typing import Dict, Optional, Any
 
 
-def get_log_config() -> Dict[
-    str,
-    Union[
-        int,
-        Dict[str, Dict[str, str]],
-        Dict[str, Union[Dict[str, str], Dict[str, Union[str, int]]]],
-        Dict[str, Union[str, List[str]]],
-    ],
-]:
+# NOTE: Looks like mypy has trouble with recursive objects, thus this using Any looks
+#       like a good solution for now
+#       See also
+#       https://github.com/python/typing/issues/182
+def get_log_config() -> Dict[str, Any]:
     """
     Get the logging configuration.
 
@@ -33,19 +29,7 @@ def get_log_config() -> Dict[
     return config
 
 
-def set_up_logger(
-    config: Optional[
-        Dict[
-            str,
-            Union[
-                int,
-                Dict[str, Dict[str, str]],
-                Dict[str, Union[Dict[str, str], Dict[str, Union[str, int]]]],
-                Dict[str, Union[str, List[str]]],
-            ],
-        ]
-    ] = None
-) -> None:
+def set_up_logger(config: Optional[Dict[str, Any]] = None) -> None:
     """
     Set up the logger.
 

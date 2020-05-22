@@ -10,7 +10,7 @@ from bout_runners.executor.bout_paths import BoutPaths
 from bout_runners.parameters.run_parameters import RunParameters
 from bout_runners.executor.executor import Executor
 from bout_runners.submitter.local_submitter import LocalSubmitter
-from typing import Any, Dict, Optional
+from typing import Dict, Optional, Union
 
 
 class DefaultParameters:
@@ -150,7 +150,7 @@ class DefaultParameters:
         )
         return executor
 
-    def get_default_parameters(self) -> Dict[str, Any]:
+    def get_default_parameters(self,) -> Dict[str, Dict[str, Union[str, int, float]]]:
         """
         Return the default parameters from the settings file.
 
@@ -182,7 +182,7 @@ class DefaultParameters:
         config = configparser.ConfigParser()
         config.read_string(settings_memory)
 
-        default_parameters_dict = dict()
+        default_parameters_dict: Dict[str, Dict[str, Union[str, int, float]]] = dict()
 
         for section in config.sections():
             default_parameters_dict[section] = dict()

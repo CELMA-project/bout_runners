@@ -60,7 +60,7 @@ class BoutMakefileReader:
         with Path(self.path).open("r") as make_file:
             return make_file.read()
 
-    def get_variable_value(self):
+    def value(self):
         """Get the value of the variable."""
 
 
@@ -72,7 +72,7 @@ class BoutMakefileVariableReader(BoutMakefileReader):
     ----------
     variable_name : str
         Name of the variable belonging to the instance
-    variable_value : str
+    __value : str
         Value belonging to the variable of the instance
 
     Methods
@@ -93,8 +93,7 @@ class BoutMakefileVariableReader(BoutMakefileReader):
     ```
 
     Script
-    >>> BoutMakefileVariableReader('SOURCEC', 'Makefile').\
-    ...     get_variable_value()
+    >>> BoutMakefileVariableReader('SOURCEC', 'Makefile').value
     'bout_model.cxx'
     """
 
@@ -112,10 +111,10 @@ class BoutMakefileVariableReader(BoutMakefileReader):
         super(BoutMakefileVariableReader, self).__init__(path)
 
         self.variable_name = variable_name
-        self.variable_value = None
+        self.__value = None
 
-    # FIXME: YOU ARE HERE - Make this a property
-    def get_variable_value(self) -> str:
+    @property
+    def value(self) -> str:
         """
         Get the value of the variable.
 
@@ -137,7 +136,7 @@ class BoutMakefileVariableReader(BoutMakefileReader):
         ... foo   = foobar.qux # foo = quux.quuz
 
         Script
-        >>> BoutMakefileVariableReader('foo', 'Makefile').get_variable_value()
+        >>> BoutMakefileVariableReader('foo', 'Makefile').value
         'foobar.qux'
         """
         # Build the match function for the regex
@@ -170,6 +169,6 @@ class BoutMakefileVariableReader(BoutMakefileReader):
 
         # Only the last line of the variable will be considered by
         # the Makefile
-        self.variable_value = matches[-1]
+        self._value = matches[-1]
 
-        return self.variable_value
+        return self._value

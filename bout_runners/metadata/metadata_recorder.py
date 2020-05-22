@@ -11,7 +11,7 @@ from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.executor.bout_paths import BoutPaths
 from bout_runners.parameters.final_parameters import FinalParameters
 from bout_runners.submitter.processor_split import ProcessorSplit
-from typing import Dict, Optional, Union
+from typing import Dict, Optional, Union, Mapping
 
 
 class MetadataRecorder:
@@ -214,7 +214,7 @@ class MetadataRecorder:
         return run_id
 
     def create_entry(
-        self, table_name: str, entries_dict: Dict[str, Union[int, str, float]]
+        self, table_name: str, entries_dict: Mapping[str, Union[int, str, float]]
     ) -> int:
         """
         Create a database entry and return the entry id.
@@ -228,24 +228,17 @@ class MetadataRecorder:
 
         Returns
         -------
-        entry_id : int
+        entry_id : None or int
             The id of the newly created entry
         """
         self.__db_writer.create_entry(table_name, entries_dict)
         entry_id = self.__db_reader.get_entry_id(table_name, entries_dict)
+        if entry_id is None:
+            raise RuntimeError("Could not fetch the newly created id")
         return entry_id
 
     def _create_parameter_tables_entry(
-        self,
-        parameters_dict: Dict[
-            str,
-            Union[
-                Dict[str, Union[int, str, float]],
-                Dict[str, float],
-                Dict[str, int],
-                Dict[str, str],
-            ],
-        ],
+        self, parameters_dict: Dict[str, Dict[str, Union[int, str, float]]]
     ) -> int:
         """
         Insert the parameters into a the parameter tables.

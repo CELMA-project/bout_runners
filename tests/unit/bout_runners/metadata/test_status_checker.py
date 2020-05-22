@@ -91,21 +91,21 @@ def test_status_checker(
 
     # Check that correct start_time has been set
     if "not_started" not in test_case:
-        expected = datetime(2020, 5, 1, 17, 7, 10)
+        expected = str(datetime(2020, 5, 1, 17, 7, 10))
         # pylint: disable=no-member
         result = db_reader.query(
             "SELECT start_time FROM run WHERE name = " "'testdata_6'"
         ).loc[0, "start_time"]
-        assert str(expected) == result
+        assert expected == result
 
     # Check that correct end_time has been set
     if "not_ended" not in test_case and "complete" in test_case:
-        expected = datetime(2020, 5, 1, 17, 7, 14)
+        expected = str(datetime(2020, 5, 1, 17, 7, 14))
         # pylint: disable=no-member
         result = db_reader.query(
             "SELECT stop_time FROM run WHERE name = " "'testdata_6'"
         ).loc[0, "stop_time"]
-        assert str(expected) == result
+        assert expected == result
 
 
 @pytest.mark.timeout(60)

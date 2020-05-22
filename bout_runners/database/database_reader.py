@@ -5,7 +5,7 @@ import pandas as pd
 from bout_runners.database.database_connector import DatabaseConnector
 from numpy import int64
 from pandas.core.frame import DataFrame
-from typing import Dict, Optional, Union
+from typing import Optional, Union, Mapping
 
 
 class DatabaseReader:
@@ -136,7 +136,7 @@ class DatabaseReader:
         return row_id
 
     def get_entry_id(
-        self, table_name: str, entries_dict: Dict[str, Union[int, str, float]]
+        self, table_name: str, entries_dict: Mapping[str, Union[int, str, float]]
     ) -> Optional[int]:
         """
         Get the id of a table entry.
@@ -158,14 +158,14 @@ class DatabaseReader:
         # https://stackoverflow.com/questions/9755860/valid-query-to-check-if-row-exists-in-sqlite3
         # NOTE: About SELECT 1
         # https://stackoverflow.com/questions/7039938/what-does-select-1-from-do
-        where_statements = list()
+        where_statements_list = list()
         for field, val in entries_dict.items():
             val = f'"{val}"' if isinstance(val, str) else val
-            where_statements.append(f'{" "*7}AND {field}={val}')
-        where_statements[0] = where_statements[0].replace("AND", "WHERE")
-        where_statements = "\n".join(where_statements)
+            where_statements_list.append(f'{" "*7}AND {field}={val}')
+        where_statements_list[0] = where_statements_list[0].replace("AND", "WHERE")
+        where_statements_str = "\n".join(where_statements_list)
 
-        query_str = f"SELECT id\n" f"FROM {table_name}\n{where_statements}"
+        query_str = f"SELECT id\n" f"FROM {table_name}\n{where_statements_str}"
 
         table = self.query(query_str)
         # NOTE: We explicitly cast to int, as sqlite3 will cast

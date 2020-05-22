@@ -4,8 +4,7 @@
 import re
 import logging
 from bout_runners.database.database_connector import DatabaseConnector
-from datetime import datetime
-from typing import Any, Dict, Tuple, Union
+from typing import Any, Tuple, Union, Mapping
 
 
 class DatabaseWriter:
@@ -162,17 +161,17 @@ class DatabaseWriter:
         """
         # Obtain the table name
         pattern = r"INSERT INTO (\w*)"
-        table_name = re.match(pattern, insert_str).group(1)
+        match = re.match(pattern, insert_str)
+        if match is None:
+            raise ValueError(f'insert_str "{insert_str}" not understood')
+
+        table_name = match.group(1)
 
         self.db_connector.execute_statement(insert_str, *values)
 
         logging.info("Made insertion to %s", table_name)
 
-    def update(
-        self,
-        update_str: str,
-        values: Union[Tuple[int, int], Tuple[datetime], Tuple[str]],
-    ) -> None:
+    def update(self, update_str: str, values: Any,) -> None:
         """
         Insert to the database.
 
@@ -185,16 +184,25 @@ class DatabaseWriter:
         """
         # Obtain the table name
         pattern = r"UPDATE (\w*)"
-        table_name = re.match(pattern, update_str).group(1)
+        match = re.match(pattern, update_str)
+
+        if match is None:
+            raise ValueError(f'update_str "{update_str}" not understood')
+        table_name = match.group(1)
+
         pattern = r"WHERE (.*)"
-        condition = re.search(pattern, update_str).group(1)
+        match = re.search(pattern, update_str)
+
+        if match is None:
+            raise ValueError(f'update_str "{update_str}" not understood')
+        condition = match.group(1)
 
         self.db_connector.execute_statement(update_str, *values)
 
         logging.info("Updated table %s, where %s", table_name, condition)
 
     def create_entry(
-        self, table_name: str, entries_dict: Dict[str, Union[int, str, float]]
+        self, table_name: str, entries_dict: Mapping[str, Union[int, str, float]]
     ) -> None:
         """
         Create a database entry.

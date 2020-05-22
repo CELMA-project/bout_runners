@@ -64,11 +64,18 @@ class LocalSubmitter(AbstractSubmitter):
         self.processor_split = (
             processor_split if processor_split is not None else ProcessorSplit()
         )
-        self.__pid = None
+        self.__pid: Optional[int] = None
 
     @property
-    def pid(self) -> int:
-        """Return the process id."""
+    def pid(self) -> Optional[int]:
+        """
+        Return the process id.
+
+        Returns
+        -------
+        self.__pid : int or None
+            The process id if a process has been called, else None
+        """
         return self.__pid
 
     def submit_command(self, command: str) -> CompletedProcess:

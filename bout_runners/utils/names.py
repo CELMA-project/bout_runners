@@ -25,13 +25,9 @@ def get_exec_name(makefile_path: Path) -> str:
         Name of the executable
     """
     try:
-        exec_name = BoutMakefileVariableReader(
-            makefile_path, "TARGET"
-        ).get_variable_value()
+        exec_name = BoutMakefileVariableReader(makefile_path, "TARGET").value
     except MakefileReaderError:
-        exec_name = BoutMakefileVariableReader(
-            makefile_path, "SOURCEC"
-        ).get_variable_value()
+        exec_name = BoutMakefileVariableReader(makefile_path, "SOURCEC").value
         # Strip the name from the last .c*
         split_by = ".c"
         split_list = exec_name.split(split_by)
