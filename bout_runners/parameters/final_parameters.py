@@ -2,8 +2,10 @@
 
 
 import ast
-from bout_runners.parameters.run_parameters import RunParameters
+from typing import Dict, Optional, Union
+
 from bout_runners.parameters.default_parameters import DefaultParameters
+from bout_runners.parameters.run_parameters import RunParameters
 
 
 class FinalParameters:
@@ -71,7 +73,11 @@ class FinalParameters:
     INTEGER, ...}}
     """
 
-    def __init__(self, default_parameters=None, run_parameters=None):
+    def __init__(
+        self,
+        default_parameters: Optional[DefaultParameters] = None,
+        run_parameters: Optional[RunParameters] = None,
+    ) -> None:
         """
         Set the member data.
 
@@ -94,13 +100,15 @@ class FinalParameters:
             run_parameters if run_parameters is not None else RunParameters()
         )
 
-    def get_final_parameters(self):
+    def get_final_parameters(
+        self,
+    ) -> Dict[str, Dict[str, Union[str, int, float, bool]]]:
         """
         Obtain the final parameters that will be used in a run.
 
         Returns
         -------
-        final_parameters_dict : dict of str, dict
+        final_parameters_dict : dict
             Parameters on the form
             >>> {'global':{'append': 'False', 'nout': 5},
             ...  'mesh':  {'nx': 4},
@@ -108,6 +116,8 @@ class FinalParameters:
         """
         final_parameters_dict = self.__default_parameters.get_default_parameters()
         run_parameters_dict = self.__run_parameters.run_parameters_dict
+        # Assert to prevent "Incompatible types in assignment" with Optional
+        assert run_parameters_dict is not None
         final_parameters_dict.update(run_parameters_dict)
 
         # Cast True to 1 and False to 0 as SQLite has no support for
@@ -126,7 +136,9 @@ class FinalParameters:
         return final_parameters_dict
 
     @staticmethod
-    def cast_to_sql_type(parameter_dict):
+    def cast_to_sql_type(
+        parameter_dict: Dict[str, Dict[str, Union[str, int, float]]]
+    ) -> Dict[str, Dict[str, str]]:
         """
         Cast the values of a parameter dict to valid SQL types.
 
@@ -151,16 +163,18 @@ class FinalParameters:
             "str": "TEXT",
         }
 
-        parameter_dict_as_sql_types = parameter_dict.copy()
+        parameter_dict_copy = parameter_dict.copy()
+        parameter_dict_as_sql_types: Dict[str, Dict[str, str]] = dict()
 
-        for section in parameter_dict.keys():
-            for key, val in parameter_dict[section].items():
+        for section in parameter_dict_copy.keys():
+            parameter_dict_as_sql_types[section] = dict()
+            for key, val in parameter_dict_copy[section].items():
                 # If type is not found, type is str
                 try:
                     val_type = type(ast.literal_eval(str(val)))
                 except (SyntaxError, ValueError):
                     val_type = str
 
-                parameter_dict[section][key] = type_map[val_type.__name__]
+                parameter_dict_as_sql_types[section][key] = type_map[val_type.__name__]
 
         return parameter_dict_as_sql_types

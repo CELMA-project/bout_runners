@@ -2,10 +2,14 @@
 
 
 import re
+from typing import Callable, Dict, List, Optional, Sequence, Tuple
+
+from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_reader import DatabaseReader
+from pandas import DataFrame
 
 
-def drop_ids(func):
+def drop_ids(func: Callable) -> Callable:
     """
     Return a function which remove excessive ids.
 
@@ -20,18 +24,18 @@ def drop_ids(func):
         The function dropping the ids
     """
 
-    def drop(self, *args, **kwargs):
+    def drop(self, *args, **kwargs) -> DataFrame:
         """
         Drop columns inplace.
 
         Parameters
         ----------
-        self
+        self : object
             Self reference to the instance the function is belonging to
             Must contain self.drop_id
-        args
+        args : tuple
             Arguments belonging to the input function
-        kwargs
+        kwargs : dict
             Keyword arguments to the input function
 
         Returns
@@ -166,7 +170,9 @@ class MetadataReader:
         "file_modification.project_makefile_modified",
     )
 
-    def __init__(self, db_connector, drop_id="keep_run_id"):
+    def __init__(
+        self, db_connector: DatabaseConnector, drop_id: Optional[str] = "keep_run_id"
+    ) -> None:
         """
         Set the database to use.
 
@@ -174,7 +180,7 @@ class MetadataReader:
         ----------
         db_connector : DatabaseConnector
             The connection to the database
-        drop_id : None or 'parameters' or 'all'
+        drop_id : None or str
             Specifies what id columns should be dropped when
             obtaining the metadata
             - None : No columns will be dropped
@@ -195,13 +201,13 @@ class MetadataReader:
         parameters_connections = {"parameters": self.__table_connections["parameters"]}
         parameters_tables = ("parameters", *parameters_connections["parameters"])
         self.__parameters_columns = tuple(
-            col
+            str(col)
             for col in self.__sorted_columns
             if col.split(".")[0] in parameters_tables
         )
 
     @property
-    def table_names(self):
+    def table_names(self) -> Tuple[str, ...]:
         """
         Set the properties of self.table_names.
 
@@ -213,7 +219,7 @@ class MetadataReader:
         return self.__table_names
 
     @property
-    def table_column_dict(self):
+    def table_column_dict(self,) -> Dict[str, Tuple[str, ...]]:
         """
         Set the properties of self.table_column_dict.
 
@@ -226,7 +232,7 @@ class MetadataReader:
         return self.__table_column_dict
 
     @property
-    def table_connection(self):
+    def table_connection(self,) -> Dict[str, Tuple[str, ...]]:
         """
         Set the properties of self.table_connections.
 
@@ -239,7 +245,7 @@ class MetadataReader:
         return self.__table_connections
 
     @property
-    def sorted_columns(self):
+    def sorted_columns(self) -> Tuple[str, ...]:
         """
         Set the properties of self.sorted_columns.
 
@@ -309,7 +315,12 @@ class MetadataReader:
         return self.__db_reader.query(parameters_query)
 
     @staticmethod
-    def get_join_query(from_statement, columns, alias_columns, table_connections):
+    def get_join_query(
+        from_statement: str,
+        columns: Sequence[str],
+        alias_columns: Sequence[str],
+        table_connections: Dict[str, Tuple[str, ...]],
+    ) -> str:
         """
         Return the query string of a `SELECT` query with `INNER JOIN`.
 
@@ -326,15 +337,15 @@ class MetadataReader:
             The statement after the `FROM` keyword in the query
             I.e.
             >>> f'SELECT * FROM {from_statement}'
-        columns : array-like
+        columns : array_like
             The columns to select from the tables
             I.e.
             >>> f'SELECT {columns} FROM *'
-        alias_columns : array-like
+        alias_columns : array_like
             The name of the columns in the resulting table
             I.e.
             >>> f'SELECT {columns[0]} AS {alias_columns[0]} FROM *'
-        table_connections : dict of tuple
+        table_connections : dict
             A dict where the keys are the table names, and the values
             are tuples containing table names connected to the key table
             as described in the note above
@@ -360,8 +371,16 @@ class MetadataReader:
                 )
         return query
 
-    def __get_parameters_query(self):
-        """Return the parameters query string."""
+    def __get_parameters_query(self) -> str:
+        """
+        Return the parameters query string.
+
+        Returns
+        -------
+        parameters_query : str
+            The SQL-string which can be used to query where table in
+            databases are joined through `INNER JOIN` operations
+        """
         parameter_connections = {"parameters": self.__table_connections["parameters"]}
         parameters_query = self.get_join_query(
             "parameters",
@@ -371,7 +390,7 @@ class MetadataReader:
         )
         return parameters_query
 
-    def __get_sorted_columns(self):
+    def __get_sorted_columns(self) -> Tuple[str, ...]:
         """
         Return all columns sorted.
 
@@ -384,7 +403,7 @@ class MetadataReader:
 
         Returns
         -------
-        sorted_columns : tuple
+        tuple
             Dict containing the column names
             On the form
             >>> ('run.id',
@@ -394,7 +413,7 @@ class MetadataReader:
             ...  'table_name_1.column_name_1',
             ...  'table_name_1.column_name_2', ...)
         """
-        sorted_columns = list()
+        sorted_columns: List[str] = list()
         table_names = sorted(self.table_column_dict.keys())
         table_names.pop(table_names.index("run"))
         table_names.insert(0, "run")
@@ -407,7 +426,7 @@ class MetadataReader:
             sorted_columns = [*sorted_columns, *table_columns]
         return tuple(sorted_columns)
 
-    def __get_table_connections(self):
+    def __get_table_connections(self) -> Dict[str, Tuple[str, ...]]:
         """
         Return a dict containing the table connections.
 
@@ -426,13 +445,18 @@ class MetadataReader:
         pattern = re.compile("(.*)_id")
 
         for table, columns in self.table_column_dict.items():
-            ids = tuple(pattern.match(el)[1] for el in columns if "_id" in el)
+            ids: List[str] = list()
+            for column in columns:
+                if "_id" in column:
+                    match = pattern.match(column)
+                    assert match is not None
+                    ids.append(match[1])
             if len(ids) > 0:
-                table_connection_dict[table] = ids
+                table_connection_dict[table] = tuple(ids)
 
         return table_connection_dict
 
-    def __get_all_table_names(self):
+    def __get_all_table_names(self) -> Tuple[str, ...]:
         """
         Return all the table names in the schema.
 
@@ -450,7 +474,7 @@ class MetadataReader:
         # pylint: disable=no-member
         return tuple(self.__db_reader.query(query).loc[:, "name"])
 
-    def __get_table_column_dict(self):
+    def __get_table_column_dict(self) -> Dict[str, Tuple[str, ...]]:
         """
         Return all the column names of the specified tables.
 

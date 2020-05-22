@@ -1,10 +1,13 @@
 """Contains unittests for the executor."""
 
 
+from pathlib import Path
+from typing import Callable
+
 from bout_runners.parameters.default_parameters import DefaultParameters
 
 
-def test_executor(make_project, yield_bout_path_conduction):
+def test_executor(make_project: Path, yield_bout_path_conduction: Callable) -> None:
     """
     Test that we are able to execute the conduction example.
 

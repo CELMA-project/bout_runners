@@ -4,6 +4,9 @@
 import logging
 import subprocess
 from pathlib import Path
+from subprocess import CompletedProcess
+from typing import Optional
+
 from bout_runners.submitter.abstract_submitter import AbstractSubmitter
 from bout_runners.submitter.processor_split import ProcessorSplit
 from bout_runners.utils.file_operations import get_caller_dir
@@ -41,7 +44,9 @@ class LocalSubmitter(AbstractSubmitter):
     test_submitter_factory.py\n', stderr=b'')
     """
 
-    def __init__(self, path=None, processor_split=None):
+    def __init__(
+        self, path: Optional[Path] = None, processor_split: None = None
+    ) -> None:
         """
         Set the path from where the calls are made from.
 
@@ -60,14 +65,21 @@ class LocalSubmitter(AbstractSubmitter):
         self.processor_split = (
             processor_split if processor_split is not None else ProcessorSplit()
         )
-        self.__pid = None
+        self.__pid: Optional[int] = None
 
     @property
-    def pid(self):
-        """Return the process id."""
+    def pid(self) -> Optional[int]:
+        """
+        Return the process id.
+
+        Returns
+        -------
+        self.__pid : int or None
+            The process id if a process has been called, else None
+        """
         return self.__pid
 
-    def submit_command(self, command):
+    def submit_command(self, command: str) -> CompletedProcess:
         """
         Run a subprocess.
 
@@ -102,7 +114,7 @@ class LocalSubmitter(AbstractSubmitter):
 
         return result
 
-    def _raise_submit_error(self, result):
+    def _raise_submit_error(self, result: subprocess.CompletedProcess) -> None:
         """
         Raise and error from the subprocess in a clean way.
 

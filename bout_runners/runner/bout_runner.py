@@ -2,11 +2,13 @@
 
 
 import logging
-from bout_runners.executor.executor import Executor
-from bout_runners.parameters.final_parameters import FinalParameters
-from bout_runners.database.database_creator import DatabaseCreator
+from typing import Optional
+
 from bout_runners.database.database_connector import DatabaseConnector
+from bout_runners.database.database_creator import DatabaseCreator
+from bout_runners.executor.executor import Executor
 from bout_runners.metadata.metadata_recorder import MetadataRecorder
+from bout_runners.parameters.final_parameters import FinalParameters
 
 
 class BoutRunner:
@@ -95,8 +97,11 @@ class BoutRunner:
     """
 
     def __init__(
-        self, executor=None, db_connector=None, final_parameters=None,
-    ):
+        self,
+        executor: Optional[Executor] = None,
+        db_connector: Optional[DatabaseConnector] = None,
+        final_parameters: Optional[FinalParameters] = None,
+    ) -> None:
         """
         Set the member data.
 
@@ -129,7 +134,7 @@ class BoutRunner:
         )
 
     @property
-    def executor(self):
+    def executor(self) -> Executor:
         """
         Get the properties of self.executor.
 
@@ -141,7 +146,7 @@ class BoutRunner:
         return self.__executor
 
     @property
-    def final_parameters(self):
+    def final_parameters(self) -> FinalParameters:
         """
         Get the properties of self.final_parameters.
 
@@ -153,7 +158,7 @@ class BoutRunner:
         return self.__final_parameters
 
     @property
-    def db_connector(self):
+    def db_connector(self) -> DatabaseConnector:
         """
         Get the properties of self.db_connector.
 
@@ -164,7 +169,7 @@ class BoutRunner:
         """
         return self.__db_connector
 
-    def create_schema(self):
+    def create_schema(self) -> None:
         """Create the schema."""
         final_parameters_dict = self.final_parameters.get_final_parameters()
         final_parameters_as_sql_types = self.final_parameters.cast_to_sql_type(
@@ -172,7 +177,7 @@ class BoutRunner:
         )
         self.__db_creator.create_all_schema_tables(final_parameters_as_sql_types)
 
-    def run(self, force=False):
+    def run(self, force: bool = False) -> None:
         """
         Perform the run and capture data.
 

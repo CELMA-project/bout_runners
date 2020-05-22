@@ -1,13 +1,15 @@
 """Contains unittests for the StatusChecker."""
 
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+from typing import Callable
+
 import pytest
 from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.metadata.status_checker import StatusChecker
 
 
-def test_status_checker_run_time_error(make_test_database):
+def test_status_checker_run_time_error(make_test_database: Callable) -> None:
     """
     Test that the status checker raises RuntimeError without tables.
 
@@ -37,12 +39,12 @@ def test_status_checker_run_time_error(make_test_database):
     ),
 )
 def test_status_checker(
-    test_case,
-    get_test_data_path,
-    get_test_db_copy,
-    mock_pid_exists,
-    copy_test_case_log_file,
-):
+    test_case: str,
+    get_test_data_path: Path,
+    get_test_db_copy: Callable,
+    mock_pid_exists: Callable,
+    copy_test_case_log_file: Callable,
+) -> None:
     """
     Test the StatusChecker exhaustively (excluding raises and loop).
 
@@ -90,35 +92,40 @@ def test_status_checker(
 
     # Check that correct start_time has been set
     if "not_started" not in test_case:
-        expected = datetime(2020, 5, 1, 17, 7, 10)
+        expected = str(datetime(2020, 5, 1, 17, 7, 10))
         # pylint: disable=no-member
         result = db_reader.query(
             "SELECT start_time FROM run WHERE name = " "'testdata_6'"
         ).loc[0, "start_time"]
-        assert str(expected) == result
+        assert expected == result
 
     # Check that correct end_time has been set
     if "not_ended" not in test_case and "complete" in test_case:
-        expected = datetime(2020, 5, 1, 17, 7, 14)
+        expected = str(datetime(2020, 5, 1, 17, 7, 14))
         # pylint: disable=no-member
         result = db_reader.query(
             "SELECT stop_time FROM run WHERE name = " "'testdata_6'"
         ).loc[0, "stop_time"]
-        assert str(expected) == result
+        assert expected == result
 
 
 @pytest.mark.timeout(60)
 def test_status_checker_until_complete_infinite(
-    get_test_data_path, get_test_db_copy, copy_test_case_log_file
-):
+    get_test_data_path: Path,
+    get_test_db_copy: Callable,
+    copy_test_case_log_file: Callable,
+) -> None:
     """
     Test the infinite loop of StatusChecker.
 
     Parameters
     ----------
-    get_test_data_path
-    get_test_db_copy
-    copy_test_case_log_file
+    get_test_data_path : Path
+        Path to the test data
+    get_test_db_copy : function
+        Function which returns a DatabaseConnector connected to a copy of test.db
+    copy_test_case_log_file : function
+        Return the function for copying the test case log files
     """
     test_case = "infinite_log_file_pid_started_ended_no_mock_pid_complete"
 

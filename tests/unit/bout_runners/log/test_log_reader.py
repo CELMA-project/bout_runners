@@ -2,10 +2,13 @@
 
 
 from datetime import datetime
+from pathlib import Path
+from typing import Dict
+
 from bout_runners.log.log_reader import LogReader
 
 
-def test_started(yield_logs):
+def test_started(yield_logs: Dict[str, Path]) -> None:
     """
     Test self.started.
 
@@ -25,7 +28,7 @@ def test_started(yield_logs):
     assert unfinished_no_pid_log_reader.started() is False
 
 
-def test_ended(yield_logs):
+def test_ended(yield_logs: Dict[str, Path]) -> None:
     """
     Test self.ended.
 
@@ -45,7 +48,7 @@ def test_ended(yield_logs):
     assert unfinished_no_pid_log_reader.ended() is False
 
 
-def test_pid_exist(yield_logs):
+def test_pid_exist(yield_logs: Dict[str, Path]) -> None:
     """
     Test self.pid_exist.
 
@@ -65,7 +68,7 @@ def test_pid_exist(yield_logs):
     assert unfinished_no_pid_log_reader.ended() is False
 
 
-def test_start_time(yield_logs):
+def test_start_time(yield_logs: Dict[str, Path]) -> None:
     """
     Test self.start_time.
 
@@ -86,7 +89,7 @@ def test_start_time(yield_logs):
     assert unfinished_no_pid_log_reader.start_time is None
 
 
-def test_end_time(yield_logs):
+def test_end_time(yield_logs: Dict[str, Path]) -> None:
     """
     Test self.end_time.
 
@@ -107,7 +110,7 @@ def test_end_time(yield_logs):
     assert unfinished_no_pid_log_reader.end_time is None
 
 
-def test_pid(yield_logs):
+def test_pid(yield_logs: Dict[str, Path]) -> None:
     """
     Test self.pid.
 

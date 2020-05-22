@@ -2,10 +2,11 @@
 
 
 import logging
+
 from bout_runners.submitter.local_submitter import LocalSubmitter
 
 
-def get_submitter(name, *args, **kwargs):
+def get_submitter(name: str, *args, **kwargs) -> LocalSubmitter:
     """
     Return a Submitter object.
 
@@ -24,6 +25,11 @@ def get_submitter(name, *args, **kwargs):
     -------
     submitter : AbstractSubmitter
         The implemented submitter class
+
+    Raises
+    ------
+    NotImplementedError
+        If the name is not a supported submitter class
     """
     implemented = ("local",)
 

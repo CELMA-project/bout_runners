@@ -2,12 +2,14 @@
 
 
 import sqlite3
+from typing import Callable
+
 import pytest
-from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.database.database_creator import DatabaseCreator
+from bout_runners.database.database_reader import DatabaseReader
 
 
-def test_db_creator(make_test_database, make_test_schema):
+def test_db_creator(make_test_database: Callable, make_test_schema: Callable) -> None:
     """
     Test we can create the database schemas.
 
@@ -61,7 +63,7 @@ def test_db_creator(make_test_database, make_test_schema):
     assert non_parameter_tables.union(parameter_tables) == set(actual)
 
 
-def test_get_create_table_statement():
+def test_get_create_table_statement() -> None:
     """Test that get_create_table_statement returns expected output."""
     result = DatabaseCreator.get_create_table_statement(
         table_name="foo",

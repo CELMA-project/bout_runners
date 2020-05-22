@@ -1,9 +1,12 @@
 """Module containing the DatabaseBase class."""
 
 
-import sqlite3
 import logging
+import sqlite3
 from pathlib import Path
+from sqlite3 import Connection
+from typing import Optional
+
 from bout_runners.utils.file_operations import get_caller_dir
 
 
@@ -35,7 +38,9 @@ class DatabaseConnector:
     >>> database.execute_statement('CREATE TABLE my_table (col INT)')
     """
 
-    def __init__(self, name=None, db_root_path=None):
+    def __init__(
+        self, name: Optional[str] = None, db_root_path: Optional[Path] = None
+    ) -> None:
         """
         Set the path to the data base.
 
@@ -49,9 +54,6 @@ class DatabaseConnector:
             Path to database
             If None is set, the path will be set to $HOME/BOUT_db
         """
-        # Declare variables to be used in the getters and setters
-        self.__db_path = None
-
         # Set the database path
         self.__db_path = self.create_db_path(name, db_root_path)
         logging.info("db_path set to %s", self.db_path)
@@ -59,12 +61,12 @@ class DatabaseConnector:
         # Open the connection
         self.__connection = sqlite3.connect(str(self.db_path))
 
-    def __del__(self):
+    def __del__(self) -> None:
         """Close the connection."""
         self.__connection.close()
 
     @property
-    def db_path(self):
+    def db_path(self) -> Path:
         """
         Get the properties of self.db_path.
 
@@ -81,14 +83,14 @@ class DatabaseConnector:
         return self.__db_path
 
     @property
-    def connection(self):
+    def connection(self) -> Connection:
         """
         Get the properties of self.connection.
 
         Returns
         -------
         self.__connection : Connection
-        The connection to the database
+            The connection to the database
 
         Notes
         -----
@@ -98,7 +100,7 @@ class DatabaseConnector:
         return self.__connection
 
     @staticmethod
-    def create_db_path(name, db_root_path):
+    def create_db_path(name: Optional[str], db_root_path: Optional[Path]) -> Path:
         """
         Create the database path.
 
@@ -135,7 +137,7 @@ class DatabaseConnector:
 
         return db_path
 
-    def execute_statement(self, sql_statement, *parameters):
+    def execute_statement(self, sql_statement: str, *parameters) -> None:
         """
         Execute a statement in the database.
 

@@ -1,12 +1,16 @@
 """Module containing the StatusChecker class."""
 
 
-import time
 import logging
+import time
+from pathlib import Path
+
 import psutil
+from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.log.log_reader import LogReader
 from bout_runners.metadata.metadata_updater import MetadataUpdater
+from pandas import DataFrame
 
 
 class StatusChecker:
@@ -53,7 +57,7 @@ class StatusChecker:
     >>> status_checker.check_and_update_until_complete()
     """
 
-    def __init__(self, db_connector, project_path):
+    def __init__(self, db_connector: DatabaseConnector, project_path: Path) -> None:
         """
         Set connector, reader and a project path.
 
@@ -75,8 +79,15 @@ class StatusChecker:
         self.__db_reader = DatabaseReader(self.__db_connector)
         self.project_path = project_path
 
-    def check_and_update_status(self):
-        """Check and update the status for the schema."""
+    def check_and_update_status(self) -> None:
+        """
+        Check and update the status for the schema.
+
+        Raises
+        ------
+        RuntimeError
+            If the schema does not exist
+        """
         # Check that run table exist
         if not self.__db_reader.check_tables_created():
             logging.error(
@@ -102,7 +113,7 @@ class StatusChecker:
         running_to_check = self.__db_reader.query(query)
         self.__check_running(metadata_updater, running_to_check)
 
-    def check_and_update_until_complete(self, seconds_between_update=5):
+    def check_and_update_until_complete(self, seconds_between_update: int = 5) -> None:
         """
         Check and update the status until all runs are stopped.
 
@@ -121,7 +132,9 @@ class StatusChecker:
             self.check_and_update_status()
             time.sleep(seconds_between_update)
 
-    def __check_submitted(self, metadata_updater, submitted_to_check):
+    def __check_submitted(
+        self, metadata_updater: MetadataUpdater, submitted_to_check: DataFrame
+    ) -> None:
         """
         Check the status of all runs which has status `submitted`.
 
@@ -142,6 +155,8 @@ class StatusChecker:
                 log_reader = LogReader(log_path)
                 if log_reader.started():
                     start_time = log_reader.start_time
+                    # Assert to prevent "Incompatible types in assignment" with Optional
+                    assert start_time is not None
                     metadata_updater.update_start_time(start_time)
                     latest_status = self.__check_if_stopped(
                         log_reader, metadata_updater
@@ -159,7 +174,9 @@ class StatusChecker:
 
             metadata_updater.update_latest_status(latest_status)
 
-    def __check_running(self, metadata_updater, running_to_check):
+    def __check_running(
+        self, metadata_updater: MetadataUpdater, running_to_check: DataFrame
+    ) -> None:
         """
         Check the status of all runs which has status `running`.
 
@@ -178,7 +195,9 @@ class StatusChecker:
             latest_status = self.check_if_running_or_errored(log_reader)
             metadata_updater.update_latest_status(latest_status)
 
-    def __check_if_stopped(self, log_reader, metadata_updater):
+    def __check_if_stopped(
+        self, log_reader: LogReader, metadata_updater: MetadataUpdater
+    ) -> str:
         """
         Check if a run has stopped.
 
@@ -191,11 +210,13 @@ class StatusChecker:
 
         Returns
         -------
-        latest_status : 'complete' or 'running' or 'error'
+        latest_status : str
             The latest status
         """
         if log_reader.ended():
             end_time = log_reader.end_time
+            # Assert to prevent "Incompatible types in assignment" with Optional
+            assert end_time is not None
             metadata_updater.update_stop_time(end_time)
             latest_status = "complete"
         else:
@@ -203,7 +224,7 @@ class StatusChecker:
         return latest_status
 
     @staticmethod
-    def check_if_running_or_errored(log_reader):
+    def check_if_running_or_errored(log_reader: LogReader) -> str:
         """
         Check if a run is still running or has errored.
 
@@ -214,7 +235,7 @@ class StatusChecker:
 
         Returns
         -------
-        latest_status : 'running' or 'error' or 'submitted'
+        latest_status : str
             The latest status
         """
         pid = log_reader.pid

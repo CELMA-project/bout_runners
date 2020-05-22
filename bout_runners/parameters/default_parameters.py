@@ -1,14 +1,16 @@
 """Contains the class dealing with the default parameters."""
 
 
-import re
 import ast
-import logging
 import configparser
+import logging
+import re
 from pathlib import Path
+from typing import Dict, Optional, Union
+
 from bout_runners.executor.bout_paths import BoutPaths
-from bout_runners.parameters.run_parameters import RunParameters
 from bout_runners.executor.executor import Executor
+from bout_runners.parameters.run_parameters import RunParameters
 from bout_runners.submitter.local_submitter import LocalSubmitter
 
 
@@ -64,7 +66,11 @@ class DefaultParameters:
     {'global': {'append': False, 'async_send': False, ...}}
     """
 
-    def __init__(self, bout_paths=None, settings_path=None):
+    def __init__(
+        self,
+        bout_paths: Optional[BoutPaths] = None,
+        settings_path: Optional[Path] = None,
+    ) -> None:
         """
         Set the member data.
 
@@ -99,7 +105,7 @@ class DefaultParameters:
             )
             self.run_parameters_run(self.__bout_paths)
 
-    def run_parameters_run(self, bout_paths):
+    def run_parameters_run(self, bout_paths: Optional[BoutPaths]) -> None:
         """
         Execute a run to obtain the default parameters.
 
@@ -114,7 +120,8 @@ class DefaultParameters:
         if bout_paths is None:
             bout_paths = BoutPaths(bout_inp_dst_dir="settings_run")
         else:
-            bout_paths.bout_inp_dst_dir = "settings_run"
+            # NOTE: type: ignore due to https://github.com/python/mypy/issues/3004
+            bout_paths.bout_inp_dst_dir = "settings_run"  # type: ignore
 
         executor = self.get_test_executor(bout_paths)
 
@@ -123,7 +130,7 @@ class DefaultParameters:
         self.__settings_path = bout_paths.bout_inp_dst_dir.joinpath("BOUT.settings")
 
     @staticmethod
-    def get_test_executor(bout_paths):
+    def get_test_executor(bout_paths: BoutPaths) -> Executor:
         """
         Return the executor used for test (i.e. where nout=0).
 
@@ -145,7 +152,9 @@ class DefaultParameters:
         )
         return executor
 
-    def get_default_parameters(self):
+    def get_default_parameters(
+        self,
+    ) -> Dict[str, Dict[str, Union[str, int, float, bool]]]:
         """
         Return the default parameters from the settings file.
 
@@ -177,7 +186,7 @@ class DefaultParameters:
         config = configparser.ConfigParser()
         config.read_string(settings_memory)
 
-        default_parameters_dict = dict()
+        default_parameters_dict: Dict[str, Dict[str, Union[str, int, float]]] = dict()
 
         for section in config.sections():
             default_parameters_dict[section] = dict()

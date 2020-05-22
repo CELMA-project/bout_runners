@@ -2,11 +2,16 @@
 
 
 from datetime import datetime
-from bout_runners.make.make import Make
-from bout_runners.database.database_writer import DatabaseWriter
+from typing import Dict, Mapping, Optional, Union
+
+from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_reader import DatabaseReader
-from bout_runners.database.database_utils import get_file_modification
-from bout_runners.database.database_utils import get_system_info
+from bout_runners.database.database_utils import get_file_modification, get_system_info
+from bout_runners.database.database_writer import DatabaseWriter
+from bout_runners.executor.bout_paths import BoutPaths
+from bout_runners.make.make import Make
+from bout_runners.parameters.final_parameters import FinalParameters
+from bout_runners.submitter.processor_split import ProcessorSplit
 
 
 class MetadataRecorder:
@@ -74,7 +79,12 @@ class MetadataRecorder:
     None
     """
 
-    def __init__(self, db_connector, bout_paths, final_parameters):
+    def __init__(
+        self,
+        db_connector: DatabaseConnector,
+        bout_paths: BoutPaths,
+        final_parameters: FinalParameters,
+    ) -> None:
         """
         Set the database to use.
 
@@ -94,7 +104,7 @@ class MetadataRecorder:
         self.__make = Make(self.__bout_paths.project_path)
 
     @property
-    def db_reader(self):
+    def db_reader(self) -> DatabaseReader:
         """
         Set the properties of self.db_reader.
 
@@ -125,7 +135,9 @@ class MetadataRecorder:
         """
         return self.__db_writer
 
-    def capture_new_data_from_run(self, processor_split, force=False):
+    def capture_new_data_from_run(
+        self, processor_split: ProcessorSplit, force: bool = False
+    ) -> Optional[int]:
         """
         Capture new data from a run.
 
@@ -151,7 +163,9 @@ class MetadataRecorder:
             executed, this will return None, else the run_id is returned
         """
         # Initiate the run_dict (will be filled with the ids)
-        run_dict = {"name": self.__bout_paths.bout_inp_dst_dir.name}
+        run_dict: Dict[str, Union[str, int, float, None]] = {
+            "name": self.__bout_paths.bout_inp_dst_dir.name
+        }
 
         # Update the parameters
         parameters_dict = self.__final_parameters.get_final_parameters()
@@ -201,7 +215,9 @@ class MetadataRecorder:
 
         return run_id
 
-    def create_entry(self, table_name, entries_dict):
+    def create_entry(
+        self, table_name: str, entries_dict: Mapping[str, Union[int, str, float, None]]
+    ) -> int:
         """
         Create a database entry and return the entry id.
 
@@ -216,12 +232,21 @@ class MetadataRecorder:
         -------
         entry_id : int
             The id of the newly created entry
+
+        Raises
+        ------
+        RuntimeError
+            If the newly created id could not be fetched
         """
         self.__db_writer.create_entry(table_name, entries_dict)
         entry_id = self.__db_reader.get_entry_id(table_name, entries_dict)
+        if entry_id is None:
+            raise RuntimeError("Could not fetch the newly created id")
         return entry_id
 
-    def _create_parameter_tables_entry(self, parameters_dict):
+    def _create_parameter_tables_entry(
+        self, parameters_dict: Dict[str, Dict[str, Union[int, str, float]]]
+    ) -> int:
         """
         Insert the parameters into a the parameter tables.
 

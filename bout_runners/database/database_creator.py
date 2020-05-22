@@ -1,8 +1,11 @@
 """Module containing the DatabaseCreator class."""
 
 
-import re
 import logging
+import re
+from typing import Dict, Optional, Tuple
+
+from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_utils import get_system_info_as_sql_type
 
 
@@ -72,7 +75,7 @@ class DatabaseCreator:
     ...     final_parameters_as_sql_types)
     """
 
-    def __init__(self, db_connector):
+    def __init__(self, db_connector: DatabaseConnector) -> None:
         """
         Set the database to use.
 
@@ -83,7 +86,9 @@ class DatabaseCreator:
         """
         self.db_connector = db_connector
 
-    def create_all_schema_tables(self, parameters_as_sql_types):
+    def create_all_schema_tables(
+        self, parameters_as_sql_types: Dict[str, Dict[str, str]]
+    ) -> None:
         """
         Create the all the tables for a schema.
 
@@ -114,8 +119,11 @@ class DatabaseCreator:
 
     @staticmethod
     def get_create_table_statement(
-        table_name, columns=None, primary_key="id", foreign_keys=None
-    ):
+        table_name: str,
+        columns: Optional[Dict[str, str]] = None,
+        primary_key: str = "id",
+        foreign_keys: Optional[Dict[str, Tuple[str, str]]] = None,
+    ) -> str:
         """
         Return a SQL string which can be used to create the table.
 
@@ -178,7 +186,7 @@ class DatabaseCreator:
 
         return create_statement
 
-    def _create_single_table(self, table_str):
+    def _create_single_table(self, table_str: str) -> None:
         """
         Create a table in the database.
 
@@ -186,16 +194,26 @@ class DatabaseCreator:
         ----------
         table_str : str
             The query to execute
+
+        Raises
+        ------
+        ValueError
+            If the table_str is not understood
         """
         # Obtain the table name
         pattern = r"CREATE TABLE (\w*)"
-        table_name = re.match(pattern, table_str).group(1)
+
+        match = re.match(pattern, table_str)
+        if match is None:
+            raise ValueError(f'table_str "{table_str}" not understood')
+
+        table_name = match.group(1)
 
         self.db_connector.execute_statement(table_str)
 
         logging.info("Created table %s", table_name)
 
-    def _create_system_info_table(self):
+    def _create_system_info_table(self) -> None:
         """Create a table for the system info."""
         sys_info_dict = get_system_info_as_sql_type()
         sys_info_statement = self.get_create_table_statement(
@@ -203,7 +221,7 @@ class DatabaseCreator:
         )
         self._create_single_table(sys_info_statement)
 
-    def _create_split_table(self):
+    def _create_split_table(self) -> None:
         """Create a table which stores the grid split."""
         split_statement = self.get_create_table_statement(
             table_name="split",
@@ -215,7 +233,7 @@ class DatabaseCreator:
         )
         self._create_single_table(split_statement)
 
-    def _create_file_modification_table(self):
+    def _create_file_modification_table(self) -> None:
         """Create a table for file modifications."""
         file_modification_statement = self.get_create_table_statement(
             table_name="file_modification",
@@ -229,7 +247,9 @@ class DatabaseCreator:
         )
         self._create_single_table(file_modification_statement)
 
-    def _create_parameter_tables(self, parameters_as_sql_types):
+    def _create_parameter_tables(
+        self, parameters_as_sql_types: Dict[str, Dict[str, str]]
+    ) -> None:
         """
         Create a table for each BOUT.settings section and a join table.
 
@@ -267,7 +287,7 @@ class DatabaseCreator:
         )
         self._create_single_table(parameters_statement)
 
-    def _create_run_table(self):
+    def _create_run_table(self) -> None:
         """Create a table for the metadata of a run."""
         run_statement = self.get_create_table_statement(
             table_name="run",

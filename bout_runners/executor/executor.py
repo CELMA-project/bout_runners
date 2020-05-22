@@ -1,10 +1,12 @@
 """Contains the executor class."""
 
 
+from typing import Optional
+
+from bout_runners.executor.bout_paths import BoutPaths
 from bout_runners.make.make import Make
 from bout_runners.parameters.run_parameters import RunParameters
 from bout_runners.submitter.local_submitter import LocalSubmitter
-from bout_runners.executor.bout_paths import BoutPaths
 
 
 class Executor:
@@ -72,7 +74,12 @@ class Executor:
     >>> executor.execute()
     """
 
-    def __init__(self, bout_paths=None, submitter=None, run_parameters=None):
+    def __init__(
+        self,
+        bout_paths: Optional[BoutPaths] = None,
+        submitter: Optional[LocalSubmitter] = None,
+        run_parameters: Optional[RunParameters] = None,
+    ) -> None:
         """
         Set the input parameters.
 
@@ -99,7 +106,7 @@ class Executor:
         self.__command = self.get_execute_command()
 
     @property
-    def bout_paths(self):
+    def bout_paths(self) -> BoutPaths:
         """
         Set the properties of self.bout_paths.
 
@@ -130,7 +137,7 @@ class Executor:
         """
         return self.__run_parameters
 
-    def get_execute_command(self):
+    def get_execute_command(self) -> str:
         """
         Return the execute command string.
 
@@ -151,7 +158,7 @@ class Executor:
         )
         return command
 
-    def execute(self):
+    def execute(self) -> None:
         """Execute a BOUT++ run."""
         # Make the project if not already made
         self.__make.run_make()

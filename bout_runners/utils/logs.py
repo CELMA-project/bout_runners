@@ -3,12 +3,17 @@
 
 import logging
 import logging.config
+from typing import Any, Dict, Optional
+
 import yaml
-from bout_runners.utils.paths import get_logger_config_path
-from bout_runners.utils.paths import get_log_file_path
+from bout_runners.utils.paths import get_log_file_path, get_logger_config_path
 
 
-def get_log_config():
+# NOTE: Looks like mypy has trouble with recursive objects, thus this using Any looks
+#       like a good solution for now
+#       See also
+#       https://github.com/python/typing/issues/182
+def get_log_config() -> Dict[str, Any]:
     """
     Get the logging configuration.
 
@@ -20,11 +25,11 @@ def get_log_config():
     log_config_path = get_logger_config_path()
 
     with log_config_path.open("r") as config_file:
-        config = yaml.safe_load(config_file.read())
+        config: Dict[str, Any] = yaml.safe_load(config_file.read())
     return config
 
 
-def set_up_logger(config=None):
+def set_up_logger(config: Optional[Dict[str, Any]] = None) -> None:
     """
     Set up the logger.
 

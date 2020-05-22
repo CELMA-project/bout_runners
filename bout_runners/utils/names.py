@@ -1,11 +1,15 @@
 """Module containing functions to extract names."""
 
 from pathlib import Path
-from bout_runners.make.read_makefile import BoutMakefileVariableReader
-from bout_runners.make.read_makefile import MakefileReaderError
+from typing import Optional
+
+from bout_runners.make.read_makefile import (
+    BoutMakefileVariableReader,
+    MakefileReaderError,
+)
 
 
-def get_exec_name(makefile_path):
+def get_exec_name(makefile_path: Path) -> str:
     """
     Return the name of the project executable.
 
@@ -24,13 +28,9 @@ def get_exec_name(makefile_path):
         Name of the executable
     """
     try:
-        exec_name = BoutMakefileVariableReader(
-            makefile_path, "TARGET"
-        ).get_variable_value()
+        exec_name = BoutMakefileVariableReader(makefile_path, "TARGET").value
     except MakefileReaderError:
-        exec_name = BoutMakefileVariableReader(
-            makefile_path, "SOURCEC"
-        ).get_variable_value()
+        exec_name = BoutMakefileVariableReader(makefile_path, "SOURCEC").value
         # Strip the name from the last .c*
         split_by = ".c"
         split_list = exec_name.split(split_by)
@@ -40,7 +40,7 @@ def get_exec_name(makefile_path):
     return exec_name
 
 
-def get_makefile_path(makefile_root_path, makefile_name):
+def get_makefile_path(makefile_root_path: Path, makefile_name: Optional[str]) -> Path:
     """
     Return the makefile path.
 
@@ -64,7 +64,7 @@ def get_makefile_path(makefile_root_path, makefile_name):
     return makefile_path
 
 
-def get_makefile_name(makefile_root_path):
+def get_makefile_name(makefile_root_path: Path) -> str:
     """
     Search for a valid Makefile.
 
@@ -72,7 +72,8 @@ def get_makefile_name(makefile_root_path):
 
     Parameters
     ----------
-    makefile_root_path
+    makefile_root_path : Path
+        Path to the root directory of the Makefile
 
     Returns
     -------

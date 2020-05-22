@@ -1,18 +1,22 @@
 """Contains unittests for the metadata_recorder."""
 
 
+from pathlib import Path
+from typing import Callable
+
 from bout_runners.metadata.metadata_recorder import MetadataRecorder
+from bout_runners.parameters.default_parameters import DefaultParameters
 from bout_runners.parameters.final_parameters import FinalParameters
 from bout_runners.submitter.processor_split import ProcessorSplit
 
 
 def test_metadata_recorder(
-    yield_bout_path_conduction,
-    get_default_parameters,
-    make_project,
-    make_test_schema,
-    yield_number_of_rows_for_all_tables,
-):
+    yield_bout_path_conduction: Callable,
+    get_default_parameters: DefaultParameters,
+    make_project: Path,
+    make_test_schema: Callable,
+    yield_number_of_rows_for_all_tables: Callable,
+) -> None:
     """
     Test the metadata recorder.
 

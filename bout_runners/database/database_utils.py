@@ -4,12 +4,15 @@
 import logging
 import platform
 import subprocess
+from pathlib import Path
+from typing import Dict
+
+from bout_runners.submitter.local_submitter import LocalSubmitter
 from bout_runners.utils.file_operations import get_modified_time
 from bout_runners.utils.paths import get_bout_directory
-from bout_runners.submitter.local_submitter import LocalSubmitter
 
 
-def get_system_info_as_sql_type():
+def get_system_info_as_sql_type() -> Dict[str, str]:
     """
     Return the SQL types of the system information.
 
@@ -26,7 +29,9 @@ def get_system_info_as_sql_type():
     return sys_info_dict
 
 
-def get_file_modification(project_path, makefile_path, exec_name):
+def get_file_modification(
+    project_path: Path, makefile_path: Path, exec_name: str
+) -> Dict[str, str]:
     """
     Return the file modification info.
 
@@ -68,7 +73,7 @@ def get_file_modification(project_path, makefile_path, exec_name):
     return file_modification
 
 
-def get_git_sha(path):
+def get_git_sha(path: Path) -> str:
     """
     Return the git hash.
 
@@ -84,7 +89,7 @@ def get_git_sha(path):
     """
     try:
         result = LocalSubmitter(path).submit_command("git rev-parse HEAD")
-        git_sha = result.stdout.decode("utf8").strip()
+        git_sha: str = result.stdout.decode("utf8").strip()
     # FileNotFoundError when `git` is not found
     except (FileNotFoundError, subprocess.CalledProcessError) as error:
         if isinstance(error, FileNotFoundError):
@@ -98,7 +103,7 @@ def get_git_sha(path):
     return git_sha
 
 
-def get_system_info():
+def get_system_info() -> Dict[str, str]:
     """
     Return the system information.
 

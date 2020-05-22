@@ -40,8 +40,11 @@ class ProcessorSplit:
     """
 
     def __init__(
-        self, number_of_processors=1, number_of_nodes=1, processors_per_node=1
-    ):
+        self,
+        number_of_processors: int = 1,
+        number_of_nodes: int = 1,
+        processors_per_node: int = 1,
+    ) -> None:
         """
         Set the parameters.
 
@@ -56,9 +59,9 @@ class ProcessorSplit:
             (only effective on clusters)
         """
         # Declare variables to be used in the getters and setters
-        self.__number_of_processors = None
-        self.__number_of_nodes = None
-        self.__processors_per_node = None
+        self.__number_of_processors = number_of_processors
+        self.__number_of_nodes = number_of_nodes
+        self.__processors_per_node = processors_per_node
 
         # Set the number of processors
         self.number_of_processors = number_of_processors
@@ -70,24 +73,19 @@ class ProcessorSplit:
         self.processors_per_node = processors_per_node
 
     @property
-    def number_of_processors(self):
+    def number_of_processors(self) -> int:
         """
         Set the properties of self.number_of_processors.
 
-        Parameters
-        ----------
-        number_of_processors : int
-            The number of processors
-
         Returns
         -------
-        self.__number_of_processors : int
+        int
             The number of processors
         """
         return self.__number_of_processors
 
     @number_of_processors.setter
-    def number_of_processors(self, number_of_processors):
+    def number_of_processors(self, number_of_processors: int):
         self.__number_of_processors = number_of_processors
         if self.number_of_nodes is not None and self.processors_per_node is not None:
             self.__enough_nodes_check()
@@ -95,24 +93,19 @@ class ProcessorSplit:
         logging.debug("number_of_processors set to %s", number_of_processors)
 
     @property
-    def number_of_nodes(self):
+    def number_of_nodes(self) -> int:
         """
         Set the properties of self.number_of_nodes.
 
-        Parameters
-        ----------
-        number_of_nodes : int
-            The number of processors
-
         Returns
         -------
-        self.__number_of_nodes : int
+        int
             The number of nodes
         """
         return self.__number_of_nodes
 
     @number_of_nodes.setter
-    def number_of_nodes(self, number_of_nodes):
+    def number_of_nodes(self, number_of_nodes: int):
         self.__number_of_nodes = number_of_nodes
         if (
             self.number_of_processors is not None
@@ -122,31 +115,34 @@ class ProcessorSplit:
         logging.debug("number_of_nodes set to %s", number_of_nodes)
 
     @property
-    def processors_per_node(self):
+    def processors_per_node(self) -> int:
         """
         Set the properties of self.processors_per_node.
 
-        Parameters
-        ----------
-        processors_per_node : int
-            The number of processors
-
         Returns
         -------
-        self.__processors_per_node : int
+        int
             The number of nodes
         """
         return self.__processors_per_node
 
     @processors_per_node.setter
-    def processors_per_node(self, processors_per_node):
+    def processors_per_node(self, processors_per_node: int):
         self.__processors_per_node = processors_per_node
         if self.number_of_processors is not None and self.number_of_nodes is not None:
             self.__enough_nodes_check()
         logging.debug("processors_per_node set to %s", processors_per_node)
 
-    def __enough_nodes_check(self):
-        """Check that enough nodes are allocated."""
+    def __enough_nodes_check(self) -> None:
+        """
+        Check that enough nodes are allocated.
+
+        Raises
+        ------
+        ValueError
+            If
+            self.number_of_nodes * self.processors_per_node < self.number_of_processors
+        """
         product = self.number_of_nodes * self.processors_per_node
         if product < self.number_of_processors:
             msg = (

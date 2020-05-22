@@ -3,17 +3,20 @@
 
 import logging
 from pathlib import Path
+from typing import Optional
+
 import yaml
-from bout_runners.utils.paths import get_bout_runners_configuration
-from bout_runners.utils.paths import get_bout_runners_config_path
-from bout_runners.utils.paths import get_bout_directory
-from bout_runners.utils.paths import get_log_file_directory
-from bout_runners.utils.paths import get_bout_log_config_path
-from bout_runners.utils.logs import get_log_config
-from bout_runners.utils.logs import set_up_logger
+from bout_runners.utils.logs import get_log_config, set_up_logger
+from bout_runners.utils.paths import (
+    get_bout_directory,
+    get_bout_log_config_path,
+    get_bout_runners_config_path,
+    get_bout_runners_configuration,
+    get_log_file_directory,
+)
 
 
-def set_log_level(level=None):
+def set_log_level(level: Optional[str] = None) -> None:
     """
     Set the log level.
 
@@ -22,6 +25,11 @@ def set_log_level(level=None):
     level : None or str
         The logging level to use
         If None the caller will be prompted
+
+    Raises
+    ------
+    ValueError
+        If the level is not one of the possibilities
     """
     config = get_log_config()
 
@@ -39,19 +47,19 @@ def set_log_level(level=None):
         for key, val in possibilities_map.items():
             question += f'{" "*3}({key}) - {val}\n'
         # Set an answer to start the wile loop
-        answer = -1
+        answer_int = -1
         possibilities_keys = possibilities_map.keys()
-        while answer not in possibilities_keys:
-            answer = input(question)
-            if answer is not None:
-                answer = int(answer)
-            if answer is None:
+        while answer_int not in possibilities_keys:
+            answer_input = input(question)
+            if answer_input is not None:
+                answer_int = int(answer_input)
+            if answer_input is None:
                 # Reverse the dict
-                answer = list(possibilities_map.keys())[
+                answer_int = list(possibilities_map.keys())[
                     list(possibilities_map.values()).index(current_level)
                 ]
                 break
-        level = possibilities_map[answer]
+        level = possibilities_map[answer_int]
 
     if level not in possibilities:
         msg = f"`level` in `set_log_level` must be one of " f"{possibilities}"
@@ -68,7 +76,7 @@ def set_log_level(level=None):
     logging.info("Logging level set to %s", level)
 
 
-def set_log_file_directory(log_dir=None):
+def set_log_file_directory(log_dir: Optional[Path] = None) -> None:
     """
     Set the directory of the log files.
 
@@ -101,7 +109,7 @@ def set_log_file_directory(log_dir=None):
     logging.info("Logging directory set to %s", config["log"]["directory"])
 
 
-def set_bout_directory(bout_dir=None):
+def set_bout_directory(bout_dir: Optional[Path] = None) -> None:
     """
     Set the path to the BOUT++ directory.
 
@@ -110,6 +118,11 @@ def set_bout_directory(bout_dir=None):
     bout_dir : None or Path
         The path to the BOUT++ directory
         If None, the caller will be prompted
+
+    Raises
+    ------
+    ValueError
+        If BOUT++ not found in the directory
     """
     config = get_bout_runners_configuration()
     if bout_dir is None:

@@ -1,10 +1,15 @@
 """Contains unittests for default parameters."""
 
 
+from pathlib import Path
+from typing import Callable
+
 from bout_runners.parameters.default_parameters import DefaultParameters
 
 
-def test_default_parameters(get_test_data_path, yield_bout_path_conduction):
+def test_default_parameters(
+    get_test_data_path: Path, yield_bout_path_conduction: Callable
+) -> None:
     """
     Test the DefaultParameter.
 
