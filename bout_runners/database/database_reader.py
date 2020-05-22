@@ -6,7 +6,7 @@ from typing import Mapping, Optional, Union
 import pandas as pd
 from bout_runners.database.database_connector import DatabaseConnector
 from numpy import int64
-from pandas.core.frame import DataFrame
+from pandas import DataFrame
 
 
 class DatabaseReader:
@@ -111,7 +111,7 @@ class DatabaseReader:
         ----------
         query_str : str
             The query to execute
-        **kwargs
+        kwargs : dict
             Additional keyword parameters to pd.read_sql_query
 
         Returns

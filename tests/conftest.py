@@ -21,13 +21,13 @@ from bout_runners.metadata.metadata_updater import MetadataUpdater
 from bout_runners.parameters.default_parameters import DefaultParameters
 from bout_runners.parameters.final_parameters import FinalParameters
 from bout_runners.utils.paths import get_bout_directory, get_config_path
-from pandas.core.frame import DataFrame
+from pandas import DataFrame
 
 
 @pytest.fixture(scope="session", name="yield_bout_path")
 def fixture_yield_bout_path() -> Iterator[Path]:
     """
-    Load the dot-env file and yield the bout_path.
+    Yield the BOUT++ path.
 
     Yields
     ------
@@ -43,6 +43,11 @@ def fixture_yield_bout_path() -> Iterator[Path]:
 def fixture_yield_conduction_path(yield_bout_path: Path) -> Iterator[Path]:
     """
     Yield the conduction path.
+
+    Parameters
+    ----------
+    yield_bout_path : Path
+        Path to BOUT++
 
     Yields
     ------
@@ -168,6 +173,11 @@ def fixture_get_tmp_db_dir() -> Iterator[Path]:
 def fixture_make_test_database(get_tmp_db_dir: Path) -> Callable:
     """
     Return the wrapped function for the database connection.
+
+    Parameters
+    ----------
+    get_tmp_db_dir: Path
+        The directory for the temporary databases
 
     Returns
     -------
@@ -370,6 +380,11 @@ def copy_bout_inp() -> Iterator[Callable]:
 def yield_bout_path_conduction(yield_conduction_path: Path) -> Iterator[Callable]:
     """
     Make the bout_path object and clean up after use.
+
+    Parameters
+    ----------
+    yield_conduction_path : Path
+        The path to the conduction example
 
     Yields
     ------
@@ -697,8 +712,8 @@ def fixture_copy_log_file(get_test_data_path: Path) -> Iterator[Callable]:
     get_test_data_path : Path
         Path to test files
 
-    Returns
-    -------
+    Yields
+    ------
     _copy_log_file : function
         Function which copy log files to a temporary directory
     """
@@ -715,11 +730,6 @@ def fixture_copy_log_file(get_test_data_path: Path) -> Iterator[Callable]:
             Path to log file to copy
         destination_dir_name : str
             Name of directory to copy relative to the test data dir
-
-        Returns
-        -------
-        db_connector : DatabaseConnector
-            DatabaseConnector to the copy of the test database
         """
         destination_dir = get_test_data_path.joinpath(destination_dir_name)
         destination_dir.mkdir(exist_ok=True)
@@ -742,6 +752,11 @@ def mock_pid_exists(monkeypatch: MonkeyPatch) -> Callable:
     ----------
     monkeypatch : MonkeyPatch
         MonkeyPatch from pytest
+
+    Returns
+    -------
+    mock_wrapper : function
+        Function which returns a monkeypatch for psutil.pid_exists
     """
 
     def mock_wrapper(test_case):
@@ -796,8 +811,12 @@ def copy_test_case_log_file(
     get_test_data_path : Path
         Path to test data
     yield_logs : dict
-        Dict containing paths to logs (these will be copied by
-        copy_log_file)
+        Dict containing paths to logs (these will be copied by copy_log_file)
+
+    Returns
+    -------
+    _copy_test_case_log_file : function
+        Function which copy the test case log files
     """
 
     def _copy_test_case_log_file(test_case):

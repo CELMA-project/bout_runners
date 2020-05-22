@@ -80,7 +80,14 @@ class StatusChecker:
         self.project_path = project_path
 
     def check_and_update_status(self) -> None:
-        """Check and update the status for the schema."""
+        """
+        Check and update the status for the schema.
+
+        Raises
+        ------
+        RuntimeError
+            If the schema does not exist
+        """
         # Check that run table exist
         if not self.__db_reader.check_tables_created():
             logging.error(
@@ -203,7 +210,7 @@ class StatusChecker:
 
         Returns
         -------
-        latest_status : 'complete' or 'running' or 'error'
+        latest_status : str
             The latest status
         """
         if log_reader.ended():
@@ -228,7 +235,7 @@ class StatusChecker:
 
         Returns
         -------
-        latest_status : 'running' or 'error' or 'submitted'
+        latest_status : str
             The latest status
         """
         pid = log_reader.pid

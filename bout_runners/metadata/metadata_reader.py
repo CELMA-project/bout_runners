@@ -30,12 +30,12 @@ def drop_ids(func: Callable) -> Callable:
 
         Parameters
         ----------
-        self
+        self : object
             Self reference to the instance the function is belonging to
             Must contain self.drop_id
-        *args
+        args : tuple
             Arguments belonging to the input function
-        **kwargs
+        kwargs : dict
             Keyword arguments to the input function
 
         Returns
@@ -180,7 +180,7 @@ class MetadataReader:
         ----------
         db_connector : DatabaseConnector
             The connection to the database
-        drop_id : None or 'parameters' or 'all'
+        drop_id : None or str
             Specifies what id columns should be dropped when
             obtaining the metadata
             - None : No columns will be dropped
@@ -337,15 +337,15 @@ class MetadataReader:
             The statement after the `FROM` keyword in the query
             I.e.
             >>> f'SELECT * FROM {from_statement}'
-        columns : array-like
+        columns : array_like
             The columns to select from the tables
             I.e.
             >>> f'SELECT {columns} FROM *'
-        alias_columns : array-like
+        alias_columns : array_like
             The name of the columns in the resulting table
             I.e.
             >>> f'SELECT {columns[0]} AS {alias_columns[0]} FROM *'
-        table_connections : dict of str, tuple of str
+        table_connections : dict
             A dict where the keys are the table names, and the values
             are tuples containing table names connected to the key table
             as described in the note above
@@ -446,11 +446,11 @@ class MetadataReader:
         ids: List[str] = list()
 
         for table, columns in self.table_column_dict.items():
-            for el in columns:
-                if "_id" in el:
-                    match = pattern.match(el)
-                    if match is None:
-                        raise RuntimeError(f'Pattern {pattern} could not match "_id"')
+            for column in columns:
+                if "_id" in column:
+                    match = pattern.match(column)
+                    # Assert to prevent "Incompatible types in assignment" with Optional
+                    assert match is not None
                     ids.append(match[1])
             if len(ids) > 0:
                 table_connection_dict[table] = tuple(ids)

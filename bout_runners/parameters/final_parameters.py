@@ -108,7 +108,7 @@ class FinalParameters:
 
         Returns
         -------
-        final_parameters_dict : dict of str, dict of str or int or float or bool
+        final_parameters_dict : dict
             Parameters on the form
             >>> {'global':{'append': 'False', 'nout': 5},
             ...  'mesh':  {'nx': 4},

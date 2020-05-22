@@ -25,6 +25,11 @@ def get_submitter(name: str, *args, **kwargs) -> LocalSubmitter:
     -------
     submitter : AbstractSubmitter
         The implemented submitter class
+
+    Raises
+    ------
+    NotImplementedError
+        If the name is not a supported submitter class
     """
     implemented = ("local",)
 

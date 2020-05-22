@@ -182,6 +182,11 @@ class LogReader:
         -------
         time : datetime
             The locale datetime
+
+        Raises
+        ------
+        ValueError
+            If no matches for pattern is found in self.file_str
         """
         # Using search as match will only search the beginning of the
         # string

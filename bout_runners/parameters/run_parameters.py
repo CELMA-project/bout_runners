@@ -44,7 +44,7 @@ class RunParameters:
 
         Parameters
         ----------
-        run_parameters_dict : None or dict of str, dict of int or bool or str
+        run_parameters_dict : None or dict
             Options on the form
             >>> {'global': {'append': False, 'nout': 5},
             ...  'mesh':  {'nx': 4},
@@ -57,7 +57,7 @@ class RunParameters:
         """
         # Declare variables to be used in the getters and setters
         self.__run_parameters_dict = None
-        self.__run_parameters_str = None
+        self.__run_parameters_str: Optional[str] = None
 
         # Set the parameters dict (and create the parameters string)
         self.run_parameters_dict = run_parameters_dict
@@ -70,14 +70,10 @@ class RunParameters:
         Set the properties of self.run_parameters_dict.
 
         The setter will also create the self.__run_parameters_str
-
-        Parameters
-        ----------
-        run_parameters_dict : None or dict of str, dict of int or float or bool or str
-            Options on the form
-            >>> {'global': {'append': False, 'nout': 5},
-            ...  'mesh':  {'nx': 4},
-            ...  'section_in_BOUT_inp': {'some_variable': 'some_value'}}
+        The run_parameters_dict should be set on the form
+        >>> {'global': {'append': False, 'nout': 5},
+        ...  'mesh':  {'nx': 4},
+        ...  'section_in_BOUT_inp': {'some_variable': 'some_value'}}
 
         Returns
         -------
@@ -87,11 +83,19 @@ class RunParameters:
         return self.__run_parameters_dict
 
     @run_parameters_dict.setter
-    def run_parameters_dict(self, run_parameters_dict):
+    def run_parameters_dict(
+        self,
+        run_parameters_dict: Optional[
+            Dict[str, Dict[str, Union[int, float, bool, str]]]
+        ],
+    ) -> None:
         # Set the run parameters
         self.__run_parameters_dict = (
             run_parameters_dict if run_parameters_dict is not None else dict()
         )
+
+        # Assert to prevent "Incompatible types in assignment" with Optional
+        assert self.run_parameters_dict is not None
 
         # Generate the string
         sections = list(self.run_parameters_dict.keys())
@@ -105,18 +109,18 @@ class RunParameters:
                 self.__run_parameters_str += f"{key}={val} "
 
         for section in sections:
-            for key, val in run_parameters_dict[section].items():
+            for key, val in self.__run_parameters_dict[section].items():
                 self.__run_parameters_str += f"{section}.{key}={val} "
         logging.debug("Parameters set to %s", self.__run_parameters_str)
 
     @property
-    def run_parameters_str(self):
+    def run_parameters_str(self) -> str:
         """
         Set the properties of self.run_parameters_str.
 
         Returns
         -------
-        self.__parameters_str : str
+        str
             The parameters dict serialized as a string
 
         Notes
@@ -124,13 +128,6 @@ class RunParameters:
         As the run_parameters_str must reflect run_parameters_dict,
         both are set when setting run_parameters_dict
         """
+        # Assert to prevent "Incompatible types in assignment" with Optional
+        assert self.__run_parameters_str is not None
         return self.__run_parameters_str
-
-    @run_parameters_str.setter
-    def run_parameters_str(self, _):
-        msg = (
-            f"The run_parameters_str is read only, and is "
-            f"set in run_parameters_dict (currently in use: "
-            f"{self.run_parameters_str})"
-        )
-        raise AttributeError(msg)

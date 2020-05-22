@@ -92,7 +92,7 @@ class DatabaseWriter:
 
         Parameters
         ----------
-        field_names : array-like
+        field_names : array_like
             Names of the fields to populate
         table_name : str
             Name of the table to use for the insertion
@@ -122,7 +122,7 @@ class DatabaseWriter:
 
         Parameters
         ----------
-        field_names : array-like
+        field_names : array_like
             Names of the fields to populate
         table_name : str
             Name of the table to use for the update
@@ -185,6 +185,11 @@ class DatabaseWriter:
             The update statement to execute
         values : tuple
             Values to be inserted in the query
+
+        Raises
+        ------
+        ValueError
+            If update_str is not understood
         """
         # Obtain the table name
         pattern = r"UPDATE (\w*)"
