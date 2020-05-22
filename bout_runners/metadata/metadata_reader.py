@@ -445,9 +445,14 @@ class MetadataReader:
         pattern = re.compile("(.*)_id")
 
         for table, columns in self.table_column_dict.items():
-            ids = tuple(pattern.match(el)[1] for el in columns if "_id" in el)
+            ids: List[str] = list()
+            for column in columns:
+                if "_id" in column:
+                    match = pattern.match(column)
+                    assert match is not None
+                    ids.append(match[1])
             if len(ids) > 0:
-                table_connection_dict[table] = ids
+                table_connection_dict[table] = tuple(ids)
 
         return table_connection_dict
 

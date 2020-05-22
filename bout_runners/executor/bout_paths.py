@@ -101,7 +101,10 @@ class BoutPaths:
         Path
             Absolute path to the root of make file
         """
-        return self.__project_path
+        # NOTE: The setter guarantees that self.__project_path is not None, however
+        #       mypy complains if just self.__project_path is returned
+        #       This may be a side effect of https://github.com/python/mypy/issues/3004
+        return Path(self.__project_path) if self.__project_path is not None else Path()
 
     @project_path.setter
     def project_path(self, project_path: Optional[Union[Path, str]]) -> None:
@@ -134,7 +137,14 @@ class BoutPaths:
         FileNotFoundError
             If no BOUT.inp file is found in the directory
         """
-        return self.__bout_inp_src_dir
+        # NOTE: The setter guarantees that self.__project_path is not None, however
+        #       mypy complains if just self.__project_path is returned
+        #       This may be a side effect of https://github.com/python/mypy/issues/3004
+        return (
+            Path(self.__bout_inp_src_dir)
+            if self.__bout_inp_src_dir is not None
+            else Path()
+        )
 
     @bout_inp_src_dir.setter
     def bout_inp_src_dir(self, bout_inp_src_dir: Optional[Union[Path, str]]) -> None:
@@ -173,7 +183,14 @@ class BoutPaths:
         Path
             Path to the destination directory
         """
-        return self.__bout_inp_dst_dir
+        # NOTE: The setter guarantees that self.__project_path is not None, however
+        #       mypy complains if just self.__project_path is returned
+        #       This may be a side effect of https://github.com/python/mypy/issues/3004
+        return (
+            Path(self.__bout_inp_dst_dir)
+            if self.__bout_inp_dst_dir is not None
+            else Path()
+        )
 
     @bout_inp_dst_dir.setter
     def bout_inp_dst_dir(self, bout_inp_dst_dir: Optional[Union[Path, str]]) -> None:

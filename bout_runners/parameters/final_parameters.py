@@ -163,16 +163,18 @@ class FinalParameters:
             "str": "TEXT",
         }
 
-        parameter_dict_as_sql_types = parameter_dict.copy()
+        parameter_dict_copy = parameter_dict.copy()
+        parameter_dict_as_sql_types: Dict[str, Dict[str, str]] = dict()
 
-        for section in parameter_dict.keys():
-            for key, val in parameter_dict[section].items():
+        for section in parameter_dict_copy.keys():
+            parameter_dict_as_sql_types[section] = dict()
+            for key, val in parameter_dict_copy[section].items():
                 # If type is not found, type is str
                 try:
                     val_type = type(ast.literal_eval(str(val)))
                 except (SyntaxError, ValueError):
                     val_type = str
 
-                parameter_dict[section][key] = type_map[val_type.__name__]
+                parameter_dict_as_sql_types[section][key] = type_map[val_type.__name__]
 
         return parameter_dict_as_sql_types
