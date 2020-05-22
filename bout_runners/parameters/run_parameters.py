@@ -128,6 +128,6 @@ class RunParameters:
         As the run_parameters_str must reflect run_parameters_dict,
         both are set when setting run_parameters_dict
         """
-        # Assert to prevent "Incompatible types in assignment" with Optional
+        # Assert to prevent "Incompatible return type" with Optional
         assert self.__run_parameters_str is not None
         return self.__run_parameters_str

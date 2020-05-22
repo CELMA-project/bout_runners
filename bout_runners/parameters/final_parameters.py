@@ -163,7 +163,7 @@ class FinalParameters:
             "str": "TEXT",
         }
 
-        parameter_dict_as_sql_types: Dict[str, Dict[str, str]] = dict()
+        parameter_dict_as_sql_types = parameter_dict.copy()
 
         for section in parameter_dict.keys():
             for key, val in parameter_dict[section].items():
@@ -173,6 +173,6 @@ class FinalParameters:
                 except (SyntaxError, ValueError):
                     val_type = str
 
-                parameter_dict_as_sql_types[section][key] = type_map[val_type.__name__]
+                parameter_dict[section][key] = type_map[val_type.__name__]
 
         return parameter_dict_as_sql_types

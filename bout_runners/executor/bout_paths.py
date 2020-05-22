@@ -16,11 +16,11 @@ class BoutPaths:
 
     Attributes
     ----------
-    __project_path : Path
+    __project_path : None or Path
         Getter and setter variable for project_path
-    __bout_inp_src_dir : Path
+    __bout_inp_src_dir : None or Path
         Getter and setter variable for bout_inp_src_dir
-    __bout_inp_dst_dir : Path
+    __bout_inp_dst_dir : None or Path
         Getter and setter variable for bout_inp_dst_dir
     project_path : Path
         The root path of the project
@@ -74,6 +74,11 @@ class BoutPaths:
             (relative to self.project_path)
             If None, the current time will be used
         """
+        # Declare variables to be used in the getters and setters
+        self.__project_path: Optional[Path] = None
+        self.__bout_inp_src_dir: Optional[Path] = None
+        self.__bout_inp_dst_dir: Optional[Path] = None
+
         # NOTE: type: ignore due to https://github.com/python/mypy/issues/3004
         # Set the project path
         self.project_path = project_path  # type: ignore

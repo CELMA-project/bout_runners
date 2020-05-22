@@ -2,6 +2,7 @@
 
 
 import logging
+from typing import Optional
 
 
 class ProcessorSplit:
@@ -10,11 +11,11 @@ class ProcessorSplit:
 
     Attributes
     ----------
-    __number_of_processors : int
+    __number_of_processors : None or int
         Getter and setter variable for number_of_processors
-    __number_of_nodes : int
+    __number_of_nodes : None or int
         Getter and setter variable for number_of_nodes
-    __processors_per_node : int
+    __processors_per_node : None or int
         Getter and setter variable for processors_per_node
     number_of_processors : int
         The total number of processors to use
@@ -58,6 +59,11 @@ class ProcessorSplit:
             The number of processors to allocate per node
             (only effective on clusters)
         """
+        # Declare variables to be used in the getters and setters
+        self.__number_of_processors: Optional[int] = None
+        self.__number_of_nodes: Optional[int] = None
+        self.__processors_per_node: Optional[int] = None
+
         # Set the number of processors
         self.number_of_processors = number_of_processors
 

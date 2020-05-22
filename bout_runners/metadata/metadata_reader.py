@@ -443,17 +443,11 @@ class MetadataReader:
         """
         table_connection_dict = dict()
         pattern = re.compile("(.*)_id")
-        ids: List[str] = list()
 
         for table, columns in self.table_column_dict.items():
-            for column in columns:
-                if "_id" in column:
-                    match = pattern.match(column)
-                    # Assert to prevent "Incompatible types in assignment" with Optional
-                    assert match is not None
-                    ids.append(match[1])
+            ids = tuple(pattern.match(el)[1] for el in columns if "_id" in el)
             if len(ids) > 0:
-                table_connection_dict[table] = tuple(ids)
+                table_connection_dict[table] = ids
 
         return table_connection_dict
 

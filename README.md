@@ -4,6 +4,7 @@
 [![pypi package](https://badge.fury.io/py/bout-runners.svg)](https://pypi.org/project/bout-runners/)
 [![Python](https://img.shields.io/badge/python->=3.6-blue.svg)](https://www.python.org/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Checked with mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
 [![License](https://img.shields.io/badge/license-LGPL--3.0-blue.svg)](https://github.com/CELMA-project/bout_runners/blob/master/LICENSE)
 
 # bout_runners
