@@ -18,7 +18,7 @@ coverage:
         target:
           auto # specify the target coverage for each commit status
           #   option: "auto" (must increase from parent commit or pull request base)
-        threshold: 1% # allowed to drop X% and still result in a "success" commit status
+        threshold: 2% # allowed to drop X% and still result in a "success" commit status
 
 parsers:
   gcov:
