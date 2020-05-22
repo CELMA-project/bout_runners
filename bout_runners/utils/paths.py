@@ -1,10 +1,10 @@
 """Contains methods which return common paths."""
 
 
-import time
 import configparser
-from pathlib import Path
+import time
 from configparser import ConfigParser
+from pathlib import Path
 from typing import Optional
 
 

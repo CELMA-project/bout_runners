@@ -1,14 +1,16 @@
 """Module containing the StatusChecker class."""
 
 
-import time
 import logging
+import time
+from pathlib import Path
+
 import psutil
+from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.log.log_reader import LogReader
 from bout_runners.metadata.metadata_updater import MetadataUpdater
-from bout_runners.database.database_connector import DatabaseConnector
-from pathlib import Path
+from pandas import DataFrame
 
 
 class StatusChecker:
@@ -123,7 +125,9 @@ class StatusChecker:
             self.check_and_update_status()
             time.sleep(seconds_between_update)
 
-    def __check_submitted(self, metadata_updater, submitted_to_check):
+    def __check_submitted(
+        self, metadata_updater: MetadataUpdater, submitted_to_check: DataFrame
+    ) -> None:
         """
         Check the status of all runs which has status `submitted`.
 
@@ -161,7 +165,9 @@ class StatusChecker:
 
             metadata_updater.update_latest_status(latest_status)
 
-    def __check_running(self, metadata_updater, running_to_check):
+    def __check_running(
+        self, metadata_updater: MetadataUpdater, running_to_check: DataFrame
+    ) -> None:
         """
         Check the status of all runs which has status `running`.
 
@@ -180,7 +186,9 @@ class StatusChecker:
             latest_status = self.check_if_running_or_errored(log_reader)
             metadata_updater.update_latest_status(latest_status)
 
-    def __check_if_stopped(self, log_reader, metadata_updater):
+    def __check_if_stopped(
+        self, log_reader: LogReader, metadata_updater: MetadataUpdater
+    ) -> str:
         """
         Check if a run has stopped.
 

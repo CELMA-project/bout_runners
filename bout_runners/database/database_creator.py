@@ -1,11 +1,12 @@
 """Module containing the DatabaseCreator class."""
 
 
-import re
 import logging
-from bout_runners.database.database_utils import get_system_info_as_sql_type
-from bout_runners.database.database_connector import DatabaseConnector
+import re
 from typing import Dict, Optional, Tuple
+
+from bout_runners.database.database_connector import DatabaseConnector
+from bout_runners.database.database_utils import get_system_info_as_sql_type
 
 
 class DatabaseCreator:
@@ -193,6 +194,11 @@ class DatabaseCreator:
         ----------
         table_str : str
             The query to execute
+
+        Raises
+        ------
+        ValueError
+            If the table_str is not understood
         """
         # Obtain the table name
         pattern = r"CREATE TABLE (\w*)"

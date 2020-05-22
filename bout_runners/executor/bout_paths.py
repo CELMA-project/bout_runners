@@ -5,8 +5,9 @@ import logging
 import shutil
 from datetime import datetime
 from pathlib import Path
-from bout_runners.utils.file_operations import get_caller_dir
 from typing import Optional, Union
+
+from bout_runners.utils.file_operations import get_caller_dir
 
 
 class BoutPaths:
@@ -15,11 +16,11 @@ class BoutPaths:
 
     Attributes
     ----------
-    __project_path : None or Path
+    __project_path : Path
         Getter and setter variable for project_path
-    __bout_inp_src_dir : None or Path
+    __bout_inp_src_dir : Path
         Getter and setter variable for bout_inp_src_dir
-    __bout_inp_dst_dir : None or Path
+    __bout_inp_dst_dir : Path
         Getter and setter variable for bout_inp_dst_dir
     project_path : Path
         The root path of the project
@@ -51,8 +52,8 @@ class BoutPaths:
 
     def __init__(
         self,
-        project_path: Optional[Path] = None,
-        bout_inp_src_dir: Optional[Path] = None,
+        project_path: Optional[Union[Path, str]] = None,
+        bout_inp_src_dir: Optional[Union[Path, str]] = None,
         bout_inp_dst_dir: Optional[Union[Path, str]] = None,
     ) -> None:
         """
@@ -73,63 +74,50 @@ class BoutPaths:
             (relative to self.project_path)
             If None, the current time will be used
         """
-        # Declare variables to be used in the getters and setters
-        self.__project_path = None
-        self.__bout_inp_src_dir = None
-        self.__bout_inp_dst_dir = None
-
+        # NOTE: type: ignore due to https://github.com/python/mypy/issues/3004
         # Set the project path
-        self.project_path = project_path
+        self.project_path = project_path  # type: ignore
 
         # Set the bout_inp_src_dir
-        self.bout_inp_src_dir = bout_inp_src_dir
+        self.bout_inp_src_dir = bout_inp_src_dir  # type: ignore
 
         # Set the bout_inp_dst_dir
-        self.bout_inp_dst_dir = bout_inp_dst_dir
+        self.bout_inp_dst_dir = bout_inp_dst_dir  # type: ignore
 
     @property
-    def project_path(self):
+    def project_path(self) -> Path:
         """
         Set the properties of self.project_path.
 
-        Parameters
-        ----------
-        project_path : None or Path or str
-            Root path of make file
-            If None, the path of the path of the root caller will be
-            used
+        If None is specified, the path of the path of the root caller will be used
 
         Returns
         -------
-        self.__project_path : Path
+        Path
             Absolute path to the root of make file
         """
         return self.__project_path
 
     @project_path.setter
-    def project_path(self, project_path):
+    def project_path(self, project_path: Optional[Union[Path, str]]) -> None:
         if project_path is None:
             project_path = get_caller_dir()
-        project_path.absolute()
+        project_path = Path(project_path).absolute()
         self.__project_path = project_path
         logging.debug("self.project_path set to %s", project_path)
 
     @property
-    def bout_inp_src_dir(self):
+    def bout_inp_src_dir(self) -> Path:
         """
         Set the properties of bout_inp_src_dir.
 
-        The setter will convert bout_inp_src_dir an absoulte path
-        (as the input is relative to the project path), check that
-        the directory exists, and copy the BOUT.inp file to the
-        bout_inp_dst_dir path (self.bout_inp_dst_dir)
+        The setter will convert bout_inp_src_dir an absolute path (as the input is
+        relative to the project path), check that the directory exists, and copy the
+        BOUT.inp file to the bout_inp_dst_dir path (self.bout_inp_dst_dir)
 
-        Parameters
-        ----------
-        bout_inp_src_dir : None or str or Path
-            The path to the BOUT.inp source directory (relative to
-            self.project_path)
-            If None, data will be used
+        The input should be the path to the BOUT.inp source directory (relative to
+        self.project_path)
+        If None, "data" will be used
 
         Returns
         -------
@@ -144,7 +132,7 @@ class BoutPaths:
         return self.__bout_inp_src_dir
 
     @bout_inp_src_dir.setter
-    def bout_inp_src_dir(self, bout_inp_src_dir):
+    def bout_inp_src_dir(self, bout_inp_src_dir: Optional[Union[Path, str]]) -> None:
         bout_inp_src_dir = (
             Path(bout_inp_src_dir) if bout_inp_src_dir is not None else Path("data")
         )
@@ -163,30 +151,27 @@ class BoutPaths:
             self._copy_inp()
 
     @property
-    def bout_inp_dst_dir(self):
+    def bout_inp_dst_dir(self) -> Path:
         """
         Set the properties of bout_inp_dst_dir.
 
-        The setter will convert bout_inp_dst_dir an absoulte path
-        (as the input is relative to the project path), and copy
-        BOUT.inp from self.bout_inp_src_dir to self.bout_inp_dst_dir
+        The setter will convert bout_inp_dst_dir an absolute path (as the input is
+        relative to the project path), and copy BOUT.inp from self.bout_inp_src_dir
+        to self.bout_inp_dst_dir
 
-        Parameters
-        ----------
-        bout_inp_dst_dir : None or str or Path
-            The path to the BOUT.inp bout_inp_dst_dir directory
-            (relative to self.project_path)
-            If None, the current time will be used
+        The input should be the path to the BOUT.inp bout_inp_dst_dir directory
+        (relative to self.project_path)
+        If None, the current time will be used
 
         Returns
         -------
-        self.__bout_inp_dst_dir : Path
-
+        Path
+            Path to the destination directory
         """
         return self.__bout_inp_dst_dir
 
     @bout_inp_dst_dir.setter
-    def bout_inp_dst_dir(self, bout_inp_dst_dir):
+    def bout_inp_dst_dir(self, bout_inp_dst_dir: Optional[Union[Path, str]]) -> None:
         time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S_%f")
         bout_inp_dst_dir = (
             Path(bout_inp_dst_dir) if bout_inp_dst_dir is not None else Path(time)

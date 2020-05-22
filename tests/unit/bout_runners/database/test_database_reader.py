@@ -1,8 +1,9 @@
 """Contains unittests for the database reader."""
 
 
-from bout_runners.database.database_reader import DatabaseReader
 from typing import Callable
+
+from bout_runners.database.database_reader import DatabaseReader
 
 
 def test_db_reader(make_test_database: Callable, write_to_split: Callable) -> None:

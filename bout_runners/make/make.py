@@ -3,11 +3,11 @@
 
 import logging
 from pathlib import Path
-from bout_runners.utils.file_operations import get_caller_dir
-from bout_runners.utils.names import get_exec_name
-from bout_runners.utils.names import get_makefile_path
-from bout_runners.submitter.local_submitter import LocalSubmitter
 from typing import Optional
+
+from bout_runners.submitter.local_submitter import LocalSubmitter
+from bout_runners.utils.file_operations import get_caller_dir
+from bout_runners.utils.names import get_exec_name, get_makefile_path
 
 
 class MakeError(Exception):

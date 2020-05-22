@@ -1,9 +1,10 @@
 """Contains unittests for make."""
 
 
-from bout_runners.make.make import Make
 from pathlib import Path
 from typing import Tuple
+
+from bout_runners.make.make import Make
 
 
 def test_make_project(make_make_object: Tuple[Make, Path]) -> None:

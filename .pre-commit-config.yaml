@@ -1,6 +1,11 @@
 # NOTE: The versions can be updated by calling
 #        pre-commit autoupdate
 repos:
+  - repo: https://github.com/timothycrosley/isort
+    rev: 4.3.21
+    hooks:
+      - id: isort
+
   - repo: https://github.com/psf/black
     rev: 19.10b0
     hooks:
@@ -15,7 +20,7 @@ repos:
           - flake8-docstrings
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v2.1.0
+    rev: v3.1.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer

@@ -3,15 +3,17 @@
 
 import logging
 from pathlib import Path
-import yaml
-from bout_runners.utils.paths import get_bout_runners_configuration
-from bout_runners.utils.paths import get_bout_runners_config_path
-from bout_runners.utils.paths import get_bout_directory
-from bout_runners.utils.paths import get_log_file_directory
-from bout_runners.utils.paths import get_bout_log_config_path
-from bout_runners.utils.logs import get_log_config
-from bout_runners.utils.logs import set_up_logger
 from typing import Optional
+
+import yaml
+from bout_runners.utils.logs import get_log_config, set_up_logger
+from bout_runners.utils.paths import (
+    get_bout_directory,
+    get_bout_log_config_path,
+    get_bout_runners_config_path,
+    get_bout_runners_configuration,
+    get_log_file_directory,
+)
 
 
 def set_log_level(level: Optional[str] = None) -> None:
@@ -23,6 +25,11 @@ def set_log_level(level: Optional[str] = None) -> None:
     level : None or str
         The logging level to use
         If None the caller will be prompted
+
+    Raises
+    ------
+    ValueError
+        If the level is not one of the possibilities
     """
     config = get_log_config()
 
@@ -111,6 +118,11 @@ def set_bout_directory(bout_dir: Optional[Path] = None) -> None:
     bout_dir : None or Path
         The path to the BOUT++ directory
         If None, the caller will be prompted
+
+    Raises
+    ------
+    ValueError
+        If BOUT++ not found in the directory
     """
     config = get_bout_runners_configuration()
     if bout_dir is None:

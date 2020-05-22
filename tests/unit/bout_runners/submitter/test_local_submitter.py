@@ -2,6 +2,7 @@
 
 
 import subprocess
+
 import pytest
 from bout_runners.submitter.local_submitter import LocalSubmitter
 

@@ -1,16 +1,21 @@
 """Contains unittests for the config module."""
 
 
-import pytest
-from bout_runners.config import set_log_level
-from bout_runners.config import set_log_file_directory
-from bout_runners.config import set_bout_directory
-from bout_runners.utils.logs import get_log_config
-from bout_runners.utils.paths import get_bout_runners_configuration
-from bout_runners.utils.paths import get_log_file_directory
-from bout_runners.utils.paths import get_bout_directory
-from _pytest.monkeypatch import MonkeyPatch
 from pathlib import Path
+
+import pytest
+from _pytest.monkeypatch import MonkeyPatch
+from bout_runners.config import (
+    set_bout_directory,
+    set_log_file_directory,
+    set_log_level,
+)
+from bout_runners.utils.logs import get_log_config
+from bout_runners.utils.paths import (
+    get_bout_directory,
+    get_bout_runners_configuration,
+    get_log_file_directory,
+)
 
 
 def test_set_log_level(get_mock_config_path: Path, monkeypatch: MonkeyPatch) -> None:

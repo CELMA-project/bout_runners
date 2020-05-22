@@ -1,11 +1,12 @@
 """Contains the executor class."""
 
 
+from typing import Optional
+
+from bout_runners.executor.bout_paths import BoutPaths
 from bout_runners.make.make import Make
 from bout_runners.parameters.run_parameters import RunParameters
 from bout_runners.submitter.local_submitter import LocalSubmitter
-from bout_runners.executor.bout_paths import BoutPaths
-from typing import Optional
 
 
 class Executor:

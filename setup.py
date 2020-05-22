@@ -2,7 +2,9 @@
 
 import re
 from pathlib import Path
+
 import setuptools
+
 import bout_runners
 
 NAME = "bout_runners"

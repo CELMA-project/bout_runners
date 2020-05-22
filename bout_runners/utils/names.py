@@ -1,9 +1,12 @@
 """Module containing functions to extract names."""
 
 from pathlib import Path
-from bout_runners.make.read_makefile import BoutMakefileVariableReader
-from bout_runners.make.read_makefile import MakefileReaderError
 from typing import Optional
+
+from bout_runners.make.read_makefile import (
+    BoutMakefileVariableReader,
+    MakefileReaderError,
+)
 
 
 def get_exec_name(makefile_path: Path) -> str:
@@ -69,7 +72,8 @@ def get_makefile_name(makefile_root_path: Path) -> str:
 
     Parameters
     ----------
-    makefile_root_path
+    makefile_root_path : Path
+        Path to the root directory of the Makefile
 
     Returns
     -------

@@ -1,11 +1,12 @@
 """Contains unittests for the StatusChecker."""
 
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+from typing import Callable
+
 import pytest
 from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.metadata.status_checker import StatusChecker
-from typing import Callable
 
 
 def test_status_checker_run_time_error(make_test_database: Callable) -> None:
@@ -119,9 +120,12 @@ def test_status_checker_until_complete_infinite(
 
     Parameters
     ----------
-    get_test_data_path
-    get_test_db_copy
-    copy_test_case_log_file
+    get_test_data_path : Path
+        Path to the test data
+    get_test_db_copy : function
+        Function which returns a DatabaseConnector connected to a copy of test.db
+    copy_test_case_log_file : function
+        Return the function for copying the test case log files
     """
     test_case = "infinite_log_file_pid_started_ended_no_mock_pid_complete"
 

@@ -1,8 +1,8 @@
 """Contains unittests for final parameters."""
 
+from bout_runners.parameters.default_parameters import DefaultParameters
 from bout_runners.parameters.final_parameters import FinalParameters
 from bout_runners.parameters.run_parameters import RunParameters
-from bout_runners.parameters.default_parameters import DefaultParameters
 
 
 def test_final_parameters(get_default_parameters: DefaultParameters) -> None:

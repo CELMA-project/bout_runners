@@ -2,9 +2,10 @@
 
 
 from datetime import datetime
-from bout_runners.log.log_reader import LogReader
 from pathlib import Path
 from typing import Dict
+
+from bout_runners.log.log_reader import LogReader
 
 
 def test_started(yield_logs: Dict[str, Path]) -> None:

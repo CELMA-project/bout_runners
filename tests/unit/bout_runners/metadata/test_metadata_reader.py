@@ -1,9 +1,10 @@
 """Contains unittests for the metadata_reader."""
 
 
+from typing import Dict, List
+
 from bout_runners.metadata.metadata_reader import MetadataReader
 from pandas.core.frame import DataFrame
-from typing import Dict, List
 
 
 def test_get_table_column_dict(

@@ -1,18 +1,19 @@
 """Contains integration test for the runner."""
 
-import os
 import contextlib
+import os
 from pathlib import Path
-from bout_runners.executor.bout_paths import BoutPaths
-from bout_runners.executor.executor import Executor
+from typing import Callable, Iterator
+
 from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_reader import DatabaseReader
+from bout_runners.executor.bout_paths import BoutPaths
+from bout_runners.executor.executor import Executor
 from bout_runners.parameters.default_parameters import DefaultParameters
-from bout_runners.parameters.run_parameters import RunParameters
 from bout_runners.parameters.final_parameters import FinalParameters
-from bout_runners.submitter.local_submitter import LocalSubmitter
+from bout_runners.parameters.run_parameters import RunParameters
 from bout_runners.runner.bout_runner import BoutRunner
-from typing import Callable, Iterator
+from bout_runners.submitter.local_submitter import LocalSubmitter
 
 
 @contextlib.contextmanager
@@ -28,6 +29,7 @@ def change_directory(new_path: Path) -> Iterator[None]:
     Yields
     ------
     None
+        The function will revert to original directory on exit
 
     References
     ----------

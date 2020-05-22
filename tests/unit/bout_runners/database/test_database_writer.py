@@ -1,10 +1,11 @@
 """Contains unittests for the database writer."""
 
 
-import numpy as np
-from bout_runners.database.database_writer import DatabaseWriter
-from bout_runners.database.database_reader import DatabaseReader
 from typing import Callable
+
+import numpy as np
+from bout_runners.database.database_reader import DatabaseReader
+from bout_runners.database.database_writer import DatabaseWriter
 
 
 def test_db_writer(make_test_schema: Callable) -> None:

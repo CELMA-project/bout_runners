@@ -1,12 +1,13 @@
 """Contains unittests for the metadata_recorder."""
 
 
-from bout_runners.metadata.metadata_recorder import MetadataRecorder
-from bout_runners.parameters.final_parameters import FinalParameters
-from bout_runners.submitter.processor_split import ProcessorSplit
-from bout_runners.parameters.default_parameters import DefaultParameters
 from pathlib import Path
 from typing import Callable
+
+from bout_runners.metadata.metadata_recorder import MetadataRecorder
+from bout_runners.parameters.default_parameters import DefaultParameters
+from bout_runners.parameters.final_parameters import FinalParameters
+from bout_runners.submitter.processor_split import ProcessorSplit
 
 
 def test_metadata_recorder(

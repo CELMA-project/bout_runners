@@ -1,10 +1,11 @@
 """Module containing the DatabaseWriter class."""
 
 
-import re
 import logging
+import re
+from typing import Any, Mapping, Sequence, Tuple, Union
+
 from bout_runners.database.database_connector import DatabaseConnector
-from typing import Any, Tuple, Union, Mapping
 
 
 class DatabaseWriter:
@@ -83,7 +84,7 @@ class DatabaseWriter:
         self.db_connector = db_connector
 
     @staticmethod
-    def create_insert_string(field_names, table_name):
+    def create_insert_string(field_names: Sequence[str], table_name: str) -> str:
         """
         Create a question mark style string for database insertions.
 
@@ -158,6 +159,11 @@ class DatabaseWriter:
             The write statement to execute
         values : tuple
             Values to be inserted in the query
+
+        Raises
+        ------
+        ValueError
+            If the insert_str is not understood
         """
         # Obtain the table name
         pattern = r"INSERT INTO (\w*)"
@@ -202,7 +208,7 @@ class DatabaseWriter:
         logging.info("Updated table %s, where %s", table_name, condition)
 
     def create_entry(
-        self, table_name: str, entries_dict: Mapping[str, Union[int, str, float]]
+        self, table_name: str, entries_dict: Mapping[str, Union[int, str, float, None]]
     ) -> None:
         """
         Create a database entry.

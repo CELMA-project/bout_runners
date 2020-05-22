@@ -1,11 +1,12 @@
 """Module containing the DatabaseReader class."""
 
 
+from typing import Mapping, Optional, Union
+
 import pandas as pd
 from bout_runners.database.database_connector import DatabaseConnector
 from numpy import int64
 from pandas.core.frame import DataFrame
-from typing import Optional, Union, Mapping
 
 
 class DatabaseReader:
@@ -110,7 +111,7 @@ class DatabaseReader:
         ----------
         query_str : str
             The query to execute
-        kwargs
+        **kwargs
             Additional keyword parameters to pd.read_sql_query
 
         Returns
@@ -136,7 +137,7 @@ class DatabaseReader:
         return row_id
 
     def get_entry_id(
-        self, table_name: str, entries_dict: Mapping[str, Union[int, str, float]]
+        self, table_name: str, entries_dict: Mapping[str, Union[int, str, float, None]]
     ) -> Optional[int]:
         """
         Get the id of a table entry.

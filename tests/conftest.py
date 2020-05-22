@@ -2,27 +2,26 @@
 
 
 import shutil
-from distutils.dir_util import copy_tree
-from distutils.dir_util import remove_tree
+from distutils.dir_util import copy_tree, remove_tree
 from pathlib import Path
+from typing import Callable, Dict, Iterator, Tuple
+
 import pandas as pd
-import pytest
 import psutil
-from bout_runners.make.make import Make
-from bout_runners.parameters.default_parameters import DefaultParameters
-from bout_runners.parameters.final_parameters import FinalParameters
-from bout_runners.utils.paths import get_config_path
-from bout_runners.utils.paths import get_bout_directory
+import pytest
+from _pytest.monkeypatch import MonkeyPatch
 from bout_runners.database.database_connector import DatabaseConnector
-from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.database.database_creator import DatabaseCreator
+from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.database.database_writer import DatabaseWriter
 from bout_runners.executor.bout_paths import BoutPaths
+from bout_runners.make.make import Make
 from bout_runners.metadata.metadata_reader import MetadataReader
 from bout_runners.metadata.metadata_updater import MetadataUpdater
-from _pytest.monkeypatch import MonkeyPatch
+from bout_runners.parameters.default_parameters import DefaultParameters
+from bout_runners.parameters.final_parameters import FinalParameters
+from bout_runners.utils.paths import get_bout_directory, get_config_path
 from pandas.core.frame import DataFrame
-from typing import Callable, Dict, Iterator, Tuple
 
 
 @pytest.fixture(scope="session", name="yield_bout_path")
@@ -601,7 +600,7 @@ def fixture_get_test_db_copy(
     get_tmp_db_dir: Path, get_test_data_path: Path, make_test_database: Callable,
 ) -> Callable:
     """
-    Return a DatabaseConnector connected to a copy of test.db.
+    Return a function which returns a DatabaseConnector connected to a copy of test.db.
 
     Parameters
     ----------

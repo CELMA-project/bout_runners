@@ -2,9 +2,11 @@
 
 
 import re
-from bout_runners.database.database_reader import DatabaseReader
+from typing import Callable, Dict, List, Optional, Tuple, Union
+
 from bout_runners.database.database_connector import DatabaseConnector
-from typing import Callable, Dict, List, Tuple, Union, Optional
+from bout_runners.database.database_reader import DatabaseReader
+from pandas import DataFrame
 
 
 def drop_ids(func: Callable) -> Callable:
@@ -22,7 +24,7 @@ def drop_ids(func: Callable) -> Callable:
         The function dropping the ids
     """
 
-    def drop(self, *args, **kwargs):
+    def drop(self, *args, **kwargs) -> DataFrame:
         """
         Drop columns inplace.
 
@@ -31,9 +33,9 @@ def drop_ids(func: Callable) -> Callable:
         self
             Self reference to the instance the function is belonging to
             Must contain self.drop_id
-        args
+        *args
             Arguments belonging to the input function
-        kwargs
+        **kwargs
             Keyword arguments to the input function
 
         Returns
@@ -199,7 +201,7 @@ class MetadataReader:
         parameters_connections = {"parameters": self.__table_connections["parameters"]}
         parameters_tables = ("parameters", *parameters_connections["parameters"])
         self.__parameters_columns = tuple(
-            col
+            str(col)
             for col in self.__sorted_columns
             if col.split(".")[0] in parameters_tables
         )
@@ -316,7 +318,7 @@ class MetadataReader:
     def get_join_query(
         from_statement: str,
         columns: Union[Tuple[str], List[str]],
-        alias_columns: Union[Tuple[str]],
+        alias_columns: Union[Tuple[str], List[str]],
         table_connections: Dict[str, Tuple[str]],
     ) -> str:
         """
@@ -369,8 +371,16 @@ class MetadataReader:
                 )
         return query
 
-    def __get_parameters_query(self):
-        """Return the parameters query string."""
+    def __get_parameters_query(self) -> str:
+        """
+        Return the parameters query string.
+
+        Returns
+        -------
+        parameters_query : str
+            The SQL-string which can be used to query where table in
+            databases are joined through `INNER JOIN` operations
+        """
         parameter_connections = {"parameters": self.__table_connections["parameters"]}
         parameters_query = self.get_join_query(
             "parameters",
@@ -380,7 +390,7 @@ class MetadataReader:
         )
         return parameters_query
 
-    def __get_sorted_columns(self):
+    def __get_sorted_columns(self) -> Tuple[str]:
         """
         Return all columns sorted.
 
@@ -416,7 +426,7 @@ class MetadataReader:
             sorted_columns = [*sorted_columns, *table_columns]
         return tuple(sorted_columns)
 
-    def __get_table_connections(self):
+    def __get_table_connections(self) -> Dict[str, Tuple[str]]:
         """
         Return a dict containing the table connections.
 
@@ -441,7 +451,7 @@ class MetadataReader:
 
         return table_connection_dict
 
-    def __get_all_table_names(self):
+    def __get_all_table_names(self) -> Tuple[str]:
         """
         Return all the table names in the schema.
 
@@ -459,7 +469,7 @@ class MetadataReader:
         # pylint: disable=no-member
         return tuple(self.__db_reader.query(query).loc[:, "name"])
 
-    def __get_table_column_dict(self):
+    def __get_table_column_dict(self) -> Dict[str, Tuple[str]]:
         """
         Return all the column names of the specified tables.
 

@@ -1,11 +1,14 @@
 """Contains unittests for the reading of makefiles."""
 
 
-import pytest
-from bout_runners.make.read_makefile import BoutMakefileReader
-from bout_runners.make.read_makefile import BoutMakefileVariableReader
-from bout_runners.make.read_makefile import MakefileReaderError
 from pathlib import Path
+
+import pytest
+from bout_runners.make.read_makefile import (
+    BoutMakefileReader,
+    BoutMakefileVariableReader,
+    MakefileReaderError,
+)
 
 
 def test_read_bout_makefile(get_test_data_path: Path) -> None:
@@ -60,4 +63,4 @@ def test_get_variable_value_raises(get_test_data_path: Path) -> None:
     )
 
     with pytest.raises(MakefileReaderError):
-        var.value
+        _ = var.value

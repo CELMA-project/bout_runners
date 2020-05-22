@@ -1,12 +1,13 @@
 """Module containing the DatabaseBase class."""
 
 
-import sqlite3
 import logging
+import sqlite3
 from pathlib import Path
-from bout_runners.utils.file_operations import get_caller_dir
 from sqlite3 import Connection
 from typing import Optional
+
+from bout_runners.utils.file_operations import get_caller_dir
 
 
 class DatabaseConnector:

@@ -2,8 +2,9 @@
 
 
 import sqlite3
-import pytest
 from typing import Callable
+
+import pytest
 
 
 def test_db_connector(make_test_database: Callable) -> None:

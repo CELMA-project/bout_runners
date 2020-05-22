@@ -2,8 +2,8 @@
 
 
 import pytest
-from bout_runners.submitter.submitter_factory import get_submitter
 from bout_runners.submitter.local_submitter import LocalSubmitter
+from bout_runners.submitter.submitter_factory import get_submitter
 
 
 def test_submitter_factory() -> None:

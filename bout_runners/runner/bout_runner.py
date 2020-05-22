@@ -2,12 +2,13 @@
 
 
 import logging
-from bout_runners.executor.executor import Executor
-from bout_runners.parameters.final_parameters import FinalParameters
-from bout_runners.database.database_creator import DatabaseCreator
-from bout_runners.database.database_connector import DatabaseConnector
-from bout_runners.metadata.metadata_recorder import MetadataRecorder
 from typing import Optional
+
+from bout_runners.database.database_connector import DatabaseConnector
+from bout_runners.database.database_creator import DatabaseCreator
+from bout_runners.executor.executor import Executor
+from bout_runners.metadata.metadata_recorder import MetadataRecorder
+from bout_runners.parameters.final_parameters import FinalParameters
 
 
 class BoutRunner:

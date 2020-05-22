@@ -1,16 +1,17 @@
 """Contains the class dealing with the default parameters."""
 
 
-import re
 import ast
-import logging
 import configparser
+import logging
+import re
 from pathlib import Path
-from bout_runners.executor.bout_paths import BoutPaths
-from bout_runners.parameters.run_parameters import RunParameters
-from bout_runners.executor.executor import Executor
-from bout_runners.submitter.local_submitter import LocalSubmitter
 from typing import Dict, Optional, Union
+
+from bout_runners.executor.bout_paths import BoutPaths
+from bout_runners.executor.executor import Executor
+from bout_runners.parameters.run_parameters import RunParameters
+from bout_runners.submitter.local_submitter import LocalSubmitter
 
 
 class DefaultParameters:
@@ -119,7 +120,8 @@ class DefaultParameters:
         if bout_paths is None:
             bout_paths = BoutPaths(bout_inp_dst_dir="settings_run")
         else:
-            bout_paths.bout_inp_dst_dir = "settings_run"
+            # NOTE: type: ignore due to https://github.com/python/mypy/issues/3004
+            bout_paths.bout_inp_dst_dir = "settings_run"  # type: ignore
 
         executor = self.get_test_executor(bout_paths)
 

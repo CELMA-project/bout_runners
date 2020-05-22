@@ -2,10 +2,11 @@
 
 
 import sqlite3
-import pytest
-from bout_runners.database.database_reader import DatabaseReader
-from bout_runners.database.database_creator import DatabaseCreator
 from typing import Callable
+
+import pytest
+from bout_runners.database.database_creator import DatabaseCreator
+from bout_runners.database.database_reader import DatabaseReader
 
 
 def test_db_creator(make_test_database: Callable, make_test_schema: Callable) -> None:

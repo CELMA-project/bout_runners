@@ -2,9 +2,10 @@
 
 
 import ast
-from bout_runners.parameters.run_parameters import RunParameters
-from bout_runners.parameters.default_parameters import DefaultParameters
 from typing import Dict, Optional, Union
+
+from bout_runners.parameters.default_parameters import DefaultParameters
+from bout_runners.parameters.run_parameters import RunParameters
 
 
 class FinalParameters:
@@ -99,13 +100,13 @@ class FinalParameters:
             run_parameters if run_parameters is not None else RunParameters()
         )
 
-    def get_final_parameters(self,) -> Dict[str, Dict[str, Union[str, int, float]]]:
+    def get_final_parameters(self) -> Dict[str, Dict[str, Union[str, int, float]]]:
         """
         Obtain the final parameters that will be used in a run.
 
         Returns
         -------
-        final_parameters_dict : dict of str, dict
+        final_parameters_dict : dict of str, dict of str or int or float
             Parameters on the form
             >>> {'global':{'append': 'False', 'nout': 5},
             ...  'mesh':  {'nx': 4},

@@ -4,11 +4,12 @@
 import logging
 import subprocess
 from pathlib import Path
+from subprocess import CompletedProcess
+from typing import Optional
+
 from bout_runners.submitter.abstract_submitter import AbstractSubmitter
 from bout_runners.submitter.processor_split import ProcessorSplit
 from bout_runners.utils.file_operations import get_caller_dir
-from subprocess import CompletedProcess
-from typing import Optional
 
 
 class LocalSubmitter(AbstractSubmitter):
@@ -113,7 +114,7 @@ class LocalSubmitter(AbstractSubmitter):
 
         return result
 
-    def _raise_submit_error(self, result):
+    def _raise_submit_error(self, result: subprocess.CompletedProcess) -> None:
         """
         Raise and error from the subprocess in a clean way.
 

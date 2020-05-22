@@ -1,10 +1,11 @@
 """Contains unittests for BOUT paths."""
 
 
-import pytest
-from bout_runners.executor.bout_paths import BoutPaths
 from pathlib import Path
 from typing import Callable
+
+import pytest
+from bout_runners.executor.bout_paths import BoutPaths
 
 
 def test_bout_path(yield_conduction_path: Path, copy_bout_inp: Callable) -> None:
@@ -36,4 +37,5 @@ def test_bout_path(yield_conduction_path: Path, copy_bout_inp: Callable) -> None
     assert project_path.joinpath(tmp_path_name, "BOUT.inp").is_file()
 
     with pytest.raises(FileNotFoundError):
-        bout_paths.bout_inp_src_dir = "dir_without_BOUT_inp"
+        # NOTE: type: ignore due to https://github.com/python/mypy/issues/3004
+        bout_paths.bout_inp_src_dir = "dir_without_BOUT_inp"  # type: ignore

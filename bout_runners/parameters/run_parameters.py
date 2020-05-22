@@ -36,7 +36,7 @@ class RunParameters:
     def __init__(
         self,
         run_parameters_dict: Optional[
-            Dict[str, Dict[str, Union[int, bool, str]]]
+            Dict[str, Dict[str, Union[int, float, bool, str]]]
         ] = None,
     ) -> None:
         """
@@ -44,7 +44,7 @@ class RunParameters:
 
         Parameters
         ----------
-        run_parameters_dict : None or dict of str, dict
+        run_parameters_dict : None or dict of str, dict of int or bool or str
             Options on the form
             >>> {'global': {'append': False, 'nout': 5},
             ...  'mesh':  {'nx': 4},
@@ -63,7 +63,9 @@ class RunParameters:
         self.run_parameters_dict = run_parameters_dict
 
     @property
-    def run_parameters_dict(self):
+    def run_parameters_dict(
+        self,
+    ) -> Optional[Dict[str, Dict[str, Union[int, float, bool, str]]]]:
         """
         Set the properties of self.run_parameters_dict.
 
@@ -71,7 +73,7 @@ class RunParameters:
 
         Parameters
         ----------
-        run_parameters_dict : None or dict of str, dict
+        run_parameters_dict : None or dict of str, dict of int or float or bool or str
             Options on the form
             >>> {'global': {'append': False, 'nout': 5},
             ...  'mesh':  {'nx': 4},

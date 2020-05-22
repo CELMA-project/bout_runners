@@ -1,10 +1,11 @@
 """Module containing the MetadataUpdater class."""
 
 
-from bout_runners.database.database_writer import DatabaseWriter
-from bout_runners.database.database_connector import DatabaseConnector
 from datetime import datetime
 from typing import Union
+
+from bout_runners.database.database_connector import DatabaseConnector
+from bout_runners.database.database_writer import DatabaseWriter
 
 
 class MetadataUpdater:

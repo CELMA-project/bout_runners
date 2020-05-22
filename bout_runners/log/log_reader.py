@@ -1,8 +1,8 @@
 """Module containing the LogReader class."""
 
 
-import re
 import logging
+import re
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -147,7 +147,7 @@ class LogReader:
             return int(match.group(1))
         return None
 
-    def __is_str_in_file(self, pattern):
+    def __is_str_in_file(self, pattern: str) -> bool:
         """
         Check whether regex-pattern exists in file.
 
@@ -169,7 +169,7 @@ class LogReader:
             return False
         return True
 
-    def __find_locale_time(self, pattern):
+    def __find_locale_time(self, pattern: str) -> datetime:
         """
         Return the locale time of a regex capture.
 

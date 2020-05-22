@@ -3,10 +3,10 @@
 
 import logging
 import logging.config
+from typing import Any, Dict, Optional
+
 import yaml
-from bout_runners.utils.paths import get_logger_config_path
-from bout_runners.utils.paths import get_log_file_path
-from typing import Dict, Optional, Any
+from bout_runners.utils.paths import get_log_file_path, get_logger_config_path
 
 
 # NOTE: Looks like mypy has trouble with recursive objects, thus this using Any looks
@@ -25,7 +25,7 @@ def get_log_config() -> Dict[str, Any]:
     log_config_path = get_logger_config_path()
 
     with log_config_path.open("r") as config_file:
-        config = yaml.safe_load(config_file.read())
+        config: Dict[str, Any] = yaml.safe_load(config_file.read())
     return config
 
 

@@ -3,6 +3,7 @@
 
 import re
 from pathlib import Path
+from typing import Optional
 
 
 class MakefileReaderError(Exception):
@@ -60,8 +61,10 @@ class BoutMakefileReader:
         with Path(self.path).open("r") as make_file:
             return make_file.read()
 
-    def value(self):
+    @property
+    def value(self) -> str:
         """Get the value of the variable."""
+        return ""
 
 
 class BoutMakefileVariableReader(BoutMakefileReader):
@@ -111,7 +114,7 @@ class BoutMakefileVariableReader(BoutMakefileReader):
         super(BoutMakefileVariableReader, self).__init__(path)
 
         self.variable_name = variable_name
-        self.__value = None
+        self.__value: Optional[str] = None
 
     @property
     def value(self) -> str:
