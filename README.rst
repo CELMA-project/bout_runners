@@ -2,7 +2,9 @@ Welcome to bout_runners
 =======================
 
 |lint| |test| |docker| |codecov|
-|python| |pypi| |license|
+
+|pypi| |python| |license|
+
 |code_style| |mypy|
 
 .. |lint| image:: https://github.com/CELMA-project/bout_runners/workflows/Lint/badge.svg?branch=master
