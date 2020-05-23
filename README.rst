@@ -1,17 +1,24 @@
 Welcome to bout_runners
 =======================
 
-|pytest| |docker| |codecov| |pypi| |python| |code_standard| |license|
+|lint| |test| |docker| |codecov|
+|python| |pypi| |license|
+|code_style| |mypy|
 
-.. |pytest| image:: https://github.com/CELMA-project/bout_runners/workflows/Pytest%20with%20codecov/badge.svg?branch=master
-    :alt: pytest status
+.. |lint| image:: https://github.com/CELMA-project/bout_runners/workflows/Lint/badge.svg?branch=master
+    :alt: lint status
     :scale: 100%
-    :target: https://github.com/CELMA-project/bout_runners/actions?query=workflow%3A%22Pytest+with+codecov%22
+    :target: https://github.com/CELMA-project/bout_runners/actions?query=workflow%3A%22Lint%22
 
-.. |docker| image:: https://github.com/CELMA-project/bout_runners/workflows/Docker%20Image%20CI/badge.svg?branch=master
+.. |test| image:: https://github.com/CELMA-project/bout_runners/workflows/Test/badge.svg?branch=master
+    :alt: test status
+    :scale: 100%
+    :target: https://github.com/CELMA-project/bout_runners/actions?query=workflow%3A%22Test%22
+
+.. |docker| image:: https://github.com/CELMA-project/bout_runners/workflows/Docker/badge.svg?branch=master
     :alt: docker build status
     :scale: 100%
-    :target: https://github.com/CELMA-project/bout_runners/actions?query=workflow%3A%22Docker+Image+CI%22
+    :target: https://github.com/CELMA-project/bout_runners/actions?query=workflow%3A%22Docker%22
 
 .. |codecov| image:: https://codecov.io/gh/CELMA-project/bout_runners/branch/master/graph/badge.svg
     :alt: codecov percentage
@@ -28,15 +35,21 @@ Welcome to bout_runners
     :scale: 100%
     :target: https://www.python.org/
 
-.. |code_standard| image:: https://img.shields.io/badge/code%20style-PEP8-brightgreen.svg
-    :alt: code standard
-    :scale: 100%
-    :target: https://www.python.org/dev/peps/pep-0008/
-
 .. |license| image:: https://img.shields.io/badge/license-LGPL--3.0-blue.svg
-    :alt: code standard
+    :alt: licence
     :scale: 100%
     :target: https://github.com/CELMA-project/bout_runners/blob/master/LICENSE
+
+.. |code_style| image:: https://img.shields.io/badge/code%20style-black-000000.svg
+    :alt: code standard
+    :scale: 100%
+    :target: https://github.com/psf/black
+
+.. |mypy| image:: http://www.mypy-lang.org/static/mypy_badge.svg
+    :alt: checked with mypy
+    :scale: 100%
+    :target: http://mypy-lang.org/
+
 
 Purpose
 -------
