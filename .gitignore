@@ -103,6 +103,7 @@ ENV/
 
 # Project related
 *.db
+*.sqlite*
 
 # Temporary files
 *delme*

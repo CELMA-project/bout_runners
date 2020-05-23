@@ -3,10 +3,11 @@
 
 import logging
 from pathlib import Path
-from bout_runners.utils.file_operations import get_caller_dir
-from bout_runners.utils.names import get_exec_name
-from bout_runners.utils.names import get_makefile_path
+from typing import Optional
+
 from bout_runners.submitter.local_submitter import LocalSubmitter
+from bout_runners.utils.file_operations import get_caller_dir
+from bout_runners.utils.names import get_exec_name, get_makefile_path
 
 
 class MakeError(Exception):
@@ -44,9 +45,9 @@ class Make:
     ... make_obj.run_make(force=True)
     """
 
-    def __init__(self,
-                 makefile_root_path=None,
-                 makefile_name=None):
+    def __init__(
+        self, makefile_root_path: Optional[Path] = None, makefile_name: None = None
+    ) -> None:
         """
         Call the make file.
 
@@ -63,17 +64,17 @@ class Make:
         if makefile_root_path is None:
             makefile_root_path = get_caller_dir()
         self.makefile_root_path = Path(makefile_root_path)
-        logging.debug('self.makefile_root_path set to %s',
-                      makefile_root_path)
+        logging.debug("self.makefile_root_path set to %s", makefile_root_path)
 
         self.makefile_name = makefile_name
 
-        self.makefile_path = get_makefile_path(self.makefile_root_path,
-                                               self.makefile_name)
+        self.makefile_path = get_makefile_path(
+            self.makefile_root_path, self.makefile_name
+        )
         self.exec_name = get_exec_name(self.makefile_path)
         self.submitter = LocalSubmitter(self.makefile_root_path)
 
-    def run_make(self, force=False):
+    def run_make(self, force: bool = False) -> None:
         """
         Execute the makefile.
 
@@ -90,23 +91,26 @@ class Make:
             self.run_clean()
 
         # Check if already made
-        made = \
-            self.makefile_root_path.joinpath(self.exec_name).is_file()
+        made = self.makefile_root_path.joinpath(self.exec_name).is_file()
 
         # Do nothing if already made
         if not made:
-            make_str = 'make' if self.makefile_name is None \
-                else f'make -f {self.makefile_name}'
+            make_str = (
+                "make"
+                if self.makefile_name is None
+                else f"make -f {self.makefile_name}"
+            )
 
-            logging.info('Making the program')
-            command = f'{make_str}'
+            logging.info("Making the program")
+            command = f"{make_str}"
             self.submitter.submit_command(command)
 
-    def run_clean(self):
+    def run_clean(self) -> None:
         """Run make clean."""
-        make_str = 'make' if self.makefile_name is None \
-            else f'make -f {self.makefile_name}'
+        make_str = (
+            "make" if self.makefile_name is None else f"make -f {self.makefile_name}"
+        )
 
-        logging.info('Running make clean')
-        command = f'{make_str} clean'
+        logging.info("Running make clean")
+        command = f"{make_str} clean"
         self.submitter.submit_command(command)

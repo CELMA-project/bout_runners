@@ -4,6 +4,9 @@
 import logging
 import subprocess
 from pathlib import Path
+from subprocess import CompletedProcess
+from typing import Optional
+
 from bout_runners.submitter.abstract_submitter import AbstractSubmitter
 from bout_runners.submitter.processor_split import ProcessorSplit
 from bout_runners.utils.file_operations import get_caller_dir
@@ -41,7 +44,9 @@ class LocalSubmitter(AbstractSubmitter):
     test_submitter_factory.py\n', stderr=b'')
     """
 
-    def __init__(self, path=None, processor_split=ProcessorSplit()):
+    def __init__(
+        self, path: Optional[Path] = None, processor_split: None = None
+    ) -> None:
         """
         Set the path from where the calls are made from.
 
@@ -50,23 +55,31 @@ class LocalSubmitter(AbstractSubmitter):
         path : Path or str or None
             Directory to run the command from
             If None, the calling directory will be used
-        processor_split : ProcessorSplit
+        processor_split : ProcessorSplit or None
             Object containing the processor split
+            If None, default values will be used
         """
         # NOTE: We are not setting the default as a keyword argument
         #       as this would mess up the paths
-        self.__path = \
-            Path(path).absolute() if path is not None else \
-            get_caller_dir()
-        self.processor_split = processor_split
-        self.__pid = None
+        self.__path = Path(path).absolute() if path is not None else get_caller_dir()
+        self.processor_split = (
+            processor_split if processor_split is not None else ProcessorSplit()
+        )
+        self.__pid: Optional[int] = None
 
     @property
-    def pid(self):
-        """Return the process id."""
+    def pid(self) -> Optional[int]:
+        """
+        Return the process id.
+
+        Returns
+        -------
+        self.__pid : int or None
+            The process id if a process has been called, else None
+        """
         return self.__pid
 
-    def submit_command(self, command):
+    def submit_command(self, command: str) -> CompletedProcess:
         """
         Run a subprocess.
 
@@ -80,20 +93,20 @@ class LocalSubmitter(AbstractSubmitter):
         result : subprocess.CompletedProcess
             The result of the subprocess call
         """
-        logging.info('Executing %s in %s', command, self.__path)
+        logging.info("Executing %s in %s", command, self.__path)
         # This is a simplified subprocess.run(), with the exception
         # that we capture the process id
-        process = subprocess.Popen(command.split(),
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE,
-                                   cwd=self.__path)
+        process = subprocess.Popen(
+            command.split(),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            cwd=self.__path,
+        )
         std_out, std_err = process.communicate()
         return_code = process.poll()
-        result = \
-            subprocess.CompletedProcess(process.args,
-                                        return_code,
-                                        std_out,
-                                        std_err)
+        result = subprocess.CompletedProcess(
+            process.args, return_code, std_out, std_err
+        )
         self.__pid = process.pid
 
         if result.returncode != 0:
@@ -101,7 +114,7 @@ class LocalSubmitter(AbstractSubmitter):
 
         return result
 
-    def _raise_submit_error(self, result):
+    def _raise_submit_error(self, result: subprocess.CompletedProcess) -> None:
         """
         Raise and error from the subprocess in a clean way.
 
@@ -110,9 +123,9 @@ class LocalSubmitter(AbstractSubmitter):
         result : subprocess.CompletedProcess
             The result from the subprocess
         """
-        logging.error('Subprocess failed with stdout:')
+        logging.error("Subprocess failed with stdout:")
         logging.error(result.stdout)
-        logging.error('and stderr:')
+        logging.error("and stderr:")
         logging.error(result.stderr)
 
         result.check_returncode()

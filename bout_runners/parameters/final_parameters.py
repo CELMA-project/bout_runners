@@ -2,8 +2,10 @@
 
 
 import ast
-from bout_runners.parameters.run_parameters import RunParameters
+from typing import Dict, Optional, Union
+
 from bout_runners.parameters.default_parameters import DefaultParameters
+from bout_runners.parameters.run_parameters import RunParameters
 
 
 class FinalParameters:
@@ -66,14 +68,16 @@ class FinalParameters:
     10, ...}}
 
     >>> final_parameters.\
-    ...     cast_parameters_to_sql_type(final_parameters_dict)
+    ...     cast_to_sql_type(final_parameters_dict)
     {'global': {'append': TEXT, 'async_send': TETX, ..., 'nout':
     INTEGER, ...}}
     """
 
-    def __init__(self,
-                 default_parameters=None,
-                 run_parameters=RunParameters()):
+    def __init__(
+        self,
+        default_parameters: Optional[DefaultParameters] = None,
+        run_parameters: Optional[RunParameters] = None,
+    ) -> None:
         """
         Set the member data.
 
@@ -82,30 +86,38 @@ class FinalParameters:
         default_parameters : DefaultParameters or None
             Object dealing with default parameters (i.e. standard
             BOUT++ parameters, or those given in BOUT.inp)
-        run_parameters : RunParameters
+        run_parameters : RunParameters or None
             Object dealing with run parameters (i.e. parameters set
             in bout_runner which has precedence over BOUT.inp)
+            If None, default parameters will be used
         """
-        self.__default_parameters = \
-            default_parameters if default_parameters is not None \
+        self.__default_parameters = (
+            default_parameters
+            if default_parameters is not None
             else DefaultParameters()
-        self.__run_parameters = run_parameters
+        )
+        self.__run_parameters = (
+            run_parameters if run_parameters is not None else RunParameters()
+        )
 
-    def get_final_parameters(self):
+    def get_final_parameters(
+        self,
+    ) -> Dict[str, Dict[str, Union[str, int, float, bool]]]:
         """
         Obtain the final parameters that will be used in a run.
 
         Returns
         -------
-        final_parameters_dict : dict of str, dict
+        final_parameters_dict : dict
             Parameters on the form
             >>> {'global':{'append': 'False', 'nout': 5},
             ...  'mesh':  {'nx': 4},
             ...  'section_in_BOUT_inp': {'some_variable': 'some_value'}}
         """
-        final_parameters_dict = \
-            self.__default_parameters.get_default_parameters()
+        final_parameters_dict = self.__default_parameters.get_default_parameters()
         run_parameters_dict = self.__run_parameters.run_parameters_dict
+        # Assert to prevent "Incompatible types in assignment" with Optional
+        assert run_parameters_dict is not None
         final_parameters_dict.update(run_parameters_dict)
 
         # Cast True to 1 and False to 0 as SQLite has no support for
@@ -124,7 +136,9 @@ class FinalParameters:
         return final_parameters_dict
 
     @staticmethod
-    def cast_parameters_to_sql_type(parameter_dict):
+    def cast_to_sql_type(
+        parameter_dict: Dict[str, Dict[str, Union[str, int, float]]]
+    ) -> Dict[str, Dict[str, str]]:
         """
         Cast the values of a parameter dict to valid SQL types.
 
@@ -142,22 +156,25 @@ class FinalParameters:
             On the form
             >>> {'section': {'parameter': 'value_type'}}
         """
-        type_map = {'bool': 'INTEGER',  # No bool type in SQLite
-                    'float': 'REAL',
-                    'int': 'INTEGER',
-                    'str': 'TEXT'}
+        type_map = {
+            "bool": "INTEGER",  # No bool type in SQLite
+            "float": "REAL",
+            "int": "INTEGER",
+            "str": "TEXT",
+        }
 
-        parameter_dict_as_sql_types = parameter_dict.copy()
+        parameter_dict_copy = parameter_dict.copy()
+        parameter_dict_as_sql_types: Dict[str, Dict[str, str]] = dict()
 
-        for section in parameter_dict.keys():
-            for key, val in parameter_dict[section].items():
+        for section in parameter_dict_copy.keys():
+            parameter_dict_as_sql_types[section] = dict()
+            for key, val in parameter_dict_copy[section].items():
                 # If type is not found, type is str
                 try:
                     val_type = type(ast.literal_eval(str(val)))
                 except (SyntaxError, ValueError):
                     val_type = str
 
-                parameter_dict[section][key] = type_map[
-                    val_type.__name__]
+                parameter_dict_as_sql_types[section][key] = type_map[val_type.__name__]
 
         return parameter_dict_as_sql_types

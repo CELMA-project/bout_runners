@@ -2,10 +2,11 @@
 
 
 import logging
+
 from bout_runners.submitter.local_submitter import LocalSubmitter
 
 
-def get_submitter(name, *args, **kwargs):
+def get_submitter(name: str, *args, **kwargs) -> LocalSubmitter:
     """
     Return a Submitter object.
 
@@ -24,16 +25,20 @@ def get_submitter(name, *args, **kwargs):
     -------
     submitter : AbstractSubmitter
         The implemented submitter class
-    """
-    implemented = ('local',)
 
-    if name == 'local':
+    Raises
+    ------
+    NotImplementedError
+        If the name is not a supported submitter class
+    """
+    implemented = ("local",)
+
+    if name == "local":
         submitter = LocalSubmitter(*args, **kwargs)
     else:
-        msg = (f'{name} is not a valid submitter class, choose '
-               f'from {implemented}')
+        msg = f"{name} is not a valid submitter class, choose " f"from {implemented}"
         raise NotImplementedError(msg)
 
-    logging.debug('%s submitter selected', name)
+    logging.debug("%s submitter selected", name)
 
     return submitter

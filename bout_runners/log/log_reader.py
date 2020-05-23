@@ -1,10 +1,11 @@
 """Module containing the LogReader class."""
 
 
-import re
 import logging
+import re
 from datetime import datetime
 from pathlib import Path
+from typing import Optional
 
 
 class LogReader:
@@ -51,7 +52,7 @@ class LogReader:
     1190
     """
 
-    def __init__(self, log_path):
+    def __init__(self, log_path: Path) -> None:
         """
         Open and read a log file.
 
@@ -60,11 +61,11 @@ class LogReader:
         log_path : str or Path
             Absolute path to log file
         """
-        with Path(log_path).open('r') as log_file:
+        with Path(log_path).open("r") as log_file:
             self.file_str = log_file.read()
-            logging.debug('Opened log_file %s', log_path)
+            logging.debug("Opened log_file %s", log_path)
 
-    def started(self):
+    def started(self) -> bool:
         """
         Check whether the run has a start time.
 
@@ -73,9 +74,9 @@ class LogReader:
         bool
             True if the start signature is found in the file
         """
-        return self.__is_str_in_file(r'^Run started at')
+        return self.__is_str_in_file(r"^Run started at")
 
-    def ended(self):
+    def ended(self) -> bool:
         """
         Check whether the run has an end time.
 
@@ -84,9 +85,9 @@ class LogReader:
         bool
             True if the end signature is found in the file
         """
-        return self.__is_str_in_file(r'^Run finished at')
+        return self.__is_str_in_file(r"^Run finished at")
 
-    def pid_exist(self):
+    def pid_exist(self) -> bool:
         """
         Check whether a process id exist.
 
@@ -95,10 +96,10 @@ class LogReader:
         bool
             True if the pid is found
         """
-        return self.__is_str_in_file(r'^pid\s*:\s*')
+        return self.__is_str_in_file(r"^pid\s*:\s*")
 
     @property
-    def start_time(self):
+    def start_time(self) -> Optional[datetime]:
         """
         Return the start time of the process.
 
@@ -108,11 +109,11 @@ class LogReader:
             The start time on date time format
         """
         if self.started():
-            return self.__find_locale_time(r'^Run started at  : (.*)')
+            return self.__find_locale_time(r"^Run started at  : (.*)")
         return None
 
     @property
-    def end_time(self):
+    def end_time(self) -> Optional[datetime]:
         """
         Return the end time of the process.
 
@@ -122,11 +123,11 @@ class LogReader:
             The end time on date time format
         """
         if self.ended():
-            return self.__find_locale_time(r'^Run finished at  : (.*)')
+            return self.__find_locale_time(r"^Run finished at  : (.*)")
         return None
 
     @property
-    def pid(self):
+    def pid(self) -> Optional[int]:
         """
         Return the pid of the process.
 
@@ -136,16 +137,17 @@ class LogReader:
             The pid of the process
         """
         if self.pid_exist():
-            pattern = r'^pid:\s*(\d*)\s*$'
+            pattern = r"^pid:\s*(\d*)\s*$"
             # Using search as match will only search the beginning of
             # the string
             # https://stackoverflow.com/a/32134461/2786884
-            return int(re.search(pattern,
-                                 self.file_str,
-                                 flags=re.MULTILINE).group(1))
+            match = re.search(pattern, self.file_str, flags=re.MULTILINE)
+            if match is None:
+                return None
+            return int(match.group(1))
         return None
 
-    def __is_str_in_file(self, pattern):
+    def __is_str_in_file(self, pattern: str) -> bool:
         """
         Check whether regex-pattern exists in file.
 
@@ -167,7 +169,7 @@ class LogReader:
             return False
         return True
 
-    def __find_locale_time(self, pattern):
+    def __find_locale_time(self, pattern: str) -> datetime:
         """
         Return the locale time of a regex capture.
 
@@ -180,12 +182,19 @@ class LogReader:
         -------
         time : datetime
             The locale datetime
+
+        Raises
+        ------
+        ValueError
+            If no matches for pattern is found in self.file_str
         """
         # Using search as match will only search the beginning of the
         # string
         # https://stackoverflow.com/a/32134461/2786884
-        time_str = re.search(pattern,
-                             self.file_str,
-                             flags=re.MULTILINE).group(1)
-        time = datetime.strptime(time_str, '%c')
+        match = re.search(pattern, self.file_str, flags=re.MULTILINE)
+        if match is None:
+            raise ValueError(f"No matches in {self.file_str} with pattern {pattern}")
+
+        time_str = match.group(1)
+        time = datetime.strptime(time_str, "%c")
         return time

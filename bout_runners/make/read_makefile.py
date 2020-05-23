@@ -8,7 +8,7 @@ from pathlib import Path
 class MakefileReaderError(Exception):
     """Error class indicating that this is a ReadMakefile error."""
 
-    def __init__(self, variable, path):
+    def __init__(self, variable: str, path: Path) -> None:
         """
         Construct a string and call the super constructor.
 
@@ -19,7 +19,7 @@ class MakefileReaderError(Exception):
         path : Path or str
             Path searched at
         """
-        message = f'Could not find {variable} in {path}'
+        message = f"Could not find {variable} in {path}"
 
         super().__init__(message)
 
@@ -36,7 +36,7 @@ class BoutMakefileReader:
         The content of the Makefile as a string
     """
 
-    def __init__(self, path):
+    def __init__(self, path: Path) -> None:
         """
         Read the content of a Makefile and store it into self.content.
 
@@ -48,7 +48,7 @@ class BoutMakefileReader:
         self.path = path
         self.content = self.read()
 
-    def read(self):
+    def read(self) -> str:
         """
         Read the makefile.
 
@@ -57,11 +57,13 @@ class BoutMakefileReader:
         str
             Content of the Makefile
         """
-        with Path(self.path).open('r') as make_file:
+        with Path(self.path).open("r") as make_file:
             return make_file.read()
 
-    def get_variable_value(self):
+    @property
+    def value(self) -> str:
         """Get the value of the variable."""
+        return ""
 
 
 class BoutMakefileVariableReader(BoutMakefileReader):
@@ -72,7 +74,7 @@ class BoutMakefileVariableReader(BoutMakefileReader):
     ----------
     variable_name : str
         Name of the variable belonging to the instance
-    variable_value : str
+    value : str
         Value belonging to the variable of the instance
 
     Methods
@@ -93,12 +95,11 @@ class BoutMakefileVariableReader(BoutMakefileReader):
     ```
 
     Script
-    >>> BoutMakefileVariableReader('SOURCEC', 'Makefile').\
-    ...     get_variable_value()
+    >>> BoutMakefileVariableReader('SOURCEC', 'Makefile').value
     'bout_model.cxx'
     """
 
-    def __init__(self, path, variable_name):
+    def __init__(self, path: Path, variable_name: str) -> None:
         """
         Set the variable name of the instance.
 
@@ -112,15 +113,15 @@ class BoutMakefileVariableReader(BoutMakefileReader):
         super(BoutMakefileVariableReader, self).__init__(path)
 
         self.variable_name = variable_name
-        self.variable_value = None
 
-    def get_variable_value(self):
+    @property
+    def value(self) -> str:
         """
         Get the value of the variable.
 
         Returns
         -------
-        self.variable_value : str
+        value : str
             The last match of the variable
 
         Raises
@@ -136,21 +137,23 @@ class BoutMakefileVariableReader(BoutMakefileReader):
         ... foo   = foobar.qux # foo = quux.quuz
 
         Script
-        >>> BoutMakefileVariableReader('foo', 'Makefile').get_variable_value()
+        >>> BoutMakefileVariableReader('foo', 'Makefile').value
         'foobar.qux'
         """
         # Build the match function for the regex
-        no_comment_line = r'^\s*(?!#)'
-        must_contain_eq_sign = r'\s*=\s*'
+        no_comment_line = r"^\s*(?!#)"
+        must_contain_eq_sign = r"\s*=\s*"
         # As we are using the MULTILINE modifier we should exclude
         # newlines
-        capture_all_except_comment_and_newline = r'([.]*[^#\n]*)'
-        avoid_trailing_whitespace = r'(?<!\s)'
+        capture_all_except_comment_and_newline = r"([.]*[^#\n]*)"
+        avoid_trailing_whitespace = r"(?<!\s)"
 
-        pattern = f'{no_comment_line}{self.variable_name}' \
-                  f'{must_contain_eq_sign}' \
-                  f'{capture_all_except_comment_and_newline}' \
-                  f'{avoid_trailing_whitespace}'
+        pattern = (
+            f"{no_comment_line}{self.variable_name}"
+            f"{must_contain_eq_sign}"
+            f"{capture_all_except_comment_and_newline}"
+            f"{avoid_trailing_whitespace}"
+        )
 
         # NOTE: match() checks for match only at the beginning of a
         #       string
@@ -167,6 +170,6 @@ class BoutMakefileVariableReader(BoutMakefileReader):
 
         # Only the last line of the variable will be considered by
         # the Makefile
-        self.variable_value = matches[-1]
+        value: str = matches[-1]
 
-        return self.variable_value
+        return value

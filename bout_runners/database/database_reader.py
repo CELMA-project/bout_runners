@@ -1,7 +1,12 @@
 """Module containing the DatabaseReader class."""
 
 
+from typing import Mapping, Optional, Union
+
 import pandas as pd
+from bout_runners.database.database_connector import DatabaseConnector
+from numpy import int64
+from pandas import DataFrame
 
 
 class DatabaseReader:
@@ -10,7 +15,7 @@ class DatabaseReader:
 
     Attributes
     ----------
-    database_connector : DatabaseConnector
+    db_connector : DatabaseConnector
         The database object to read from
 
     Methods
@@ -55,7 +60,7 @@ class DatabaseReader:
     >>> final_parameters = FinalParameters(default_parameters)
     >>> final_parameters_dict = final_parameters.get_final_parameters()
     >>> final_parameters_as_sql_types = \
-    ...     final_parameters.cast_parameters_to_sql_type(
+    ...     final_parameters.cast_to_sql_type(
     ...     final_parameters_dict)
 
     Create the database
@@ -87,18 +92,18 @@ class DatabaseReader:
     True
     """
 
-    def __init__(self, database_connector):
+    def __init__(self, db_connector: DatabaseConnector) -> None:
         """
         Set the database to use.
 
         Parameters
         ----------
-        database_connector : DatabaseConnector
+        db_connector : DatabaseConnector
             The database object to read from
         """
-        self.database_connector = database_connector
+        self.db_connector = db_connector
 
-    def query(self, query_str, **kwargs):
+    def query(self, query_str: str, **kwargs) -> DataFrame:
         """
         Make a query to the database.
 
@@ -106,7 +111,7 @@ class DatabaseReader:
         ----------
         query_str : str
             The query to execute
-        kwargs
+        kwargs : dict
             Additional keyword parameters to pd.read_sql_query
 
         Returns
@@ -114,12 +119,10 @@ class DatabaseReader:
         table : DataFrame
             The result of a query as a DataFrame
         """
-        table = pd.read_sql_query(query_str,
-                                  self.database_connector.connection,
-                                  **kwargs)
+        table = pd.read_sql_query(query_str, self.db_connector.connection, **kwargs)
         return table
 
-    def get_latest_row_id(self):
+    def get_latest_row_id(self) -> int64:
         """
         Return the latest row id.
 
@@ -130,11 +133,12 @@ class DatabaseReader:
         """
         # https://stackoverflow.com/questions/3442033/sqlite-how-to-get-value-of-auto-increment-primary-key-after-insert-other-than
         # pylint: disable=no-member
-        row_id = \
-            self.query('SELECT last_insert_rowid() AS id').loc[0, 'id']
+        row_id = self.query("SELECT last_insert_rowid() AS id").loc[0, "id"]
         return row_id
 
-    def get_entry_id(self, table_name, entries_dict):
+    def get_entry_id(
+        self, table_name: str, entries_dict: Mapping[str, Union[int, str, float, None]]
+    ) -> Optional[int]:
         """
         Get the id of a table entry.
 
@@ -155,27 +159,24 @@ class DatabaseReader:
         # https://stackoverflow.com/questions/9755860/valid-query-to-check-if-row-exists-in-sqlite3
         # NOTE: About SELECT 1
         # https://stackoverflow.com/questions/7039938/what-does-select-1-from-do
-        where_statements = list()
+        where_statements_list = list()
         for field, val in entries_dict.items():
             val = f'"{val}"' if isinstance(val, str) else val
-            where_statements.append(f'{" "*7}AND {field}={val}')
-        where_statements[0] = where_statements[0].replace('AND',
-                                                          'WHERE')
-        where_statements = '\n'.join(where_statements)
+            where_statements_list.append(f'{" "*7}AND {field}={val}')
+        where_statements_list[0] = where_statements_list[0].replace("AND", "WHERE")
+        where_statements_str = "\n".join(where_statements_list)
 
-        query_str = \
-            (f'SELECT id\n'
-             f'FROM {table_name}\n{where_statements}')
+        query_str = f"SELECT id\n" f"FROM {table_name}\n{where_statements_str}"
 
         table = self.query(query_str)
         # NOTE: We explicitly cast to int, as sqlite3 will cast
         #       np.int64 to bytes
         # pylint: disable=no-member
-        row_id = None if table.empty else int(table.loc[0, 'id'])
+        row_id = None if table.empty else int(table.loc[0, "id"])
 
         return row_id
 
-    def check_tables_created(self):
+    def check_tables_created(self) -> bool:
         """
         Check if the tables is created in the database.
 
@@ -184,8 +185,7 @@ class DatabaseReader:
         bool
             Whether or not the tables are created
         """
-        query_str = ('SELECT name FROM sqlite_master '
-                     '   WHERE type="table"')
+        query_str = 'SELECT name FROM sqlite_master WHERE type="table"'
 
         table = self.query(query_str)
         return len(table.index) != 0

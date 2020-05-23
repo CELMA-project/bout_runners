@@ -1,14 +1,16 @@
 """Contains the class dealing with the default parameters."""
 
 
-import re
 import ast
-import logging
 import configparser
+import logging
+import re
 from pathlib import Path
+from typing import Dict, Optional, Union
+
 from bout_runners.executor.bout_paths import BoutPaths
-from bout_runners.parameters.run_parameters import RunParameters
 from bout_runners.executor.executor import Executor
+from bout_runners.parameters.run_parameters import RunParameters
 from bout_runners.submitter.local_submitter import LocalSubmitter
 
 
@@ -64,7 +66,11 @@ class DefaultParameters:
     {'global': {'append': False, 'async_send': False, ...}}
     """
 
-    def __init__(self, bout_paths=None, settings_path=None):
+    def __init__(
+        self,
+        bout_paths: Optional[BoutPaths] = None,
+        settings_path: Optional[Path] = None,
+    ) -> None:
         """
         Set the member data.
 
@@ -91,15 +97,15 @@ class DefaultParameters:
             Will invoke `run_parameters_run` if set to None
         """
         self.__bout_paths = bout_paths
-        self.__settings_path = Path() if settings_path is None \
-            else Path(settings_path)
+        self.__settings_path = Path() if settings_path is None else Path(settings_path)
 
         if not self.__settings_path.is_file():
-            logging.info('Running parameter run as the parameters of '
-                         'the project are unknown')
+            logging.info(
+                "Running parameter run as the parameters of " "the project are unknown"
+            )
             self.run_parameters_run(self.__bout_paths)
 
-    def run_parameters_run(self, bout_paths):
+    def run_parameters_run(self, bout_paths: Optional[BoutPaths]) -> None:
         """
         Execute a run to obtain the default parameters.
 
@@ -112,22 +118,43 @@ class DefaultParameters:
             Object containing the paths of the project
         """
         if bout_paths is None:
-            bout_paths = BoutPaths(bout_inp_dst_dir='settings_run')
+            bout_paths = BoutPaths(bout_inp_dst_dir="settings_run")
         else:
-            bout_paths.bout_inp_dst_dir = 'settings_run'
+            # NOTE: type: ignore due to https://github.com/python/mypy/issues/3004
+            bout_paths.bout_inp_dst_dir = "settings_run"  # type: ignore
 
-        run_parameters = RunParameters({'global': {'nout': 0}})
-        executor = Executor(
-            bout_paths=bout_paths,
-            submitter=LocalSubmitter(bout_paths.project_path),
-            run_parameters=run_parameters)
+        executor = self.get_test_executor(bout_paths)
 
         executor.execute()
 
-        self.__settings_path = \
-            bout_paths.bout_inp_dst_dir.joinpath('BOUT.settings')
+        self.__settings_path = bout_paths.bout_inp_dst_dir.joinpath("BOUT.settings")
 
-    def get_default_parameters(self):
+    @staticmethod
+    def get_test_executor(bout_paths: BoutPaths) -> Executor:
+        """
+        Return the executor used for test (i.e. where nout=0).
+
+        Parameters
+        ----------
+        bout_paths : BoutPaths
+            Object containing the BOUT++ paths
+
+        Returns
+        -------
+        executor : Executor
+            Executor instantiated with the test set up
+        """
+        run_parameters = RunParameters({"global": {"nout": 0}})
+        executor = Executor(
+            bout_paths=bout_paths,
+            submitter=LocalSubmitter(bout_paths.project_path),
+            run_parameters=run_parameters,
+        )
+        return executor
+
+    def get_default_parameters(
+        self,
+    ) -> Dict[str, Dict[str, Union[str, int, float, bool]]]:
         """
         Return the default parameters from the settings file.
 
@@ -153,19 +180,19 @@ class DefaultParameters:
         """
         # The settings file lacks a header for the global parameter
         # Therefore, we add add the header [global]
-        with self.__settings_path.open('r') as settings_file:
-            settings_memory = f'[global]\n{settings_file.read()}'
+        with self.__settings_path.open("r") as settings_file:
+            settings_memory = f"[global]\n{settings_file.read()}"
 
         config = configparser.ConfigParser()
         config.read_string(settings_memory)
 
-        default_parameters_dict = dict()
+        default_parameters_dict: Dict[str, Dict[str, Union[str, int, float]]] = dict()
 
         for section in config.sections():
             default_parameters_dict[section] = dict()
             for key, val in config[section].items():
                 # Strip comments
-                capture_all_but_comment = '^([^#]*)'
+                capture_all_but_comment = "^([^#]*)"
                 matches = re.findall(capture_all_but_comment, val, re.M)
 
                 # Exclude comment line
@@ -186,16 +213,16 @@ class DefaultParameters:
 
         # NOTE: Bug in .settings: -d path is captured with # not in use
         bout_inp_dir = self.__settings_path.parent
-        default_parameters_dict['global'].pop('d', None)
-        default_parameters_dict['global'].pop(str(bout_inp_dir).lower(),
-                                              None)
+        default_parameters_dict["global"].pop("d", None)
+        default_parameters_dict["global"].pop(str(bout_inp_dir).lower(), None)
 
-        if 'all' in default_parameters_dict.keys():
-            default_parameters_dict['all_boundaries'] = \
-                default_parameters_dict.pop('all')
+        if "all" in default_parameters_dict.keys():
+            default_parameters_dict["all_boundaries"] = default_parameters_dict.pop(
+                "all"
+            )
 
         # Drop run as bout_runners will make its own table with that
         # name
-        default_parameters_dict.pop('run', None)
+        default_parameters_dict.pop("run", None)
 
         return default_parameters_dict

@@ -1,7 +1,13 @@
 """Contains unittests for make."""
 
 
-def test_make_project(make_make_object):
+from pathlib import Path
+from typing import Tuple
+
+from bout_runners.make.make import Make
+
+
+def test_make_project(make_make_object: Tuple[Make, Path]) -> None:
     """
     Test that the MakeProject class is able to make conduction.
 

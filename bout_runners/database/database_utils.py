@@ -4,12 +4,15 @@
 import logging
 import platform
 import subprocess
+from pathlib import Path
+from typing import Dict
+
+from bout_runners.submitter.local_submitter import LocalSubmitter
 from bout_runners.utils.file_operations import get_modified_time
 from bout_runners.utils.paths import get_bout_directory
-from bout_runners.submitter.local_submitter import LocalSubmitter
 
 
-def get_system_info_as_sql_type():
+def get_system_info_as_sql_type() -> Dict[str, str]:
     """
     Return the SQL types of the system information.
 
@@ -21,12 +24,14 @@ def get_system_info_as_sql_type():
     """
     attributes = get_system_info()
 
-    sys_info_dict = {att: 'TEXT' for att in attributes.keys()}
+    sys_info_dict = {att: "TEXT" for att in attributes.keys()}
 
     return sys_info_dict
 
 
-def get_file_modification(project_path, makefile_path, exec_name):
+def get_file_modification(
+    project_path: Path, makefile_path: Path, exec_name: str
+) -> Dict[str, str]:
     """
     Return the file modification info.
 
@@ -50,24 +55,25 @@ def get_file_modification(project_path, makefile_path, exec_name):
         ...  'bout_git_sha': str,}
     """
     file_modification = dict()
-    file_modification['project_makefile_modified'] =\
-        get_modified_time(makefile_path)
+    file_modification["project_makefile_modified"] = get_modified_time(makefile_path)
 
     project_executable = makefile_path.parent.joinpath(exec_name)
-    file_modification['project_executable_modified'] =\
-        get_modified_time(project_executable)
+    file_modification["project_executable_modified"] = get_modified_time(
+        project_executable
+    )
 
-    file_modification['project_git_sha'] = get_git_sha(project_path)
+    file_modification["project_git_sha"] = get_git_sha(project_path)
 
     bout_path = get_bout_directory()
-    file_modification['bout_lib_modified'] = \
-        get_modified_time(bout_path.joinpath('lib', 'libbout++.a'))
-    file_modification['bout_git_sha'] = get_git_sha(bout_path)
+    file_modification["bout_lib_modified"] = get_modified_time(
+        bout_path.joinpath("lib", "libbout++.a")
+    )
+    file_modification["bout_git_sha"] = get_git_sha(bout_path)
 
     return file_modification
 
 
-def get_git_sha(path):
+def get_git_sha(path: Path) -> str:
     """
     Return the git hash.
 
@@ -82,9 +88,8 @@ def get_git_sha(path):
         The git hash
     """
     try:
-        result = \
-            LocalSubmitter(path).submit_command('git rev-parse HEAD')
-        git_sha = result.stdout.decode('utf8').strip()
+        result = LocalSubmitter(path).submit_command("git rev-parse HEAD")
+        git_sha: str = result.stdout.decode("utf8").strip()
     # FileNotFoundError when `git` is not found
     except (FileNotFoundError, subprocess.CalledProcessError) as error:
         if isinstance(error, FileNotFoundError):
@@ -92,13 +97,13 @@ def get_git_sha(path):
         elif isinstance(error, subprocess.CalledProcessError):
             error_str = error.args[2]
         else:
-            error_str = 'Unknown error'
-        logging.warning('Could not retrieve git sha: %s', error_str)
-        git_sha = 'None'
+            error_str = "Unknown error"
+        logging.warning("Could not retrieve git sha: %s", error_str)
+        git_sha = "None"
     return git_sha
 
 
-def get_system_info():
+def get_system_info() -> Dict[str, str]:
     """
     Return the system information.
 
@@ -110,8 +115,9 @@ def get_system_info():
     # From
     # https://stackoverflow.com/questions/11637293/iterate-over-object-attributes-in-python
     sys_info = platform.uname()
-    attributes = {name: getattr(sys_info, name)
-                  for name in dir(sys_info)
-                  if not name.startswith('_') and not
-                  callable(getattr(sys_info, name))}
+    attributes = {
+        name: getattr(sys_info, name)
+        for name in dir(sys_info)
+        if not name.startswith("_") and not callable(getattr(sys_info, name))
+    }
     return attributes

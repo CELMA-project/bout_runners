@@ -1,10 +1,12 @@
 """Contains the executor class."""
 
 
+from typing import Optional
+
+from bout_runners.executor.bout_paths import BoutPaths
 from bout_runners.make.make import Make
 from bout_runners.parameters.run_parameters import RunParameters
 from bout_runners.submitter.local_submitter import LocalSubmitter
-from bout_runners.executor.bout_paths import BoutPaths
 
 
 class Executor:
@@ -72,10 +74,12 @@ class Executor:
     >>> executor.execute()
     """
 
-    def __init__(self,
-                 bout_paths=None,
-                 submitter=None,
-                 run_parameters=RunParameters()):
+    def __init__(
+        self,
+        bout_paths: Optional[BoutPaths] = None,
+        submitter: Optional[LocalSubmitter] = None,
+        run_parameters: Optional[RunParameters] = None,
+    ) -> None:
         """
         Set the input parameters.
 
@@ -86,22 +90,23 @@ class Executor:
             If None, default BoutPaths values will be used
         submitter : AbstractSubmitter
             Object containing the submitter
-        run_parameters : RunParameters
+        run_parameters : RunParameters or None
             Object containing the run parameters
+            If None, default parameters will be used
         """
         # Set member data
         # NOTE: We are not setting the default as a keyword argument
         #       as this would mess up the paths
-        self.submitter = \
-            submitter if submitter is not None else LocalSubmitter()
-        self.__bout_paths = \
-            bout_paths if bout_paths is not None else BoutPaths()
-        self.__run_parameters = run_parameters
+        self.submitter = submitter if submitter is not None else LocalSubmitter()
+        self.__bout_paths = bout_paths if bout_paths is not None else BoutPaths()
+        self.__run_parameters = (
+            run_parameters if run_parameters is not None else RunParameters()
+        )
         self.__make = Make(self.__bout_paths.project_path)
         self.__command = self.get_execute_command()
 
     @property
-    def bout_paths(self):
+    def bout_paths(self) -> BoutPaths:
         """
         Set the properties of self.bout_paths.
 
@@ -132,7 +137,7 @@ class Executor:
         """
         return self.__run_parameters
 
-    def get_execute_command(self):
+    def get_execute_command(self) -> str:
         """
         Return the execute command string.
 
@@ -141,18 +146,19 @@ class Executor:
         command : str
             The terminal command for executing the run
         """
-        mpi_cmd = 'mpirun -np'
+        mpi_cmd = "mpirun -np"
 
         # NOTE: No spaces if parameters are None
-        command = \
-            (f'{mpi_cmd} '
-             f'{self.submitter.processor_split.number_of_processors} '
-             f'./{self.__make.exec_name} '
-             f'-d {self.__bout_paths.bout_inp_dst_dir} '
-             f'{self.__run_parameters.run_parameters_str}')
+        command = (
+            f"{mpi_cmd} "
+            f"{self.submitter.processor_split.number_of_processors} "
+            f"./{self.__make.exec_name} "
+            f"-d {self.__bout_paths.bout_inp_dst_dir} "
+            f"{self.__run_parameters.run_parameters_str}"
+        )
         return command
 
-    def execute(self):
+    def execute(self) -> None:
         """Execute a BOUT++ run."""
         # Make the project if not already made
         self.__make.run_make()
