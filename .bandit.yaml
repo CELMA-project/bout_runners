@@ -1,0 +1,6 @@
+# Currently not able to specify in setup.cfg
+# https://github.com/PyCQA/bandit/issues/212
+
+# Skip B322 as bandit cannot distinguish between py2 and py3
+# https://github.com/PyCQA/bandit/issues/596
+skips: ['B322', 'B101']

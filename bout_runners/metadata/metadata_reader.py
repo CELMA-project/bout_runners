@@ -449,6 +449,7 @@ class MetadataReader:
             for column in columns:
                 if "_id" in column:
                     match = pattern.match(column)
+                    # FIXME: Drop skip of B101 in bandit.yaml
                     assert match is not None
                     ids.append(match[1])
             if len(ids) > 0:
