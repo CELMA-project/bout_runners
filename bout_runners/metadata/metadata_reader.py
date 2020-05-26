@@ -440,6 +440,11 @@ class MetadataReader:
             On the form
             >>> {'table_1': ('table_2', 'table_3'),
             ...  'table_4': ('table_5',), ...}
+
+        Raises
+        ------
+        RuntimeError
+            If match is None
         """
         table_connection_dict = dict()
         pattern = re.compile("(.*)_id")
@@ -449,7 +454,8 @@ class MetadataReader:
             for column in columns:
                 if "_id" in column:
                     match = pattern.match(column)
-                    assert match is not None
+                    if match is None:
+                        raise RuntimeError("match is None")
                     ids.append(match[1])
             if len(ids) > 0:
                 table_connection_dict[table] = tuple(ids)

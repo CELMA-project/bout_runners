@@ -79,6 +79,11 @@ class RunParameters:
         -------
         self.__run_parameters_dict : dict of str, dict
             Absolute path to the root of make file
+
+        Raises
+        ------
+        RuntimeError
+            If self.run_parameters_dict is None
         """
         return self.__run_parameters_dict
 
@@ -95,7 +100,8 @@ class RunParameters:
         )
 
         # Assert to prevent "Incompatible types in assignment" with Optional
-        assert self.run_parameters_dict is not None
+        if self.run_parameters_dict is None:
+            raise RuntimeError("self.run_parameters_dict is None")
 
         # Generate the string
         sections = list(self.run_parameters_dict.keys())
@@ -123,11 +129,17 @@ class RunParameters:
         str
             The parameters dict serialized as a string
 
+        Raises
+        ------
+        RuntimeError
+            If self.__run_parameters_str is None
+
         Notes
         -----
         As the run_parameters_str must reflect run_parameters_dict,
         both are set when setting run_parameters_dict
         """
         # Assert to prevent "Incompatible return type" with Optional
-        assert self.__run_parameters_str is not None
+        if self.__run_parameters_str is None:
+            raise RuntimeError("self.__run_parameters_str is None")
         return self.__run_parameters_str

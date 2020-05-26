@@ -145,6 +145,11 @@ class StatusChecker:
         submitted_to_check : DataFrame
             DataFrame containing the `id` and `name` of the runs with
             status `submitted`
+
+        Raises
+        ------
+        RuntimeError
+            In case log_reader.started() is True and log_reader.start_time is None
         """
         for name, run_id in submitted_to_check.itertuples(index=False):
             metadata_updater.run_id = run_id
@@ -156,7 +161,11 @@ class StatusChecker:
                 if log_reader.started():
                     start_time = log_reader.start_time
                     # Assert to prevent "Incompatible types in assignment" with Optional
-                    assert start_time is not None
+                    if start_time is None:
+                        raise RuntimeError(
+                            "log_reader.start_time is None although "
+                            "log_reader.started is True"
+                        )
                     metadata_updater.update_start_time(start_time)
                     latest_status = self.__check_if_stopped(
                         log_reader, metadata_updater
@@ -212,11 +221,19 @@ class StatusChecker:
         -------
         latest_status : str
             The latest status
+
+        Raises
+        ------
+        RuntimeError
+            In case log_reader.ended() is True and log_reader.end_time is None
         """
         if log_reader.ended():
             end_time = log_reader.end_time
             # Assert to prevent "Incompatible types in assignment" with Optional
-            assert end_time is not None
+            if end_time is None:
+                raise RuntimeError(
+                    "log_reader.end_time is None although " "log_reader.ended() is True"
+                )
             metadata_updater.update_stop_time(end_time)
             latest_status = "complete"
         else:

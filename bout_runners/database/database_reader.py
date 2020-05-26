@@ -1,7 +1,7 @@
 """Module containing the DatabaseReader class."""
 
 
-from typing import Mapping, Optional, Union
+from typing import Iterable, Mapping, Optional, Union
 
 import pandas as pd
 from bout_runners.database.database_connector import DatabaseConnector
@@ -103,7 +103,12 @@ class DatabaseReader:
         """
         self.db_connector = db_connector
 
-    def query(self, query_str: str, **kwargs) -> DataFrame:
+    def query(
+        self,
+        query_str: str,
+        params: Optional[Iterable[Union[str, float, int, bool, None]]] = None,
+        **kwargs,
+    ) -> DataFrame:
         """
         Make a query to the database.
 
@@ -111,6 +116,10 @@ class DatabaseReader:
         ----------
         query_str : str
             The query to execute
+        params : array_like
+            Array of parameters
+            Used to protect against SQL injection
+            >>> self.query("SELECT ? FROM table WHERE foo = ?", params=("bar", "baz"))
         kwargs : dict
             Additional keyword parameters to pd.read_sql_query
 
@@ -119,7 +128,9 @@ class DatabaseReader:
         table : DataFrame
             The result of a query as a DataFrame
         """
-        table = pd.read_sql_query(query_str, self.db_connector.connection, **kwargs)
+        table = pd.read_sql_query(
+            query_str, self.db_connector.connection, params=params, **kwargs
+        )
         return table
 
     def get_latest_row_id(self) -> int64:
@@ -160,15 +171,18 @@ class DatabaseReader:
         # NOTE: About SELECT 1
         # https://stackoverflow.com/questions/7039938/what-does-select-1-from-do
         where_statements_list = list()
+        where_values = list()
         for field, val in entries_dict.items():
-            val = f'"{val}"' if isinstance(val, str) else val
-            where_statements_list.append(f'{" "*7}AND {field}={val}')
+            val = f"{val}" if isinstance(val, str) else val
+            where_statements_list.append(f'{" "*7}AND {field}=?')
+            where_values.append(val)
         where_statements_list[0] = where_statements_list[0].replace("AND", "WHERE")
         where_statements_str = "\n".join(where_statements_list)
 
-        query_str = f"SELECT id\n" f"FROM {table_name}\n{where_statements_str}"
+        # NOTE: Protection against SQL injection through the use of ? in for-loop above
+        query_str = f"SELECT id\nFROM {table_name}\n{where_statements_str}"  # nosec
 
-        table = self.query(query_str)
+        table = self.query(query_str, params=where_values)
         # NOTE: We explicitly cast to int, as sqlite3 will cast
         #       np.int64 to bytes
         # pylint: disable=no-member
