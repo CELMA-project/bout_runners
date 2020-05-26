@@ -5,7 +5,7 @@ Welcome to bout_runners
 
 |pypi| |python| |license|
 
-|code_style| |mypy|
+|bandit| |code_style| |mypy|
 
 .. |lint| image:: https://github.com/CELMA-project/bout_runners/workflows/Lint/badge.svg?branch=master
     :alt: lint status
@@ -52,6 +52,10 @@ Welcome to bout_runners
     :scale: 100%
     :target: http://mypy-lang.org/
 
+.. |bandit| image:: https://img.shields.io/badge/security-bandit-yellow.svg
+    :alt: security status
+    :scale: 100%
+    :target: https://github.com/PyCQA/bandit
 
 Purpose
 -------

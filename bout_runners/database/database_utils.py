@@ -3,8 +3,11 @@
 
 import logging
 import platform
-import subprocess
 from pathlib import Path
+
+# NOTE: subprocess can be vulnerable if shell=True
+#       However, CalledProcessError has no known security vulnerabilities
+from subprocess import CalledProcessError  # nosec
 from typing import Dict
 
 from bout_runners.submitter.local_submitter import LocalSubmitter
@@ -91,10 +94,10 @@ def get_git_sha(path: Path) -> str:
         result = LocalSubmitter(path).submit_command("git rev-parse HEAD")
         git_sha: str = result.stdout.decode("utf8").strip()
     # FileNotFoundError when `git` is not found
-    except (FileNotFoundError, subprocess.CalledProcessError) as error:
+    except (FileNotFoundError, CalledProcessError) as error:
         if isinstance(error, FileNotFoundError):
             error_str = error.args[1]
-        elif isinstance(error, subprocess.CalledProcessError):
+        elif isinstance(error, CalledProcessError):
             error_str = error.args[2]
         else:
             error_str = "Unknown error"
