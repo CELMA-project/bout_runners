@@ -129,7 +129,7 @@ class DatabaseReader:
             The result of a query as a DataFrame
         """
         table = pd.read_sql_query(
-            query_str, self.db_connector.connection, params, **kwargs
+            query_str, self.db_connector.connection, params=params, **kwargs
         )
         return table
 
@@ -173,7 +173,7 @@ class DatabaseReader:
         where_statements_list = list()
         where_values = list()
         for field, val in entries_dict.items():
-            val = f'"{val}"' if isinstance(val, str) else val
+            val = f"{val}" if isinstance(val, str) else val
             where_statements_list.append(f'{" "*7}AND {field}=?')
             where_values.append(val)
         where_statements_list[0] = where_statements_list[0].replace("AND", "WHERE")
