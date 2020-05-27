@@ -1,5 +1,12 @@
-Welcome to bout_runners
-=======================
+|bout_runners|
+
+.. note:: FIX THE INTERNAL LINKS WITH HARD LINKS (Contributing)
+
+.. |bout_runners| image:: logo.svg
+    :alt: bout runners
+    :scale: 100%
+
+=====
 
 |lint| |test| |docker| |codecov|
 |python| |pypi| |license|
@@ -51,6 +58,126 @@ Welcome to bout_runners
     :target: http://mypy-lang.org/
 
 
-Purpose
+Manage your BOUT++ runs through python
+
+Overview
+--------
+
+One Paragraph of project description goes here
+
+Getting Started
+---------------
+
+These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+
+Prerequisites
+-------------
+
+What things you need to install the software and how to install them
+
+```
+Give examples
+```
+
+Installing
+----------
+
+A step by step series of examples that tell you how to get a development env running
+
+Say what the step will be
+
+.. code:: python
+
+   Give the example
+
+
+And repeat
+
+.. code:: python
+
+   Until finished
+
+End with an example of getting some data out of the system or using it for a little demo
+
+Running the tests
+-----------------
+
+Explain how to run the automated tests for this system
+
+Break down into end to end tests
+--------------------------------
+
+Explain what these tests test and why ``Some code``
+
+.. code:: python
+
+   Give
+   an
+   example
+   for code
+
+
+And coding style tests
+----------------------
+
+Explain what these tests test and why
+
+.. code:: python
+
+   Give
+   an
+   example
+   for code
+
+Deployment
+----------
+
+Add additional notes about how to deploy this on a live system
+
+Built With
+----------
+
+
+* Dropwizard_ - The web framework used
+* Maven_ - Dependency Management
+* ROME_ - Used to generate RSS Feeds
+
+.. _Dropwizard: http://www.dropwizard.io/1.0.2/docs/
+.. _Maven: http://www.dropwizard.io/1.0.2/docs/
+.. _ROME: http://www.dropwizard.io/1.0.2/docs/
+
+Contributing
+------------
+
+Please read CONTRIBUTING.rst (FIXME: link to this)
+
+Versioning
+----------
+
+Check out auto versioning (symver has been mentioned)
+
+Authors
 -------
-Run BOUT++ easily through python
+
+* **Michael Løiten** - *Initial work*
+
+See also the list of contributors_ who participated in this project.
+
+.. _contributors: https://github.com/CELMA-project/bout_runners/contributors
+
+License
+-------
+
+This project is licensed under the GNU LESSER GENERAL PUBLIC LICENSE - see the LICENSE_
+file for details
+
+.. _LICENSE: https://github.com/CELMA-project/bout_runners/blob/master/LICENSE
+
+Acknowledgments
+---------------
+
+* Hat tip to anyone whose code was used
+* Inspiration
+* etc
+
+https://docutils.sourceforge.io/docs/user/rst/quickref.html
