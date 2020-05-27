@@ -113,11 +113,17 @@ class FinalParameters:
             >>> {'global':{'append': 'False', 'nout': 5},
             ...  'mesh':  {'nx': 4},
             ...  'section_in_BOUT_inp': {'some_variable': 'some_value'}}
+
+        Raises
+        ------
+        RuntimeError
+            If run_parameters_dict is None
         """
         final_parameters_dict = self.__default_parameters.get_default_parameters()
         run_parameters_dict = self.__run_parameters.run_parameters_dict
         # Assert to prevent "Incompatible types in assignment" with Optional
-        assert run_parameters_dict is not None
+        if run_parameters_dict is None:
+            raise RuntimeError("run_parameters_dict is None")
         final_parameters_dict.update(run_parameters_dict)
 
         # Cast True to 1 and False to 0 as SQLite has no support for

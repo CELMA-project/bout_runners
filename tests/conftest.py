@@ -495,7 +495,9 @@ def yield_number_of_rows_for_all_tables() -> Iterator[Callable]:
         table_of_tables = db_reader.query(query_str)
         for _, table_name_as_series in table_of_tables.iterrows():
             table_name = table_name_as_series["name"]
-            query_str = f"SELECT COUNT(*) AS rows FROM {table_name}"
+            # NOTE: SQL injection possible through bad table name, however the table
+            #       names are hard-coded in this example
+            query_str = f"SELECT COUNT(*) AS rows FROM {table_name}"  # nosec
             table = db_reader.query(query_str)
             number_of_rows_dict[table_name] = table.loc[0, "rows"]
         return number_of_rows_dict

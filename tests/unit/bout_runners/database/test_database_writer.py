@@ -37,7 +37,8 @@ def test_db_writer(make_test_schema: Callable) -> None:
     }
     db_writer.create_entry(table_name, dummy_split_dict)
 
-    table = db_reader.query(f"SELECT * FROM {table_name}")
+    # NOTE: Protected against SQL injection as table_name is hard-coded above
+    table = db_reader.query(f"SELECT * FROM {table_name}")  # nosec
 
     # Check that the shape is expected (note that one column is
     # assigned to the id)
@@ -60,7 +61,8 @@ def test_db_writer(make_test_schema: Callable) -> None:
         db_writer.create_update_string(update_fields, table_name, search_condition),
         values,
     )
-    table = db_reader.query(f"SELECT * FROM {table_name}")
+    # NOTE: Protected against SQL injection as table_name is hard-coded above
+    table = db_reader.query(f"SELECT * FROM {table_name}")  # nosec
     for index, field in enumerate(update_fields):
         # pylint: disable=no-member
         assert table.loc[:, field].values[0] == values[index]

@@ -2,9 +2,14 @@
 
 
 import logging
-import subprocess
+
+# NOTE: Subprocess below is safe against shell injections
+# https://github.com/PyCQA/bandit/issues/280
+import subprocess  # nosec
 from pathlib import Path
-from subprocess import CompletedProcess
+
+# The import below is also alarming bandit
+from subprocess import CompletedProcess  # nosec
 from typing import Optional
 
 from bout_runners.submitter.abstract_submitter import AbstractSubmitter
@@ -101,6 +106,9 @@ class LocalSubmitter(AbstractSubmitter):
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             cwd=self.__path,
+            # https://docs.python.org/3/library/subprocess.html#security-considerations
+            # https://github.com/PyCQA/bandit/issues/280
+            shell=False,  # nosec
         )
         std_out, std_err = process.communicate()
         return_code = process.poll()
