@@ -2,7 +2,7 @@
 
 .. note:: FIX THE INTERNAL LINKS WITH HARD LINKS (Contributing)
 
-.. |bout_runners| image:: logo.svg
+.. |bout_runners| image:: docs/source/_static/logo_full.svg
     :alt: bout runners
     :scale: 100%
 
