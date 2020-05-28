@@ -1,3 +1,6 @@
+# pylint: skip-file
+# NOTE: We would ideally igore this file in pylintrc, but there seem to be an open issue
+#       https://github.com/PyCQA/pylint/issues/2686
 """
 Configuration file for the Sphinx documentation builder.
 
