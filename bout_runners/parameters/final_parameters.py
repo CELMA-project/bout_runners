@@ -108,6 +108,7 @@ class FinalParameters:
         -------
         final_parameters_dict : dict
             Parameters on the form
+
             >>> {'global':{'append': 'False', 'nout': 5},
             ...  'mesh':  {'nx': 4},
             ...  'section_in_BOUT_inp': {'some_variable': 'some_value'}}
@@ -151,6 +152,7 @@ class FinalParameters:
         parameter_dict : dict
             Dictionary containing the parameters given in BOUT.settings
             On the form
+
             >>> {'section': {'parameter': 'value'}}
 
         Returns
@@ -158,6 +160,7 @@ class FinalParameters:
         parameter_dict_as_sql_types : dict
             Dictionary containing the parameters given in BOUT.settings
             On the form
+
             >>> {'section': {'parameter': 'value_type'}}
         """
         type_map = {

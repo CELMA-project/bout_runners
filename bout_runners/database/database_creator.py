@@ -96,12 +96,13 @@ class DatabaseCreator:
         ----------
         parameters_as_sql_types : dict
             The dictionary on the form
+
             >>> {'section': {'parameter': 'value_type'}}
 
         References
         ----------
-        [1] https://www.databasestar.com/database-normalization/
-        [2] http://www.bkent.net/Doc/simple5.htm
+        .. [1] https://www.databasestar.com/database-normalization/
+        .. [2] http://www.bkent.net/Doc/simple5.htm
         """
         logging.info("Creating tables in %s", self.db_connector.db_path)
 
@@ -254,6 +255,7 @@ class DatabaseCreator:
         ----------
         parameters_as_sql_types : dict
             The dictionary on the form
+
             >>> {'section': {'parameter': 'value_type'}}
 
         Notes

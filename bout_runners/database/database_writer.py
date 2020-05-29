@@ -127,6 +127,7 @@ class DatabaseWriter:
         search_condition : str
             Condition for the update
             Example
+
             >>> 'id = 3 AND col = 42'
 
         Returns

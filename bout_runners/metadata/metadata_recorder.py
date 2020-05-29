@@ -251,6 +251,7 @@ class MetadataRecorder:
         ----------
         parameters_dict : dict
             The dictionary on the form
+
             >>> {'section': {'parameter': 'value'}}
 
         Returns

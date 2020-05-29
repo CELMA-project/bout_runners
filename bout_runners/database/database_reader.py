@@ -116,7 +116,9 @@ class DatabaseReader:
         params : array_like
             Array of parameters
             Used to protect against SQL injection
+
             >>> self.query("SELECT ? FROM table WHERE foo = ?", params=("bar", "baz"))
+
         kwargs : dict
             Additional keyword parameters to pd.read_sql_query
 

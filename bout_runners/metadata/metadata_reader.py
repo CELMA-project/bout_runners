@@ -332,15 +332,21 @@ class MetadataReader:
         from_statement : str
             The statement after the `FROM` keyword in the query
             I.e.
+
             >>> f'SELECT * FROM {from_statement}'
+
         columns : array_like
             The columns to select from the tables
             I.e.
+
             >>> f'SELECT {columns} FROM *'
+
         alias_columns : array_like
             The name of the columns in the resulting table
             I.e.
+
             >>> f'SELECT {columns[0]} AS {alias_columns[0]} FROM *'
+
         table_connections : dict
             A dict where the keys are the table names, and the values are tuples
             containing table names connected to the key table as described in the
@@ -401,6 +407,7 @@ class MetadataReader:
         tuple
             Dict containing the column names
             On the form
+
             >>> ('run.id',
             ...  'run.column_name_1',
             ...  'run.column_name_2',
@@ -432,6 +439,7 @@ class MetadataReader:
             is the table under consideration and the value is a tuple containing the
             tables which have a key connection to the table under consideration
             On the form
+
             >>> {'table_1': ('table_2', 'table_3'),
             ...  'table_4': ('table_5',), ...}
 
@@ -483,6 +491,7 @@ class MetadataReader:
         table_column_dict : dict of tuple
             Dict containing the column names
             On the form
+
             >>> {'table_1': ('table_1_column_1', ...),
             ...  'table_2': ('table_2_column_1', ...), ...}
         """

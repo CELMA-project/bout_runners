@@ -7,4 +7,4 @@ The API documentation of ``bout_runners`` follows.
 
 BOUT Runners
 ============
-.. include:: api/bout_runners.database.rst
+.. include:: api/bout_runners.rst

@@ -46,6 +46,7 @@ class RunParameters:
         ----------
         run_parameters_dict : None or dict
             Options on the form
+
             >>> {'global': {'append': False, 'nout': 5},
             ...  'mesh':  {'nx': 4},
             ...  'section_in_BOUT_inp': {'some_variable': 'some_value'}}
@@ -70,6 +71,7 @@ class RunParameters:
 
         The setter will also create the self.__run_parameters_str
         The run_parameters_dict should be set on the form
+
         >>> {'global': {'append': False, 'nout': 5},
         ...  'mesh':  {'nx': 4},
         ...  'section_in_BOUT_inp': {'some_variable': 'some_value'}}

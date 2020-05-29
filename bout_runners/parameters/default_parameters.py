@@ -164,6 +164,7 @@ class DefaultParameters:
         default_parameters_dict : dict
             Dictionary containing the parameters given in BOUT.settings
             On the form
+
             >>> {'section': {'parameter': 'value'}}
 
         Notes

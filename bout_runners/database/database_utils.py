@@ -50,6 +50,7 @@ def get_file_modification(
     -------
     file_modification : dict
         The file modification on the form
+
         >>> {'project_makefile_modified': str,
         ...  'project_executable_modified': str,
         ...  'project_git_sha': str,

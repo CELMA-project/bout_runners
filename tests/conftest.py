@@ -476,6 +476,7 @@ def yield_number_of_rows_for_all_tables() -> Iterator[Callable]:
         -------
         number_of_rows_dict : dict
             Dict on the form
+
             >>> {'table_name': int}
         """
         number_of_rows_dict = dict()
@@ -761,6 +762,7 @@ def mock_pid_exists(monkeypatch: MonkeyPatch) -> Callable:
         ----------
         test_case : str
             Description of the test on the form
+
             >>> ('<log_file_present>_<pid_present_in_log>_'
             ...  '<started_time_present_in_log>_'
             ...  '<ended_time_present_in_log>_'
@@ -818,6 +820,7 @@ def copy_test_case_log_file(
         ----------
         test_case : str
             Description of the test on the form
+
             >>> ('<log_file_present>_<pid_present_in_log>_'
             ...  '<started_time_present_in_log>_'
             ...  '<ended_time_present_in_log>'
