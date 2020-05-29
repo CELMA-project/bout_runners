@@ -22,8 +22,7 @@ def test_db_writer(make_test_schema: Callable) -> None:
     Parameters
     ----------
     make_test_schema : function
-        Function returning the database connection with the schema
-        created
+        Function returning the database connection with the schema created
     """
     db_connection, _ = make_test_schema("write_test")
     db_reader = DatabaseReader(db_connection)

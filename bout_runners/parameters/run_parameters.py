@@ -52,8 +52,7 @@ class RunParameters:
 
         Notes
         -----
-        The parameters set here will override those found in the
-        BOUT.inp file
+        The parameters set here will override those found in the BOUT.inp file
         """
         # Declare variables to be used in the getters and setters
         self.__run_parameters_dict = None
@@ -136,8 +135,8 @@ class RunParameters:
 
         Notes
         -----
-        As the run_parameters_str must reflect run_parameters_dict,
-        both are set when setting run_parameters_dict
+        As the run_parameters_str must reflect run_parameters_dict, both are set when
+        setting run_parameters_dict
         """
         # Assert to prevent "Incompatible return type" with Optional
         if self.__run_parameters_str is None:

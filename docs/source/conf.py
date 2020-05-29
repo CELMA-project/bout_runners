@@ -1,5 +1,5 @@
 # pylint: skip-file
-# NOTE: We would ideally igore this file in pylintrc, but there seem to be an open issue
+# NOTE: Ideally we'd ignore this file in pylintrc, but there seem to be an open issue
 #       https://github.com/PyCQA/pylint/issues/2686
 """
 Configuration file for the Sphinx documentation builder.
@@ -18,7 +18,7 @@ sys.path.insert(0, str(root_path))
 
 
 # Project information
-project = "BOUT RUNNERS"
+project = "bout_runners"
 author = "Løiten, Michael"
 copyright = f"2019; {author}"
 # Automatic detection of release
@@ -55,4 +55,4 @@ autosummary_generate = True  # Generate autosummary
 # HTML output
 html_theme = "sphinx_rtd_theme"  # One of many possibilities
 html_static_path = ["_static"]
-html_logo = str(root_path.joinpath("doc", "source", "_static", "logo_b.svg"))
+html_logo = str(root_path.joinpath("docs", "source", "_static", "logo_b.svg"))

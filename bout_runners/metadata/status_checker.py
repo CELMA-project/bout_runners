@@ -54,6 +54,7 @@ class StatusChecker:
     Any updates to the runs will be written to the database.
     Alternatively, one can run the program until all jobs have
     stopped by calling
+
     >>> status_checker.check_and_update_until_complete()
     """
 
@@ -63,17 +64,16 @@ class StatusChecker:
 
         Notes
         -----
-        The StatusChecker instance only checks the project belonging
-        to the same database schema grouped together by the
-        db_connector
+        The StatusChecker instance only checks the project belonging to the same
+        database schema grouped together by the `db_connector`
 
         Parameters
         ----------
         db_connector : DatabaseConnector
             Connection to the database
         project_path : Path
-            Path to the project (the root directory with which
-            usually contains the makefile and the executable)
+            Path to the project (the root directory with which usually contains the
+            makefile and the executable)
         """
         self.__db_connector = db_connector
         self.__db_reader = DatabaseReader(self.__db_connector)
@@ -143,8 +143,7 @@ class StatusChecker:
         metadata_updater : MetadataUpdater
             Object which updates the database
         submitted_to_check : DataFrame
-            DataFrame containing the `id` and `name` of the runs with
-            status `submitted`
+            DataFrame containing the `id` and `name` of the runs with status `submitted`
 
         Raises
         ------
@@ -194,8 +193,7 @@ class StatusChecker:
         metadata_updater : MetadataUpdater
             Object which updates the database
         running_to_check : DataFrame
-            DataFrame containing the `id` and `name` of the runs with
-            status `running`
+            DataFrame containing the `id` and `name` of the runs with status `running`
         """
         for name, run_id in running_to_check.itertuples(index=False):
             metadata_updater.run_id = run_id

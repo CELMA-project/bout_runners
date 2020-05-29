@@ -18,8 +18,8 @@ class DefaultParameters:
     """
     Class which deals with the default parameters.
 
-    The default parameters are those set internally in BOUT++,
-    or in the specified BOUT.inp file
+    The default parameters are those set internally in BOUT++, or in the specified
+    BOUT.inp file
 
     Attributes
     ----------
@@ -37,9 +37,10 @@ class DefaultParameters:
 
     Examples
     --------
-    The easiest way to use DefaultParameters is to run a script from the
-    root directory of the project (i.e. where the `Makefile` and
-    `data` directory are normally situated. The script can simply call
+    The easiest way to use DefaultParameters is to run a script from the root
+    directory of the project (i.e. where the `Makefile` and `data` directory are
+    normally situated. The script can simply call
+
     >>> DefaultParameters().get_default_parameters()
     {'global': {'append': False, 'async_send': False, ...}}
 
@@ -47,20 +48,21 @@ class DefaultParameters:
     built manually:
 
     Import dependencies
+
     >>> from pathlib import Path
     >>> from bout_runners.executor.bout_paths import BoutPaths
 
     Create the `bout_paths` object
+
     >>> project_path = Path().joinpath('path', 'to', 'project')
-    >>> bout_inp_src_dir = Path().joinpath('path', 'to', 'source',
-    ... 'BOUT.inp')
-    >>> bout_inp_dst_dir = Path().joinpath('path', 'to', 'destination',
-    ... 'BOUT.inp')
+    >>> bout_inp_src_dir = Path().joinpath('path', 'to', 'source', 'BOUT.inp')
+    >>> bout_inp_dst_dir = Path().joinpath('path', 'to', 'destination', 'BOUT.inp')
     >>> bout_paths = BoutPaths(project_path=project_path,
     ...                        bout_inp_src_dir=bout_inp_src_dir,
     ...                        bout_inp_dst_dir=bout_inp_dst_dir)
 
     Get the default parameters
+
     >>> default_parameter = DefaultParameters(bout_paths=bout_paths)
     >>> default_parameter.get_default_parameters()
     {'global': {'append': False, 'async_send': False, ...}}
@@ -74,24 +76,23 @@ class DefaultParameters:
         """
         Set the member data.
 
-        If the settings_path is None, the constructor will call
-        run_parameters_run to create a settings_path
+        If the settings_path is None, the constructor will call run_parameters_run to
+        create a settings_path
 
         Warnings
         --------
-        There can be a potential mismatch between a user provided
-        `settings_path` and the actual default values. This can occur
-        if the user has updated `BOUT.inp` without updating the
-        `BOUT.settings` file. It is therefore recommended to set
-        `settings_path` to None unless the user is sure the
-        `BOUT.settings` file pointed to by `settings_path` is up to date
+        There can be a potential mismatch between a user provided `settings_path` and
+        the actual default values. This can occur if the user has updated `BOUT.inp`
+        without updating the `BOUT.settings` file.
+        It is therefore recommended to set `settings_path` to None unless the user is
+        sure the `BOUT.settings` file pointed to by `settings_path` is up to date
 
         Parameters
         ----------
         bout_paths : BoutPaths or None
             Object containing the paths of the project
-            Will only be used in the `run_parameters_run` call if the
-            `settings_path` is not valid
+            Will only be used in the `run_parameters_run` call if the `settings_path`
+            is not valid
         settings_path : None or Path
             Path to the up-to-date `settings_path`
             Will invoke `run_parameters_run` if set to None
@@ -109,8 +110,8 @@ class DefaultParameters:
         """
         Execute a run to obtain the default parameters.
 
-        A settings run executes the executable of the project with
-        nout = 0 in order to capture all parameters used in the project
+        A settings run executes the executable of the project with nout = 0 in order
+        to capture all parameters used in the project
 
         Parameters
         ----------
@@ -167,15 +168,12 @@ class DefaultParameters:
 
         Notes
         -----
-        1. The section-less part of BOUT.settings will be renamed
-           `global`
-        2. In the `global` section, the keys `d` and the directory to
-           the BOUT.inp file will be removed
-        3. If the section `all` is present in BOUT.settings, the section
-           will be renamed `all_boundaries` as `all` is a protected SQL
-           keyword
-        4. The section `run` will be dropped due to bout_runners own
-           `run` table
+        1. The section-less part of BOUT.settings will be renamed `global`
+        2. In the `global` section, the keys `d` and the directory to the BOUT.inp
+           file will be removed
+        3. If the section `all` is present in BOUT.settings, the section will be
+           renamed `all_boundaries` as `all` is a protected SQL keyword
+        4. The section `run` will be dropped due to bout_runners own `run` table
         5. The string values will be stored using lowercase
         """
         # The settings file lacks a header for the global parameter

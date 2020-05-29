@@ -13,9 +13,8 @@ def get_exec_name(makefile_path: Path) -> str:
     """
     Return the name of the project executable.
 
-    This method first searches for the 'TARGET' variable in the
-    makefile. If not found it infers the name from the 'SOURCEC'
-    variable.
+    This method first searches for the 'TARGET' variable in the makefile. If not
+    found it infers the name from the 'SOURCEC' variable.
 
     Parameters
     ----------
@@ -96,9 +95,8 @@ def get_makefile_name(makefile_root_path: Path) -> str:
 
     if makefile_name is None:
         msg = (
-            f"Could not find a valid Makefile name in "
-            f"{makefile_root_path}. Valid Makefile names are "
-            f'{" ,".join(possible_names)}'
+            f"Could not find a valid Makefile name in {makefile_root_path}. "
+            f"Valid Makefile names are {' ,'.join(possible_names)}"
         )
         raise FileNotFoundError(msg)
 

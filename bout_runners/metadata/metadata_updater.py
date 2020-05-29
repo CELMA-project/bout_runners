@@ -32,11 +32,9 @@ class MetadataUpdater:
     --------
     >>> from pathlib import Path
     >>> from datetime import datetime
-    >>> from bout_runners.database.database_connector import \
-    ...     DatabaseConnector
+    >>> from bout_runners.database.database_connector import DatabaseConnector
     >>> db_root_path = Path().joinpath('path', 'to', 'db_root')
-    >>> db_connector = DatabaseConnector('name_of_db',
-    ...                                        db_root_path)
+    >>> db_connector = DatabaseConnector('name_of_db', db_root_path)
     >>> run_id = 1  # This must be a valid id in the run table
     >>> metadata_updater = MetadataUpdater(db_connector, run_id)
     >>> metadata_updater.update_start_time(datetime.now())

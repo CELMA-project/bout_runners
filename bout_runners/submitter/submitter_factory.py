@@ -15,11 +15,9 @@ def get_submitter(name: str, *args, **kwargs) -> LocalSubmitter:
     name : str
         Name of the submitter to use
     args : tuple
-        Positional arguments (see the different implementation
-        for details)
+        Positional arguments (see the different implementation for details)
     kwargs : dict
-        Keyword arguments (see the different implementation
-        for details)
+        Keyword arguments (see the different implementation for details)
 
     Returns
     -------

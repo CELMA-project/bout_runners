@@ -43,42 +43,38 @@ class BoutRunner:
 
     Examples
     --------
-    The easiest way to use BoutRunner is to run a script from the
-    root directory of the project (i.e. where the `Makefile` and
-    `data` directory are normally situated. The script can simply call
+    The easiest way to use BoutRunner is to run a script from the root directory of
+    the project (i.e. where the `Makefile` and `data` directory are normally
+    situated. The script can simply call
+
     >>> BoutRunner().run()
 
     and `BoutRunner` takes care of the rest.
 
-    A more elaborate example where all the dependency objects are
-    built manually:
+    A more elaborate example where all the dependency objects are built manually:
 
     Import dependencies
+
     >>> from pathlib import Path
     >>> from bout_runners.executor.bout_paths import BoutPaths
     >>> from bout_runners.executor.executor import Executor
-    >>> from bout_runners.database.database_connector import \
-    ...     DatabaseConnector
-    >>> from bout_runners.parameters.default_parameters import \
-    ...     DefaultParameters
-    >>> from bout_runners.parameters.run_parameters import \
-    ...     RunParameters
-    >>> from bout_runners.parameters.final_parameters import \
-    ...     FinalParameters
-    >>> from bout_runners.submitter.local_submitter import \
-    ...     LocalSubmitter
+    >>> from bout_runners.database.database_connector import DatabaseConnector
+    >>> from bout_runners.parameters.default_parameters import DefaultParameters
+    >>> from bout_runners.parameters.run_parameters import RunParameters
+    >>> from bout_runners.parameters.final_parameters import FinalParameters
+    >>> from bout_runners.submitter.local_submitter import LocalSubmitter
 
     Create the `bout_paths` object
+
     >>> project_path = Path().joinpath('path', 'to', 'project')
-    >>> bout_inp_src_dir = Path().joinpath('path', 'to', 'source',
-    ... 'BOUT.inp')
-    >>> bout_inp_dst_dir = Path().joinpath('path', 'to', 'destination',
-    ... 'BOUT.inp')
+    >>> bout_inp_src_dir = Path().joinpath('path', 'to', 'source', 'BOUT.inp')
+    >>> bout_inp_dst_dir = Path().joinpath('path', 'to', 'destination', 'BOUT.inp')
     >>> bout_paths = BoutPaths(project_path=project_path,
     ...                        bout_inp_src_dir=bout_inp_src_dir,
     ...                        bout_inp_dst_dir=bout_inp_dst_dir)
 
     Create the input objects
+
     >>> run_parameters = RunParameters({'global': {'nout': 0}})
     >>> default_parameters = DefaultParameters(bout_paths)
     >>> final_parameters = FinalParameters(default_parameters,
@@ -90,6 +86,7 @@ class BoutRunner:
     >>> db_connection = DatabaseConnector('name_of_database')
 
     Run the project
+
     >>> runner = BoutRunner(executor,
     ...                     db_connection,
     ...                     final_parameters)
@@ -114,8 +111,7 @@ class BoutRunner:
             The connection to the database
             If None: Default database connector will be used
         final_parameters : FinalParameters or None
-            The object containing the parameters which are going to
-            be used in the run
+            The object containing the parameters which are going to be used in the run
             If None, default parameters will be used
         """
         # Set member data
@@ -184,8 +180,7 @@ class BoutRunner:
         Parameters
         ----------
         force : bool
-            Execute the run even if has been performed with the same
-            parameters
+            Execute the run even if has been performed with the same parameters
         """
         if not self.__metadata_recorder.db_reader.check_tables_created():
             logging.info(
@@ -203,8 +198,8 @@ class BoutRunner:
             self.executor.execute()
         else:
             logging.warning(
-                "Run with the same configuration has been "
-                "executed before, see run with run_id %d",
+                "Run with the same configuration has been executed before, "
+                "see run with run_id %d",
                 run_id,
             )
             if force:

@@ -95,6 +95,7 @@ class BoutMakefileVariableReader(BoutMakefileReader):
     ```
 
     Script
+
     >>> BoutMakefileVariableReader('SOURCEC', 'Makefile').value
     'bout_model.cxx'
     """

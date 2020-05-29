@@ -22,8 +22,7 @@ def get_system_info_as_sql_type() -> Dict[str, str]:
     Returns
     -------
     sys_info_dict : dict
-        Dictionary with the attributes of the system as keys and the
-        type as values
+        Dictionary with the attributes of the system as keys and the type as values
     """
     attributes = get_system_info()
 

@@ -12,8 +12,8 @@ class FinalParameters:
     r"""
     Class which deals with the final parameters.
 
-    The final parameters are those who are going to be used in the
-    execution of the project
+    The final parameters are those who are going to be used in the execution of the
+    project
 
     Attributes
     ----------
@@ -31,9 +31,10 @@ class FinalParameters:
 
     Examples
     --------
-    The easiest way to use FinalParameters is to run a script from the
-    root directory of the project (i.e. where the `Makefile` and
-    `data` directory are normally situated. The script can simply call
+    The easiest way to use FinalParameters is to run a script from the root directory
+    of the project (i.e. where the `Makefile` and `data` directory are normally
+    situated. The script can simply call
+
     >>> FinalParameters().get_final_parameters()
     {'global': {'append': False, 'async_send': False, ...}}
 
@@ -41,36 +42,33 @@ class FinalParameters:
     built manually:
 
     Import dependencies
+
     >>> from pathlib import Path
     >>> from bout_runners.executor.bout_paths import BoutPaths
-    >>> from bout_runners.parameters.default_parameters import \
-    ...     DefaultParameters
-    >>> from bout_runners.parameters.run_parameters import \
-    ...     RunParameters
+    >>> from bout_runners.parameters.default_parameters import DefaultParameters
+    >>> from bout_runners.parameters.run_parameters import RunParameters
 
     Create the `bout_paths` object
+
     >>> project_path = Path().joinpath('path', 'to', 'project')
-    >>> bout_inp_src_dir = Path().joinpath('path', 'to', 'source',
-    ... 'BOUT.inp')
-    >>> bout_inp_dst_dir = Path().joinpath('path', 'to', 'destination',
-    ... 'BOUT.inp')
+    >>> bout_inp_src_dir = Path().joinpath('path', 'to', 'source', 'BOUT.inp')
+    >>> bout_inp_dst_dir = Path().joinpath('path', 'to', 'destination', 'BOUT.inp')
     >>> bout_paths = BoutPaths(project_path=project_path,
     ...                        bout_inp_src_dir=bout_inp_src_dir,
     ...                        bout_inp_dst_dir=bout_inp_dst_dir)
 
     Get the final parameters
+
     >>> default_parameters = DefaultParameters(bout_paths=bout_paths)
     >>> final_parameters = FinalParameters(default_parameters,
     ...     RunParameters({'nout': 10}))
     >>> final_parameters_dict = final_parameters.get_final_parameters()
     >>> final_parameters_dict
-    {'global': {'append': False, 'async_send': False, ..., 'nout':
-    10, ...}}
+    {'global': {'append': False, 'async_send': False, ..., 'nout': 10, ...}}
 
     >>> final_parameters.\
     ...     cast_to_sql_type(final_parameters_dict)
-    {'global': {'append': TEXT, 'async_send': TETX, ..., 'nout':
-    INTEGER, ...}}
+    {'global': {'append': TEXT, 'async_send': TETX, ..., 'nout': INTEGER, ...}}
     """
 
     def __init__(
@@ -84,11 +82,11 @@ class FinalParameters:
         Parameters
         ----------
         default_parameters : DefaultParameters or None
-            Object dealing with default parameters (i.e. standard
-            BOUT++ parameters, or those given in BOUT.inp)
+            Object dealing with default parameters (i.e. standard BOUT++ parameters,
+            or those given in BOUT.inp)
         run_parameters : RunParameters or None
-            Object dealing with run parameters (i.e. parameters set
-            in bout_runner which has precedence over BOUT.inp)
+            Object dealing with run parameters (i.e. parameters set in bout_runner
+            which has precedence over BOUT.inp)
             If None, default parameters will be used
         """
         self.__default_parameters = (

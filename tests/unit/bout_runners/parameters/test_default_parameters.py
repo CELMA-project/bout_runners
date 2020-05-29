@@ -14,10 +14,8 @@ def test_default_parameters(
     Test the DefaultParameter.
 
     Test by:
-    1. Checking that setting only the `settings_path` parameter
-       yields a dict
-    2. Checking that setting only the `bout_paths` parameter
-       yields a dict
+    1. Checking that setting only the `settings_path` parameter yields a dict
+    2. Checking that setting only the `bout_paths` parameter yields a dict
 
     Parameters
     ----------

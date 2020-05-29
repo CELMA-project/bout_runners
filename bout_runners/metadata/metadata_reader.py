@@ -89,19 +89,17 @@ class MetadataReader:
     table_names : tuple
          A tuple containing all names of the tables
     table_column_dict : dict of tuple
-        A dict where the keys are table names, and the values are
-        corresponding column names
+        A dict where the keys are table names, and the values are corresponding
+        column names
     table_connections : dict of tuple
-        A dict where the keys are tables, and the values are tuples
-        of tables connected to the key table
+        A dict where the keys are tables, and the values are tuples of tables
+        connected to the key table
     sorted_columns : tuple
-        A tuple of the column names as they will be sorted in the
-        all_metadata DataFrame
+        A tuple of the column names as they will be sorted in the all_metadata DataFrame
     date_columns : tuple
         Columns containing dates
     drop_id : None or str
-        Specifies what id columns should be dropped when obtaining
-        the metadata
+        Specifies what id columns should be dropped when obtaining the metadata
 
     Methods
     -------
@@ -109,8 +107,7 @@ class MetadataReader:
         Return all of the run metadata
     get_parameters_metadata()
         Return only the parameter part of the run metadata
-    get_join_query(from_statement, columns, alias_columns,
-                   table_connections)
+    get_join_query(from_statement, columns, alias_columns, table_connections)
         Return the query string of a `SELECT` query with `INNER JOIN`
     __get_parameters_query()
         Return the parameters query string
@@ -125,8 +122,7 @@ class MetadataReader:
 
     Examples
     --------
-    >>> from bout_runners.database.database_connector import \
-    ...     DatabaseConnector
+    >>> from bout_runners.database.database_connector import DatabaseConnector
     >>> db_connector = DatabaseConnector('test')
     >>> metadata_reader = MetadataReader(db_connector)
     >>> metadata_reader.get_parameters_metadata()
@@ -136,6 +132,7 @@ class MetadataReader:
     2       2       10  ...                 1                  1
 
     [3 rows x 16 columns]
+
     >>> metadata_reader.get_all_metadata()
        run.id  ...                  system_info.version
     0       1  ...  #1 SMP Thu Oct 17 19:31:58 UTC 2019
@@ -147,6 +144,7 @@ class MetadataReader:
     6       7  ...  #1 SMP Thu Oct 17 19:31:58 UTC 2019
 
     [7 rows x 43 columns]
+
     >>> metadata_reader.drop_id = 'all_id'
     >>> metadata_reader.get_all_metadata()
       run.latest_status  ...                  system_info.version
@@ -181,8 +179,7 @@ class MetadataReader:
         db_connector : DatabaseConnector
             The connection to the database
         drop_id : None or str
-            Specifies what id columns should be dropped when
-            obtaining the metadata
+            Specifies what id columns should be dropped when obtaining the metadata
             - None : No columns will be dropped
             - 'parameters' : All columns containing parameters ids
               will be dropped
@@ -226,8 +223,8 @@ class MetadataReader:
         Returns
         -------
         self.__table_column_dict : dict of tuple
-            A dict where the keys are table names, and the values are
-            corresponding column names
+            A dict where the keys are table names, and the values are corresponding
+            column names
         """
         return self.__table_column_dict
 
@@ -239,8 +236,8 @@ class MetadataReader:
         Returns
         -------
         self.__table_connections : dict of tuple
-            A dict where the keys are tables, and the values are
-            tuples of tables connected to the key table
+            A dict where the keys are tables, and the values are tuples of tables
+            connected to the key table
         """
         return self.__table_connections
 
@@ -252,8 +249,8 @@ class MetadataReader:
         Returns
         -------
         self.__sorted_columns : tuple
-            A tuple of the column names as they will be sorted in the
-            all_metadata DataFrame
+            A tuple of the column names as they will be sorted in the all_metadata
+            DataFrame
         """
         return self.__sorted_columns
 
@@ -326,10 +323,9 @@ class MetadataReader:
 
         Notes
         -----
-        The tables in `table_connection` is assumed to be joined by
-        `id`s. I.e. `table_a` is connected to `table_b` by `table_b`
-        having a column named `table_a_id` which corresponds to the
-        `id` column of `table_a`
+        The tables in `table_connection` is assumed to be joined by `id`s. I.e.
+        `table_a` is connected to `table_b` by `table_b` having a column named
+        `table_a_id` which corresponds to the `id` column of `table_a`
 
         Parameters
         ----------
@@ -346,15 +342,15 @@ class MetadataReader:
             I.e.
             >>> f'SELECT {columns[0]} AS {alias_columns[0]} FROM *'
         table_connections : dict
-            A dict where the keys are the table names, and the values
-            are tuples containing table names connected to the key table
-            as described in the note above
+            A dict where the keys are the table names, and the values are tuples
+            containing table names connected to the key table as described in the
+            note above
 
         Returns
         -------
         query : str
-            The SQL-string which can be used to query where table in
-            databases are joined through `INNER JOIN` operations
+            The SQL-string which can be used to query where table in databases are
+            joined through `INNER JOIN` operations
         """
         query = "SELECT\n"
         for column, alias in zip(columns, alias_columns):
@@ -378,8 +374,8 @@ class MetadataReader:
         Returns
         -------
         parameters_query : str
-            The SQL-string which can be used to query where table in
-            databases are joined through `INNER JOIN` operations
+            The SQL-string which can be used to query where table in databases are
+            joined through `INNER JOIN` operations
         """
         parameter_connections = {"parameters": self.__table_connections["parameters"]}
         parameters_query = self.get_join_query(
@@ -394,9 +390,8 @@ class MetadataReader:
         """
         Return all columns sorted.
 
-        The columns will be sorted alphabetically first by table
-        name, then alphabetically by column name, with the
-        following exceptions:
+        The columns will be sorted alphabetically first by table name,
+        then alphabetically by column name, with the following exceptions:
 
         1. The columns from the run table is presented first
         2. The id column is the first column in the table
@@ -433,10 +428,9 @@ class MetadataReader:
         Returns
         -------
         table_connection_dict : dict
-            A dict telling which tables are connected to each other,
-            where the key is the table under consideration and the
-            value is a tuple containing the tables which have a key
-            connection to the table under consideration
+            A dict telling which tables are connected to each other, where the key
+            is the table under consideration and the value is a tuple containing the
+            tables which have a key connection to the table under consideration
             On the form
             >>> {'table_1': ('table_2', 'table_3'),
             ...  'table_4': ('table_5',), ...}

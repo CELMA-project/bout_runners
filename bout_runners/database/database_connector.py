@@ -48,8 +48,7 @@ class DatabaseConnector:
         ----------
         name : str or None
             Name of the database (excluding .db)
-            If set to None, the name of the caller directory will be
-            used
+            If set to None, the name of the caller directory will be used
         db_root_path : Path or str or None
             Path to database
             If None is set, the path will be set to $HOME/BOUT_db
@@ -77,8 +76,8 @@ class DatabaseConnector:
 
         Notes
         -----
-        To avoid corrupting data between databases, the setting this
-        parameter outside the constructor is disabled
+        To avoid corrupting data between databases, the setting this parameter
+        outside the constructor is disabled
         """
         return self.__db_path
 
@@ -94,8 +93,8 @@ class DatabaseConnector:
 
         Notes
         -----
-        To avoid corrupting data between databases, the setting this
-        parameter outside the constructor is disabled
+        To avoid corrupting data between databases, the setting this parameter
+        outside the constructor is disabled
         """
         return self.__connection
 
@@ -108,8 +107,7 @@ class DatabaseConnector:
         ----------
         name : str or None
             Name of the database (excluding .db)
-            If set to None, the name of the caller directory will be
-            used
+            If set to None, the name of the caller directory will be used
         db_root_path : Path or str or None
             Path to database
             If None is set, the path will be set to $HOME/BOUT_db

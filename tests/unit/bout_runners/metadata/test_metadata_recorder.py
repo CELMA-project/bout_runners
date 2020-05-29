@@ -27,16 +27,14 @@ def test_metadata_recorder(
     4. All the tables still have one row
     5. Create a new entry after changing the run parameters
     6. Check that a new entry is created
-    7. See that the `split` table and the `run` table have two rows,
-       whereas the rest have one
-    8. Check that it is possible to forcefully make an entry to the
-       run table
+    7. See that the `split` table and the `run` table have two rows, whereas the rest
+       have one
+    8. Check that it is possible to forcefully make an entry to the run table
 
     Parameters
     ----------
     yield_bout_path_conduction : function
-        Function which makes the BoutPaths object for the conduction
-        example
+        Function which makes the BoutPaths object for the conduction example
     get_default_parameters : DefaultParameters
         The DefaultParameters object
     make_project : Path
@@ -44,8 +42,7 @@ def test_metadata_recorder(
     make_test_schema : function
         The function making the schema (i.e. making all the tables)
     yield_number_of_rows_for_all_tables : function
-        Function which returns the number of rows for all tables in a
-        schema
+        Function which returns the number of rows for all tables in a schema
     """
     # NOTE: If the project is not made, the metadata recorder will
     # fail when the get_file_modification is trying to get the last

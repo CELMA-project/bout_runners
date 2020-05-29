@@ -63,15 +63,13 @@ class BoutPaths:
         ----------
         project_path : None or Path or str
             Root path of make file
-            If None, the path of the path of the root caller will be
-            used
+            If None, the path of the path of the root caller will be used
         bout_inp_src_dir : None or str or Path
-            The path to the BOUT.inp source directory (relative to
-            self.project_path)
+            The path to the BOUT.inp source directory (relative to self.project_path)
             If None, data will be used
         bout_inp_dst_dir : None or str or Path
-            The path to the BOUT.inp bout_inp_dst_dir directory
-            (relative to self.project_path)
+            The path to the BOUT.inp bout_inp_dst_dir directory (relative to
+            self.project_path)
             If None, the current time will be used
         """
         # Declare variables to be used in the getters and setters

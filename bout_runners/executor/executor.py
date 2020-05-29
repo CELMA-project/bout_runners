@@ -37,33 +37,33 @@ class Executor:
 
     Examples
     --------
-    The easiest way to use the Executor is to run a script from the
-    root directory of the project (i.e. where the `Makefile` and
-    `data` directory are normally situated. The script can simply call
+    The easiest way to use the Executor is to run a script from the root directory of
+    the project (i.e. where the `Makefile` and `data` directory are normally
+    situated. The script can simply call
+
     >>> Executor().execute()
 
     and `Executor` takes care of the rest.
 
-    A more elaborate example where all the dependency objects are
-    built manually:
+    A more elaborate example where all the dependency objects are built manually:
 
     Import the dependencies
+
     >>> from pathlib import Path
     >>> from bout_runners.executor.bout_paths import BoutPaths
-    >>> from bout_runners.submitter.local_submitter import \
-    ...     LocalSubmitter
+    >>> from bout_runners.submitter.local_submitter import LocalSubmitter
 
     Create the `bout_paths` object
+
     >>> project_path = Path().joinpath('path', 'to', 'project')
-    >>> bout_inp_src_dir = Path().joinpath('path', 'to', 'source',
-    ... 'BOUT.inp')
-    >>> bout_inp_dst_dir = Path().joinpath('path', 'to', 'destination',
-    ... 'BOUT.inp')
+    >>> bout_inp_src_dir = Path().joinpath('path', 'to', 'source', 'BOUT.inp')
+    >>> bout_inp_dst_dir = Path().joinpath('path', 'to', 'destination', 'BOUT.inp')
     >>> bout_paths = BoutPaths(project_path=project_path,
     ...                        bout_inp_src_dir=bout_inp_src_dir,
     ...                        bout_inp_dst_dir=bout_inp_dst_dir)
 
     Create the executor object
+
     >>> run_parameters = RunParameters({'global': {'nout': 0}})
     >>> executor = Executor(
     ...     bout_paths=bout_paths,
@@ -71,6 +71,7 @@ class Executor:
     ...     run_parameters=run_parameters)
 
     Execute the run
+
     >>> executor.execute()
     """
 
