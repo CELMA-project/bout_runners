@@ -6,14 +6,19 @@
 Welcome to BOUT RUNNERS's documentation!
 ========================================
 
+.. include:: ../../README.rst
+
+Contents
+########
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
 
+   self
+   apidoc
 
 
 Indices and tables
-==================
+##################
 
 * :ref:`genindex`
 * :ref:`modindex`
