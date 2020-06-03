@@ -10,6 +10,8 @@ Contents
 
    self
    intro
+   contributing
+   license
    apidoc
 
 

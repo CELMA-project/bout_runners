@@ -8,7 +8,7 @@
 
 =====
 
-|lint| |test| |docker| |codecov|
+|lint| |test| |docker| |codecov| |docs|
 
 |pypi| |python| |license|
 
@@ -16,58 +16,56 @@
 
 .. |lint| image:: https://github.com/CELMA-project/bout_runners/workflows/Lint/badge.svg?branch=master
     :alt: lint status
-    :scale: 100%
     :target: https://github.com/CELMA-project/bout_runners/actions?query=workflow%3A%22Lint%22
 
 .. |test| image:: https://github.com/CELMA-project/bout_runners/workflows/Test/badge.svg?branch=master
     :alt: test status
-    :scale: 100%
     :target: https://github.com/CELMA-project/bout_runners/actions?query=workflow%3A%22Test%22
 
 .. |docker| image:: https://github.com/CELMA-project/bout_runners/workflows/Docker/badge.svg?branch=master
     :alt: docker build status
-    :scale: 100%
     :target: https://github.com/CELMA-project/bout_runners/actions?query=workflow%3A%22Docker%22
 
 .. |codecov| image:: https://codecov.io/gh/CELMA-project/bout_runners/branch/master/graph/badge.svg
     :alt: codecov percentage
-    :scale: 100%
     :target: https://codecov.io/gh/CELMA-project/bout_runners
+
+.. |docs| image:: https://readthedocs.org/projects/bout-runners/badge/?version=latest
+    :alt: documentation status
+    :target: https://bout-runners.readthedocs.io/en/latest/?badge=latest
 
 .. |pypi| image:: https://badge.fury.io/py/bout-runners.svg
     :alt: pypi package number
-    :scale: 100%
     :target: https://pypi.org/project/bout-runners/
 
 .. |python| image:: https://img.shields.io/badge/python->=3.6-blue.svg
     :alt: supported python versions
-    :scale: 100%
     :target: https://www.python.org/
 
 .. |license| image:: https://img.shields.io/badge/license-LGPL--3.0-blue.svg
     :alt: licence
-    :scale: 100%
     :target: https://github.com/CELMA-project/bout_runners/blob/master/LICENSE
 
 .. |code_style| image:: https://img.shields.io/badge/code%20style-black-000000.svg
     :alt: code standard
-    :scale: 100%
     :target: https://github.com/psf/black
 
 .. |mypy| image:: http://www.mypy-lang.org/static/mypy_badge.svg
     :alt: checked with mypy
-    :scale: 100%
     :target: http://mypy-lang.org/
 
 .. |bandit| image:: https://img.shields.io/badge/security-bandit-yellow.svg
     :alt: security status
-    :scale: 100%
     :target: https://github.com/PyCQA/bandit
 
 Manage your BOUT++ runs through python
 
 Overview
 --------
+
+Documentation available at ReadTheDocs_
+
+.. _ReadTheDocs: https://bout-runners.readthedocs.io/en/latest/
 
 One Paragraph of project description goes here
 

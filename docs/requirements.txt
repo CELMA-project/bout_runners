@@ -1,0 +1,2 @@
+# Requirements for building the docs
+numpydoc==1.0.0
