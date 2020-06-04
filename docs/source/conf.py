@@ -33,6 +33,7 @@ with init_path.open("r") as f:
 
 
 # General configuration
+master_doc = "index"  # Where sphinx should look for the documentation
 extensions = [
     "sphinx.ext.autosummary",  # Summary of documentation
     "sphinx.ext.viewcode",  # Add [source] link
