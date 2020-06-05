@@ -2,9 +2,8 @@
 
 .. note:: FIX THE INTERNAL LINKS WITH HARD LINKS (Contributing)
 
-.. |bout_runners| image:: docs/source/_static/logo_full.svg
+.. |bout_runners| image:: https://raw.githubusercontent.com/CELMA-project/bout_runners/master/docs/source/_static/logo_full.svg
     :alt: bout runners
-    :scale: 100%
 
 =====
 
