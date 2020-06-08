@@ -1,7 +1,5 @@
 |bout_runners|
 
-.. note:: FIX THE INTERNAL LINKS WITH HARD LINKS (Contributing)
-
 .. |bout_runners| image:: https://raw.githubusercontent.com/CELMA-project/bout_runners/master/docs/source/_static/logo_full.svg
     :alt: bout runners
 
@@ -62,11 +60,20 @@ Manage your BOUT++ runs through python
 Overview
 --------
 
-Documentation available at ReadTheDocs_
+BOUT Runners is a package to manage and orchestrate your BOUT++ runs. More
+specifically it's a tool:
+
+- Which automatically makes your project
+- Where you can override default parameters, and parameters found in ``BOUT.inp``
+- Where you can submit a single run, or even a chain of runs
+- Which automatically stores parameters and other metadata in a database (inspired by |sacred|_)
+- Logs the entire process
+
+Read the full documentation at ReadTheDocs_
 
 .. _ReadTheDocs: https://bout-runners.readthedocs.io/en/latest/
-
-One Paragraph of project description goes here
+.. |sacred| replace:: ``sacred``
+.. _sacred: https://github.com/IDSIA/sacred
 
 Getting Started
 ---------------
