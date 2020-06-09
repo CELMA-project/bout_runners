@@ -169,15 +169,18 @@ class MetadataReader:
     )
 
     def __init__(
-        self, db_connector: DatabaseConnector, drop_id: Optional[str] = "keep_run_id"
+        self,
+        db_connector: Optional[DatabaseConnector] = None,
+        drop_id: Optional[str] = "keep_run_id",
     ) -> None:
         """
         Set the database to use.
 
         Parameters
         ----------
-        db_connector : DatabaseConnector
+        db_connector : DatabaseConnector or None
             The connection to the database
+            If None: Default database connector will be used
         drop_id : None or str
             Specifies what id columns should be dropped when obtaining the metadata
             - None : No columns will be dropped
@@ -188,6 +191,8 @@ class MetadataReader:
             - 'all_id' : All id columns will be removed
         """
         self.drop_id = drop_id
+
+        db_connector = db_connector if db_connector is not None else DatabaseConnector()
         self.__db_reader = DatabaseReader(db_connector)
 
         self.__table_names = self.__get_all_table_names()

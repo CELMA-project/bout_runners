@@ -3,6 +3,7 @@
 
 import logging
 import time
+from typing import Optional, Union
 from pathlib import Path
 
 import psutil
@@ -58,7 +59,11 @@ class StatusChecker:
     >>> status_checker.check_and_update_until_complete()
     """
 
-    def __init__(self, db_connector: DatabaseConnector, project_path: Path) -> None:
+    def __init__(
+        self,
+        db_connector: Optional[DatabaseConnector] = None,
+        project_path: Optional[Union[Path, str]] = None,
+    ) -> None:
         """
         Set connector, reader and a project path.
 
@@ -75,9 +80,11 @@ class StatusChecker:
             Path to the project (the root directory with which usually contains the
             makefile and the executable)
         """
-        self.__db_connector = db_connector
+        self.__db_connector = (
+            db_connector if db_connector is not None else DatabaseConnector()
+        )
         self.__db_reader = DatabaseReader(self.__db_connector)
-        self.project_path = project_path
+        self.__project_path = Path(project_path) if project_path is not None else Path()
 
     def check_and_update_status(self) -> None:
         """
@@ -153,7 +160,7 @@ class StatusChecker:
         for name, run_id in submitted_to_check.itertuples(index=False):
             metadata_updater.run_id = run_id
 
-            log_path = self.project_path.joinpath(name, "BOUT.log.0")
+            log_path = self.__project_path.joinpath(name, "BOUT.log.0")
 
             if log_path.is_file():
                 log_reader = LogReader(log_path)
@@ -197,7 +204,7 @@ class StatusChecker:
         """
         for name, run_id in running_to_check.itertuples(index=False):
             metadata_updater.run_id = run_id
-            log_path = self.project_path.joinpath(name, "BOUT.log.0")
+            log_path = self.__project_path.joinpath(name, "BOUT.log.0")
             log_reader = LogReader(log_path)
             latest_status = self.check_if_running_or_errored(log_reader)
             metadata_updater.update_latest_status(latest_status)
