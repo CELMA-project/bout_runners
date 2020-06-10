@@ -2,7 +2,7 @@
    Note: The toctree must have the same name as the current directory to work
 
 .. autosummary::
-   :toctree: api
+   :toctree: _autosummary
 
    bout_runners
    bout_runners.config

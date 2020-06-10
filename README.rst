@@ -121,69 +121,48 @@ Prerequisites
 Installing
 ----------
 
-A step by step series of examples that tell you how to get a development env running
+The package can be installed from ``pip``
 
-Say what the step will be
+.. code:: sh
 
-.. code:: python
+   pip install bout-runners
 
-   Give the example
+Or from source
 
+.. code:: sh
 
-And repeat
-
-.. code:: python
-
-   Until finished
-
-End with an example of getting some data out of the system or using it for a little demo
+   python setup.py install
 
 Running the tests
 -----------------
 
-Explain how to run the automated tests for this system
+The test suite can be executed through ``pytest`` or through ``codecov pytest-cov``.
+Installation through
 
-Break down into end to end tests
---------------------------------
+.. code:: sh
 
-Explain what these tests test and why ``Some code``
+    pip install pytest
 
-.. code:: python
+or
 
-   Give
-   an
-   example
-   for code
+.. code:: sh
 
-
-And coding style tests
-----------------------
-
-Explain what these tests test and why
-
-.. code:: python
-
-   Give
-   an
-   example
-   for code
-
-Deployment
-----------
-
-Add additional notes about how to deploy this on a live system
-
-Built With
-----------
+    pip install codecov pytest-cov
 
 
-* Dropwizard_ - The web framework used
-* Maven_ - Dependency Management
-* ROME_ - Used to generate RSS Feeds
+and run with
 
-.. _Dropwizard: http://www.dropwizard.io/1.0.2/docs/
-.. _Maven: http://www.dropwizard.io/1.0.2/docs/
-.. _ROME: http://www.dropwizard.io/1.0.2/docs/
+.. code:: sh
+
+    pytest
+
+or
+
+.. code:: sh
+
+    pytest --cov=./
+
+respectively
 
 Contributing
 ------------
@@ -192,11 +171,6 @@ Please read |CONTRIBUTING.rst|_ for details about how to contribute.
 
 .. |CONTRIBUTING.rst| replace:: ``CONTRIBUTING.rst``
 .. _CONTRIBUTING.rst: https://github.com/CELMA-project/bout_runners/blob/master/.github/CONTRIBUTING.rst
-
-Versioning
-----------
-
-Check out auto versioning (symver has been mentioned)
 
 Authors
 -------
@@ -210,8 +184,7 @@ See also the list of contributors_ who participated in this project.
 License
 -------
 
-This project is licensed under the ``GNU LESSER GENERAL PUBLIC LICENSE`` - see the
-LICENSE_ file for details
+This project is licensed under the ``GNU LESSER GENERAL PUBLIC LICENSE`` - see the LICENSE_ file for details
 
 .. _LICENSE: https://github.com/CELMA-project/bout_runners/blob/master/LICENSE
 
