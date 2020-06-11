@@ -50,6 +50,7 @@ autodoc_default_options = {
     "members": True,  # Include auto documentation of members
     "inherited-members": True,  # Include inherited members
 }
+autoclass_content = "both"  # Include __init__ in the documentation
 autosummary_generate = True  # Generate autosummary
 
 

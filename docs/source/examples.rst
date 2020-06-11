@@ -1,16 +1,11 @@
-Examples
-********
-
-Here cometh more in-depth examples
-
-Constructing the classes
-========================
-.. include:: examples/classes.rst
+Constructing the runner from scratch
+************************************
+.. include:: examples/runner.rst
 
 Creating a bundle
-=================
-.. include:: api/bundle.rst
+*****************
+.. include:: examples/bundle.rst
 
 Monitoring the runs
-===================
-.. include:: api/monitoring.rst
+*******************
+.. include:: examples/monitoring.rst

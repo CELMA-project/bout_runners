@@ -133,6 +133,14 @@ Or from source
 
    python setup.py install
 
+After installation you can optionally call
+
+.. code:: sh
+
+    bout_runners_config
+
+in order to setup the path to your ``BOUT++`` installation and to configure other parameters like logging.
+
 Running the tests
 -----------------
 

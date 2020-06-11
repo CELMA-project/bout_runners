@@ -75,15 +75,15 @@ class BoutRunner:
 
     Create the input objects
 
-    >>> run_parameters = RunParameters({'global': {'nout': 0}})
     >>> default_parameters = DefaultParameters(bout_paths)
+    >>> run_parameters = RunParameters({'global': {'nout': 0}})
     >>> final_parameters = FinalParameters(default_parameters,
     ...                                    run_parameters)
     >>> executor = Executor(
     ...     bout_paths=bout_paths,
     ...     submitter=LocalSubmitter(bout_paths.project_path),
     ...     run_parameters=run_parameters)
-    >>> db_connection = DatabaseConnector('name_of_database')
+    >>> db_connection = DatabaseConnector('name_of_database', db_root_path=Path())
 
     Run the project
 
