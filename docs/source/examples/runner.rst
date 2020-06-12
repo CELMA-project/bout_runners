@@ -1,3 +1,6 @@
+Constructing the runner from scratch
+************************************
+
 Although it's nice to run the scripts from the root of the project directory, it may in certain cases be too strict.
 The following example shows how to get a more fine-grained control of the ``runner`` class.
 

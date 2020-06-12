@@ -7,13 +7,26 @@ Contents
 ########
 .. toctree::
    :maxdepth: 2
+   :caption: About BOUT Runners
 
    self
    intro
-   examples
-   structure
    contributing
    license
+
+.. toctree::
+   :maxdepth: 2
+   :caption: User guide
+
+   structure
+   examples/runner
+   examples/bundle
+   examples/metadata
+
+.. toctree::
+   :maxdepth: 2
+   :caption: API documentation
+
    apidoc
 
 
