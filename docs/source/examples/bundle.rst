@@ -1,4 +1,4 @@
 Creating a bundle
 *****************
 
-FIXME: Make the bundle class first
+Documentation will appear once the bundle class is implemented

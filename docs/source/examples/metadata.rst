@@ -1,19 +1,43 @@
 Metadata
 ********
 
-.. note:: The columns and values in the following example is purely fictional, and may be inconsistent.
+.. Note:: The columns and values in the following example is purely fictional, and  may be inconsistent.
 
-The metadata of a project is stored in it's own schema
+In the following examples we are looking at a project with the input sections ``foo``, ``bar`` and ``baz``.
+The section and parameters are as follows
 
-.. note:: ``sqlite`` does not implement a schema like other databases does.
-          Hence: Each project has its own database file.
+- ``foo``
+    - ``foo``
+    - ``bar``
+    - ``baz``
+- ``bar``
+    - ``foo``
+    - ``qux``
+    - ``quux``
+- ``baz``
+    - ``bar``
+    - ``quuz``
+    - ``corge``
+
+In addition, the following sections are always present in all projects
+
+- ``run``: Contains information about the run itself
+- ``file_modification``: When did the underlying files change the last time
+- ``split``: How the mesh was split
+- ``parameters``: A link table to the parameters listed above
+- ``system_info``: Information about the system the run was executed on
+
+This gives the following entity relationship diagram
 
 ..
    Creation by https://github.com/schemaspy/schemaspy/issues/524#issuecomment-496010502
 
-FIXME: You are here
-
 |db|
+
+The metadata of a project is stored in it's own schema.
+
+.. Note:: ``sqlite`` does not implement a schema like other databases does.
+          Hence: Each project has its own database file.
 
 .. |db| image:: https://raw.githubusercontent.com/CELMA-project/bout_runners/master/docs/source/_static/db.png
     :alt: Example database
@@ -21,9 +45,7 @@ FIXME: You are here
 Extracting the metadata
 =======================
 
-The metadata can be extracted by using the ``MetadataReader`` class.
-
-In order to obtain
+To extract the entire content of the database above we will use the  ``MetadataReader`` class.
 
 .. code:: python
 
@@ -31,21 +53,7 @@ In order to obtain
     metadata_reader = MetadataReader()
     metadata = metadata_reader.get_all_metadata()
 
-Parameters
-
-+----+----------+-----------+------------+-----------+----------+-----------+-------------+------------+----------+-----------+-----------+--------------+-----------------+---------------------+---------------------+---------------------+
-|    |   bar.id |   bar.foo | bar.quux   |   bar.qux |   baz.id |   baz.bar |   baz.corge | baz.quuz   |   foo.id |   foo.bar |   foo.foo |   foo.foobar |   parameters.id |   parameters.bar_id |   parameters.baz_id |   parameters.foo_id |
-+====+==========+===========+============+===========+==========+===========+=============+============+==========+===========+===========+==============+=================+=====================+=====================+=====================+
-|  0 |        1 |         1 | a          |      0.2  |        1 |       0.2 |           1 | b          |        1 |         0 |         0 |          0.1 |               1 |                   1 |                   1 |                   1 |
-+----+----------+-----------+------------+-----------+----------+-----------+-------------+------------+----------+-----------+-----------+--------------+-----------------+---------------------+---------------------+---------------------+
-|  1 |        2 |        10 | a          |      0.24 |        1 |       0.2 |           1 | b          |        2 |         1 |         1 |          0.2 |               2 |                   2 |                   1 |                   2 |
-+----+----------+-----------+------------+-----------+----------+-----------+-------------+------------+----------+-----------+-----------+--------------+-----------------+---------------------+---------------------+---------------------+
-|  2 |        2 |        10 | a          |      0.24 |        1 |       0.2 |           1 | b          |        1 |         0 |         0 |          0.1 |               3 |                   2 |                   1 |                   1 |
-+----+----------+-----------+------------+-----------+----------+-----------+-------------+------------+----------+-----------+-----------+--------------+-----------------+---------------------+---------------------+---------------------+
-
-The ``metadata`` variable is a ``DataFrame``, and contains the following table
-
-Absolutely everything
+The ``metadata`` parameter above is a ``DataFrame`` with the following content
 
 +---+--------+--------------------------+-------------------+------------------+-------------------+--------------+----------------------------+----------------------------+----------------------------+--------------------+--------+---------+----------+---------+--------+---------+-----------+----------+----------------------+------------------------------------------+-------------------------------------+-----------------------------------------------+------------------------------------------+---------------------------------------------+--------+---------+---------+------------+---------------+-------------------+-------------------+-------------------+----------+-----------------------+----------------------------+---------------------------+----------------+---------------------+------------------+-----------------------+---------------------+--------------------+-------------------------------------+
 |   | run.id | run.file_modification_id | run.latest_status | run.name         | run.parameters_id | run.split_id | run.start_time             | run.stop_time              | run.submitted_time         | run.system_info_id | bar.id | bar.foo | bar.quux | bar.qux | baz.id | baz.bar | baz.corge | baz.quuz | file_modification.id | file_modification.bout_git_sha           | file_modification.bout_lib_modified | file_modification.project_executable_modified | file_modification.project_git_sha        | file_modification.project_makefile_modified | foo.id | foo.bar | foo.foo | foo.foobar | parameters.id | parameters.bar_id | parameters.baz_id | parameters.foo_id | split.id | split.number_of_nodes | split.number_of_processors | split.processors_per_node | system_info.id | system_info.machine | system_info.node | system_info.processor | system_info.release | system_info.system | system_info.version                 |
@@ -65,8 +73,15 @@ Absolutely everything
 | 6 | 7      | 2                        | submitted         | testdata_6       | 2                 | 2            |                            |                            | 2030-04-20 14:57:16.997700 | 2                  | 2      | 10      | a        | 0.24    | 1      | 0.2     | 1         | b        | 2                    | 7272a99cb05c9f6105b774d4c5cf1061796c4f7d | 2019-12-03 11:05:29.000000          | 2001-01-01 13:57:16.172488                    | 7272a99cb05c9f6105b774d4c5cf1061796c4f7d | 2000-01-01 10:50:58.000000                  | 2      | 1       | 1       | 0.2        | 2             | 2                 | 1                 | 2                 | 2        | 2                     | 2                          | 2                         | 2              | x86_64              | MrTrollMan       |                       | 4.19.76-linuxkit    | Linux              | #1 SMP Thu Oct 17 19:31:58 UTC 2019 |
 +---+--------+--------------------------+-------------------+------------------+-------------------+--------------+----------------------------+----------------------------+----------------------------+--------------------+--------+---------+----------+---------+--------+---------+-----------+----------+----------------------+------------------------------------------+-------------------------------------+-----------------------------------------------+------------------------------------------+---------------------------------------------+--------+---------+---------+------------+---------------+-------------------+-------------------+-------------------+----------+-----------------------+----------------------------+---------------------------+----------------+---------------------+------------------+-----------------------+---------------------+--------------------+-------------------------------------+
 
+A lot of the columns (``<name>_id``) are simply keys.
+If we only the ``run.id`` column we can change the constructor argument ``drop_id``
 
-Only run id
+.. code:: python
+
+    metadata_reader.drop_id = "keep_run_id"
+    metadata = metadata_reader.get_all_metadata()
+
+``metadata`` now contains
 
 +---+--------+-------------------+------------------+----------------------------+----------------------------+----------------------------+---------+----------+---------+---------+-----------+----------+------------------------------------------+-------------------------------------+-----------------------------------------------+------------------------------------------+---------------------------------------------+---------+---------+------------+-----------------------+----------------------------+---------------------------+---------------------+------------------+-----------------------+---------------------+--------------------+-------------------------------------+
 |   | run.id | run.latest_status | run.name         | run.start_time             | run.stop_time              | run.submitted_time         | bar.foo | bar.quux | bar.qux | baz.bar | baz.corge | baz.quuz | file_modification.bout_git_sha           | file_modification.bout_lib_modified | file_modification.project_executable_modified | file_modification.project_git_sha        | file_modification.project_makefile_modified | foo.bar | foo.foo | foo.foobar | split.number_of_nodes | split.number_of_processors | split.processors_per_node | system_info.machine | system_info.node | system_info.processor | system_info.release | system_info.system | system_info.version                 |
@@ -86,13 +101,38 @@ Only run id
 | 6 | 7      | submitted         | testdata_6       |                            |                            | 2030-04-20 14:57:16.997700 | 10      | a        | 0.24    | 0.2     | 1         | b        | 7272a99cb05c9f6105b774d4c5cf1061796c4f7d | 2019-12-03 11:05:29.000000          | 2001-01-01 13:57:16.172488                    | 7272a99cb05c9f6105b774d4c5cf1061796c4f7d | 2000-01-01 10:50:58.000000                  | 1       | 1       | 0.2        | 2                     | 2                          | 2                         | x86_64              | MrTrollMan       |                       | 4.19.76-linuxkit    | Linux              | #1 SMP Thu Oct 17 19:31:58 UTC 2019 |
 +---+--------+-------------------+------------------+----------------------------+----------------------------+----------------------------+---------+----------+---------+---------+-----------+----------+------------------------------------------+-------------------------------------+-----------------------------------------------+------------------------------------------+---------------------------------------------+---------+---------+------------+-----------------------+----------------------------+---------------------------+---------------------+------------------+-----------------------+---------------------+--------------------+-------------------------------------+
 
+Or, we may simply want only the parameters
 
+.. code:: python
+
+    metadata_reader.drop_id = None
+    metadata = metadata_reader.get_parameters_metadata()
+
++----+----------+-----------+------------+-----------+----------+-----------+-------------+------------+----------+-----------+-----------+--------------+-----------------+---------------------+---------------------+---------------------+
+|    |   bar.id |   bar.foo | bar.quux   |   bar.qux |   baz.id |   baz.bar |   baz.corge | baz.quuz   |   foo.id |   foo.bar |   foo.foo |   foo.foobar |   parameters.id |   parameters.bar_id |   parameters.baz_id |   parameters.foo_id |
++====+==========+===========+============+===========+==========+===========+=============+============+==========+===========+===========+==============+=================+=====================+=====================+=====================+
+|  0 |        1 |         1 | a          |      0.2  |        1 |       0.2 |           1 | b          |        1 |         0 |         0 |          0.1 |               1 |                   1 |                   1 |                   1 |
++----+----------+-----------+------------+-----------+----------+-----------+-------------+------------+----------+-----------+-----------+--------------+-----------------+---------------------+---------------------+---------------------+
+|  1 |        2 |        10 | a          |      0.24 |        1 |       0.2 |           1 | b          |        2 |         1 |         1 |          0.2 |               2 |                   2 |                   1 |                   2 |
++----+----------+-----------+------------+-----------+----------+-----------+-------------+------------+----------+-----------+-----------+--------------+-----------------+---------------------+---------------------+---------------------+
+|  2 |        2 |        10 | a          |      0.24 |        1 |       0.2 |           1 | b          |        1 |         0 |         0 |          0.1 |               3 |                   2 |                   1 |                   1 |
++----+----------+-----------+------------+-----------+----------+-----------+-------------+------------+----------+-----------+-----------+--------------+-----------------+---------------------+---------------------+---------------------+
 
 Updating the database
 =====================
 
+In order to update the ``latest_status``, ``start_time`` and ``stop_time`` the ``StatusChecker`` class can be used.
+To do a one-time update we can run
+
 .. code:: python
 
     from bout_runners.metadata.status_checker import StatusChecker
+    db_connector = runner.db_connector  # Assuming runner is a BoutRunner object
     status_checker = StatusChecker()
     status_checker.check_and_update_status()
+
+and for a loop which runs until all statuses are complete
+
+.. code:: python
+
+    status_checker.check_and_update_until_complete()
