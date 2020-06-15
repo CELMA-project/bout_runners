@@ -24,8 +24,7 @@ def test_db_creator(make_test_database: Callable, make_test_schema: Callable) ->
     make_test_database : function
         Function returning the database connection
     make_test_schema : function
-        Function returning the database connection and the final
-        parameters as sql types
+        Function returning the database connection and the final parameters as sql types
     """
     db_connection_no_schema = make_test_database("test_creation_without_schema")
     db_reader_no_schema = DatabaseReader(db_connection_no_schema)

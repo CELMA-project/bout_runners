@@ -14,8 +14,8 @@ def test_make_project(make_make_object: Tuple[Make, Path]) -> None:
     Parameters
     ----------
     make_make_object : tuple
-        Tuple consisting of the `make_obj` (MakeProject object) and
-        `exec_file` (Path). See the make_make_object fixture for details
+        Tuple consisting of the `make_obj` (MakeProject object) and `exec_file` (Path)
+        See the make_make_object fixture for details
 
     See Also
     --------

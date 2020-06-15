@@ -12,9 +12,8 @@ def test_update_start_time(get_metadata_updater_and_db_reader: Callable) -> None
     Parameters
     ----------
     get_metadata_updater_and_db_reader : function
-        Function which returns the MetadataUpdater object with
-        initialized with connection to the database and a
-        corresponding DatabaseReader object
+        Function which returns the MetadataUpdater object with initialized with
+        connection to the database and a corresponding DatabaseReader object
     """
     metadata_updater, db_reader = get_metadata_updater_and_db_reader("start_time")
     now = datetime.now()
@@ -33,9 +32,8 @@ def test_update_stop_time(get_metadata_updater_and_db_reader: Callable) -> None:
     Parameters
     ----------
     get_metadata_updater_and_db_reader : function
-        Function which returns the MetadataUpdater object with
-        initialized with connection to the database and a
-        corresponding DatabaseReader object
+        Function which returns the MetadataUpdater object with initialized with
+        connection to the database and a corresponding DatabaseReader object
     """
     metadata_updater, db_reader = get_metadata_updater_and_db_reader("stop_time")
     now = datetime.now()
@@ -54,9 +52,8 @@ def test_update_latest_status(get_metadata_updater_and_db_reader: Callable) -> N
     Parameters
     ----------
     get_metadata_updater_and_db_reader : function
-        Function which returns the MetadataUpdater object with
-        initialized with connection to the database and a
-        corresponding DatabaseReader object
+        Function which returns the MetadataUpdater object with initialized with
+        connection to the database and a corresponding DatabaseReader object
     """
     metadata_updater, db_reader = get_metadata_updater_and_db_reader("latest_status")
     latest_status = "foobar"

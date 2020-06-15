@@ -46,14 +46,14 @@ class RunParameters:
         ----------
         run_parameters_dict : None or dict
             Options on the form
+
             >>> {'global': {'append': False, 'nout': 5},
             ...  'mesh':  {'nx': 4},
             ...  'section_in_BOUT_inp': {'some_variable': 'some_value'}}
 
         Notes
         -----
-        The parameters set here will override those found in the
-        BOUT.inp file
+        The parameters set here will override those found in the BOUT.inp file
         """
         # Declare variables to be used in the getters and setters
         self.__run_parameters_dict = None
@@ -71,6 +71,7 @@ class RunParameters:
 
         The setter will also create the self.__run_parameters_str
         The run_parameters_dict should be set on the form
+
         >>> {'global': {'append': False, 'nout': 5},
         ...  'mesh':  {'nx': 4},
         ...  'section_in_BOUT_inp': {'some_variable': 'some_value'}}
@@ -136,8 +137,8 @@ class RunParameters:
 
         Notes
         -----
-        As the run_parameters_str must reflect run_parameters_dict,
-        both are set when setting run_parameters_dict
+        As the run_parameters_str must reflect run_parameters_dict, both are set when
+        setting run_parameters_dict
         """
         # Assert to prevent "Incompatible return type" with Optional
         if self.__run_parameters_str is None:

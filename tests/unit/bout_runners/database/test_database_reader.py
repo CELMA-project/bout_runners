@@ -14,10 +14,9 @@ def test_db_reader(make_test_database: Callable, write_to_split: Callable) -> No
     1. We can make a query
     2. That an empty db has not been populated
     3. That a populated db has table entries
-    4. Check that we can extract the id for a given set of values
-       which exist
-    5. Check that no id is returned if a given set of values is not
-       found in the database
+    4. Check that we can extract the id for a given set of values which exist
+    5. Check that no id is returned if a given set of values is not found in the
+       database
     6. That we can get the latest row id which has been written to
 
     Parameters
@@ -25,8 +24,7 @@ def test_db_reader(make_test_database: Callable, write_to_split: Callable) -> No
     make_test_database : function
         Function which returns the database connection
     write_to_split : function
-        Function returning the database connection where `split` has
-        been populated
+        Function returning the database connection where `split` has been populated
     """
     empty_db_connection = make_test_database("empty_read_test")
     empty_db_reader = DatabaseReader(empty_db_connection)

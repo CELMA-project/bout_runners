@@ -52,9 +52,11 @@ def test_status_checker(
     ----------
     test_case : str
         Description of the test on the form
+
         >>> ('<log_file_present>_<pid_present_in_log>_'
         ...  '<started_time_present_in_log>_<ended_time_present_in_log>'
         ...  '_<whether_pid_exists>_<new_status>')
+
     get_test_data_path : Path
         Path to test data
     get_test_db_copy : function

@@ -16,8 +16,7 @@ def test_executor(make_project: Path, yield_bout_path_conduction: Callable) -> N
     make_project : Path
         The path to the conduction example
     yield_bout_path_conduction : function
-        Function which makes the BoutPaths object for the conduction
-        example
+        Function which makes the BoutPaths object for the conduction example
     """
     # Use the make fixture in order to automate clean up after done
     _ = make_project

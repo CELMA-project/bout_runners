@@ -128,8 +128,7 @@ def test_bout_runners_from_directory(
     make_project : Path
         The path to the conduction example
     yield_number_of_rows_for_all_tables : function
-        Function which returns the number of rows for all tables in a
-        schema
+        Function which returns the number of rows for all tables in a schema
     clean_default_db_dir : Path
         Path to the default database directory
     """
@@ -178,8 +177,7 @@ def test_full_bout_runner(
     make_project : Path
         The path to the conduction example
     yield_number_of_rows_for_all_tables : function
-        Function which returns the number of rows for all tables in a
-        schema
+        Function which returns the number of rows for all tables in a schema
     clean_default_db_dir : Path
         Path to the default database directory
     """

@@ -85,16 +85,16 @@ class BoutMakefileVariableReader(BoutMakefileReader):
     Examples
     --------
     Makefile
-    ```
-    BOUT_SUPER	= /super/path/to/BOUT-dev
-    BOUT_TOP	= $(BOUT_SUPER)/BOUT-dev
 
-    SOURCEC		= bout_model.cxx
-
-    include $(BOUT_TOP)/make.config
-    ```
+    >>> BOUT_SUPER	= /super/path/to/BOUT-dev
+    ... BOUT_TOP	= $(BOUT_SUPER)/BOUT-dev
+    ...
+    ... SOURCEC		= bout_model.cxx
+    ...
+    ... include $(BOUT_TOP)/make.config
 
     Script
+
     >>> BoutMakefileVariableReader('SOURCEC', 'Makefile').value
     'bout_model.cxx'
     """
@@ -132,11 +132,13 @@ class BoutMakefileVariableReader(BoutMakefileReader):
         Examples
         --------
         Makefile
+
         >>> # foo=bar
         ... foo = baz
         ... foo   = foobar.qux # foo = quux.quuz
 
         Script
+
         >>> BoutMakefileVariableReader('foo', 'Makefile').value
         'foobar.qux'
         """

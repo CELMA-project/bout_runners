@@ -65,18 +65,16 @@ def make_make_object(yield_bout_path: Path) -> Iterator[Tuple[Make, Path]]:
     """
     Set up and tear down the make-object.
 
-    In order not to make collisions with the global fixture which
-    makes the `conduction` program, this fixture copies the content
-    of the `conduction` directory to a `tmp` directory, which is
-    removed in the teardown.
+    In order not to make collisions with the global fixture which makes the
+    `conduction` program, this fixture copies the content of the `conduction`
+    directory to a `tmp` directory, which is removed in the teardown.
 
     This fixture calls make_obj.run_clean() before the yield statement.
 
     Parameters
     ----------
     yield_bout_path : Path
-        Path to the BOUT++ repository. See the yield_bout_path fixture
-        for more details
+        Path to the BOUT++ repository. See the yield_bout_path fixture for more details
 
     Yields
     ------
@@ -87,8 +85,7 @@ def make_make_object(yield_bout_path: Path) -> Iterator[Tuple[Make, Path]]:
 
     See Also
     --------
-    tests.bout_runners.conftest.get_bout_directory : Fixture which returns
-    the BOUT++ path
+    tests.bout_runners.conftest.get_bout_directory : Fixture returning the BOUT++ path
     """
     # Setup
     bout_path = yield_bout_path
@@ -113,13 +110,12 @@ def make_project(yield_conduction_path: Path) -> Iterator[Path]:
     """
     Set up and tear down the Make object.
 
-    The method calls make_obj.run_clean() before and after the yield
-    statement
+    The method calls make_obj.run_clean() before and after the yield statement
 
     Parameters
     ----------
     yield_conduction_path : Path
-        Path to the BOUT++ conduction example.
+        Path to the BOUT++ conduction example
         See the yield_conduction_path for more details
 
     Yields
@@ -189,8 +185,8 @@ def fixture_make_test_database(get_tmp_db_dir: Path) -> Callable:
         """
         Make a database.
 
-        It makes sense to have one database per test as we are
-        testing the content of the database
+        It makes sense to have one database per test as we are testing the content of
+        the database
 
         Parameters
         ----------
@@ -289,8 +285,7 @@ def write_to_split(make_test_schema: Callable) -> Iterator[Callable]:
     Parameters
     ----------
     make_test_schema : function
-        Function returning the database connection with the schema
-        created
+        Function returning the database connection with the schema created
 
     Yields
     ------
@@ -335,8 +330,7 @@ def copy_bout_inp() -> Iterator[Callable]:
     Yields
     ------
     _copy_inp_path : function
-        Function which copies BOUT.inp and returns the path to the
-        temporary directory
+        Function which copies BOUT.inp and returns the path to the temporary directory
     """
     # We store the directories to be removed in a list, as lists are
     # mutable irrespective of the scope of their definition
@@ -389,8 +383,7 @@ def yield_bout_path_conduction(yield_conduction_path: Path) -> Iterator[Callable
     Yields
     ------
     _make_bout_path : function
-        Function which makes the BoutPaths object for the conduction
-        example
+        Function which makes the BoutPaths object for the conduction example
     """
     # We store the directories to be removed in a list, as lists are
     # mutable irrespective of the scope of their definition
@@ -467,8 +460,7 @@ def yield_number_of_rows_for_all_tables() -> Iterator[Callable]:
     Yields
     ------
     _get_number_of_rows_for_all_tables : function
-        Function which returns the number of rows for all tables in a
-        schema
+        Function which returns the number of rows for all tables in a schema
     """
 
     def _get_number_of_rows_for_all_tables(db_reader):
@@ -484,6 +476,7 @@ def yield_number_of_rows_for_all_tables() -> Iterator[Callable]:
         -------
         number_of_rows_dict : dict
             Dict on the form
+
             >>> {'table_name': int}
         """
         number_of_rows_dict = dict()
@@ -632,8 +625,7 @@ def fixture_get_test_db_copy(
     Returns
     -------
     _get_test_db_copy : function
-        Function which returns a a database connector to the copy of the
-        test database
+        Function which returns a a database connector to the copy of the test database
     """
     source = get_test_data_path.joinpath("test.db")
 
@@ -669,15 +661,13 @@ def get_metadata_updater_and_db_reader(get_test_db_copy: Callable) -> Callable:
     Parameters
     ----------
     get_test_db_copy : function
-        Function which returns a a database connector to the copy of the
-        test database
+        Function which returns a a database connector to the copy of the test database
 
     Returns
     -------
     _get_metadata_updater_and_db_reader : function
-        Function which returns the MetadataUpdater object with
-        initialized with connection to the database and a
-        corresponding DatabaseReader object
+        Function which returns the MetadataUpdater object with initialized with
+        connection to the database and a corresponding DatabaseReader object
     """
 
     def _get_metadata_updater_and_db_reader(name):
@@ -772,6 +762,7 @@ def mock_pid_exists(monkeypatch: MonkeyPatch) -> Callable:
         ----------
         test_case : str
             Description of the test on the form
+
             >>> ('<log_file_present>_<pid_present_in_log>_'
             ...  '<started_time_present_in_log>_'
             ...  '<ended_time_present_in_log>_'
@@ -829,6 +820,7 @@ def copy_test_case_log_file(
         ----------
         test_case : str
             Description of the test on the form
+
             >>> ('<log_file_present>_<pid_present_in_log>_'
             ...  '<started_time_present_in_log>_'
             ...  '<ended_time_present_in_log>'

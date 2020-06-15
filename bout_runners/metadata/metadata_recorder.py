@@ -39,28 +39,25 @@ class MetadataRecorder:
     Examples
     --------
     Import dependencies
+
     >>> from pathlib import Path
     >>> from bout_runners.executor.bout_paths import BoutPaths
-    >>> from bout_runners.parameters.default_parameters import \
-    ...     DefaultParameters
-    >>> from bout_runners.parameters.final_parameters import \
-    ...     FinalParameters
-    >>> from bout_runners.database.database_connector import \
-    ...     DatabaseConnector
-    >>> from bout_runners.submitter.processor_split import \
-    ...     ProcessorSplit
+    >>> from bout_runners.parameters.default_parameters import DefaultParameters
+    >>> from bout_runners.parameters.final_parameters import FinalParameters
+    >>> from bout_runners.database.database_connector import DatabaseConnector
+    >>> from bout_runners.submitter.processor_split import ProcessorSplit
 
     Create the `bout_paths` object
+
     >>> project_path = Path().joinpath('path', 'to', 'project')
-    >>> bout_inp_src_dir = Path().joinpath('path', 'to', 'source',
-    ... 'BOUT.inp')
-    >>> bout_inp_dst_dir = Path().joinpath('path', 'to', 'destination',
-    ... 'BOUT.inp')
+    >>> bout_inp_src_dir = Path().joinpath('path', 'to', 'source', 'BOUT.inp')
+    >>> bout_inp_dst_dir = Path().joinpath('path', 'to', 'destination','BOUT.inp')
     >>> bout_paths = BoutPaths(project_path=project_path,
     ...                        bout_inp_src_dir=bout_inp_src_dir,
     ...                        bout_inp_dst_dir=bout_inp_dst_dir)
 
     Obtain the parameters
+
     >>> default_parameters = DefaultParameters(bout_paths)
     >>> final_parameters = FinalParameters(default_parameters)
     >>> final_parameters_dict = final_parameters.get_final_parameters()
@@ -69,12 +66,14 @@ class MetadataRecorder:
     ...     final_parameters_dict)
 
     Create the metadata recorder object
+
     >>> db_connection = DatabaseConnector('name')
     >>> metadata_recorder = MetadataRecorder(db_connection,
     ...                                      bout_paths,
     ...                                      final_parameters)
 
     Capture the data to the database
+
     >>> metadata_recorder.capture_new_data_from_run(ProcessorSplit())
     None
     """
@@ -142,25 +141,23 @@ class MetadataRecorder:
         Capture new data from a run.
 
         This function will capture all uncaptured data from a run.
-        If all data has been captured previously, it means that the
-        run has already been executed, and new_entry = False will be
-        returned.
+        If all data has been captured previously, it means that the run has already
+        been executed, and new_entry = False will be returned.
 
         Parameters
         ----------
         processor_split : ProcessorSplit
             The processor split object
         force : bool
-            Store entry to the run table even if a entry with the
-            same parameter exists
-            This will typically be used if the bout_runners is
-            forcefully executing a run
+            Store entry to the run table even if a entry with the same parameter exists
+            This will typically be used if the bout_runners is forcefully executing
+            a run
 
         Returns
         -------
         run_id : None or int
-            If no previous run with the same configuration has been
-            executed, this will return None, else the run_id is returned
+            If no previous run with the same configuration has been executed,
+            this will return None, else the run_id is returned
         """
         # Initiate the run_dict (will be filled with the ids)
         run_dict: Dict[str, Union[str, int, float, None]] = {
@@ -254,6 +251,7 @@ class MetadataRecorder:
         ----------
         parameters_dict : dict
             The dictionary on the form
+
             >>> {'section': {'parameter': 'value'}}
 
         Returns

@@ -55,8 +55,7 @@ class Make:
         ----------
         makefile_root_path : None or Path or str
             Root path of make file
-            If None, the path of the root caller of MakeProject will
-            be called
+            If None, the path of the root caller of MakeProject will be called
         makefile_name : None or str
             If set to None, it tries the following names, in order:
             'GNUmakefile', 'makefile' and 'Makefile'
@@ -78,8 +77,7 @@ class Make:
         """
         Execute the makefile.
 
-        If an executable is found, nothing will be done unless 'force'
-        is set to True
+        If an executable is found, nothing will be done unless 'force' is set to True
 
         Parameters
         ----------

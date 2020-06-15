@@ -22,8 +22,7 @@ def get_system_info_as_sql_type() -> Dict[str, str]:
     Returns
     -------
     sys_info_dict : dict
-        Dictionary with the attributes of the system as keys and the
-        type as values
+        Dictionary with the attributes of the system as keys and the type as values
     """
     attributes = get_system_info()
 
@@ -51,6 +50,7 @@ def get_file_modification(
     -------
     file_modification : dict
         The file modification on the form
+
         >>> {'project_makefile_modified': str,
         ...  'project_executable_modified': str,
         ...  'project_git_sha': str,
