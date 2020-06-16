@@ -1,7 +1,7 @@
 Metadata
 ********
 
-.. Note:: The columns and values in the following example is purely fictional, and  may be inconsistent.
+.. Warning:: The columns and values in the following example is purely fictional, and may be inconsistent.
 
 In the following examples we are looking at a project with the input sections ``foo``, ``bar`` and ``baz``.
 The section and parameters are as follows
