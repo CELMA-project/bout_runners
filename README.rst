@@ -5,7 +5,7 @@
 
 =====
 
-|lint| |test| |docker| |codecov| |docs|
+|lint| |test| |docker| |ltgm_grade| |codecov| |docs|
 
 |pypi| |python| |license|
 
@@ -22,6 +22,10 @@
 .. |docker| image:: https://github.com/CELMA-project/bout_runners/workflows/Docker/badge.svg?branch=master
     :alt: docker build status
     :target: https://github.com/CELMA-project/bout_runners/actions?query=workflow%3A%22Docker%22
+
+.. |ltgm_grade| image:: https://img.shields.io/lgtm/grade/python/g/CELMA-project/bout_runners.svg?logo=lgtm&logoWidth=18
+   :alt: language grade: python
+   :target: https://lgtm.com/projects/g/CELMA-project/bout_runners/context:python
 
 .. |codecov| image:: https://codecov.io/gh/CELMA-project/bout_runners/branch/master/graph/badge.svg
     :alt: codecov percentage
