@@ -51,9 +51,10 @@ def set_log_level(level: Optional[str] = None) -> None:
         possibilities_keys = possibilities_map.keys()
         while answer_int not in possibilities_keys:
             answer_input = input(question)
-            if answer_input is not None:
+            print(f"Your answered: '{answer_input}'")
+            if answer_input != "":
                 answer_int = int(answer_input)
-            if answer_input is None:
+            if answer_input == "":
                 # Reverse the dict
                 answer_int = list(possibilities_map.keys())[
                     list(possibilities_map.values()).index(current_level)
@@ -65,6 +66,8 @@ def set_log_level(level: Optional[str] = None) -> None:
         msg = f"`level` in `set_log_level` must be one of " f"{possibilities}"
         raise ValueError(msg)
 
+    print(f"Setting logging level to {level}")
+
     config["handlers"]["file_handler"]["level"] = level
     config["handlers"]["console_handler"]["level"] = level
     config["root"]["level"] = level
@@ -73,7 +76,8 @@ def set_log_level(level: Optional[str] = None) -> None:
         log_file.write(yaml.dump(config))
 
     set_up_logger(config)
-    logging.info("Logging level set to %s", level)
+    logging.debug("Logging level set to %s", level)
+    print("")
 
 
 def set_log_file_directory(log_dir: Optional[Path] = None) -> None:
@@ -95,7 +99,8 @@ def set_log_file_directory(log_dir: Optional[Path] = None) -> None:
             f"{current_dir}\n"
         )
         answer = input(question)
-        if answer is None:
+        print(f"Your answered: '{answer}'")
+        if answer == "":
             config["log"]["directory"] = str(current_dir)
         else:
             config["log"]["directory"] = answer
@@ -105,8 +110,11 @@ def set_log_file_directory(log_dir: Optional[Path] = None) -> None:
     with get_bout_runners_config_path().open("w") as configfile:
         config.write(configfile)
 
+    print(f"Setting logging dir to {config['log']['directory']}")
+
     set_up_logger()
-    logging.info("Logging directory set to %s", config["log"]["directory"])
+    logging.debug("Logging directory set to %s", config["log"]["directory"])
+    print("")
 
 
 def set_bout_directory(bout_dir: Optional[Path] = None) -> None:
@@ -126,17 +134,18 @@ def set_bout_directory(bout_dir: Optional[Path] = None) -> None:
     """
     config = get_bout_runners_configuration()
     if bout_dir is None:
-        current_dir = get_bout_directory()
+        suggested_dir = get_bout_directory()
         question = (
             f"Please entering the directory for the root of BOUT++:\n"
-            f"Empty input will reuse the current directory "
-            f"{current_dir}\n"
+            f"Empty input use the directory "
+            f"{suggested_dir}\n"
         )
         answer = input(question)
-        if answer is None:
-            config["bout++"]["directory"] = str(current_dir)
-        else:
+        print(f"Your answered: '{answer}'")
+        if answer != "":
             config["bout++"]["directory"] = answer
+        else:
+            config["bout++"]["directory"] = str(suggested_dir)
     else:
         config["bout++"]["directory"] = str(bout_dir)
 
@@ -147,11 +156,19 @@ def set_bout_directory(bout_dir: Optional[Path] = None) -> None:
     with get_bout_runners_config_path().open("w") as configfile:
         config.write(configfile)
 
+    print(f"Setting BOUT++ directory to {config['bout++']['directory']}")
+
     set_up_logger()
-    logging.info("BOUT++ directory set to %s", config["log"]["directory"])
+    logging.debug("BOUT++ directory set to %s", config["bout++"]["directory"])
+    print("")
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """Call all configuration functions."""
     set_log_level()
     set_log_file_directory()
     set_bout_directory()
+
+
+if __name__ == "__main__":
+    main()
