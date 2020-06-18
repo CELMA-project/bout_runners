@@ -104,6 +104,7 @@ ENV/
 # Project related
 *.db
 *.sqlite*
+dist/
 
 # Temporary files
 *delme*

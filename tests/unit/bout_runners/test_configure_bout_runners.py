@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 from _pytest.monkeypatch import MonkeyPatch
-from bout_runners.config import (
+from bout_runners.configure_bout_runners import (
     set_bout_directory,
     set_log_file_directory,
     set_log_level,
@@ -44,7 +44,7 @@ def test_set_log_level(get_mock_config_path: Path, monkeypatch: MonkeyPatch) -> 
         set_log_level("Not a level")
 
     # Test with empty input
-    monkeypatch.setattr("builtins.input", lambda _: None)
+    monkeypatch.setattr("builtins.input", lambda _: "")
     set_log_level()
     config = get_log_config()
     assert config["handlers"]["file_handler"]["level"] == level
@@ -79,7 +79,7 @@ def test_set_log_file_directory(
     original_dir = get_log_file_directory()
 
     # Test with empty input
-    monkeypatch.setattr("builtins.input", lambda _: None)
+    monkeypatch.setattr("builtins.input", lambda _: "")
     set_log_file_directory()
     config = get_bout_runners_configuration()
     assert config["log"]["directory"] == str(original_dir)
@@ -115,7 +115,7 @@ def test_set_bout_directory(
     original_dir = get_bout_directory()
 
     # Test with empty input
-    monkeypatch.setattr("builtins.input", lambda _: None)
+    monkeypatch.setattr("builtins.input", lambda _: "")
     set_bout_directory()
     config = get_bout_runners_configuration()
     assert config["bout++"]["directory"] == str(original_dir)
