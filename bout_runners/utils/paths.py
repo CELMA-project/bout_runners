@@ -8,16 +8,16 @@ from pathlib import Path
 from typing import Optional
 
 
-def get_root_path() -> Path:
+def get_bout_runners_package_path() -> Path:
     """
-    Return the absolute path to the root of this repository.
+    Return the absolute path to the bout_runners package.
 
     Returns
     -------
     Path
         The path to the root directory
     """
-    return Path(__file__).absolute().parents[2]
+    return Path(__file__).absolute().parents[1]
 
 
 def get_config_path() -> Path:
@@ -29,7 +29,7 @@ def get_config_path() -> Path:
     Path
         The path to the configuration directory
     """
-    return get_root_path().joinpath("config")
+    return get_bout_runners_package_path().joinpath("config")
 
 
 def get_logger_config_path() -> Path:
@@ -94,7 +94,7 @@ def get_log_file_directory() -> Path:
     config = get_bout_runners_configuration()
     path_str = config["log"]["directory"]
     if path_str == "None":
-        log_file_dir = get_root_path().joinpath("logs")
+        log_file_dir = get_bout_runners_package_path().joinpath("logs")
     else:
         log_file_dir = Path(path_str)
 
