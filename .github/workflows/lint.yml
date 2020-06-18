@@ -34,7 +34,8 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install --upgrade pre-commit
           python -m pip install --upgrade pylint
-          python -m pip install .
+          python -m pip install --upgrade pyyaml
+          pip install -e ".[test]"
 
       - name: Lint
         run: pre-commit run --all-files
