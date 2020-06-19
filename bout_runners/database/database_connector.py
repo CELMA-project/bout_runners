@@ -1,10 +1,9 @@
-"""Module containing the DatabaseBase class."""
+"""Module containing the DatabaseConnector class."""
 
 
 import logging
 import sqlite3
 from pathlib import Path
-from sqlite3 import Connection
 from typing import Optional
 
 from bout_runners.utils.file_operations import get_caller_dir
@@ -18,11 +17,11 @@ class DatabaseConnector:
     ----------
     __db_path : None or Path
         Getter variable for db_path
-    __connection : Connection
+    __connection : sqlite3.Connection
         Getter variable for connection
     db_path : Path
         Path to database
-    connection : Connection
+    connection : sqlite3.Connection
         The connection to the database
 
     Methods
@@ -82,13 +81,13 @@ class DatabaseConnector:
         return self.__db_path
 
     @property
-    def connection(self) -> Connection:
+    def connection(self) -> sqlite3.Connection:
         """
         Get the properties of self.connection.
 
         Returns
         -------
-        self.__connection : Connection
+        self.__connection : sqlite3.Connection
             The connection to the database
 
         Notes
