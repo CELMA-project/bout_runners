@@ -3,7 +3,6 @@
 
 import configparser
 import time
-from configparser import ConfigParser
 from pathlib import Path
 from typing import Optional
 
@@ -68,13 +67,13 @@ def get_bout_log_config_path() -> Path:
     return get_config_path().joinpath("logging_config.yaml")
 
 
-def get_bout_runners_configuration() -> ConfigParser:
+def get_bout_runners_configuration() -> configparser.ConfigParser:
     """
     Return the bout_runners configuration.
 
     Returns
     -------
-    config : ConfigParser
+    config : configparser.ConfigParser
         The configuration of bout_runners
     """
     config = configparser.ConfigParser()

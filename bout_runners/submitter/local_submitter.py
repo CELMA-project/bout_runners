@@ -8,8 +8,6 @@ import logging
 import subprocess  # nosec
 from pathlib import Path
 
-# The import below is also alarming bandit
-from subprocess import CompletedProcess  # nosec
 from typing import Optional
 
 from bout_runners.submitter.abstract_submitter import AbstractSubmitter
@@ -84,7 +82,7 @@ class LocalSubmitter(AbstractSubmitter):
         """
         return self.__pid
 
-    def submit_command(self, command: str) -> CompletedProcess:
+    def submit_command(self, command: str) -> subprocess.CompletedProcess:
         """
         Run a subprocess.
 

@@ -6,7 +6,6 @@ from typing import Iterable, Mapping, Optional, Union
 import pandas as pd
 from bout_runners.database.database_connector import DatabaseConnector
 from numpy import int64
-from pandas import DataFrame
 
 
 class DatabaseReader:
@@ -105,7 +104,7 @@ class DatabaseReader:
         query_str: str,
         params: Optional[Iterable[Union[str, float, int, bool, None]]] = None,
         **kwargs,
-    ) -> DataFrame:
+    ) -> pd.DataFrame:
         """
         Make a query to the database.
 
@@ -124,7 +123,7 @@ class DatabaseReader:
 
         Returns
         -------
-        table : DataFrame
+        table : pd.DataFrame
             The result of a query as a DataFrame
         """
         table = pd.read_sql_query(
