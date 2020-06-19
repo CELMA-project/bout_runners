@@ -10,8 +10,11 @@ sphinx:
   configuration: docs/source/conf.py
 
 # Optionally set the version of Python and requirements required to build your docs
+# See https://docs.readthedocs.io/en/stable/config-file/v2.html#packages for details
 python:
   version: 3
   install:
-    - requirements: docs/requirements.txt
-    - requirements: requirements.txt
+    - method: pip
+      path: .
+      extra_requirements:
+        - docs
