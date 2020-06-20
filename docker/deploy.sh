@@ -15,16 +15,18 @@ docker build -f docker/Dockerfile -t "$IMAGE":"$VERSION" .
 printf "\nTesting build\n"
 # Test that the build is working
 # NOTE: The /bin/sh is already stated in the ENTRYPOINT
-echo "from bout_runners.runner.bout_runner import BoutRunner" >> test.py
-echo "from bout_runners.metadata.status_checker import StatusChecker" >> test.py
-echo "from bout_runners.metadata.metadata_reader import MetadataReader" >> test.py
-echo "BoutRunner().run()" >> test.py
-echo "status_checker = StatusChecker()" >> test.py
-echo "status_checker.check_and_update_status()" >> test.py
-echo "metadata_reader = MetadataReader()" >> test.py
-echo "metadata = metadata_reader.get_all_metadata()" >> test.py
-echo "print(metadata)" >> test.py
-docker run "$IMAGE":"$VERSION" -c 'cd $HOME/BOUT-dev/examples/conduction && python test.py'
+CHANGE_DIR='cd $HOME/BOUT-dev/examples/conduction'
+PYTHON_TEST='python -c "'\
+'from bout_runners.runner.bout_runner import BoutRunner; '\
+'from bout_runners.metadata.status_checker import StatusChecker; '\
+'from bout_runners.metadata.metadata_reader import MetadataReader; '\
+'BoutRunner().run(); '\
+'status_checker = StatusChecker(); '\
+'status_checker.check_and_update_status(); '\
+'metadata_reader = MetadataReader(); '\
+'metadata = metadata_reader.get_all_metadata(); '\
+'print(metadata)"'
+docker run --rm "$IMAGE":"$VERSION" -c "$CHANGE_DIR&&$PYTHON_TEST"
 printf "\nTest Passed\n"
 # NOTE: DOCKER_PASSWORD and DOCKER_USERNAME are environment secrets of
 #       the github repo
