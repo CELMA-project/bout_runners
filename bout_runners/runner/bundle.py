@@ -1,6 +1,129 @@
 """Contains the bundle class."""
 
 
+from typing import Optional
+
+from bout_runners.database.database_connector import DatabaseConnector
+from bout_runners.database.database_creator import DatabaseCreator
+from bout_runners.executor.executor import Executor
+from bout_runners.metadata.metadata_recorder import MetadataRecorder
+from bout_runners.parameters.final_parameters import FinalParameters
+
+
+class RunSetup:
+    """
+    Class containing the setup of the run.
+
+    FIXME
+    """
+
+    def __init__(
+        self,
+        executor: Optional[Executor] = None,
+        db_connector: Optional[DatabaseConnector] = None,
+        final_parameters: Optional[FinalParameters] = None,
+    ) -> None:
+        """
+        Set the member data.
+
+        Parameters
+        ----------
+        executor : Executor or None
+            Object executing the run
+            If None, default parameters will be used
+        db_connector : DatabaseConnector or None
+            The connection to the database
+            If None: Default database connector will be used
+        final_parameters : FinalParameters or None
+            The object containing the parameters which are going to be used in the run
+            If None, default parameters will be used
+        """
+        # Set member data
+        # NOTE: We are not setting the default as a keyword argument
+        #       as this would mess up the paths
+        self.__executor = executor if executor is not None else Executor()
+        self.__final_parameters = (
+            final_parameters if final_parameters is not None else FinalParameters()
+        )
+        self.__db_connector = (
+            db_connector if db_connector is not None else DatabaseConnector()
+        )
+        self.__db_creator = DatabaseCreator(self.db_connector)
+        self.__metadata_recorder = MetadataRecorder(
+            self.__db_connector, self.executor.bout_paths, self.final_parameters
+        )
+
+    @property
+    def executor(self) -> Executor:
+        """
+        Get the properties of self.executor.
+
+        Returns
+        -------
+        self.__executor : Executor
+            The executor object
+        """
+        return self.__executor
+
+    @property
+    def final_parameters(self) -> FinalParameters:
+        """
+        Get the properties of self.final_parameters.
+
+        Returns
+        -------
+        self.__final_parameters : FinalParameters
+            The object containing the parameters used in the run
+        """
+        return self.__final_parameters
+
+    @property
+    def db_connector(self) -> DatabaseConnector:
+        """
+        Get the properties of self.db_connector.
+
+        Returns
+        -------
+        self.__db_connector : DatabaseConnector
+            The object holding the database connection
+        """
+        return self.__db_connector
+
+
+class RunGroup:
+    """
+    Class for building a run group.
+
+    A run group must contain one, and only one, recipe for executing the project (
+    called `run_setup`). It may consist of one or several pre-hooks (functions that
+    will run prior to the project execution) together with one or several post-hooks
+    (functions that will run after the project execution).
+
+    The pre-hooks may be chained (i.e. executed in a series) to each other,
+    but at least one pre-hook is chained to the project execution (i.e. when that
+    pre-hook is finished the execution of the project will start). Similarly the
+    post-hooks may be chained to each other, but at least one is chained to the
+    project execution (i.e. it will start when the project execution is done).
+    """
+
+    def __init__(self, run_setup: RunSetup) -> None:
+        """
+        Run me.
+
+        Parameters
+        ----------
+        run_setup : RunSetup
+            The setup of the project execution
+        """
+        print(repr(run_setup))
+
+    def add_pre_hook(self) -> None:
+        """Run me."""
+
+    def add_post_hook(self) -> None:
+        """Run me."""
+
+
 class Bundle:
     """Run a bundle."""
 
