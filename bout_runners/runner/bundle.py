@@ -137,6 +137,69 @@ class Bundle:
         # FIXME: Make documentation in readthedocs
         # FIXME: Make docstring documentation
         # FIXME: Make unittest
+        # FIXME: Can loop through nested list...[[we,run,together],[wait_for]]?
+
+        # Populate the waiting_for_dict
+        waiting_for_dict = {None: list()}
+        for group in run_group:
+            # Add the pre_hooks
+            for pre_hook in pre_hooks:
+                if pre_hook.waiting_for_id in waiting_for_dict:
+                    waiting_for_dict[pre_hook.waiting_for_id].append(pre_hook)
+                else:
+                    waiting_for_dict[pre_hook.waiting_for_id] = [pre_hook]
+
+            # Add the run
+            if pre_hook.waiting_for_id in waiting_for_dict:
+                waiting_for_dict[run_group.run.waiting_for_id].append(run_group.run)
+            else:
+                waiting_for_dict[run_group.run.waiting_for_id] = [run_group.run]
+
+            # Add the post_hooks
+            for post_hook in post_hooks:
+                if post_hook.waiting_for_id in waiting_for_dict:
+                    waiting_for_dict[post_hook.waiting_for_id].append(post_hook)
+                else:
+                    waiting_for_dict[post_hook.waiting_for_id] = [post_hook]
+
+        # FIXME: Enable parallel execution on single machine, user can specify max nodes
+        # FIXME: PBS system may have this functionality built-in already (check old
+        #        bout_runners)
+        # FIXME: Add monitor: Execute the next in line when pid has finished. If not
+        #        success -> broken chain, but the rest can continue
+        # multiprocessing.Queue([maxsize])
+        # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Queue
+        # NOTE: An element may wait for more than one element
+        # Upon submitting
+        submission_pid = dict()
+        ...
+        # NOTE: object_id is the object_id of either pre_hook, run_group.run or
+        post_hook
+
+        # Remove element from queue on submission
+        waiting_for_dict[None].remove(submission_id[completed_pid])
+
+
+
+        submission_pid[object_id] = pid
+        # FIXME: Find the inverse of this dict as well
+
+        # Assume monitoring found that one of the runs were done
+        # Put those marked as waiting for the completed pid in the None key of
+        # waiting_for_dict
+        waiting_for_dict[None].\
+            append(waiting_for_dict.pop(submission_id[completed_pid]))
+        # If an element waits for several ids
+        for key in waiting_for_dict.keys():
+            if type(key) == list:
+                if submission_id[completed_pid] in key:
+                    if len(key) == 1:
+                        waiting_for_dict[None].\
+                            append(waiting_for_dict.pop(submission_id[completed_pid]))
+                    else:
+                        new_key = key.copy()
+                        new_key.remove(submission_id[completed_pid])
+                        waiting_for_dict[new_key] = waiting_for_dict.pop(key)
 
         pre_hook
         run
