@@ -1,7 +1,8 @@
 """Contains the bundle class."""
 
 
-from typing import Optional
+import logging
+from typing import Optional, Callable, Tuple, Any, Dict, List
 
 from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_creator import DatabaseCreator
@@ -12,9 +13,42 @@ from bout_runners.parameters.final_parameters import FinalParameters
 
 class RunSetup:
     """
-    Class containing the setup of the run.
+    Class for setting up the run.
 
-    FIXME
+    More specifically this class will connect the executor object with the run
+    parameters and a database to store the results in
+
+    Attributes
+    ----------
+    self.__executor : Executor
+        Getter variable for executor
+    self.__db_connector : DatabaseConnector
+        Getter variable for db_connector
+    self.__final_parameters : FinalParameters
+        Getter variable for final_parameters
+    self.__db_creator : DatabaseCreator
+        Object used to create the database
+    self.__metadata_recorder : MetadataRecorder
+        Object used to record the metadata about a run
+    self.executor : Executor
+        Object used to execute the run
+    self.db_creator : DatabaseCreator
+        Object used to create the database
+    self.final_parameters : FinalParameters
+        Object containing the parameters to use
+
+    Methods
+    -------
+    __create_schema()
+        Create the schema
+
+    Examples
+    --------
+    >>> run_setup = RunSetup(executor, db_connector, final_parameters)
+    >>> run_group = RunGroup(run_setup)
+    >>> run_bundle = RunBundle().add_run_group(run_group)
+    >>> runner = BoutRunner(run_bundle)
+    >>> runner.run()
     """
 
     def __init__(
@@ -25,6 +59,8 @@ class RunSetup:
     ) -> None:
         """
         Set the member data.
+
+        This constructor will also create the schema if it does not exist.
 
         Parameters
         ----------
@@ -52,6 +88,13 @@ class RunSetup:
         self.__metadata_recorder = MetadataRecorder(
             self.__db_connector, self.executor.bout_paths, self.final_parameters
         )
+
+        if not self.__metadata_recorder.db_reader.check_tables_created():
+            logging.info(
+                "Creating schema as no tables were found in " "%s",
+                self.__metadata_recorder.db_reader.db_connector.db_path,
+            )
+            self.__create_schema()
 
     @property
     def executor(self) -> Executor:
@@ -89,6 +132,14 @@ class RunSetup:
         """
         return self.__db_connector
 
+    def __create_schema(self) -> None:
+        """Create the schema."""
+        final_parameters_dict = self.final_parameters.get_final_parameters()
+        final_parameters_as_sql_types = self.final_parameters.cast_to_sql_type(
+            final_parameters_dict
+        )
+        self.__db_creator.create_all_schema_tables(final_parameters_as_sql_types)
+
 
 class RunGroup:
     """
@@ -106,22 +157,98 @@ class RunGroup:
     project execution (i.e. it will start when the project execution is done).
     """
 
+    # NOTE: As the execution id must be unique over several instances of this class
+    #       we make execution_id_counter a class bound variable
+    execution_id_counter = 0
+
     def __init__(self, run_setup: RunSetup) -> None:
         """
-        Run me.
+        Initiate the member data and assign a run_setup_id.
 
         Parameters
         ----------
         run_setup : RunSetup
             The setup of the project execution
         """
-        print(repr(run_setup))
+        self.__run_id = None
+        self.__run_waiting_for: Optional[int] = None
+        self.__pre_hooks: List[Dict[str, Any]] = list()
+        self.__post_hooks: List[Dict[str, Any]] = list()
 
-    def add_pre_hook(self) -> None:
-        """Run me."""
+        self.run_setup = run_setup
+        self.__run_setup_id = RunGroup.execution_id_counter
+        RunGroup.execution_id_counter += 1
+
+    @property
+    def run_id(self) -> Optional[int]:
+        """Return the id of the run."""
+        return self.__run_id
+
+    @property
+    def run_waiting_for(self) -> Optional[int]:
+        """
+        Set the id which the run is waiting for.
+
+        Returns
+        -------
+        self.__run_waiting_for : int
+            The id which the run will wait for finishes before starting the run.
+        """
+        return self.__run_waiting_for
+
+    @run_waiting_for.setter
+    def run_waiting_for(self, waiting_for_id: int) -> None:
+        self.__run_waiting_for = waiting_for_id
+
+    def add_pre_hook(
+        self,
+        function: Callable,
+        args: Optional[Tuple[Any, ...]] = None,
+        kwargs: Optional[Dict[str, Any]] = None,
+        waiting_for_id: Optional[int] = None,
+    ) -> int:
+        """
+        Add a pre hook function.
+
+        The pre hooks will run prior to the project run.
+
+        Parameters
+        ----------
+        function : callable
+            The function to call
+        args : None or tuple
+            The positional arguments of the function
+        kwargs : None or dict
+            The keyword arguments of the function
+        waiting_for_id : None or int
+            The id of the function which have to finish before starting the function
+
+        Returns
+        -------
+        hook_id : int
+            The id of the hook
+        """
+        hook_id = RunGroup.execution_id_counter
+        pre_hook = {
+            "function": function,
+            "args": args,
+            "kwargs": kwargs,
+            "waiting_for_id": waiting_for_id,
+            "hook_id": hook_id,
+        }
+        self.__pre_hooks.append(pre_hook)
+        return hook_id
 
     def add_post_hook(self) -> None:
-        """Run me."""
+        """
+        Run me.
+
+        # FIXME: You are here. How to enforce that this is an actual post hook?
+        Could add type in dict over? But run id < pre hook id. Could say it has to be
+        higher than pre hook id, and lower than highest post hook?
+        The same problem with pre hooks...how can we ensure that it is earliest
+        connected to the previous run_id?
+        """
 
 
 class Bundle:
