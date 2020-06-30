@@ -171,10 +171,12 @@ class RunGroup:
             The setup of the project execution
         """
         self.__run_id = None
+        # FIXME: __run_waiting_for could be input parameter
         self.__run_waiting_for: Optional[int] = None
         self.__pre_hooks: List[Dict[str, Any]] = list()
         self.__post_hooks: List[Dict[str, Any]] = list()
 
+        # FIXME: property for run_setup
         self.run_setup = run_setup
         self.__run_setup_id = RunGroup.execution_id_counter
         RunGroup.execution_id_counter += 1
@@ -229,6 +231,16 @@ class RunGroup:
             The id of the hook
         """
         hook_id = RunGroup.execution_id_counter
+        # Ensure that this is a true pre-hook
+        # FIXME: This will not work as we cannot guarantee the order...using a graph
+        #  instead
+        if type(waiting_for_id) == int:
+            if waiting_for_id > self.__run_setup_id:
+                raise ValueError(f"Cannot let a pre-hook wait for an id higher than "
+                                 f"the project run id. Project run id: {self.__run_setup_id}, waiting "
+                                 f"for id: {waiting_for_id}")
+
+        RunGroup.execution_id_counter += 1
         pre_hook = {
             "function": function,
             "args": args,
@@ -243,11 +255,40 @@ class RunGroup:
         """
         Run me.
 
-        # FIXME: You are here. How to enforce that this is an actual post hook?
-        Could add type in dict over? But run id < pre hook id. Could say it has to be
-        higher than pre hook id, and lower than highest post hook?
-        The same problem with pre hooks...how can we ensure that it is earliest
-        connected to the previous run_id?
+        # FIXME: YOU ARE HERE
+        # The question is now: How to make an execution order which waits for each other
+        # In the docstring of Bundle.setup, there is a metacode which uses lists of list
+        # IT LOOKS LIKE IT WILL WORK: IT UPDATES FINISHED RUNS TO NONE
+        # ALWAYS RUN THE RUNS WHERE WAITING FOR IS NONE
+        # THE QUESTION IS STILL: HOW TO MAKE SURE A PRE HOOK IS A PRE HOOK AND A POST
+        # HOOK IS A POST
+        # Maybe: Can annotate the waiting for dict with a dict which explains if it
+        # is a run, pre-hook or post-hook, and which run-id it's tied to...but this
+        # maybe prevents the user to add a run in-between two other runs
+
+
+        # Maybe we are going into implementation territory: In PBS you can submit and
+        # say waiting for
+
+        g1 = {9:[6], 6:[7,8], 7:[1], 8:[None], 4:[1], 5:[1], 1:[2,3], 2:[None], 3:[None]}
+
+        In [8]: from graphviz import Digraph
+           ...:
+           ...: g = Digraph('G', filename='hello.gv')
+           ...:
+           ...: for key in g1.keys():
+           ...:     for el in g1[key]:
+           ...:         if el is None:
+           ...:             continue
+           ...:         g.edge(f"{el}", f"{key}")
+           ...:
+           ...: g.view()
+
+        # FIXME: How to enforce that this is an actual post hook?
+          Could add type in dict over? But run id < pre hook id. Could say it has to be
+          higher than pre hook id, and lower than highest post hook?
+          The same problem with pre hooks...how can we ensure that it is earliest
+          connected to the previous run_id?
         """
 
 
