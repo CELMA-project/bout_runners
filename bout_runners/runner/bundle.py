@@ -181,6 +181,10 @@ class RunGroup:
         self.__run_setup_id = RunGroup.execution_id_counter
         RunGroup.execution_id_counter += 1
 
+        # FIXME: Redo some?
+        self.__waiting_for_dict = dict()
+        self.__execution_id_type = dict()
+
     @property
     def run_id(self) -> Optional[int]:
         """Return the id of the run."""
@@ -232,13 +236,33 @@ class RunGroup:
         """
         hook_id = RunGroup.execution_id_counter
         # Ensure that this is a true pre-hook
-        # FIXME: This will not work as we cannot guarantee the order...using a graph
-        #  instead
-        if type(waiting_for_id) == int:
-            if waiting_for_id > self.__run_setup_id:
-                raise ValueError(f"Cannot let a pre-hook wait for an id higher than "
-                                 f"the project run id. Project run id: {self.__run_setup_id}, waiting "
-                                 f"for id: {waiting_for_id}")
+        # A pre-hook cannot wait for the current self._run_setup_id
+        # A pre-hook cannot wait for a post-hook in the run_group
+        # A pre-hook can wait for any other ids
+
+        # How to prevent cyclic relationship? That looks like a bad ass algorithm in
+        # the generic case, maybe we can do it easier in this special case
+
+        # FIXME: YOU ARE HERE
+        # We know the current project run id, we know the previous project run id
+        # If we also know the post-hook of the previous project run id, then we know
+        # the full set of possible acceptable waiting_for_ids (this includes these
+        # pre-hooks)
+        # Will this limit alterations to the previous RunGroup? Maybe not
+        # If each RunGroup can inherit from a parent which keeps track of all other
+        # RunGroups
+        # The parent has the overview: List of RunGroups?
+
+        # FIXME: YOU ARE HERE - looks like https://igraph.org/python/#startpy should
+        #  be used for graphs, maybe the parent class can take care of the graph?
+        #  Business rules above applies. Naming should be RunGroup-x-pre_hook_y etc,
+        #  Can allow for a run to be waiting for two other runs (main run). One
+        #  RunGroup holds a subgraph? One could pop from graph after a run is
+        #  complete. Start if graph is always runned (if not waiting for)...use luigi
+        #  or airflow?? Subgraphs:...makes no sense to keep it as separate
+        #  subgraphs...next step: Play around with igraph
+        if waiting_for_id in self.__execution_id_type.keys():
+            pass
 
         RunGroup.execution_id_counter += 1
         pre_hook = {
@@ -249,9 +273,21 @@ class RunGroup:
             "hook_id": hook_id,
         }
         self.__pre_hooks.append(pre_hook)
+
+        if hook_id in self.__waiting_for_dict.keys():
+            self.__waiting_for_dict[hook_id] = [waiting_for_id]
+        else:
+            self.__waiting_for_dict[hook_id].append(waiting_for_id)
+
         return hook_id
 
-    def add_post_hook(self) -> None:
+    def add_post_hook(
+        self,
+        function: Callable,
+        args: Optional[Tuple[Any, ...]] = None,
+        kwargs: Optional[Dict[str, Any]] = None,
+        waiting_for_id: Optional[int] = None,
+    ) -> int:
         """
         Run me.
 
@@ -290,6 +326,26 @@ class RunGroup:
           The same problem with pre hooks...how can we ensure that it is earliest
           connected to the previous run_id?
         """
+        hook_id = RunGroup.execution_id_counter
+        # Ensure that this is a true pre-hook
+        # FIXME: Do this
+
+        RunGroup.execution_id_counter += 1
+        post_hook = {
+            "function": function,
+            "args": args,
+            "kwargs": kwargs,
+            "waiting_for_id": waiting_for_id,
+            "hook_id": hook_id,
+        }
+        self.__post_hooks.append(post_hook)
+
+        if hook_id in self.__waiting_for_dict.keys():
+            self.__waiting_for_dict[hook_id] = [waiting_for_id]
+        else:
+            self.__waiting_for_dict[hook_id].append(waiting_for_id)
+
+        return hook_id
 
 
 class Bundle:
