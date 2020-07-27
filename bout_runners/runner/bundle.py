@@ -254,6 +254,7 @@ class RunGroup:
         # The parent has the overview: List of RunGroups?
 
         # FIXME: YOU ARE HERE - looks like https://igraph.org/python/#startpy should
+        #  Actually: pip install networkx should do the trick
         #  be used for graphs, maybe the parent class can take care of the graph?
         #  Business rules above applies. Naming should be RunGroup-x-pre_hook_y etc,
         #  Can allow for a run to be waiting for two other runs (main run). One
@@ -261,6 +262,35 @@ class RunGroup:
         #  complete. Start if graph is always runned (if not waiting for)...use luigi
         #  or airflow?? Subgraphs:...makes no sense to keep it as separate
         #  subgraphs...next step: Play around with igraph
+        # In[10]:
+        # import networkx as nx
+        # ...:
+        # import matplotlib.pyplot as plt
+        # ...:
+        # ...: G = nx.DiGraph()
+        # ...:
+        # ...: map(G.add_node, range(12))
+        # ...:
+        # ...: G.add_edge(1, 0)
+        # ...: G.add_edge(2, 0)
+        # ...:
+        # ...: G.add_edge(0, 3)
+        # ...: G.add_edge(0, 4)
+        # ...: G.add_edge(0, 6)
+        # ...: G.add_edge(0, 7)
+        # ...:
+        # ...: G.add_edge(6, 5)
+        # ...: G.add_edge(7, 5)
+        # ...:
+        # ...: G.add_edge(5, 8)
+        # ...: print(nx.is_directed_acyclic_graph(G))
+        # ...:
+        # ...:
+        # ...:  # Plot
+        # ...: nx.nx_pydot.to_pydot(G).write_svg('delme.svg')
+        # ...:
+        # ...: G.add_edge(8, 2)
+        # ...: print(nx.is_directed_acyclic_graph(G))
         if waiting_for_id in self.__execution_id_type.keys():
             pass
 
