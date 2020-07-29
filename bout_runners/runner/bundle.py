@@ -3,6 +3,7 @@
 
 import logging
 from typing import Optional, Callable, Tuple, Any, Dict, List
+import networkx as nx
 
 from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_creator import DatabaseCreator
@@ -44,6 +45,10 @@ class RunSetup:
 
     Examples
     --------
+    FIXME: Should have a RunGraph (contains the overall graph) where RunGroups
+    (contains the subgraphs) can be added, thus Bundle may be obsolete.
+
+
     >>> run_setup = RunSetup(executor, db_connector, final_parameters)
     >>> run_group = RunGroup(run_setup)
     >>> run_bundle = RunBundle().add_run_group(run_group)
@@ -141,6 +146,35 @@ class RunSetup:
         self.__db_creator.create_all_schema_tables(final_parameters_as_sql_types)
 
 
+class RunGraph:
+    def __init__(self):
+        self.graph = nx.DiGraph()
+        self.nodes = set(self.graph.nodes)
+
+    def add_node(self, name, function, args, kwargs):
+        self.graph.add_node(name, function=function, args=args, kwargs=kwargs)
+        self.nodes = set(self.graph.nodes)
+
+    def add_edge(self, from_node, to_node):
+        self.graph.add_edge(from_node, to_node)
+        if not nx.is_directed_acyclic_graph(self.graph):
+            raise ValueError(f"The node connection from {from_node} to {to_node} "
+                             f"resulted in a cyclic graph")
+
+    def pick_root(self):
+        """Removes node from graph"""
+        roots = tuple(node for node, degree in self.graph.in_degree() if degree == 0)
+        root_nodes = list()
+        for root in roots:
+            root_nodes.append(self.graph[root])
+            self.graph.remove_node(root)
+        self.nodes = set(self.graph.nodes)
+        return root_nodes
+
+        # FIXME: Access a node attribute by self.graph.nodes[name][attribute]
+        # FIXME: Can the BOUT++ run be formulated as a function? Setup?
+
+
 class RunGroup:
     """
     Class for building a run group.
@@ -234,14 +268,16 @@ class RunGroup:
         hook_id : int
             The id of the hook
         """
+        # Networkx has nice documentation
+        # https://github.com/networkx/networkx/blob/master/doc/reference/index.rst
+        # https://networkx.github.io/documentation/stable/reference/algorithms/approximation.html
+        # https://github.com/networkx/networkx/blob/master/networkx/algorithms/approximation/__init__.py
         hook_id = RunGroup.execution_id_counter
         # Ensure that this is a true pre-hook
         # A pre-hook cannot wait for the current self._run_setup_id
         # A pre-hook cannot wait for a post-hook in the run_group
         # A pre-hook can wait for any other ids
-
-        # How to prevent cyclic relationship? That looks like a bad ass algorithm in
-        # the generic case, maybe we can do it easier in this special case
+        # A post-hook can wait for main run, or post hook in same group
 
         # FIXME: YOU ARE HERE
         # We know the current project run id, we know the previous project run id
@@ -253,10 +289,8 @@ class RunGroup:
         # RunGroups
         # The parent has the overview: List of RunGroups?
 
-        # FIXME: YOU ARE HERE - looks like https://igraph.org/python/#startpy should
-        #  Actually: pip install networkx should do the trick
-        #  be used for graphs, maybe the parent class can take care of the graph?
-        #  Business rules above applies. Naming should be RunGroup-x-pre_hook_y etc,
+        # FIXME: YOU ARE HERE - maybe the parent class can take care of the graph?
+        #  Naming should be RunGroup-x-pre_hook_y etc,
         #  Can allow for a run to be waiting for two other runs (main run). One
         #  RunGroup holds a subgraph? One could pop from graph after a run is
         #  complete. Start if graph is always runned (if not waiting for)...use luigi
@@ -291,6 +325,27 @@ class RunGroup:
         # ...:
         # ...: G.add_edge(8, 2)
         # ...: print(nx.is_directed_acyclic_graph(G))
+        # import networkx as nx
+        # r1 = nx.DiGraph()
+        # r1.add_node(0)
+        # pre1 = nx.DiGraph()
+        # pre1.add_nodes_from([1, 2])
+        # def depends_on(to_g, from_g, to_node, from_nodes):
+        #     to_g.add_nodes_from(from_g)
+        #     for node in from_nodes:
+        #         to_g.add_edge(node, to_node)
+        #     if not nx.is_directed_acyclic_graph(to_g):
+        #         raise ValueError("The resulting graph must be acyclic")
+        #     return to_g
+        # r1 = depends_on(r1, pre1, 0, [1,2])
+        # nx.nx_pydot.to_pydot(r1).write_svg('delme2.svg')
+        # r1 = depends_on(r1, pre1, 0, [1,2])
+        # nx.nx_pydot.to_pydot(r1).write_svg('delme2.svg')
+        # r1 = depends_on(r1, pre1, 0, [9,999])
+        # nx.nx_pydot.to_pydot(r1).write_svg('delme2.svg')
+        # pre1.add_nodes_from([1, 2, 777])
+        # r1 = depends_on(r1, pre1, 0, [1, 2])
+        # nx.nx_pydot.to_pydot(r1).write_svg('delme2.svg')
         if waiting_for_id in self.__execution_id_type.keys():
             pass
 
