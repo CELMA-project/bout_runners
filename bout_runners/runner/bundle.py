@@ -52,7 +52,7 @@ class RunSetup:
     >>> run_setup = RunSetup(executor, db_connector, final_parameters)
     >>> run_group = RunGroup(run_setup)
     >>> run_bundle = RunBundle().add_run_group(run_group)
-    >>> runner = BoutRunner(run_bundle)
+    >>> runner = BoutRunner(run_bundle) -> BoutRunner(run_graph)
     >>> runner.run()
     """
 
@@ -173,7 +173,57 @@ class RunGraph:
 
         # FIXME: Access a node attribute by self.graph.nodes[name][attribute]
         # FIXME: Can the BOUT++ run be formulated as a function? Setup?
+        # Answer: The function which calls the run is executor.execute
 
+    def create_run_group(self):
+        return RunGroup(self)
+
+
+class RunGroup:
+    def __init__(self, run_graph):
+        self.pre_processors = list()
+        self.bout_run = None
+        self.post_processors = list()
+
+    def add_pre_processor(self):
+        pass
+
+    def add_post_processor(self):
+        pass
+
+
+class Processor:
+    def __init__(
+        self,
+        function: Callable,
+        name: Optional[str] = None,
+        args: Optional[Tuple[Any, ...]] = None,
+        kwargs: Optional[Dict[str, Any]] = None,
+        waiting_for: Optional[List[int]] = None,
+    ) -> None:
+        self.function = function
+        self.name = name
+        self.args = args
+        self.kwargs = kwargs
+        self.waiting_for = waiting_for
+
+    def add_wait_for(self, wait_for):
+        pass
+
+    def remove_wait_for(self, wait_for):
+        pass
+
+
+class BoutRun:
+    def __init__(self, run_setup, waiting_for):
+        self.run_setup = run_setup
+        self.waiting_for = waiting_for
+
+    def add_wait_for(self, wait_for):
+        pass
+
+    def remove_wait_for(self, wait_for):
+        pass
 
 class RunGroup:
     """
