@@ -2,7 +2,7 @@
 
 
 import logging
-from typing import Optional, Callable, Tuple, Any, Dict, List
+from typing import Optional, Callable, Tuple, List, Any, Dict, Iterable, Union
 import networkx as nx
 
 from bout_runners.database.database_connector import DatabaseConnector
@@ -12,9 +12,9 @@ from bout_runners.metadata.metadata_recorder import MetadataRecorder
 from bout_runners.parameters.final_parameters import FinalParameters
 
 
-class RunSetup:
+class BoutRunSetup:
     """
-    Class for setting up the run.
+    Class for setting up the BOUT++ run.
 
     More specifically this class will connect the executor object with the run
     parameters and a database to store the results in
@@ -45,14 +45,27 @@ class RunSetup:
 
     Examples
     --------
-    FIXME: Should have a RunGraph (contains the overall graph) where RunGroups
-    (contains the subgraphs) can be added, thus Bundle may be obsolete.
+    # FIXME: Can the BOUT++ run be formulated as a function? Setup?
+    # Answer: The function which calls the run is executor.execute
 
+    # submission_pid[object_id] = pid
+    # FIXME: Find the inverse of this dict as well
+    # FIXME: String representation
+    # FIXME: Possibility to add different submissions
 
-    >>> run_setup = RunSetup(executor, db_connector, final_parameters)
-    >>> run_group = RunGroup(run_setup)
-    >>> run_bundle = RunBundle().add_run_group(run_group)
-    >>> runner = BoutRunner(run_bundle)
+    # FIXME: Add examples
+    # FIXME: Split files
+    # FIXME: Make documentation in readthedocs
+    # FIXME: Enable parallel execution on single machine, user can specify max nodes
+    # FIXME: Add monitor: Execute the next in line when pid has finished. If not
+    #        success -> broken chain, but the rest can continue
+    # multiprocessing.Queue([maxsize])
+    # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Queue
+
+    >>> run_setup = BoutRunSetup(executor, db_connector, final_parameters)
+    >>> run_graph = RunGraph()
+    >>> run_graph.create_run_group(run_setup)
+    >>> runner = BoutRunner(run_graph)
     >>> runner.run()
     """
 
@@ -147,402 +160,295 @@ class RunSetup:
 
 
 class RunGraph:
+    """
+    A directed acyclic graph where the nodes contains instructions for execution.
+
+    Attributes
+    ----------
+    __graph : nx.DiGraph
+        The run graph
+    __nodes : set
+        The set of nodes belonging to the graph
+
+    Methods
+    -------
+    add_node(name, function=None, args=None, kwargs=None)
+        Add a node to the graph
+    add_edge(start_node, end_node)
+        Connect two nodes through an directed edge
+    add_waiting_for(waiting_for, name_of_waiting_node)
+        Make a node wait for the completion of one or more nodes
+    pick_root()
+        Picks and removes the root nodes from graph
+    create_run_group(self, bout_run_setup, name, waiting_for)
+        Create a run group attached to the run graph
+
+    See Also
+    --------
+    RunGroup : Class for building a run group
+    """
+
     def __init__(self):
-        self.graph = nx.DiGraph()
-        self.nodes = set(self.graph.nodes)
+        """Instantiate the graph."""
+        self.__graph = nx.DiGraph()
+        self.__nodes = set(self.__graph.nodes)
 
-    def add_node(self, name, function, args, kwargs):
-        self.graph.add_node(name, function=function, args=args, kwargs=kwargs)
-        self.nodes = set(self.graph.nodes)
+    def add_node(
+        self,
+        name: str,
+        function: Optional[Callable] = None,
+        args: Optional[Tuple[Any, ...]] = None,
+        kwargs: Optional[Dict[str, Any]] = None,
+    ):
+        """
+        Add a node to the graph.
 
-    def add_edge(self, from_node, to_node):
-        self.graph.add_edge(from_node, to_node)
-        if not nx.is_directed_acyclic_graph(self.graph):
-            raise ValueError(f"The node connection from {from_node} to {to_node} "
-                             f"resulted in a cyclic graph")
+        Parameters
+        ----------
+        name : str
+            Name of the node (must be unique)
+        function : None or callable
+            The function to be called
+            Will be None in the case of the bout_run_setup
+        args : None or tuple
+            Optional arguments to the function
+        kwargs : None or dict
+            Optional keyword arguments to the function
+        """
+        if name in self.__nodes:
+            logging.warning(
+                "%s is already present in the graph, and will be overwritten", name
+            )
+        self.__graph.add_node(name, function=function, args=args, kwargs=kwargs)
+        self.__nodes = set(self.__graph.nodes)
 
-    def pick_root(self):
-        """Removes node from graph"""
-        roots = tuple(node for node, degree in self.graph.in_degree() if degree == 0)
+    def add_edge(self, start_node: str, end_node: str):
+        """
+        Connect two nodes through an directed edge.
+
+        Parameters
+        ----------
+        start_node : str
+            Name of the start node
+        end_node : str
+            Name of the end node
+
+        Raises
+        ------
+        ValueError
+            If the graph after adding the nodes becomes cyclic
+        """
+        self.__graph.add_edge(start_node, end_node)
+        if not nx.is_directed_acyclic_graph(self.__graph):
+            raise ValueError(
+                f"The node connection from {start_node} to {end_node} "
+                f"resulted in a cyclic graph"
+            )
+
+    def add_waiting_for(
+        self,
+        waiting_for: Optional[Union[str, Iterable[str]]],
+        name_of_waiting_node: str,
+    ):
+        """
+        Make a node wait for the completion of one or more nodes.
+
+        In other words we will let one or more nodes point to name_of_waiting_node.
+
+        Parameters
+        ----------
+        waiting_for : str or iterable
+            Name of nodes the name_of_waiting_node will wait for
+        name_of_waiting_node : str
+            Name of the node which will wait for the node(s) in waiting_for
+        """
+        if waiting_for is not None:
+            if hasattr(waiting_for, "__iter__") and not isinstance(waiting_for, str):
+                for waiting_for_node in waiting_for:
+                    self.add_edge(waiting_for_node, name_of_waiting_node)
+            elif isinstance(waiting_for, str):
+                self.add_edge(waiting_for, name_of_waiting_node)
+
+    def pick_root_nodes(self):
+        """
+        Pick and remove the root nodes from graph.
+
+        Returns
+        -------
+        root_nodes : tuple of dict
+            Tuple of the attributes of the nodes
+        """
+        roots = tuple(node for node, degree in self.__graph.in_degree() if degree == 0)
         root_nodes = list()
         for root in roots:
-            root_nodes.append(self.graph[root])
-            self.graph.remove_node(root)
-        self.nodes = set(self.graph.nodes)
-        return root_nodes
+            root_nodes.append(self.__graph.nodes[root])
+            self.__graph.remove_node(root)
+        self.__nodes = set(self.__graph.nodes)
+        return tuple(root_nodes)
 
-        # FIXME: Access a node attribute by self.graph.nodes[name][attribute]
-        # FIXME: Can the BOUT++ run be formulated as a function? Setup?
+    def create_run_group(
+        self,
+        bout_run_setup: BoutRunSetup,
+        name: Optional[str] = None,
+        waiting_for: Union[str, Iterable[str]] = None,
+    ):
+        """
+        Create a run group attached to the run graph.
+
+        Parameters
+        ----------
+        bout_run_setup : BoutRunSetup
+            The setup for the BOUT++ run
+        name : None or str
+            Name of the RunGroup
+            If None, a unique number will be assigned
+        waiting_for : str or iterable
+            Name of nodes the name_of_waiting_node will wait for
+
+        Returns
+        -------
+        RunGroup
+            The run group
+
+        See Also
+        --------
+        RunGroup : Class for building a run group
+        """
+        return RunGroup(self, bout_run_setup, name, waiting_for)
 
 
 class RunGroup:
     """
     Class for building a run group.
 
-    A run group must contain one, and only one, recipe for executing the project (
-    called `run_setup`). It may consist of one or several pre-hooks (functions that
-    will run prior to the project execution) together with one or several post-hooks
-    (functions that will run after the project execution).
+    A run group contains one recipe for executing the project (called bout_run_setup).
+    The run group may consist of pre-processors (functions that will run prior to the
+    bout_run_setup execution), and it may consist of post-processors (functions that
+    will run after the bout_run_setup execution).
 
-    The pre-hooks may be chained (i.e. executed in a series) to each other,
-    but at least one pre-hook is chained to the project execution (i.e. when that
-    pre-hook is finished the execution of the project will start). Similarly the
-    post-hooks may be chained to each other, but at least one is chained to the
-    project execution (i.e. it will start when the project execution is done).
+    Attributes
+    ----------
+    __counter : int
+        Counter used if no name is given in the constructor
+    __run_graph : RunGraph
+        The RunGraph which the RunGroup is attached to
+    __bout_run_setup : BoutRunSetup
+        The setup of the BOUT++ run
+    __pre_processors : list
+        List of pre-processors (which will run before the BOUT++ run)
+    __post_processors
+        List of pre-processors (which will run after the BOUT++ run)
+
+    Methods
+    -------
+    add_pre_processor(function, name, args, kwargs, waiting_for)
+        Add a function which will run prior to the BOUT++ run
+    add_post_processor(function, name, args, kwargs, waiting_for)
+        Add a function which will run after the BOUT++ run
     """
 
-    # NOTE: As the execution id must be unique over several instances of this class
-    #       we make execution_id_counter a class bound variable
-    execution_id_counter = 0
+    __counter = 0
 
-    def __init__(self, run_setup: RunSetup) -> None:
+    def __init__(
+        self,
+        run_graph: RunGraph,
+        bout_run_setup: BoutRunSetup,
+        name: Optional[str] = None,
+        waiting_for: Optional[Union[str, Iterable[str]]] = None,
+    ):
         """
-        Initiate the member data and assign a run_setup_id.
+        Set the member data.
+
+        If you want to connect nodes to this RunGroup after creation, you can use
+        RunGraph.add_node
 
         Parameters
         ----------
-        run_setup : RunSetup
-            The setup of the project execution
+        run_graph : RunGraph
+            The RunGraph which the RunGroup is attached to
+        bout_run_setup : BoutRunSetup
+            The setup of the BOUT++ run
+        name : None or str
+            Name of the RunGroup
+            If None, the class counter will be used
+        waiting_for : None or str or iterable
+            Name of nodes the name_of_waiting_node will wait for
         """
-        self.__run_id = None
-        # FIXME: __run_waiting_for could be input parameter
-        self.__run_waiting_for: Optional[int] = None
-        self.__pre_hooks: List[Dict[str, Any]] = list()
-        self.__post_hooks: List[Dict[str, Any]] = list()
+        self.__run_graph = run_graph
+        self.__bout_run_setup = bout_run_setup
+        self.__name = name
+        self.__pre_processors: List[str] = list()
+        self.__post_processors: List[str] = list()
 
-        # FIXME: property for run_setup
-        self.run_setup = run_setup
-        self.__run_setup_id = RunGroup.execution_id_counter
-        RunGroup.execution_id_counter += 1
+        if self.__name is None:
+            self.__name = str(RunGroup.__counter)
+            RunGroup.__counter += 1
 
-        # FIXME: Redo some?
-        self.__waiting_for_dict = dict()
-        self.__execution_id_type = dict()
+        # Assign a node to bout_run_setup
+        self.bout_run_node_name = f"bout_run_{self.__name}"
+        self.__run_graph.add_node(self.bout_run_node_name)
 
-    @property
-    def run_id(self) -> Optional[int]:
-        """Return the id of the run."""
-        return self.__run_id
+        # Add edges to the nodes
+        self.__run_graph.add_waiting_for(waiting_for, self.bout_run_node_name)
 
-    @property
-    def run_waiting_for(self) -> Optional[int]:
-        """
-        Set the id which the run is waiting for.
-
-        Returns
-        -------
-        self.__run_waiting_for : int
-            The id which the run will wait for finishes before starting the run.
-        """
-        return self.__run_waiting_for
-
-    @run_waiting_for.setter
-    def run_waiting_for(self, waiting_for_id: int) -> None:
-        self.__run_waiting_for = waiting_for_id
-
-    def add_pre_hook(
+    def add_pre_processor(
         self,
         function: Callable,
         args: Optional[Tuple[Any, ...]] = None,
         kwargs: Optional[Dict[str, Any]] = None,
-        waiting_for_id: Optional[int] = None,
-    ) -> int:
+        waiting_for: Optional[Union[str, Iterable[str]]] = None,
+    ) -> None:
         """
-        Add a pre hook function.
-
-        The pre hooks will run prior to the project run.
+        Add a pre-processor to the BOUT++ run.
 
         Parameters
         ----------
         function : callable
-            The function to call
+            The function to execute
         args : None or tuple
-            The positional arguments of the function
+            Optional arguments to the function
         kwargs : None or dict
-            The keyword arguments of the function
-        waiting_for_id : None or int
-            The id of the function which have to finish before starting the function
-
-        Returns
-        -------
-        hook_id : int
-            The id of the hook
+            Optional keyword arguments to the function
+        waiting_for : None or str or iterable
+            Name of nodes this node will wait for to finish before executing
         """
-        # Networkx has nice documentation
-        # https://github.com/networkx/networkx/blob/master/doc/reference/index.rst
-        # https://networkx.github.io/documentation/stable/reference/algorithms/approximation.html
-        # https://github.com/networkx/networkx/blob/master/networkx/algorithms/approximation/__init__.py
-        hook_id = RunGroup.execution_id_counter
-        # Ensure that this is a true pre-hook
-        # A pre-hook cannot wait for the current self._run_setup_id
-        # A pre-hook cannot wait for a post-hook in the run_group
-        # A pre-hook can wait for any other ids
-        # A post-hook can wait for main run, or post hook in same group
+        pre_processor_node_name = (
+            f"pre_processor_{self.__name}_{len(self.__pre_processors)}"
+        )
+        self.__run_graph.add_node(
+            self.bout_run_node_name, function=function, args=args, kwargs=kwargs
+        )
+        self.__run_graph.add_edge(pre_processor_node_name, self.bout_run_node_name)
+        self.__run_graph.add_waiting_for(waiting_for, pre_processor_node_name)
+        self.__pre_processors.append(pre_processor_node_name)
 
-        # FIXME: YOU ARE HERE
-        # We know the current project run id, we know the previous project run id
-        # If we also know the post-hook of the previous project run id, then we know
-        # the full set of possible acceptable waiting_for_ids (this includes these
-        # pre-hooks)
-        # Will this limit alterations to the previous RunGroup? Maybe not
-        # If each RunGroup can inherit from a parent which keeps track of all other
-        # RunGroups
-        # The parent has the overview: List of RunGroups?
-
-        # FIXME: YOU ARE HERE - maybe the parent class can take care of the graph?
-        #  Naming should be RunGroup-x-pre_hook_y etc,
-        #  Can allow for a run to be waiting for two other runs (main run). One
-        #  RunGroup holds a subgraph? One could pop from graph after a run is
-        #  complete. Start if graph is always runned (if not waiting for)...use luigi
-        #  or airflow?? Subgraphs:...makes no sense to keep it as separate
-        #  subgraphs...next step: Play around with igraph
-        # In[10]:
-        # import networkx as nx
-        # ...:
-        # import matplotlib.pyplot as plt
-        # ...:
-        # ...: G = nx.DiGraph()
-        # ...:
-        # ...: map(G.add_node, range(12))
-        # ...:
-        # ...: G.add_edge(1, 0)
-        # ...: G.add_edge(2, 0)
-        # ...:
-        # ...: G.add_edge(0, 3)
-        # ...: G.add_edge(0, 4)
-        # ...: G.add_edge(0, 6)
-        # ...: G.add_edge(0, 7)
-        # ...:
-        # ...: G.add_edge(6, 5)
-        # ...: G.add_edge(7, 5)
-        # ...:
-        # ...: G.add_edge(5, 8)
-        # ...: print(nx.is_directed_acyclic_graph(G))
-        # ...:
-        # ...:
-        # ...:  # Plot
-        # ...: nx.nx_pydot.to_pydot(G).write_svg('delme.svg')
-        # ...:
-        # ...: G.add_edge(8, 2)
-        # ...: print(nx.is_directed_acyclic_graph(G))
-        # import networkx as nx
-        # r1 = nx.DiGraph()
-        # r1.add_node(0)
-        # pre1 = nx.DiGraph()
-        # pre1.add_nodes_from([1, 2])
-        # def depends_on(to_g, from_g, to_node, from_nodes):
-        #     to_g.add_nodes_from(from_g)
-        #     for node in from_nodes:
-        #         to_g.add_edge(node, to_node)
-        #     if not nx.is_directed_acyclic_graph(to_g):
-        #         raise ValueError("The resulting graph must be acyclic")
-        #     return to_g
-        # r1 = depends_on(r1, pre1, 0, [1,2])
-        # nx.nx_pydot.to_pydot(r1).write_svg('delme2.svg')
-        # r1 = depends_on(r1, pre1, 0, [1,2])
-        # nx.nx_pydot.to_pydot(r1).write_svg('delme2.svg')
-        # r1 = depends_on(r1, pre1, 0, [9,999])
-        # nx.nx_pydot.to_pydot(r1).write_svg('delme2.svg')
-        # pre1.add_nodes_from([1, 2, 777])
-        # r1 = depends_on(r1, pre1, 0, [1, 2])
-        # nx.nx_pydot.to_pydot(r1).write_svg('delme2.svg')
-        if waiting_for_id in self.__execution_id_type.keys():
-            pass
-
-        RunGroup.execution_id_counter += 1
-        pre_hook = {
-            "function": function,
-            "args": args,
-            "kwargs": kwargs,
-            "waiting_for_id": waiting_for_id,
-            "hook_id": hook_id,
-        }
-        self.__pre_hooks.append(pre_hook)
-
-        if hook_id in self.__waiting_for_dict.keys():
-            self.__waiting_for_dict[hook_id] = [waiting_for_id]
-        else:
-            self.__waiting_for_dict[hook_id].append(waiting_for_id)
-
-        return hook_id
-
-    def add_post_hook(
+    def add_post_processor(
         self,
         function: Callable,
         args: Optional[Tuple[Any, ...]] = None,
         kwargs: Optional[Dict[str, Any]] = None,
-        waiting_for_id: Optional[int] = None,
-    ) -> int:
+        waiting_for: Optional[Union[str, Iterable[str]]] = None,
+    ) -> None:
         """
-        Run me.
+        Add a post-processor to the BOUT++ run.
 
-        # FIXME: YOU ARE HERE
-        # The question is now: How to make an execution order which waits for each other
-        # In the docstring of Bundle.setup, there is a metacode which uses lists of list
-        # IT LOOKS LIKE IT WILL WORK: IT UPDATES FINISHED RUNS TO NONE
-        # ALWAYS RUN THE RUNS WHERE WAITING FOR IS NONE
-        # THE QUESTION IS STILL: HOW TO MAKE SURE A PRE HOOK IS A PRE HOOK AND A POST
-        # HOOK IS A POST
-        # Maybe: Can annotate the waiting for dict with a dict which explains if it
-        # is a run, pre-hook or post-hook, and which run-id it's tied to...but this
-        # maybe prevents the user to add a run in-between two other runs
-
-
-        # Maybe we are going into implementation territory: In PBS you can submit and
-        # say waiting for
-
-        g1 = {9:[6], 6:[7,8], 7:[1], 8:[None], 4:[1], 5:[1], 1:[2,3], 2:[None], 3:[None]}
-
-        In [8]: from graphviz import Digraph
-           ...:
-           ...: g = Digraph('G', filename='hello.gv')
-           ...:
-           ...: for key in g1.keys():
-           ...:     for el in g1[key]:
-           ...:         if el is None:
-           ...:             continue
-           ...:         g.edge(f"{el}", f"{key}")
-           ...:
-           ...: g.view()
-
-        # FIXME: How to enforce that this is an actual post hook?
-          Could add type in dict over? But run id < pre hook id. Could say it has to be
-          higher than pre hook id, and lower than highest post hook?
-          The same problem with pre hooks...how can we ensure that it is earliest
-          connected to the previous run_id?
+        Parameters
+        ----------
+        function : callable
+            The function to execute
+        args : None or tuple
+            Optional arguments to the function
+        kwargs : None or dict
+            Optional keyword arguments to the function
+        waiting_for : None or str or iterable
+            Name of nodes this node will wait for to finish before executing
         """
-        hook_id = RunGroup.execution_id_counter
-        # Ensure that this is a true pre-hook
-        # FIXME: Do this
-
-        RunGroup.execution_id_counter += 1
-        post_hook = {
-            "function": function,
-            "args": args,
-            "kwargs": kwargs,
-            "waiting_for_id": waiting_for_id,
-            "hook_id": hook_id,
-        }
-        self.__post_hooks.append(post_hook)
-
-        if hook_id in self.__waiting_for_dict.keys():
-            self.__waiting_for_dict[hook_id] = [waiting_for_id]
-        else:
-            self.__waiting_for_dict[hook_id].append(waiting_for_id)
-
-        return hook_id
-
-
-class Bundle:
-    """Run a bundle."""
-
-    def __init__(self,) -> None:
-        """Construct lol."""
-
-    def setup(self):
-        """
-        Call the pass function.
-
-        # FIXME: Make documentation in readthedocs
-        # FIXME: Make docstring documentation
-        # FIXME: Make unittest
-        # FIXME: Can loop through nested list...[[we,run,together],[wait_for]]?
-
-        # Populate the waiting_for_dict
-        waiting_for_dict = {None: list()}
-        for group in run_group:
-            # Add the pre_hooks
-            for pre_hook in pre_hooks:
-                if pre_hook.waiting_for_id in waiting_for_dict:
-                    waiting_for_dict[pre_hook.waiting_for_id].append(pre_hook)
-                else:
-                    waiting_for_dict[pre_hook.waiting_for_id] = [pre_hook]
-
-            # Add the run
-            if pre_hook.waiting_for_id in waiting_for_dict:
-                waiting_for_dict[run_group.run.waiting_for_id].append(run_group.run)
-            else:
-                waiting_for_dict[run_group.run.waiting_for_id] = [run_group.run]
-
-            # Add the post_hooks
-            for post_hook in post_hooks:
-                if post_hook.waiting_for_id in waiting_for_dict:
-                    waiting_for_dict[post_hook.waiting_for_id].append(post_hook)
-                else:
-                    waiting_for_dict[post_hook.waiting_for_id] = [post_hook]
-
-        # FIXME: Enable parallel execution on single machine, user can specify max nodes
-        # FIXME: PBS system may have this functionality built-in already (check old
-        #        bout_runners)
-        # FIXME: Add monitor: Execute the next in line when pid has finished. If not
-        #        success -> broken chain, but the rest can continue
-        # multiprocessing.Queue([maxsize])
-        # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Queue
-        # NOTE: An element may wait for more than one element
-        # Upon submitting
-        submission_pid = dict()
-        ...
-        # NOTE: object_id is the object_id of either pre_hook, run_group.run or
-        post_hook
-
-        # Remove element from queue on submission
-        waiting_for_dict[None].remove(submission_id[completed_pid])
-
-
-
-        submission_pid[object_id] = pid
-        # FIXME: Find the inverse of this dict as well
-
-        # Assume monitoring found that one of the runs were done
-        # Put those marked as waiting for the completed pid in the None key of
-        # waiting_for_dict
-        waiting_for_dict[None].\
-            append(waiting_for_dict.pop(submission_id[completed_pid]))
-        # If an element waits for several ids
-        for key in waiting_for_dict.keys():
-            if type(key) == list:
-                if submission_id[completed_pid] in key:
-                    if len(key) == 1:
-                        waiting_for_dict[None].\
-                            append(waiting_for_dict.pop(submission_id[completed_pid]))
-                    else:
-                        new_key = key.copy()
-                        new_key.remove(submission_id[completed_pid])
-                        waiting_for_dict[new_key] = waiting_for_dict.pop(key)
-
-        pre_hook
-        run
-        post_hook
-        next keyword?
-
-        two names: one for pre, run and post, another one for group of the preceeding
-        run_group - can only contain one run (recipe?) but unlimited pre and post hooks
-        run_bundle - a collection of run groups
-
-        chain must have a start and an end...implemented as waits_for and tag_id
-        cannot be two of the same ids in a bundle
-        add_pre_hook - as many as you like, group them (list so you can add self.hooks)
-        add_run - not possible to add_pre_hook (unless you specify the tag_id)
-
-        must be possible to write "for group in bundle"
-        must be possible to submit hooks with individual runners
-        can also make hooks wait for each other
-        possible to attach process ids to hooks
-
-        must have a nice string representation
-
-        How should BoutRunners be rewritten?
-        For the most, that just builds up the run object
-        Ideally we would have something that takes the bundle as input and loops through
-        If no bundle is entered, will create a run_group with the run, and added to
-        bundle
-        !!! Possible to refactor BoutRunners to run_group
-        ??? Is bundle just a list??? - if so the chaining could be weird,
-        bundle should be able to sort? Unless the sort is meaningless
-
-        Currently BoutRunners will only take a bundle and run, what else...
-        prune hooks if run has already been run
-        """
-
-    def teardown(self):
-        """Call something that does not exist."""
+        post_processor_node_name = (
+            f"post_processor_{self.__name}_{len(self.__post_processors)}"
+        )
+        self.__run_graph.add_node(
+            self.bout_run_node_name, function=function, args=args, kwargs=kwargs
+        )
+        self.__run_graph.add_edge(self.bout_run_node_name, post_processor_node_name)
+        self.__run_graph.add_waiting_for(waiting_for, post_processor_node_name)
+        self.__pre_processors.append(post_processor_node_name)

@@ -110,6 +110,7 @@ class LocalSubmitter(AbstractSubmitter):
         )
         std_out, std_err = process.communicate()
         return_code = process.poll()
+        return_code = return_code if return_code is not None else 0
         result = subprocess.CompletedProcess(
             process.args, return_code, std_out, std_err
         )
