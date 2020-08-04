@@ -73,9 +73,11 @@ class BoutPaths:
             If None, the current time will be used
         """
         # Declare variables to be used in the getters and setters
-        self.__project_path: Optional[Path] = None
-        self.__bout_inp_src_dir: Optional[Path] = None
-        self.__bout_inp_dst_dir: Optional[Path] = None
+        # NOTE: When the variables will be set to absolute paths in the setters.
+        #       Thus, Path() can be regarded as None
+        self.__project_path: Path = Path()
+        self.__bout_inp_src_dir: Path = Path()
+        self.__bout_inp_dst_dir: Path = Path()
 
         # NOTE: type: ignore due to https://github.com/python/mypy/issues/3004
         # Set the project path
@@ -99,10 +101,7 @@ class BoutPaths:
         Path
             Absolute path to the root of make file
         """
-        # NOTE: The setter guarantees that self.__project_path is not None, however
-        #       mypy complains if just self.__project_path is returned
-        #       This may be a side effect of https://github.com/python/mypy/issues/3004
-        return Path(self.__project_path) if self.__project_path is not None else Path()
+        return self.__project_path
 
     @project_path.setter
     def project_path(self, project_path: Optional[Union[Path, str]]) -> None:
@@ -135,14 +134,7 @@ class BoutPaths:
         FileNotFoundError
             If no BOUT.inp file is found in the directory
         """
-        # NOTE: The setter guarantees that self.__project_path is not None, however
-        #       mypy complains if just self.__project_path is returned
-        #       This may be a side effect of https://github.com/python/mypy/issues/3004
-        return (
-            Path(self.__bout_inp_src_dir)
-            if self.__bout_inp_src_dir is not None
-            else Path()
-        )
+        return self.__bout_inp_src_dir
 
     @bout_inp_src_dir.setter
     def bout_inp_src_dir(self, bout_inp_src_dir: Optional[Union[Path, str]]) -> None:
@@ -160,7 +152,7 @@ class BoutPaths:
         logging.debug("self.bout_inp_src_dir set to %s", self.__bout_inp_src_dir)
 
         # Copy file to bout_inp_dst_dir if set
-        if self.bout_inp_dst_dir is not None:
+        if self.bout_inp_dst_dir != Path():
             self._copy_inp()
 
     @property
@@ -181,14 +173,7 @@ class BoutPaths:
         Path
             Path to the destination directory
         """
-        # NOTE: The setter guarantees that self.__project_path is not None, however
-        #       mypy complains if just self.__project_path is returned
-        #       This may be a side effect of https://github.com/python/mypy/issues/3004
-        return (
-            Path(self.__bout_inp_dst_dir)
-            if self.__bout_inp_dst_dir is not None
-            else Path()
-        )
+        return self.__bout_inp_dst_dir
 
     @bout_inp_dst_dir.setter
     def bout_inp_dst_dir(self, bout_inp_dst_dir: Optional[Union[Path, str]]) -> None:
