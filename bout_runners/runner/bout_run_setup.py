@@ -51,6 +51,9 @@ class BoutRunSetup:
     # FIXME: String representation
     # FIXME: Possibility to add different submissions
 
+    # FIXME: Attach pid to a run
+    # FIXME: Check for completion of all executions (pre and post)
+
     # FIXME: Add examples
     # FIXME: Split files
     # FIXME: Make documentation in readthedocs

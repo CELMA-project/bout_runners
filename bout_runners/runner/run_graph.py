@@ -5,9 +5,6 @@ import logging
 from typing import Optional, Callable, Tuple, Any, Dict, Iterable, Union
 import networkx as nx
 
-from bout_runners.runner.bout_run_setup import BoutRunSetup
-from bout_runners.runner.run_group import RunGroup
-
 
 class RunGraph:
     """
@@ -17,8 +14,9 @@ class RunGraph:
     ----------
     __graph : nx.DiGraph
         The run graph
-    __nodes : set
+    __node_set : set
         The set of nodes belonging to the graph
+    node :
 
     Methods
     -------
@@ -38,10 +36,17 @@ class RunGraph:
     RunGroup : Class for building a run group
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Instantiate the graph."""
         self.__graph = nx.DiGraph()
-        self.__nodes = set(self.__graph.nodes)
+        self.__node_set = set(self.__graph.nodes)
+
+    @property
+    def nodes(self) -> nx.classes.reportviews.NodeView:
+        """Return the nodes."""
+        # NOTE: The set of nodes only contain the name of the nodes, not their
+        #       attributes
+        return self.__graph.nodes
 
     def add_node(
         self,
@@ -65,12 +70,12 @@ class RunGraph:
         kwargs : None or dict
             Optional keyword arguments to the function
         """
-        if name in self.__nodes:
+        if name in self.__node_set:
             logging.warning(
-                "%s is already present in the graph, and will be overwritten", name
+                "'%s' is already present in the graph, and will be overwritten", name
             )
         self.__graph.add_node(name, function=function, args=args, kwargs=kwargs)
-        self.__nodes = set(self.__graph.nodes)
+        self.__node_set = set(self.__graph.nodes)
 
     def add_edge(self, start_node: str, end_node: str):
         """
@@ -133,35 +138,5 @@ class RunGraph:
         for root in roots:
             root_nodes.append(self.__graph.nodes[root])
             self.__graph.remove_node(root)
-        self.__nodes = set(self.__graph.nodes)
+        self.__node_set = set(self.__graph.nodes)
         return tuple(root_nodes)
-
-    def create_run_group(
-        self,
-        bout_run_setup: BoutRunSetup,
-        name: Optional[str] = None,
-        waiting_for: Union[str, Iterable[str]] = None,
-    ):
-        """
-        Create a run group attached to the run graph.
-
-        Parameters
-        ----------
-        bout_run_setup : BoutRunSetup
-            The setup for the BOUT++ run
-        name : None or str
-            Name of the RunGroup
-            If None, a unique number will be assigned
-        waiting_for : str or iterable
-            Name of nodes the name_of_waiting_node will wait for
-
-        Returns
-        -------
-        bout_runners.runner.run_group.RunGroup
-            The run group
-
-        See Also
-        --------
-        RunGroup : Class for building a run group
-        """
-        return RunGroup(self, bout_run_setup, name, waiting_for)
