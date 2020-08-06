@@ -30,9 +30,9 @@ class RunGroup:
 
     Methods
     -------
-    add_pre_processor(function, name, args, kwargs, waiting_for)
+    add_pre_processor(function, name, args, kwargs, nodes_to_wait_for)
         Add a function which will run prior to the BOUT++ run
-    add_post_processor(function, name, args, kwargs, waiting_for)
+    add_post_processor(function, name, args, kwargs, nodes_to_wait_for)
         Add a function which will run after the BOUT++ run
     """
 
@@ -78,7 +78,7 @@ class RunGroup:
         self.__run_graph.add_node(self.bout_run_node_name)
 
         # Add edges to the nodes
-        self.__run_graph.add_waiting_for(waiting_for, self.bout_run_node_name)
+        self.__run_graph.add_waiting_for(self.bout_run_node_name, waiting_for)
 
     def add_pre_processor(
         self,
@@ -108,7 +108,7 @@ class RunGroup:
             self.bout_run_node_name, function=function, args=args, kwargs=kwargs
         )
         self.__run_graph.add_edge(pre_processor_node_name, self.bout_run_node_name)
-        self.__run_graph.add_waiting_for(waiting_for, pre_processor_node_name)
+        self.__run_graph.add_waiting_for(pre_processor_node_name, waiting_for)
         self.__pre_processors.append(pre_processor_node_name)
 
     def add_post_processor(
@@ -139,5 +139,5 @@ class RunGroup:
             self.bout_run_node_name, function=function, args=args, kwargs=kwargs
         )
         self.__run_graph.add_edge(self.bout_run_node_name, post_processor_node_name)
-        self.__run_graph.add_waiting_for(waiting_for, post_processor_node_name)
+        self.__run_graph.add_waiting_for(post_processor_node_name, waiting_for)
         self.__pre_processors.append(post_processor_node_name)

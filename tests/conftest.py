@@ -9,6 +9,7 @@ from typing import Callable, Dict, Iterator, Tuple
 import pandas as pd
 import psutil
 import pytest
+from pandas import DataFrame
 from _pytest.monkeypatch import MonkeyPatch
 from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_creator import DatabaseCreator
@@ -21,7 +22,7 @@ from bout_runners.metadata.metadata_updater import MetadataUpdater
 from bout_runners.parameters.default_parameters import DefaultParameters
 from bout_runners.parameters.final_parameters import FinalParameters
 from bout_runners.utils.paths import get_bout_directory, get_config_path
-from pandas import DataFrame
+from bout_runners.runner.run_graph import RunGraph
 
 
 @pytest.fixture(scope="session", name="yield_bout_path")
@@ -919,3 +920,25 @@ def clean_default_db_dir() -> Iterator[Path]:
     default_dir = Path().home().joinpath("BOUT_db")
     yield default_dir
     shutil.rmtree(default_dir)
+
+
+@pytest.fixture(scope="function")
+def make_graph() -> RunGraph:
+    """
+    Yield a simple graph.
+
+    Returns
+    -------
+    run_graph : RunGraph
+        A simple graph
+    """
+    run_graph = RunGraph()
+    for i in range(6):
+        run_graph.add_node(str(i))
+
+    run_graph.add_waiting_for("4", "3")
+    run_graph.add_waiting_for("5", "3")
+    run_graph.add_waiting_for("3", "2")
+    run_graph.add_waiting_for("2", "0")
+    run_graph.add_waiting_for("1", "0")
+    return run_graph

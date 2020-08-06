@@ -24,11 +24,11 @@ class RunGraph:
         Add a node to the graph
     add_edge(start_node, end_node)
         Connect two nodes through an directed edge
-    add_waiting_for(waiting_for, name_of_waiting_node)
+    add_waiting_for(nodes_to_wait_for, name_of_waiting_node)
         Make a node wait for the completion of one or more nodes
     pick_root()
         Picks and removes the root nodes from graph
-    create_run_group(self, bout_run_setup, name, waiting_for)
+    create_run_group(self, bout_run_setup, name, nodes_to_wait_for)
         Create a run group attached to the run graph
 
     See Also
@@ -54,7 +54,7 @@ class RunGraph:
         function: Optional[Callable] = None,
         args: Optional[Tuple[Any, ...]] = None,
         kwargs: Optional[Dict[str, Any]] = None,
-    ):
+    ) -> None:
         """
         Add a node to the graph.
 
@@ -77,7 +77,7 @@ class RunGraph:
         self.__graph.add_node(name, function=function, args=args, kwargs=kwargs)
         self.__node_set = set(self.__graph.nodes)
 
-    def add_edge(self, start_node: str, end_node: str):
+    def add_edge(self, start_node: str, end_node: str) -> None:
         """
         Connect two nodes through an directed edge.
 
@@ -102,9 +102,9 @@ class RunGraph:
 
     def add_waiting_for(
         self,
-        waiting_for: Optional[Union[str, Iterable[str]]],
         name_of_waiting_node: str,
-    ):
+        nodes_to_wait_for: Optional[Union[str, Iterable[str]]],
+    ) -> None:
         """
         Make a node wait for the completion of one or more nodes.
 
@@ -112,19 +112,51 @@ class RunGraph:
 
         Parameters
         ----------
-        waiting_for : str or iterable
-            Name of nodes the name_of_waiting_node will wait for
         name_of_waiting_node : str
-            Name of the node which will wait for the node(s) in waiting_for
+            Name of the node which will wait for the node(s) in waiting_for to finish
+        nodes_to_wait_for : str or iterable
+            Name of nodes the name_of_waiting_node will wait for
         """
-        if waiting_for is not None:
-            if hasattr(waiting_for, "__iter__") and not isinstance(waiting_for, str):
-                for waiting_for_node in waiting_for:
+        if nodes_to_wait_for is not None:
+            if hasattr(nodes_to_wait_for, "__iter__") and not isinstance(
+                nodes_to_wait_for, str
+            ):
+                for waiting_for_node in nodes_to_wait_for:
                     self.add_edge(waiting_for_node, name_of_waiting_node)
-            elif isinstance(waiting_for, str):
-                self.add_edge(waiting_for, name_of_waiting_node)
+            elif isinstance(nodes_to_wait_for, str):
+                self.add_edge(nodes_to_wait_for, name_of_waiting_node)
 
-    def pick_root_nodes(self):
+    def get_waiting_for_tuple(self, start_node_name) -> tuple:
+        """
+        Return the list of nodes waiting for a given node.
+
+        Parameters
+        ----------
+        start_node_name : str
+            Name of the node other nodes are waiting for
+
+        Returns
+        -------
+        tuple
+            Tuple of the nodes which are waiting for the given node
+        """
+        return tuple(nx.dfs_tree(self.__graph, start_node_name))
+
+    def remove_node_with_dependencies(self, start_node_name) -> None:
+        """
+        Remove node and all nodes waiting for the specified node.
+
+        Parameters
+        ----------
+        start_node_name : str
+            Name of the node to remove
+            All nodes waiting for start_node_name will be removed
+        """
+        nodes_to_remove = self.get_waiting_for_tuple(start_node_name)
+        for node in nodes_to_remove:
+            self.__graph.remove_node(node)
+
+    def pick_root_nodes(self) -> tuple:
         """
         Pick and remove the root nodes from graph.
 
@@ -140,3 +172,16 @@ class RunGraph:
             self.__graph.remove_node(root)
         self.__node_set = set(self.__graph.nodes)
         return tuple(root_nodes)
+
+    def get_dot_string(self) -> str:
+        """
+        Return the graph as a string i the dot format.
+
+        This can be visualized through GraphViz or online at http://www.webgraphviz.com/
+
+        Returns
+        -------
+        str
+            The graph written in the dot format
+        """
+        return str(nx.nx_pydot.to_pydot(self.__graph))
