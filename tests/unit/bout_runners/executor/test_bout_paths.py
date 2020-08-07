@@ -8,7 +8,9 @@ import pytest
 from bout_runners.executor.bout_paths import BoutPaths
 
 
-def test_bout_path(yield_conduction_path: Path, copy_bout_inp: Callable) -> None:
+def test_bout_path(
+    yield_conduction_path: Path, copy_bout_inp: Callable[[Path, str], Path]
+) -> None:
     """
     Test that BoutPath is copying BOUT.inp.
 

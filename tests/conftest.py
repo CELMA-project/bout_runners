@@ -1,10 +1,11 @@
+# pylint: disable=c0302
 """Global fixtures for the test routines."""
 
 
 import shutil
 from distutils.dir_util import copy_tree, remove_tree
 from pathlib import Path
-from typing import Callable, Dict, Iterator, Tuple
+from typing import Callable, Dict, Iterator, Tuple, Optional
 
 import pandas as pd
 import psutil
@@ -22,6 +23,7 @@ from bout_runners.metadata.metadata_updater import MetadataUpdater
 from bout_runners.parameters.default_parameters import DefaultParameters
 from bout_runners.parameters.final_parameters import FinalParameters
 from bout_runners.utils.paths import get_bout_directory, get_config_path
+from bout_runners.executor.executor import Executor
 from bout_runners.runner.run_graph import RunGraph
 
 
@@ -167,7 +169,9 @@ def fixture_get_tmp_db_dir() -> Iterator[Path]:
 
 
 @pytest.fixture(scope="session", name="make_test_database")
-def fixture_make_test_database(get_tmp_db_dir: Path) -> Callable:
+def fixture_make_test_database(
+    get_tmp_db_dir: Path,
+) -> Callable[[Optional[str]], DatabaseConnector]:
     """
     Return the wrapped function for the database connection.
 
@@ -179,10 +183,10 @@ def fixture_make_test_database(get_tmp_db_dir: Path) -> Callable:
     Returns
     -------
     _make_db : function
-        The function making the database
+        Function making an empty database
     """
 
-    def _make_db(db_name=None):
+    def _make_db(db_name: Optional[str] = None) -> DatabaseConnector:
         """
         Make a database.
 
@@ -226,8 +230,11 @@ def fixture_get_default_parameters(get_test_data_path: Path) -> DefaultParameter
 
 @pytest.fixture(scope="session", name="make_test_schema")
 def fixture_make_test_schema(
-    get_default_parameters: DefaultParameters, make_test_database: Callable
-) -> Iterator[Callable]:
+    get_default_parameters: DefaultParameters,
+    make_test_database: Callable[[Optional[str]], DatabaseConnector],
+) -> Iterator[
+    Callable[[Optional[str]], Tuple[DatabaseConnector, Dict[str, Dict[str, str]]]]
+]:
     """
     Return the wrapped function for schema creation.
 
@@ -244,7 +251,9 @@ def fixture_make_test_schema(
         The function making the schema (i.e. making all the tables)
     """
 
-    def _make_schema(db_name=None):
+    def _make_schema(
+        db_name: Optional[str] = None,
+    ) -> Tuple[DatabaseConnector, Dict[str, Dict[str, str]]]:
         """
         Create the schema (i.e. make all the tables) of the database.
 
@@ -279,7 +288,11 @@ def fixture_make_test_schema(
 
 
 @pytest.fixture(scope="session")
-def write_to_split(make_test_schema: Callable) -> Iterator[Callable]:
+def write_to_split(
+    make_test_schema: Callable[
+        [Optional[str]], Tuple[DatabaseConnector, Dict[str, Dict[str, str]]]
+    ],
+) -> Iterator[Callable[[Optional[str]], DatabaseConnector]]:
     """
     Return the wrapped function for writing to the split table.
 
@@ -294,7 +307,7 @@ def write_to_split(make_test_schema: Callable) -> Iterator[Callable]:
         The function writing to the split table
     """
 
-    def _write_split(db_name=None):
+    def _write_split(db_name: Optional[str] = None) -> DatabaseConnector:
         """
         Write to the split table.
 
@@ -324,7 +337,7 @@ def write_to_split(make_test_schema: Callable) -> Iterator[Callable]:
 
 
 @pytest.fixture(scope="session")
-def copy_bout_inp() -> Iterator[Callable]:
+def copy_bout_inp() -> Iterator[Callable[[Path, str], Path]]:
     """
     Copy BOUT.inp to a temporary directory.
 
@@ -339,7 +352,7 @@ def copy_bout_inp() -> Iterator[Callable]:
     # https://docs.pytest.org/en/latest/fixture.html#factories-as-fixtures
     tmp_dir_list = []
 
-    def _copy_inp_path(project_path, tmp_path_name):
+    def _copy_inp_path(project_path: Path, tmp_path_name: str) -> Path:
         """
         Copy BOUT.inp to a temporary directory.
 
@@ -371,8 +384,10 @@ def copy_bout_inp() -> Iterator[Callable]:
         shutil.rmtree(tmp_dir_path)
 
 
-@pytest.fixture(scope="function")
-def yield_bout_path_conduction(yield_conduction_path: Path) -> Iterator[Callable]:
+@pytest.fixture(scope="function", name="yield_bout_path_conduction")
+def fixture_yield_bout_path_conduction(
+    yield_conduction_path: Path,
+) -> Iterator[Callable[[str], BoutPaths]]:
     """
     Make the bout_path object and clean up after use.
 
@@ -392,7 +407,7 @@ def yield_bout_path_conduction(yield_conduction_path: Path) -> Iterator[Callable
     # https://docs.pytest.org/en/latest/fixture.html#factories-as-fixtures
     tmp_dir_list = []
 
-    def _make_bout_path(tmp_path_name):
+    def _make_bout_path(tmp_path_name: str) -> BoutPaths:
         """
         Create BoutPaths from the conduction directory.
 
@@ -454,7 +469,9 @@ def copy_makefile(get_test_data_path: Path) -> Iterator[Path]:
 
 
 @pytest.fixture(scope="function")
-def yield_number_of_rows_for_all_tables() -> Iterator[Callable]:
+def yield_number_of_rows_for_all_tables() -> Iterator[
+    Callable[[DatabaseReader], Dict[str, int]]
+]:
     """
     Yield the function used to count number of rows in a table.
 
@@ -464,7 +481,7 @@ def yield_number_of_rows_for_all_tables() -> Iterator[Callable]:
         Function which returns the number of rows for all tables in a schema
     """
 
-    def _get_number_of_rows_for_all_tables(db_reader):
+    def _get_number_of_rows_for_all_tables(db_reader: DatabaseReader) -> Dict[str, int]:
         """
         Return the number of rows for all tables in a schema.
 
@@ -608,8 +625,10 @@ def fixture_yield_logs(get_test_data_path: Path) -> Iterator[Dict[str, Path]]:
 
 @pytest.fixture(scope="function", name="get_test_db_copy")
 def fixture_get_test_db_copy(
-    get_tmp_db_dir: Path, get_test_data_path: Path, make_test_database: Callable,
-) -> Callable:
+    get_tmp_db_dir: Path,
+    get_test_data_path: Path,
+    make_test_database: Callable[[Optional[str]], DatabaseConnector],
+) -> Callable[[str], DatabaseConnector]:
     """
     Return a function which returns a DatabaseConnector connected to a copy of test.db.
 
@@ -630,7 +649,7 @@ def fixture_get_test_db_copy(
     """
     source = get_test_data_path.joinpath("test.db")
 
-    def _get_test_db_copy(name):
+    def _get_test_db_copy(name: str) -> DatabaseConnector:
         """
         Return a database connector to the copy of the test database.
 
@@ -671,7 +690,9 @@ def get_metadata_updater_and_db_reader(get_test_db_copy: Callable) -> Callable:
         connection to the database and a corresponding DatabaseReader object
     """
 
-    def _get_metadata_updater_and_db_reader(name):
+    def _get_metadata_updater_and_db_reader(
+        name: str,
+    ) -> Tuple[MetadataUpdater, DatabaseReader]:
         """
         Return a MetadataUpdater and its DatabaseConnector.
 
@@ -713,7 +734,7 @@ def fixture_copy_log_file(get_test_data_path: Path) -> Iterator[Callable]:
     # NOTE: This corresponds to names in test.db
     paths_to_remove = list()
 
-    def _copy_log_file(log_file_to_copy, destination_dir_name):
+    def _copy_log_file(log_file_to_copy: Path, destination_dir_name: str) -> None:
         """
         Copy log files to a temporary directory.
 
@@ -752,7 +773,7 @@ def mock_pid_exists(monkeypatch: MonkeyPatch) -> Callable:
         Function which returns a monkeypatch for psutil.pid_exists
     """
 
-    def mock_wrapper(test_case):
+    def mock_wrapper(test_case: str):
         """
         Return monkeypatch for psutil.pid_exists.
 
@@ -770,7 +791,7 @@ def mock_pid_exists(monkeypatch: MonkeyPatch) -> Callable:
             ...  '<whether_pid_exists>_<new_status>')
         """
 
-        def _pid_exists_mock(pid):
+        def _pid_exists_mock(pid: Optional[int]) -> bool:
             """
             Mock psutil.pid_exists.
 
@@ -813,7 +834,7 @@ def copy_test_case_log_file(
         Function which copy the test case log files
     """
 
-    def _copy_test_case_log_file(test_case):
+    def _copy_test_case_log_file(test_case: str) -> None:
         """
         Copy the test case log files.
 
@@ -942,3 +963,41 @@ def make_graph() -> RunGraph:
     run_graph.add_waiting_for("2", "0")
     run_graph.add_waiting_for("1", "0")
     return run_graph
+
+
+@pytest.fixture(scope="function")
+def get_executor(yield_bout_path_conduction: Callable):
+    """
+    Return a function which returns an Executor object.
+
+    Parameters
+    ----------
+    yield_bout_path_conduction : function
+        Function which makes the BoutPaths object for the conduction example
+
+    Returns
+    -------
+    _get_executor : function
+        Function which returns an Executor based on the conduction directory.
+    """
+
+    def _get_executor(tmp_path_name: str) -> Executor:
+        """
+        Create Executor based on the conduction directory.
+
+        Parameters
+        ----------
+        tmp_path_name : str
+            Name of the temporary directory
+
+        Returns
+        -------
+        executor : Executor
+            The Executor object
+        """
+        bout_paths = yield_bout_path_conduction(tmp_path_name)
+        executor = DefaultParameters.get_test_executor(bout_paths)
+
+        return executor
+
+    return _get_executor

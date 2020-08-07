@@ -3,7 +3,7 @@
 import contextlib
 import os
 from pathlib import Path
-from typing import Callable, Iterator
+from typing import Callable, Iterator, Dict
 
 from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_reader import DatabaseReader
@@ -69,7 +69,8 @@ def assert_first_run(
 
 
 def assert_tables_has_len_1(
-    db_reader: DatabaseReader, yield_number_of_rows_for_all_tables: Callable
+    db_reader: DatabaseReader,
+    yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
 ) -> None:
     """
     Assert that tables has length 1.
@@ -87,7 +88,8 @@ def assert_tables_has_len_1(
 
 
 def assert_force_run(
-    db_reader: DatabaseReader, yield_number_of_rows_for_all_tables: Callable
+    db_reader: DatabaseReader,
+    yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
 ) -> None:
     """
     Assert that the force run is effective.
@@ -111,7 +113,7 @@ def assert_force_run(
 
 def test_bout_runners_from_directory(
     make_project: Path,
-    yield_number_of_rows_for_all_tables: Callable,
+    yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
     clean_default_db_dir: Path,
 ) -> None:
     """
@@ -160,7 +162,7 @@ def test_bout_runners_from_directory(
 
 def test_full_bout_runner(
     make_project: Path,
-    yield_number_of_rows_for_all_tables: Callable,
+    yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
     clean_default_db_dir: Path,
 ) -> None:
     """

@@ -2,10 +2,17 @@
 
 
 from datetime import datetime
-from typing import Callable
+from typing import Callable, Tuple
+
+from bout_runners.database.database_reader import DatabaseReader
+from bout_runners.metadata.metadata_updater import MetadataUpdater
 
 
-def test_update_start_time(get_metadata_updater_and_db_reader: Callable) -> None:
+def test_update_start_time(
+    get_metadata_updater_and_db_reader: Callable[
+        [str], Tuple[MetadataUpdater, DatabaseReader]
+    ]
+) -> None:
     """
     Test if it's possible to update the start time.
 
@@ -25,7 +32,11 @@ def test_update_start_time(get_metadata_updater_and_db_reader: Callable) -> None
     assert result_df.loc[0, "start_time"] == str(now)
 
 
-def test_update_stop_time(get_metadata_updater_and_db_reader: Callable) -> None:
+def test_update_stop_time(
+    get_metadata_updater_and_db_reader: Callable[
+        [str], Tuple[MetadataUpdater, DatabaseReader]
+    ]
+) -> None:
     """
     Test if it's possible to update the stop time.
 
@@ -45,7 +56,11 @@ def test_update_stop_time(get_metadata_updater_and_db_reader: Callable) -> None:
     assert result_df.loc[0, "stop_time"] == str(now)
 
 
-def test_update_latest_status(get_metadata_updater_and_db_reader: Callable) -> None:
+def test_update_latest_status(
+    get_metadata_updater_and_db_reader: Callable[
+        [str], Tuple[MetadataUpdater, DatabaseReader]
+    ]
+) -> None:
     """
     Test if it's possible to update the latest status.
 

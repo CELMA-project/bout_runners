@@ -2,14 +2,17 @@
 
 from datetime import datetime
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Optional
 
 import pytest
+from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.metadata.status_checker import StatusChecker
 
 
-def test_status_checker_run_time_error(make_test_database: Callable) -> None:
+def test_status_checker_run_time_error(
+    make_test_database: Callable[[Optional[str]], DatabaseConnector]
+) -> None:
     """
     Test that the status checker raises RuntimeError without tables.
 
@@ -41,9 +44,9 @@ def test_status_checker_run_time_error(make_test_database: Callable) -> None:
 def test_status_checker(
     test_case: str,
     get_test_data_path: Path,
-    get_test_db_copy: Callable,
-    mock_pid_exists: Callable,
-    copy_test_case_log_file: Callable,
+    get_test_db_copy: Callable[[str], DatabaseConnector],
+    mock_pid_exists: Callable[[str], None],
+    copy_test_case_log_file: Callable[[str], None],
 ) -> None:
     """
     Test the StatusChecker exhaustively (excluding raises and loop).
@@ -114,8 +117,8 @@ def test_status_checker(
 @pytest.mark.timeout(60)
 def test_status_checker_until_complete_infinite(
     get_test_data_path: Path,
-    get_test_db_copy: Callable,
-    copy_test_case_log_file: Callable,
+    get_test_db_copy: Callable[[str], DatabaseConnector],
+    copy_test_case_log_file: Callable[[str], None],
 ) -> None:
     """
     Test the infinite loop of StatusChecker.

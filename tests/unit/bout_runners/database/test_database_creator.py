@@ -2,14 +2,20 @@
 
 
 import sqlite3
-from typing import Callable
+from typing import Callable, Tuple, Dict
 
 import pytest
+from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_creator import DatabaseCreator
 from bout_runners.database.database_reader import DatabaseReader
 
 
-def test_db_creator(make_test_database: Callable, make_test_schema: Callable) -> None:
+def test_db_creator(
+    make_test_database: Callable[[str], DatabaseConnector],
+    make_test_schema: Callable[
+        [str], Tuple[DatabaseConnector, Dict[str, Dict[str, str]]]
+    ],
+) -> None:
     """
     Test we can create the database schemas.
 

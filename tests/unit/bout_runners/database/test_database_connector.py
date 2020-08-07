@@ -5,9 +5,12 @@ import sqlite3
 from typing import Callable
 
 import pytest
+from pathlib import Path
+
+from bout_runners.database.database_connector import DatabaseConnector
 
 
-def test_db_connector(make_test_database: Callable) -> None:
+def test_db_connector(make_test_database: Callable[[str], DatabaseConnector]) -> None:
     """
     Test the connection.
 
@@ -33,7 +36,9 @@ def test_db_connector(make_test_database: Callable) -> None:
         db_connection.execute_statement("THIS IS AN INVALID STATEMENT")
 
     with pytest.raises(AttributeError):
-        db_connection.db_path = "invalid"
+        # Ignoring mypy as db_path is defined as read-only
+        db_connection.db_path = Path("invalid")  # type: ignore
 
     with pytest.raises(AttributeError):
-        db_connection.connection = "invalid"
+        # Ignoring mypy as db_path is defined as read-only
+        db_connection.connection = Path("invalid")  # type: ignore
