@@ -15,6 +15,8 @@ class RunGroup:
     bout_run_setup execution), and it may consist of post-processors (functions that
     will run after the bout_run_setup execution).
 
+    FIXME: Add examples
+
     Attributes
     ----------
     __counter : int
@@ -105,7 +107,7 @@ class RunGroup:
             f"pre_processor_{self.__name}_{len(self.__pre_processors)}"
         )
         self.__run_graph.add_node(
-            self.bout_run_node_name, function=function, args=args, kwargs=kwargs
+            pre_processor_node_name, function=function, args=args, kwargs=kwargs
         )
         self.__run_graph.add_edge(pre_processor_node_name, self.bout_run_node_name)
         self.__run_graph.add_waiting_for(pre_processor_node_name, waiting_for)
@@ -136,8 +138,8 @@ class RunGroup:
             f"post_processor_{self.__name}_{len(self.__post_processors)}"
         )
         self.__run_graph.add_node(
-            self.bout_run_node_name, function=function, args=args, kwargs=kwargs
+            post_processor_node_name, function=function, args=args, kwargs=kwargs
         )
         self.__run_graph.add_edge(self.bout_run_node_name, post_processor_node_name)
         self.__run_graph.add_waiting_for(post_processor_node_name, waiting_for)
-        self.__pre_processors.append(post_processor_node_name)
+        self.__post_processors.append(post_processor_node_name)

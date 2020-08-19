@@ -1013,7 +1013,7 @@ def get_bout_run_setup(
     get_default_parameters: DefaultParameters,
 ) -> Callable[[str], BoutRunSetup]:
     """
-    Return a function which returns an Executor object.
+    Return a function which returns a BoutRunSetup object.
 
     Parameters
     ----------
