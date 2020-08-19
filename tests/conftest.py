@@ -25,6 +25,7 @@ from bout_runners.parameters.final_parameters import FinalParameters
 from bout_runners.utils.paths import get_bout_directory, get_config_path
 from bout_runners.executor.executor import Executor
 from bout_runners.runner.run_graph import RunGraph
+from bout_runners.runner.bout_run_setup import BoutRunSetup
 
 
 @pytest.fixture(scope="session", name="yield_bout_path")
@@ -965,8 +966,10 @@ def make_graph() -> RunGraph:
     return run_graph
 
 
-@pytest.fixture(scope="function")
-def get_executor(yield_bout_path_conduction: Callable):
+@pytest.fixture(scope="function", name="get_executor")
+def fixture_get_executor(
+    yield_bout_path_conduction: Callable[[str], BoutPaths]
+) -> Callable[[str], Executor]:
     """
     Return a function which returns an Executor object.
 
@@ -978,7 +981,7 @@ def get_executor(yield_bout_path_conduction: Callable):
     Returns
     -------
     _get_executor : function
-        Function which returns an Executor based on the conduction directory.
+        Function which returns an Executor based on the conduction directory
     """
 
     def _get_executor(tmp_path_name: str) -> Executor:
@@ -1001,3 +1004,51 @@ def get_executor(yield_bout_path_conduction: Callable):
         return executor
 
     return _get_executor
+
+
+@pytest.fixture(scope="function")
+def get_bout_run_setup(
+    get_executor: Callable[[str], Executor],
+    make_test_database: Callable[[Optional[str]], DatabaseConnector],
+    get_default_parameters: DefaultParameters,
+) -> Callable[[str], BoutRunSetup]:
+    """
+    Return a function which returns an Executor object.
+
+    Parameters
+    ----------
+    get_executor : function
+        Function which returns an Executor based on the conduction directory
+    make_test_database : function
+        Function making an empty database
+    get_default_parameters : DefaultParameters
+        The DefaultParameters object
+
+    Returns
+    -------
+    _get_bout_run_setup : function
+        Function which returns the BoutRunSetup object based on the conduction directory
+    """
+
+    def _get_bout_run_setup(tmp_path_name: str) -> BoutRunSetup:
+        """
+        Create BoutRunSetup based on the conduction directory.
+
+        Parameters
+        ----------
+        tmp_path_name : str
+            Name of the temporary directory
+
+        Returns
+        -------
+        bout_run_setup : BoutRunSetup
+            The BoutRunSetup object
+        """
+        executor = get_executor(tmp_path_name)
+        db_connector = make_test_database(tmp_path_name)
+        final_parameters = FinalParameters(get_default_parameters)
+        bout_run_setup = BoutRunSetup(executor, db_connector, final_parameters)
+
+        return bout_run_setup
+
+    return _get_bout_run_setup
