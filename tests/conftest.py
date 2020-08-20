@@ -956,7 +956,7 @@ def make_graph() -> RunGraph:
     """
     run_graph = RunGraph()
     for i in range(6):
-        run_graph.add_node(str(i))
+        run_graph.add_function_node(str(i))
 
     run_graph.add_waiting_for("4", "3")
     run_graph.add_waiting_for("5", "3")

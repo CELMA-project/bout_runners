@@ -35,6 +35,8 @@ class BoutRunSetup:
         Object used to create the database
     self.final_parameters : FinalParameters
         Object containing the parameters to use
+    self.metadata_recorder : MetadataRecorder
+        Object containing the metadata recorder
 
     Methods
     -------
@@ -150,6 +152,18 @@ class BoutRunSetup:
             The object holding the database connection
         """
         return self.__db_connector
+
+    @property
+    def metadata_recorder(self) -> MetadataRecorder:
+        """
+        Get the properties of self.metadata_recorder.
+
+        Returns
+        -------
+        self.__metadata_recorder : MetadataRecorder
+            The object holding the metadata recorder
+        """
+        return self.__metadata_recorder
 
     def __create_schema(self) -> None:
         """Create the schema."""

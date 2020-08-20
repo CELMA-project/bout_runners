@@ -51,7 +51,7 @@ class RunGroup:
         Set the member data.
 
         If you want to connect nodes to this RunGroup after creation, you can use
-        RunGraph.add_node
+        RunGraph.add_function_node
 
         Parameters
         ----------
@@ -66,7 +66,6 @@ class RunGroup:
             Name of nodes the name_of_waiting_node will wait for
         """
         self.__run_graph = run_graph
-        self.__bout_run_setup = bout_run_setup
         self.__name = name
         self.__pre_processors: List[str] = list()
         self.__post_processors: List[str] = list()
@@ -76,11 +75,23 @@ class RunGroup:
             RunGroup.__counter += 1
 
         # Assign a node to bout_run_setup
-        self.bout_run_node_name = f"bout_run_{self.__name}"
-        self.__run_graph.add_node(self.bout_run_node_name)
+        self.__bout_run_node_name = f"bout_run_{self.__name}"
+        self.__run_graph.add_bout_run_node(self.bout_run_node_name, bout_run_setup)
 
         # Add edges to the nodes
         self.__run_graph.add_waiting_for(self.bout_run_node_name, waiting_for)
+
+    @property
+    def bout_run_node_name(self) -> str:
+        """
+        Return the name of the BOUT++ run node.
+
+        Returns
+        -------
+        str
+            The name of the BOUT++ run node
+        """
+        return self.__bout_run_node_name
 
     def add_pre_processor(
         self,
@@ -106,7 +117,7 @@ class RunGroup:
         pre_processor_node_name = (
             f"pre_processor_{self.__name}_{len(self.__pre_processors)}"
         )
-        self.__run_graph.add_node(
+        self.__run_graph.add_function_node(
             pre_processor_node_name, function=function, args=args, kwargs=kwargs
         )
         self.__run_graph.add_edge(pre_processor_node_name, self.bout_run_node_name)
@@ -137,7 +148,7 @@ class RunGroup:
         post_processor_node_name = (
             f"post_processor_{self.__name}_{len(self.__post_processors)}"
         )
-        self.__run_graph.add_node(
+        self.__run_graph.add_function_node(
             post_processor_node_name, function=function, args=args, kwargs=kwargs
         )
         self.__run_graph.add_edge(self.bout_run_node_name, post_processor_node_name)

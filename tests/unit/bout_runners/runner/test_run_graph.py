@@ -7,14 +7,14 @@ from bout_runners.runner.run_graph import RunGraph
 def test_add_node() -> None:
     """Test ability to write and rewrite a node."""
     run_graph = RunGraph()
-    run_graph.add_node("test", args=("pass", 42))
+    run_graph.add_function_node("test", args=("pass", 42))
     assert len(run_graph.nodes) == 1
     assert run_graph.nodes["test"] == {
         "function": None,
         "args": ("pass", 42),
         "kwargs": None,
     }
-    run_graph.add_node("test")
+    run_graph.add_function_node("test")
     assert len(run_graph.nodes) == 1
     assert run_graph.nodes["test"] == {"function": None, "args": None, "kwargs": None}
 
@@ -22,8 +22,8 @@ def test_add_node() -> None:
 def test_add_edge() -> None:
     """Test ability to add edges, and the ability to detect if a graph is cyclic."""
     run_graph = RunGraph()
-    run_graph.add_node("1")
-    run_graph.add_node("2")
+    run_graph.add_function_node("1")
+    run_graph.add_function_node("2")
 
     run_graph.add_edge("1", "2")
 
@@ -38,9 +38,9 @@ def test_add_edge() -> None:
 def test_add_waiting_for() -> None:
     """Test the ability to let a node wait for other nodes."""
     run_graph = RunGraph()
-    run_graph.add_node("1")
-    run_graph.add_node("2")
-    run_graph.add_node("3")
+    run_graph.add_function_node("1")
+    run_graph.add_function_node("2")
+    run_graph.add_function_node("3")
 
     run_graph.add_waiting_for("2", "1")
     run_graph.add_waiting_for("3", ("2", "1"))
@@ -106,6 +106,6 @@ def test_pick_root_nodes(make_graph) -> None:
 def test_get_dot_string() -> None:
     """Test the ability to get the dot string."""
     run_graph = RunGraph()
-    run_graph.add_node("42")
+    run_graph.add_function_node("42")
     expected = "strict digraph  {\n42 [args=None, function=None, kwargs=None];\n}\n"
     assert expected == run_graph.get_dot_string()

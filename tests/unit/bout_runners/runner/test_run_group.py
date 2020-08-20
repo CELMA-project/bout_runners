@@ -17,7 +17,7 @@ def test_constructor(get_bout_run_setup: Callable[[str], BoutRunSetup]) -> None:
     """
     bout_run_setup = get_bout_run_setup("test_run_group_constructor")
     run_graph = RunGraph()
-    run_graph.add_node("1")
+    run_graph.add_function_node("1")
 
     run_group_0 = RunGroup(run_graph, bout_run_setup)
     assert run_group_0.bout_run_node_name == "bout_run_0"
@@ -46,7 +46,7 @@ def test_pre_processor(get_bout_run_setup: Callable[[str], BoutRunSetup]) -> Non
     """
     bout_run_setup = get_bout_run_setup("test_run_group_pre")
     run_graph = RunGraph()
-    run_graph.add_node("1")
+    run_graph.add_function_node("1")
     run_group_pre = RunGroup(
         run_graph, bout_run_setup, name="test_pre", waiting_for="1"
     )
@@ -69,7 +69,7 @@ def test_post_processor(get_bout_run_setup: Callable[[str], BoutRunSetup]) -> No
     """
     bout_run_setup = get_bout_run_setup("test_run_group_post")
     run_graph = RunGraph()
-    run_graph.add_node("1")
+    run_graph.add_function_node("1")
     run_group_post = RunGroup(
         run_graph, bout_run_setup, name="test_post", waiting_for="1"
     )

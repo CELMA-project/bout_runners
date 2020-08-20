@@ -4,6 +4,7 @@
 import logging
 from typing import Optional, Callable, Tuple, Any, Dict, Iterable, Union
 import networkx as nx
+from bout_runners.runner.bout_run_setup import BoutRunSetup
 
 
 class RunGraph:
@@ -20,7 +21,7 @@ class RunGraph:
 
     Methods
     -------
-    add_node(name, function=None, args=None, kwargs=None)
+    add_function_node(name, function=None, args=None, kwargs=None)
         Add a node to the graph
     add_edge(start_node, end_node)
         Connect two nodes through an directed edge
@@ -48,7 +49,27 @@ class RunGraph:
         #       attributes
         return self.__graph.nodes
 
-    def add_node(
+    def add_bout_run_node(self, name: str, bout_run_setup: BoutRunSetup,) -> None:
+        """
+        Add a node where the setup of a BOUT++ run is attached.
+
+        FIXME: Test me
+
+        Parameters
+        ----------
+        name : str
+            Name of the node
+        bout_run_setup : BoutRunSetup
+            The setup of the BOUT++ run
+        """
+        if name in self.__node_set:
+            logging.warning(
+                "'%s' is already present in the graph, and will be overwritten", name
+            )
+        self.__graph.add_node(name, bout_run_setup=bout_run_setup)
+        self.__node_set = set(self.__graph.nodes)
+
+    def add_function_node(
         self,
         name: str,
         function: Optional[Callable] = None,
@@ -56,12 +77,12 @@ class RunGraph:
         kwargs: Optional[Dict[str, Any]] = None,
     ) -> None:
         """
-        Add a node to the graph.
+        Add a node with an optionally attached callable to the graph.
 
         Parameters
         ----------
         name : str
-            Name of the node (must be unique)
+            Name of the node
         function : None or callable
             The function to be called
             Will be None in the case of the bout_run_setup

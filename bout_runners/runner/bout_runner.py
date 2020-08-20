@@ -2,18 +2,18 @@
 
 
 import logging
-from typing import Optional
+from typing import Optional, Dict, Union, Callable, Tuple, Any
 
-from bout_runners.database.database_connector import DatabaseConnector
-from bout_runners.database.database_creator import DatabaseCreator
-from bout_runners.executor.executor import Executor
-from bout_runners.metadata.metadata_recorder import MetadataRecorder
-from bout_runners.parameters.final_parameters import FinalParameters
+from bout_runners.runner.run_graph import RunGraph
+from bout_runners.runner.bout_run_setup import BoutRunSetup
+from bout_runners.runner.run_group import RunGroup
 
 
 class BoutRunner:
     r"""
     Class for executing a run and store its metadata.
+
+    #FIXME: Redo all this
 
     Attributes
     ----------
@@ -93,12 +93,7 @@ class BoutRunner:
     >>> runner.run()
     """
 
-    def __init__(
-        self,
-        executor: Optional[Executor] = None,
-        db_connector: Optional[DatabaseConnector] = None,
-        final_parameters: Optional[FinalParameters] = None,
-    ) -> None:
+    def __init__(self, run_graph: Optional[RunGraph] = None) -> None:
         """
         Set the member data.
 
@@ -114,88 +109,54 @@ class BoutRunner:
             The object containing the parameters which are going to be used in the run
             If None, default parameters will be used
         """
-        # Set member data
-        # NOTE: We are not setting the default as a keyword argument
-        #       as this would mess up the paths
-        self.__executor = executor if executor is not None else Executor()
-        self.__final_parameters = (
-            final_parameters if final_parameters is not None else FinalParameters()
-        )
-        self.__db_connector = (
-            db_connector if db_connector is not None else DatabaseConnector()
-        )
-        self.__db_creator = DatabaseCreator(self.db_connector)
-        self.__metadata_recorder = MetadataRecorder(
-            self.__db_connector, self.executor.bout_paths, self.final_parameters
-        )
+        if run_graph is None:
+            self.__run_graph = RunGraph()
+            _ = RunGroup(self.__run_graph, BoutRunSetup())
+        else:
+            self.__run_graph = run_graph
+            if (
+                len(
+                    [
+                        node
+                        for node in self.__run_graph.nodes
+                        if node.startswith("bout_run")
+                    ]
+                )
+                == 0
+            ):
+                logging.warning("The provided run_graph does not contain any bout_runs")
 
     @property
-    def executor(self) -> Executor:
+    def run_graph(self) -> RunGraph:
         """
-        Get the properties of self.executor.
+        Get the properties of self.run_graph.
 
         Returns
         -------
-        self.__executor : Executor
-            The executor object
+        self.__run_graph : RunGraph
+            The RunGraph object
         """
-        return self.__executor
+        return self.__run_graph
 
-    @property
-    def final_parameters(self) -> FinalParameters:
+    @staticmethod
+    def __run_bout_run(bout_run_setup: BoutRunSetup, force: bool) -> None:
         """
-        Get the properties of self.final_parameters.
-
-        Returns
-        -------
-        self.__final_parameters : FinalParameters
-            The object containing the parameters used in the run
-        """
-        return self.__final_parameters
-
-    @property
-    def db_connector(self) -> DatabaseConnector:
-        """
-        Get the properties of self.db_connector.
-
-        Returns
-        -------
-        self.__db_connector : DatabaseConnector
-            The object holding the database connection
-        """
-        return self.__db_connector
-
-    def create_schema(self) -> None:
-        """Create the schema."""
-        final_parameters_dict = self.final_parameters.get_final_parameters()
-        final_parameters_as_sql_types = self.final_parameters.cast_to_sql_type(
-            final_parameters_dict
-        )
-        self.__db_creator.create_all_schema_tables(final_parameters_as_sql_types)
-
-    def run(self, force: bool = False) -> None:
-        """
-        Perform the run and capture data.
+        Perform the BOUT++ run and capture data.
 
         Parameters
         ----------
+        bout_run_setup : BoutRunSetup
+            The setup for the BOUT++ run
         force : bool
             Execute the run even if has been performed with the same parameters
         """
-        if not self.__metadata_recorder.db_reader.check_tables_created():
-            logging.info(
-                "Creating schema as no tables were found in " "%s",
-                self.__metadata_recorder.db_reader.db_connector.db_path,
-            )
-            self.create_schema()
-
-        run_id = self.__metadata_recorder.capture_new_data_from_run(
-            self.__executor.submitter.processor_split, force
+        run_id = bout_run_setup.metadata_recorder.capture_new_data_from_run(
+            bout_run_setup.executor.submitter.processor_split, force
         )
 
         if run_id is None:
             logging.info("Executing the run")
-            self.executor.execute()
+            bout_run_setup.executor.execute()
         else:
             logging.warning(
                 "Run with the same configuration has been executed before, "
@@ -204,4 +165,49 @@ class BoutRunner:
             )
             if force:
                 logging.info("Executing the run as force==True")
-                self.executor.execute()
+                bout_run_setup.executor.execute()
+
+    @staticmethod
+    def __run_function(
+        function_node: Dict[
+            str,
+            Union[
+                Optional[Callable], Optional[Tuple[Any, ...]], Optional[Dict[str, Any]]
+            ],
+        ]
+    ) -> None:
+        """
+        Execute the function from the node.
+
+        Parameters
+        ----------
+        function_node : dict
+            A dict containing the function, the positional arguments and the keyword
+            arguments
+        """
+        function = function_node["function"]
+        args = function_node["args"]
+        kwargs = function_node["kwargs"]
+        function(*args, **kwargs)
+
+    def run(self, force: bool = False) -> None:
+        """
+        Execute all the nodes in the run_graph.
+
+        Parameters
+        ----------
+        force : bool
+            Execute the run even if has been performed with the same parameters
+        """
+        while len(self.__run_graph.nodes) != 0:
+            root_nodes = self.__run_graph.pick_root_nodes()
+            # FIXME: YOU ARE HERE: You don't get the names here,
+            #  only the nodes themselves
+            for node in root_nodes:
+                logging.info("Executing %s", node)
+                if node.startswith("bout_run"):
+                    self.__run_bout_run(
+                        self.__run_graph.nodes[node]["bout_run_setup"], force
+                    )
+                else:
+                    self.__run_function(self.__run_graph.nodes[node])
