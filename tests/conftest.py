@@ -930,7 +930,7 @@ def get_mock_config_path(monkeypatch: MonkeyPatch) -> Iterator[Path]:
 
 
 @pytest.fixture(scope="session")
-def clean_default_db_dir() -> Iterator[Path]:
+def clean_default_db_dir(get_test_data_path) -> Iterator[Path]:
     """
     Yield the default database dir, and clean it during the teardown.
 
@@ -939,7 +939,9 @@ def clean_default_db_dir() -> Iterator[Path]:
     default_dir : Path
         Path to the default database directory
     """
-    default_dir = Path().home().joinpath("BOUT_db")
+    test_data_path = get_test_data_path
+    default_dir = test_data_path.joinpath("BOUT_db")
+    default_dir.mkdir(parents=True, exist_ok=True)
     yield default_dir
     shutil.rmtree(default_dir)
 

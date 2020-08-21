@@ -1,7 +1,6 @@
 """Contains the RunGraph class."""
 
 
-import logging
 from typing import Optional, Callable, Tuple, Any, Dict, Iterable, Union
 import networkx as nx
 from bout_runners.runner.bout_run_setup import BoutRunSetup
@@ -53,19 +52,21 @@ class RunGraph:
         """
         Add a node where the setup of a BOUT++ run is attached.
 
-        FIXME: Test me
-
         Parameters
         ----------
         name : str
             Name of the node
         bout_run_setup : BoutRunSetup
             The setup of the BOUT++ run
+
+        Raises
+        ------
+        ValueError
+            If the node is already present in the graph
         """
         if name in self.__node_set:
-            logging.warning(
-                "'%s' is already present in the graph, and will be overwritten", name
-            )
+            raise ValueError(f"'{name}' is already present in the graph")
+
         self.__graph.add_node(name, bout_run_setup=bout_run_setup)
         self.__node_set = set(self.__graph.nodes)
 
@@ -90,11 +91,15 @@ class RunGraph:
             Optional arguments to the function
         kwargs : None or dict
             Optional keyword arguments to the function
+
+        Raises
+        ------
+        ValueError
+            If the node is already present in the graph
         """
         if name in self.__node_set:
-            logging.warning(
-                "'%s' is already present in the graph, and will be overwritten", name
-            )
+            raise ValueError(f"'{name}' is already present in the graph")
+
         self.__graph.add_node(name, function=function, args=args, kwargs=kwargs)
         self.__node_set = set(self.__graph.nodes)
 
@@ -177,22 +182,22 @@ class RunGraph:
         for node in nodes_to_remove:
             self.__graph.remove_node(node)
 
-    def pick_root_nodes(self) -> tuple:
+    def pick_root_nodes(self) -> Dict[str, Dict[str, Any]]:
         """
         Pick and remove the root nodes from graph.
 
         Returns
         -------
-        root_nodes : tuple of dict
-            Tuple of the attributes of the nodes
+        root_nodes : dict of str, dict
+            Dict of the attributes of the nodes
         """
         roots = tuple(node for node, degree in self.__graph.in_degree() if degree == 0)
-        root_nodes = list()
+        root_nodes = dict()
         for root in roots:
-            root_nodes.append(self.__graph.nodes[root])
+            root_nodes[root] = self.__graph.nodes[root]
             self.__graph.remove_node(root)
         self.__node_set = set(self.__graph.nodes)
-        return tuple(root_nodes)
+        return root_nodes
 
     def get_dot_string(self) -> str:
         """

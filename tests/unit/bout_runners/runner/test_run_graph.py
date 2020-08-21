@@ -2,10 +2,31 @@
 
 import pytest
 from bout_runners.runner.run_graph import RunGraph
+from bout_runners.runner.bout_run_setup import BoutRunSetup
 
 
-def test_add_node() -> None:
-    """Test ability to write and rewrite a node."""
+def test_add_bout_run_node(get_bout_run_setup) -> None:
+    """
+    Test ability to write and rewrite a BoutRunSetup node.
+
+    Parameters
+    ----------
+    get_bout_run_setup : function
+        Function which returns the BoutRunSetup object based on the conduction directory
+    """
+    run_graph = RunGraph()
+    bout_run_setup = get_bout_run_setup("test_run_graph")
+    run_graph.add_bout_run_node("test", bout_run_setup)
+    assert len(run_graph.nodes) == 1
+    assert isinstance(run_graph.nodes["test"]["bout_run_setup"], BoutRunSetup)
+
+    with pytest.raises(ValueError):
+        run_graph.add_function_node("test")
+        assert len(run_graph.nodes) == 1
+
+
+def test_add_function_node() -> None:
+    """Test ability to write and rewrite a function node."""
     run_graph = RunGraph()
     run_graph.add_function_node("test", args=("pass", 42))
     assert len(run_graph.nodes) == 1
@@ -14,9 +35,9 @@ def test_add_node() -> None:
         "args": ("pass", 42),
         "kwargs": None,
     }
-    run_graph.add_function_node("test")
-    assert len(run_graph.nodes) == 1
-    assert run_graph.nodes["test"] == {"function": None, "args": None, "kwargs": None}
+    with pytest.raises(ValueError):
+        run_graph.add_function_node("test")
+        assert len(run_graph.nodes) == 1
 
 
 def test_add_edge() -> None:
@@ -90,14 +111,16 @@ def test_pick_root_nodes(make_graph) -> None:
     """
     run_graph = make_graph
     nodes = run_graph.pick_root_nodes()
-    expected_after_1st_pick = ({"args": None, "function": None, "kwargs": None},)
+    expected_after_1st_pick = {
+        "0": {"args": None, "function": None, "kwargs": None},
+    }
     assert expected_after_1st_pick == nodes
 
     nodes = run_graph.pick_root_nodes()
-    expected_after_2nd_pick = (
-        {"args": None, "function": None, "kwargs": None},
-        {"args": None, "function": None, "kwargs": None},
-    )
+    expected_after_2nd_pick = {
+        "1": {"args": None, "function": None, "kwargs": None},
+        "2": {"args": None, "function": None, "kwargs": None},
+    }
     assert expected_after_2nd_pick == nodes
     expected_remaining_nodes = {"3", "4", "5"}
     assert expected_remaining_nodes == set(run_graph.nodes)

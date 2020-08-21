@@ -2,7 +2,7 @@
 
 
 import logging
-from typing import Optional, Dict, Union, Callable, Tuple, Any
+from typing import Optional, Dict, Callable, Tuple, Any
 
 from bout_runners.runner.run_graph import RunGraph
 from bout_runners.runner.bout_run_setup import BoutRunSetup
@@ -99,15 +99,10 @@ class BoutRunner:
 
         Parameters
         ----------
-        executor : Executor or None
-            Object executing the run
-            If None, default parameters will be used
-        db_connector : DatabaseConnector or None
-            The connection to the database
-            If None: Default database connector will be used
-        final_parameters : FinalParameters or None
-            The object containing the parameters which are going to be used in the run
-            If None, default parameters will be used
+        run_graph : None or RunGraph
+            The run graph to be executed
+            If None the run graph will be constructed and added parameters from the
+            default BoutRunSetup
         """
         if run_graph is None:
             self.__run_graph = RunGraph()
@@ -139,7 +134,7 @@ class BoutRunner:
         return self.__run_graph
 
     @staticmethod
-    def __run_bout_run(bout_run_setup: BoutRunSetup, force: bool) -> None:
+    def run_bout_run(bout_run_setup: BoutRunSetup, force: bool = False) -> None:
         """
         Perform the BOUT++ run and capture data.
 
@@ -168,27 +163,42 @@ class BoutRunner:
                 bout_run_setup.executor.execute()
 
     @staticmethod
-    def __run_function(
-        function_node: Dict[
-            str,
-            Union[
-                Optional[Callable], Optional[Tuple[Any, ...]], Optional[Dict[str, Any]]
-            ],
-        ]
+    def run_function(
+        function: Optional[Callable] = None,
+        args: Optional[Tuple[Any, ...]] = None,
+        kwargs: Optional[Dict[str, Any]] = None,
     ) -> None:
         """
         Execute the function from the node.
 
         Parameters
         ----------
-        function_node : dict
-            A dict containing the function, the positional arguments and the keyword
-            arguments
+        function : None or function
+            The function to call
+            Returns without calling if None
+        args : tuple
+            The positional arguments
+        kwargs : dict
+            The keyword arguments
         """
-        function = function_node["function"]
-        args = function_node["args"]
-        kwargs = function_node["kwargs"]
-        function(*args, **kwargs)
+        if function is None:
+            logging.warning("Returning as the function is 'None'")
+            return
+
+        logging.info(
+            "Calling %s, with positional parameters %s, and keyword parameters %s",
+            function.__name__,
+            args,
+            kwargs,
+        )
+        if args is None and kwargs is None:
+            function()
+        elif args is not None and kwargs is None:
+            function(*args)
+        elif args is None and kwargs is not None:
+            function(**kwargs)
+        elif args is not None and kwargs is not None:
+            function(*args, **kwargs)
 
     def run(self, force: bool = False) -> None:
         """
@@ -201,13 +211,12 @@ class BoutRunner:
         """
         while len(self.__run_graph.nodes) != 0:
             root_nodes = self.__run_graph.pick_root_nodes()
-            # FIXME: YOU ARE HERE: You don't get the names here,
-            #  only the nodes themselves
-            for node in root_nodes:
+            for node in root_nodes.keys():
                 logging.info("Executing %s", node)
                 if node.startswith("bout_run"):
-                    self.__run_bout_run(
-                        self.__run_graph.nodes[node]["bout_run_setup"], force
-                    )
+                    self.run_bout_run(root_nodes[node]["bout_run_setup"], force)
                 else:
-                    self.__run_function(self.__run_graph.nodes[node])
+                    function = root_nodes[node]["function"]
+                    args = root_nodes[node]["args"]
+                    kwargs = root_nodes[node]["kwargs"]
+                    self.run_function(function, args, kwargs)
