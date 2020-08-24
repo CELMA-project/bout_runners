@@ -54,7 +54,7 @@ def test_pre_processor(get_bout_run_setup: Callable[[str], BoutRunSetup]) -> Non
     run_group_pre.add_pre_processor(lambda: None)
     run_group_pre.add_pre_processor(lambda: None)
 
-    root_nodes = run_graph.pick_root_nodes()
+    root_nodes = run_graph.get_next_node_order()
     assert len(root_nodes) == 3
 
 

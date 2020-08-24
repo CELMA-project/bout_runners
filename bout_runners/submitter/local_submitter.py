@@ -48,7 +48,9 @@ class LocalSubmitter(AbstractSubmitter):
     """
 
     def __init__(
-        self, path: Optional[Path] = None, processor_split: None = None
+        self,
+        path: Optional[Path] = None,
+        processor_split: Optional[ProcessorSplit] = None,
     ) -> None:
         """
         Set the path from where the calls are made from.
@@ -120,6 +122,20 @@ class LocalSubmitter(AbstractSubmitter):
             self._raise_submit_error(result)
 
         return result
+
+    def submit_function(self, function, args, kwargs):
+        """
+        Submit a python function.
+
+        FIXME: You are here (see line 4093 in old BOUT++ runners)
+
+        Parameters
+        ----------
+        function
+        args
+        kwargs
+        """
+        pass
 
     def _raise_submit_error(self, result: subprocess.CompletedProcess) -> None:
         """

@@ -15,8 +15,6 @@ class RunGroup:
     bout_run_setup execution), and it may consist of post-processors (functions that
     will run after the bout_run_setup execution).
 
-    FIXME: Add examples
-
     Attributes
     ----------
     __counter : int

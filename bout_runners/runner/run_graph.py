@@ -39,6 +39,10 @@ class RunGraph:
     def __init__(self) -> None:
         """Instantiate the graph."""
         self.__graph = nx.DiGraph()
+        # NOTE: As there seem to be no easy way to traverse the graph in order we will
+        #       traverse by removing nodes and counting the number of edges pointing to
+        #       the graph (the nodes without dependencies will have 0 edges)
+        self.__work_graph = nx.DiGraph()
         self.__node_set = set(self.__graph.nodes)
 
     @property
@@ -67,8 +71,10 @@ class RunGraph:
         if name in self.__node_set:
             raise ValueError(f"'{name}' is already present in the graph")
 
-        self.__graph.add_node(name, bout_run_setup=bout_run_setup)
+        self.__graph.add_node(name, bout_run_setup=bout_run_setup, status="ready")
         self.__node_set = set(self.__graph.nodes)
+
+        self.__work_graph.add_node(name, bout_run_setup=bout_run_setup, status="ready")
 
     def add_function_node(
         self,
@@ -100,8 +106,14 @@ class RunGraph:
         if name in self.__node_set:
             raise ValueError(f"'{name}' is already present in the graph")
 
-        self.__graph.add_node(name, function=function, args=args, kwargs=kwargs)
+        self.__graph.add_node(
+            name, function=function, args=args, kwargs=kwargs, status="ready"
+        )
         self.__node_set = set(self.__graph.nodes)
+
+        self.__work_graph.add_node(
+            name, function=function, args=args, kwargs=kwargs, status="ready"
+        )
 
     def add_edge(self, start_node: str, end_node: str) -> None:
         """
@@ -125,6 +137,11 @@ class RunGraph:
                 f"The node connection from {start_node} to {end_node} "
                 f"resulted in a cyclic graph"
             )
+
+        # FIXME: This can be problematic if the work graph has been traversed.
+        #        Reset graph first
+        # FIXME: You are here: Add restart functionality
+        self.__work_graph.add_edge(start_node, end_node)
 
     def add_waiting_for(
         self,
@@ -152,7 +169,7 @@ class RunGraph:
             elif isinstance(nodes_to_wait_for, str):
                 self.add_edge(nodes_to_wait_for, name_of_waiting_node)
 
-    def get_waiting_for_tuple(self, start_node_name) -> tuple:
+    def get_waiting_for_tuple(self, start_node_name) -> Tuple[str, ...]:
         """
         Return the list of nodes waiting for a given node.
 
@@ -168,7 +185,9 @@ class RunGraph:
         """
         return tuple(nx.dfs_tree(self.__graph, start_node_name))
 
-    def remove_node_with_dependencies(self, start_node_name) -> None:
+    def change_status_node_and_dependencies(
+        self, start_node_name, status: str = "errored"
+    ) -> None:
         """
         Remove node and all nodes waiting for the specified node.
 
@@ -177,26 +196,32 @@ class RunGraph:
         start_node_name : str
             Name of the node to remove
             All nodes waiting for start_node_name will be removed
+        status : str
+            Status to set on start_node_name and all its dependencies
         """
         nodes_to_remove = self.get_waiting_for_tuple(start_node_name)
-        for node in nodes_to_remove:
-            self.__graph.remove_node(node)
+        for node_name in nodes_to_remove:
+            self.__graph.nodes[node_name]["status"] = status
+            self.__work_graph.remove_node(node_name)
 
-    def pick_root_nodes(self) -> Dict[str, Dict[str, Any]]:
+    def get_next_node_order(self) -> Dict[str, Dict[str, Any]]:
         """
-        Pick and remove the root nodes from graph.
+        Return the next order nodes from graph (ordered by the breadth).
 
         Returns
         -------
         root_nodes : dict of str, dict
             Dict of the attributes of the nodes
         """
-        roots = tuple(node for node, degree in self.__graph.in_degree() if degree == 0)
+        # In degree is number of edges pointing to the node
+        roots = tuple(
+            node for node, degree in self.__work_graph.in_degree() if degree == 0
+        )
         root_nodes = dict()
         for root in roots:
             root_nodes[root] = self.__graph.nodes[root]
-            self.__graph.remove_node(root)
-        self.__node_set = set(self.__graph.nodes)
+            self.__work_graph.remove_node(root)
+            self.__graph.nodes[root]["status"] = "traversed"
         return root_nodes
 
     def get_dot_string(self) -> str:

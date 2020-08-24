@@ -45,26 +45,6 @@ class BoutRunSetup:
 
     Examples
     --------
-    # FIXME: Can the BOUT++ run be formulated as a function? Setup?
-    # Answer: The function which calls the run is executor.execute
-
-    # submission_pid[object_id] = pid
-    # FIXME: Find the inverse of this dict as well
-    # FIXME: String representation
-    # FIXME: Possibility to add different submissions
-
-    # FIXME: Attach pid to a run
-    # FIXME: Check for completion of all executions (pre and post)
-
-    # FIXME: Add examples
-    # FIXME: Split files
-    # FIXME: Make documentation in readthedocs
-    # FIXME: Enable parallel execution on single machine, user can specify max nodes
-    # FIXME: Add monitor: Execute the next in line when pid has finished. If not
-    #        success -> broken chain, but the rest can continue
-    # multiprocessing.Queue([maxsize])
-    # https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Queue
-
     >>> run_setup = BoutRunSetup(executor, db_connector, final_parameters)
     >>> run_graph = RunGraph()
     >>> run_graph.create_run_group(run_setup)

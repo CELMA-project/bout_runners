@@ -25,7 +25,9 @@ def test_constructor(yield_conduction_path) -> None:
     project_path = yield_conduction_path
     with change_directory(project_path):
         runner = BoutRunner()
-    assert isinstance(runner.run_graph.nodes['bout_run_0']['bout_run_setup'], BoutRunSetup)
+    assert isinstance(
+        runner.run_graph.nodes["bout_run_0"]["bout_run_setup"], BoutRunSetup
+    )
 
     # Assert that an empty graph can be added
     run_graph = RunGraph()
@@ -33,18 +35,25 @@ def test_constructor(yield_conduction_path) -> None:
     assert len(runner.run_graph.nodes) == 0
 
 
-def test_run_bout_run(make_project: Path,
-                      clean_default_db_dir: Path,
-                      get_bout_run_setup: Callable[[str], BoutRunSetup],
-                      yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
-                      ) -> None:
+def test_run_bout_run(
+    make_project: Path,
+    clean_default_db_dir: Path,
+    get_bout_run_setup: Callable[[str], BoutRunSetup],
+    yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
+) -> None:
     """
     Test the BOUT++ run method.
 
     Parameters
     ----------
+    make_project : Path
+        The path to the conduction example
+    clean_default_db_dir : Path
+        Path to the default database dir
     get_bout_run_setup : function
         Function which returns the BoutRunSetup object based on the conduction directory
+    yield_number_of_rows_for_all_tables : function
+        Function which returns the number of rows for all tables in a schema
     """
     # For automatic clean-up
     _ = clean_default_db_dir
@@ -81,5 +90,5 @@ def test_function_run() -> None:
     runner = BoutRunner(run_graph)
     runner.run_function()
     runner.run_function(lambda: None)
-    runner.run_function(lambda x, y: x+y, (1, 2))
-    runner.run_function(lambda x, y, z=0: x+y+z, (1, 2), {"z": 3})
+    runner.run_function(lambda x, y: x + y, (1, 2))
+    runner.run_function(lambda x, y, z=0: x + y + z, (1, 2), {"z": 3})

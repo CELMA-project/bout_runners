@@ -85,7 +85,7 @@ def test_get_waiting_for_tuple(make_graph) -> None:
     assert expected == run_graph.get_waiting_for_tuple("2")
 
 
-def test_remove_node_with_dependencies(make_graph) -> None:
+def test_change_status_node_and_dependencies(make_graph) -> None:
     """
     Test the remove node functionality.
 
@@ -95,12 +95,18 @@ def test_remove_node_with_dependencies(make_graph) -> None:
         A simple graph
     """
     run_graph = make_graph
-    expected = {"0", "1"}
-    run_graph.remove_node_with_dependencies("2")
-    assert expected == set(run_graph.nodes)
+    status = "foo"
+
+    run_graph.change_status_node_and_dependencies("2", status=status)
+    nodes_with_ready_status = ("0", "1")
+    for node_name in run_graph.nodes:
+        if node_name in nodes_with_ready_status:
+            assert run_graph.nodes[node_name]["status"] == "ready"
+        else:
+            assert run_graph.nodes[node_name]["status"] == status
 
 
-def test_pick_root_nodes(make_graph) -> None:
+def test_get_next_node_order(make_graph) -> None:
     """
     Test the pick root nodes functionality.
 
@@ -110,20 +116,24 @@ def test_pick_root_nodes(make_graph) -> None:
         A simple graph
     """
     run_graph = make_graph
-    nodes = run_graph.pick_root_nodes()
+    nodes = run_graph.get_next_node_order()
     expected_after_1st_pick = {
-        "0": {"args": None, "function": None, "kwargs": None},
+        "0": {"args": None, "function": None, "kwargs": None, "status": "traversed"},
     }
     assert expected_after_1st_pick == nodes
 
-    nodes = run_graph.pick_root_nodes()
+    nodes = run_graph.get_next_node_order()
     expected_after_2nd_pick = {
-        "1": {"args": None, "function": None, "kwargs": None},
-        "2": {"args": None, "function": None, "kwargs": None},
+        "1": {"args": None, "function": None, "kwargs": None, "status": "traversed"},
+        "2": {"args": None, "function": None, "kwargs": None, "status": "traversed"},
     }
     assert expected_after_2nd_pick == nodes
-    expected_remaining_nodes = {"3", "4", "5"}
-    assert expected_remaining_nodes == set(run_graph.nodes)
+    nodes_with_ready_status = ("3", "4", "5")
+    for node_name in run_graph.nodes:
+        if node_name in nodes_with_ready_status:
+            assert run_graph.nodes[node_name]["status"] == "ready"
+        else:
+            assert run_graph.nodes[node_name]["status"] == "traversed"
 
 
 def test_get_dot_string() -> None:

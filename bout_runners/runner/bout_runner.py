@@ -13,8 +13,6 @@ class BoutRunner:
     r"""
     Class for executing a run and store its metadata.
 
-    #FIXME: Redo all this
-
     Attributes
     ----------
     self.__executor : Executor
@@ -209,8 +207,9 @@ class BoutRunner:
         force : bool
             Execute the run even if has been performed with the same parameters
         """
+        # FIXME: Nodes are no longer removed
         while len(self.__run_graph.nodes) != 0:
-            root_nodes = self.__run_graph.pick_root_nodes()
+            root_nodes = self.__run_graph.get_next_node_order()
             for node in root_nodes.keys():
                 logging.info("Executing %s", node)
                 if node.startswith("bout_run"):

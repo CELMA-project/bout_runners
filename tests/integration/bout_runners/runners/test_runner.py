@@ -45,24 +45,24 @@ def test_bout_runners_from_directory(
     project_path = make_project
     with change_directory(project_path):
         runner = BoutRunner()
-        runner.run()
+        bout_run_setup = runner.run_graph.nodes["bout_run_0"]["bout_run_setup"]
 
-        bout_paths = runner.executor.bout_paths
-        db_connection = runner.db_connector
+    runner.run()
+
+    bout_paths = bout_run_setup.executor.bout_paths
+    db_connection = bout_run_setup.db_connector
     # Assert that the run went well
     db_reader = assert_first_run(bout_paths, db_connection)
     # Assert that all the values are 1
     assert_tables_has_len_1(db_reader, yield_number_of_rows_for_all_tables)
 
     # Check that the run will not be executed again
-    with change_directory(project_path):
-        runner.run()
+    runner.run()
     # Assert that all the values are 1
     assert_tables_has_len_1(db_reader, yield_number_of_rows_for_all_tables)
 
     # Check that force overrides the behaviour
-    with change_directory(project_path):
-        runner.run(force=True)
+    runner.run(force=True)
     assert_force_run(db_reader, yield_number_of_rows_for_all_tables)
 
 
