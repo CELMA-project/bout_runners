@@ -127,6 +127,7 @@ class LocalSubmitter(AbstractSubmitter):
         """
         Submit a python function.
 
+        FIXME: Make a test where you test pre and post processors
         FIXME: You are here (see line 4093 in old BOUT++ runners)
 
         Parameters

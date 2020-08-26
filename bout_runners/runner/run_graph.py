@@ -39,11 +39,63 @@ class RunGraph:
     def __init__(self) -> None:
         """Instantiate the graph."""
         self.__graph = nx.DiGraph()
-        # NOTE: As there seem to be no easy way to traverse the graph in order we will
-        #       traverse by removing nodes and counting the number of edges pointing to
-        #       the graph (the nodes without dependencies will have 0 edges)
-        self.__work_graph = nx.DiGraph()
         self.__node_set = set(self.__graph.nodes)
+
+    def __iter__(self) -> "RunGraph":
+        """
+        Make the class iterable.
+
+        Returns
+        -------
+        self : RunGraph
+            The class as an iterable
+        """
+        return self
+
+    def __next__(self) -> Dict[str, Dict[str, Any]]:
+        """
+        Return the next order nodes from graph (ordered by the breadth).
+
+        Raises
+        ------
+        StopIteration
+            When the iteration is exhausted
+
+        Returns
+        -------
+        nodes_at_current_order : dict of str, dict
+            Dict of the attributes of the nodes
+        """
+        # NOTE: The while loop can be done more efficient with the walrus operator,
+        #       but this will break compatibility with python < 3.8
+        clone = self.__get_pruned_clone()
+        if len(clone) != 0:
+            # Find all roots of the clone
+            # In degree is number of edges pointing to the node
+            roots = tuple(node for node, degree in clone.in_degree() if degree == 0)
+
+            nodes_at_current_order = dict()
+            for root in roots:
+                nodes_at_current_order[root] = self.__graph.nodes[root]
+                self.__graph.nodes[root]["status"] = "traversed"
+            return nodes_at_current_order
+
+        raise StopIteration
+
+    def __len__(self) -> int:
+        """
+        Return the number of nodes with status ready.
+
+        Returns
+        -------
+        length : len
+            Number of nodes with status ready.
+        """
+        length = 0
+        for node_name in self.__graph:
+            if self.__graph.nodes[node_name]["status"] == "ready":
+                length += 1
+        return length
 
     @property
     def nodes(self) -> nx.classes.reportviews.NodeView:
@@ -51,6 +103,11 @@ class RunGraph:
         # NOTE: The set of nodes only contain the name of the nodes, not their
         #       attributes
         return self.__graph.nodes
+
+    def reset(self) -> None:
+        """Reset the nodes by setting the status to 'ready'."""
+        for node_name in self.__graph:
+            self.__graph.nodes[node_name]["status"] = "ready"
 
     def add_bout_run_node(self, name: str, bout_run_setup: BoutRunSetup,) -> None:
         """
@@ -73,8 +130,6 @@ class RunGraph:
 
         self.__graph.add_node(name, bout_run_setup=bout_run_setup, status="ready")
         self.__node_set = set(self.__graph.nodes)
-
-        self.__work_graph.add_node(name, bout_run_setup=bout_run_setup, status="ready")
 
     def add_function_node(
         self,
@@ -111,10 +166,6 @@ class RunGraph:
         )
         self.__node_set = set(self.__graph.nodes)
 
-        self.__work_graph.add_node(
-            name, function=function, args=args, kwargs=kwargs, status="ready"
-        )
-
     def add_edge(self, start_node: str, end_node: str) -> None:
         """
         Connect two nodes through an directed edge.
@@ -137,11 +188,6 @@ class RunGraph:
                 f"The node connection from {start_node} to {end_node} "
                 f"resulted in a cyclic graph"
             )
-
-        # FIXME: This can be problematic if the work graph has been traversed.
-        #        Reset graph first
-        # FIXME: You are here: Add restart functionality
-        self.__work_graph.add_edge(start_node, end_node)
 
     def add_waiting_for(
         self,
@@ -202,27 +248,22 @@ class RunGraph:
         nodes_to_remove = self.get_waiting_for_tuple(start_node_name)
         for node_name in nodes_to_remove:
             self.__graph.nodes[node_name]["status"] = status
-            self.__work_graph.remove_node(node_name)
 
-    def get_next_node_order(self) -> Dict[str, Dict[str, Any]]:
+    def __get_pruned_clone(self) -> nx.DiGraph:
         """
-        Return the next order nodes from graph (ordered by the breadth).
+        Return a clone of the "ready" nodes of self.__graph.
 
         Returns
         -------
-        root_nodes : dict of str, dict
-            Dict of the attributes of the nodes
+        clone : nx.Digraph
+            A clone of self.__graph where all nodes with another status than "ready"
+            has been removed
         """
-        # In degree is number of edges pointing to the node
-        roots = tuple(
-            node for node, degree in self.__work_graph.in_degree() if degree == 0
-        )
-        root_nodes = dict()
-        for root in roots:
-            root_nodes[root] = self.__graph.nodes[root]
-            self.__work_graph.remove_node(root)
-            self.__graph.nodes[root]["status"] = "traversed"
-        return root_nodes
+        clone = self.__graph.copy()
+        for node_name in self.__graph:
+            if self.__graph.nodes[node_name]["status"] != "ready":
+                clone.remove_node(node_name)
+        return clone
 
     def get_dot_string(self) -> str:
         """

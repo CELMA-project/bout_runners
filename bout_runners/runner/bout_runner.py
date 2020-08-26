@@ -198,6 +198,10 @@ class BoutRunner:
         elif args is not None and kwargs is not None:
             function(*args, **kwargs)
 
+    def reset(self) -> None:
+        """Reset the run_graph."""
+        self.__run_graph.reset()
+
     def run(self, force: bool = False) -> None:
         """
         Execute all the nodes in the run_graph.
@@ -206,16 +210,35 @@ class BoutRunner:
         ----------
         force : bool
             Execute the run even if has been performed with the same parameters
+
+        Raises
+        ------
+        RuntimeError
+            If none of the nodes in the `run_graph` has status "ready"
         """
-        # FIXME: Nodes are no longer removed
-        while len(self.__run_graph.nodes) != 0:
-            root_nodes = self.__run_graph.get_next_node_order()
-            for node in root_nodes.keys():
+        if force:
+            self.reset()
+
+        if len(self.__run_graph) == 0:
+            if len(self.__run_graph.nodes) == 0:
+                msg = "The 'run_graph' does not contain any nodes."
+            else:
+                msg = (
+                    "None of the nodes in 'run_graph' has the status 'ready'. "
+                    "Reset the 'run_graph' if you'd like to run the original graph"
+                )
+            logging.error(msg)
+            raise RuntimeError(msg)
+
+        for nodes_at_current_order in self.__run_graph:
+            for node in nodes_at_current_order.keys():
                 logging.info("Executing %s", node)
                 if node.startswith("bout_run"):
-                    self.run_bout_run(root_nodes[node]["bout_run_setup"], force)
+                    self.run_bout_run(
+                        nodes_at_current_order[node]["bout_run_setup"], force
+                    )
                 else:
-                    function = root_nodes[node]["function"]
-                    args = root_nodes[node]["args"]
-                    kwargs = root_nodes[node]["kwargs"]
+                    function = nodes_at_current_order[node]["function"]
+                    args = nodes_at_current_order[node]["args"]
+                    kwargs = nodes_at_current_order[node]["kwargs"]
                     self.run_function(function, args, kwargs)

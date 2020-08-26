@@ -1,5 +1,7 @@
 """Contains integration test for the runner."""
 
+import pytest
+
 from pathlib import Path
 from typing import Callable, Dict
 
@@ -11,7 +13,11 @@ from bout_runners.parameters.default_parameters import DefaultParameters
 from bout_runners.parameters.final_parameters import FinalParameters
 from bout_runners.parameters.run_parameters import RunParameters
 from bout_runners.runner.bout_runner import BoutRunner
+from bout_runners.runner.run_graph import RunGraph
+from bout_runners.runner.run_group import RunGroup
+from bout_runners.runner.bout_run_setup import BoutRunSetup
 from bout_runners.submitter.local_submitter import LocalSubmitter
+
 from tests.utils.paths import change_directory
 from tests.utils.run import assert_first_run, assert_tables_has_len_1, assert_force_run
 
@@ -56,7 +62,12 @@ def test_bout_runners_from_directory(
     # Assert that all the values are 1
     assert_tables_has_len_1(db_reader, yield_number_of_rows_for_all_tables)
 
+    # Check that all the nodes have changed status
+    with pytest.raises(RuntimeError):
+        runner.run()
+
     # Check that the run will not be executed again
+    runner.reset()
     runner.run()
     # Assert that all the values are 1
     assert_tables_has_len_1(db_reader, yield_number_of_rows_for_all_tables)
@@ -105,14 +116,21 @@ def test_full_bout_runner(
     run_parameters = RunParameters({"global": {"nout": 0}})
     default_parameters = DefaultParameters(bout_paths)
     final_parameters = FinalParameters(default_parameters, run_parameters)
-    submitter = LocalSubmitter(bout_paths.project_path)
     executor = Executor(
-        bout_paths=bout_paths, submitter=submitter, run_parameters=run_parameters,
+        bout_paths=bout_paths,
+        submitter=LocalSubmitter(bout_paths.project_path),
+        run_parameters=run_parameters,
     )
     db_connection = DatabaseConnector(name)
 
+    # Create the `run_group`
+    run_graph = RunGraph()
+    _ = RunGroup(
+        run_graph, BoutRunSetup(executor, db_connection, final_parameters), name=name
+    )
+
     # Run the project
-    runner = BoutRunner(executor, db_connection, final_parameters)
+    runner = BoutRunner(run_graph)
     runner.run()
 
     # Assert that the run went well
@@ -121,6 +139,7 @@ def test_full_bout_runner(
     assert_tables_has_len_1(db_reader, yield_number_of_rows_for_all_tables)
 
     # Check that the run will not be executed again
+    runner.reset()
     runner.run()
     # Assert that all the values are 1
     assert_tables_has_len_1(db_reader, yield_number_of_rows_for_all_tables)

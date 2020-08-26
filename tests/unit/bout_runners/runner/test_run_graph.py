@@ -106,9 +106,9 @@ def test_change_status_node_and_dependencies(make_graph) -> None:
             assert run_graph.nodes[node_name]["status"] == status
 
 
-def test_get_next_node_order(make_graph) -> None:
+def test_reset(make_graph) -> None:
     """
-    Test the pick root nodes functionality.
+    Test the remove node functionality.
 
     Parameters
     ----------
@@ -116,13 +116,33 @@ def test_get_next_node_order(make_graph) -> None:
         A simple graph
     """
     run_graph = make_graph
-    nodes = run_graph.get_next_node_order()
+
+    length = len(run_graph)
+    run_graph.change_status_node_and_dependencies("2")
+    # Only "0" and "1" will have status ready
+    assert len(run_graph) == 2
+
+    run_graph.reset()
+    assert len(run_graph) == length
+
+
+def test___next__(make_graph) -> None:
+    """
+    Test the next functionality.
+
+    Parameters
+    ----------
+    make_graph : RunGraph
+        A simple graph
+    """
+    run_graph = make_graph
+    nodes = next(run_graph)
     expected_after_1st_pick = {
         "0": {"args": None, "function": None, "kwargs": None, "status": "traversed"},
     }
     assert expected_after_1st_pick == nodes
 
-    nodes = run_graph.get_next_node_order()
+    nodes = next(run_graph)
     expected_after_2nd_pick = {
         "1": {"args": None, "function": None, "kwargs": None, "status": "traversed"},
         "2": {"args": None, "function": None, "kwargs": None, "status": "traversed"},
@@ -134,6 +154,23 @@ def test_get_next_node_order(make_graph) -> None:
             assert run_graph.nodes[node_name]["status"] == "ready"
         else:
             assert run_graph.nodes[node_name]["status"] == "traversed"
+
+
+def test___len__(make_graph) -> None:
+    """
+    Test the length functionality.
+
+    Parameters
+    ----------
+    make_graph : RunGraph
+        A simple graph
+    """
+    run_graph = make_graph
+    assert len(run_graph) == len(run_graph.nodes)
+
+    # In this special case only one node is traversed
+    _ = next(run_graph)
+    assert len(run_graph) == len(run_graph.nodes) - 1
 
 
 def test_get_dot_string() -> None:
