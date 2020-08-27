@@ -1,6 +1,8 @@
 """Contains the RunGraph class."""
 
 
+import logging
+from pathlib import Path
 from typing import Optional, Callable, Tuple, Any, Dict, Iterable, Union
 import networkx as nx
 from bout_runners.runner.bout_run_setup import BoutRunSetup
@@ -106,6 +108,7 @@ class RunGraph:
 
     def reset(self) -> None:
         """Reset the nodes by setting the status to 'ready'."""
+        logging.info("Resetting status in nodes to 'ready'")
         for node_name in self.__graph:
             self.__graph.nodes[node_name]["status"] = "ready"
 
@@ -137,6 +140,7 @@ class RunGraph:
         function: Optional[Callable] = None,
         args: Optional[Tuple[Any, ...]] = None,
         kwargs: Optional[Dict[str, Any]] = None,
+        path: Optional[Path] = None,
     ) -> None:
         """
         Add a node with an optionally attached callable to the graph.
@@ -152,6 +156,9 @@ class RunGraph:
             Optional arguments to the function
         kwargs : None or dict
             Optional keyword arguments to the function
+        path : None or Path
+            Absolute path to store the python file which holds the function and
+            its arguments
 
         Raises
         ------
@@ -162,7 +169,7 @@ class RunGraph:
             raise ValueError(f"'{name}' is already present in the graph")
 
         self.__graph.add_node(
-            name, function=function, args=args, kwargs=kwargs, status="ready"
+            name, function=function, args=args, kwargs=kwargs, path=path, status="ready"
         )
         self.__node_set = set(self.__graph.nodes)
 

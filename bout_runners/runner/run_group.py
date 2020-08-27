@@ -1,5 +1,6 @@
 """Contains the RunGroup class."""
 
+from pathlib import Path
 from typing import Optional, Union, Iterable, List, Callable, Tuple, Any, Dict
 
 from bout_runners.runner.bout_run_setup import BoutRunSetup
@@ -65,6 +66,7 @@ class RunGroup:
         """
         self.__run_graph = run_graph
         self.__name = name
+        self.__dst_dir = bout_run_setup.executor.bout_paths.bout_inp_dst_dir
         self.__pre_processors: List[str] = list()
         self.__post_processors: List[str] = list()
 
@@ -96,10 +98,14 @@ class RunGroup:
         function: Callable,
         args: Optional[Tuple[Any, ...]] = None,
         kwargs: Optional[Dict[str, Any]] = None,
+        directory: Optional[Path] = None,
         waiting_for: Optional[Union[str, Iterable[str]]] = None,
     ) -> None:
         """
         Add a pre-processor to the BOUT++ run.
+
+        The function and the parameters will be saved to a python script which will
+        be submitted
 
         Parameters
         ----------
@@ -109,14 +115,24 @@ class RunGroup:
             Optional arguments to the function
         kwargs : None or dict
             Optional keyword arguments to the function
+        directory : None or Path
+            Absolute path to directory to store the python script
+            If None, the destination directory of BoutRun will be used
         waiting_for : None or str or iterable
             Name of nodes this node will wait for to finish before executing
         """
+        if directory is None:
+            directory = self.__dst_dir
         pre_processor_node_name = (
             f"pre_processor_{self.__name}_{len(self.__pre_processors)}"
         )
+        path = directory.joinpath(f"{function.__name__}_{pre_processor_node_name}.py")
         self.__run_graph.add_function_node(
-            pre_processor_node_name, function=function, args=args, kwargs=kwargs
+            pre_processor_node_name,
+            function=function,
+            args=args,
+            kwargs=kwargs,
+            path=path,
         )
         self.__run_graph.add_edge(pre_processor_node_name, self.bout_run_node_name)
         self.__run_graph.add_waiting_for(pre_processor_node_name, waiting_for)
@@ -127,10 +143,14 @@ class RunGroup:
         function: Callable,
         args: Optional[Tuple[Any, ...]] = None,
         kwargs: Optional[Dict[str, Any]] = None,
+        directory: Optional[Path] = None,
         waiting_for: Optional[Union[str, Iterable[str]]] = None,
     ) -> None:
         """
         Add a post-processor to the BOUT++ run.
+
+        The function and the parameters will be saved to a python script which will
+        be submitted
 
         Parameters
         ----------
@@ -140,14 +160,24 @@ class RunGroup:
             Optional arguments to the function
         kwargs : None or dict
             Optional keyword arguments to the function
+        directory : None or Path
+            Absolute path to directory to store the python script
+            If None, the destination directory of BoutRun will be used
         waiting_for : None or str or iterable
             Name of nodes this node will wait for to finish before executing
         """
+        if directory is None:
+            directory = self.__dst_dir
         post_processor_node_name = (
             f"post_processor_{self.__name}_{len(self.__post_processors)}"
         )
+        path = directory.joinpath(f"{function.__name__}_{post_processor_node_name}.py")
         self.__run_graph.add_function_node(
-            post_processor_node_name, function=function, args=args, kwargs=kwargs
+            post_processor_node_name,
+            function=function,
+            args=args,
+            kwargs=kwargs,
+            path=path,
         )
         self.__run_graph.add_edge(self.bout_run_node_name, post_processor_node_name)
         self.__run_graph.add_waiting_for(post_processor_node_name, waiting_for)

@@ -2,6 +2,7 @@
 
 
 import logging
+from pathlib import Path
 from typing import Optional, Dict, Callable, Tuple, Any
 
 from bout_runners.runner.run_graph import RunGraph
@@ -162,27 +163,28 @@ class BoutRunner:
 
     @staticmethod
     def run_function(
-        function: Optional[Callable] = None,
+        path: Path,
+        function: Callable,
         args: Optional[Tuple[Any, ...]] = None,
         kwargs: Optional[Dict[str, Any]] = None,
     ) -> None:
         """
         Execute the function from the node.
 
+        # FIXME: You are here: Add submitter to the node
+
         Parameters
         ----------
-        function : None or function
+        path : Path
+            Absolute path to store the python file which holds the function and
+            its arguments
+        function : function
             The function to call
-            Returns without calling if None
         args : tuple
             The positional arguments
         kwargs : dict
             The keyword arguments
         """
-        if function is None:
-            logging.warning("Returning as the function is 'None'")
-            return
-
         logging.info(
             "Calling %s, with positional parameters %s, and keyword parameters %s",
             function.__name__,
@@ -241,4 +243,5 @@ class BoutRunner:
                     function = nodes_at_current_order[node]["function"]
                     args = nodes_at_current_order[node]["args"]
                     kwargs = nodes_at_current_order[node]["kwargs"]
-                    self.run_function(function, args, kwargs)
+                    path = nodes_at_current_order[node]["path"]
+                    self.run_function(function, args, kwargs, path)
