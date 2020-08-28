@@ -50,7 +50,7 @@ class AbstractSubmitter(ABC):
         """
         # Make a string of the arguments
         if args is not None:
-            args_str = ", ".join(args)
+            args_str = ", ".join(map(str, args))
         else:
             args_str = ""
 
@@ -65,7 +65,9 @@ class AbstractSubmitter(ABC):
                 keyword_arguments.append(f"{arg_name}={value}")
 
             # Put a comma in between the arguments
-            kwargs_str = ", ".join(keyword_arguments)
+            kwargs_str = ", ".join(map(str, keyword_arguments))
+        else:
+            kwargs_str = ""
 
         # Make the script
         script_str = (

@@ -1,10 +1,13 @@
 """Contains the RunGroup class."""
 
+import logging
 from pathlib import Path
 from typing import Optional, Union, Iterable, List, Callable, Tuple, Any, Dict
 
 from bout_runners.runner.bout_run_setup import BoutRunSetup
 from bout_runners.runner.run_graph import RunGraph
+from bout_runners.submitter.abstract_submitter import AbstractSubmitter
+from bout_runners.submitter.local_submitter import LocalSubmitter
 
 
 class RunGroup:
@@ -95,10 +98,11 @@ class RunGroup:
 
     def add_pre_processor(
         self,
-        function: Callable,
-        args: Optional[Tuple[Any, ...]] = None,
-        kwargs: Optional[Dict[str, Any]] = None,
+        function_dict: Dict[
+            str, Optional[Union[Callable, Tuple[Any, ...], Dict[str, Any]]]
+        ],
         directory: Optional[Path] = None,
+        submitter: Optional[AbstractSubmitter] = None,
         waiting_for: Optional[Union[str, Iterable[str]]] = None,
     ) -> None:
         """
@@ -109,30 +113,48 @@ class RunGroup:
 
         Parameters
         ----------
-        function : callable
-            The function to execute
-        args : None or tuple
-            Optional arguments to the function
-        kwargs : None or dict
-            Optional keyword arguments to the function
+        function_dict : dict
+            Dict with the function to call
+            On the form
+            >>> {'function': callable,
+            ...  'args': None or tuple,
+            ...  'kwargs': None or dict}
         directory : None or Path
             Absolute path to directory to store the python script
             If None, the destination directory of BoutRun will be used
         waiting_for : None or str or iterable
             Name of nodes this node will wait for to finish before executing
+        submitter : AbstractSubmitter
+            Submitter to submit the function with
+            If None, the default LocalSubmitter will be used
+
+        Raises
+        ------
+        ValueError
+            If the function in the function_dict is not callable
         """
         if directory is None:
             directory = self.__dst_dir
+
+        if "function" not in function_dict.keys() or not callable(
+            function_dict["function"]
+        ):
+            msg = 'function_dict["function"] must be callable'
+            logging.error(msg)
+            raise ValueError(msg)
+
         pre_processor_node_name = (
             f"pre_processor_{self.__name}_{len(self.__pre_processors)}"
         )
-        path = directory.joinpath(f"{function.__name__}_{pre_processor_node_name}.py")
+        path = directory.joinpath(
+            f"{function_dict['function'].__name__}_{pre_processor_node_name}.py"
+        )
+        submitter = submitter if submitter is not None else LocalSubmitter()
         self.__run_graph.add_function_node(
             pre_processor_node_name,
-            function=function,
-            args=args,
-            kwargs=kwargs,
+            function_dict=function_dict,
             path=path,
+            submitter=submitter,
         )
         self.__run_graph.add_edge(pre_processor_node_name, self.bout_run_node_name)
         self.__run_graph.add_waiting_for(pre_processor_node_name, waiting_for)
@@ -140,10 +162,11 @@ class RunGroup:
 
     def add_post_processor(
         self,
-        function: Callable,
-        args: Optional[Tuple[Any, ...]] = None,
-        kwargs: Optional[Dict[str, Any]] = None,
+        function_dict: Dict[
+            str, Optional[Union[Callable, Tuple[Any, ...], Dict[str, Any]]]
+        ],
         directory: Optional[Path] = None,
+        submitter: Optional[AbstractSubmitter] = None,
         waiting_for: Optional[Union[str, Iterable[str]]] = None,
     ) -> None:
         """
@@ -154,30 +177,48 @@ class RunGroup:
 
         Parameters
         ----------
-        function : callable
-            The function to execute
-        args : None or tuple
-            Optional arguments to the function
-        kwargs : None or dict
-            Optional keyword arguments to the function
+        function_dict : dict
+            Dict with the function to call
+            On the form
+            >>> {'function': callable,
+            ...  'args': None or tuple,
+            ...  'kwargs': None or dict}
         directory : None or Path
             Absolute path to directory to store the python script
             If None, the destination directory of BoutRun will be used
         waiting_for : None or str or iterable
             Name of nodes this node will wait for to finish before executing
+        submitter : None or AbstractSubmitter
+            Submitter to submit the function with
+            If None, the default LocalSubmitter will be used
+
+        Raises
+        ------
+        ValueError
+            If the function in the function_dict is not callable
         """
         if directory is None:
             directory = self.__dst_dir
+
+        if "function" not in function_dict.keys() or not callable(
+            function_dict["function"]
+        ):
+            msg = 'function_dict["function"] must be callable'
+            logging.error(msg)
+            raise ValueError(msg)
+
         post_processor_node_name = (
             f"post_processor_{self.__name}_{len(self.__post_processors)}"
         )
-        path = directory.joinpath(f"{function.__name__}_{post_processor_node_name}.py")
+        path = directory.joinpath(
+            f"{function_dict['function'].__name__}_{post_processor_node_name}.py"
+        )
+        submitter = submitter if submitter is not None else LocalSubmitter()
         self.__run_graph.add_function_node(
             post_processor_node_name,
-            function=function,
-            args=args,
-            kwargs=kwargs,
+            function_dict=function_dict,
             path=path,
+            submitter=submitter,
         )
         self.__run_graph.add_edge(self.bout_run_node_name, post_processor_node_name)
         self.__run_graph.add_waiting_for(post_processor_node_name, waiting_for)

@@ -123,21 +123,6 @@ class LocalSubmitter(AbstractSubmitter):
 
         return result
 
-    def submit_function(self, function, args, kwargs):
-        """
-        Submit a python function.
-
-        FIXME: Make a test where you test pre and post processors
-        FIXME: You are here (see line 4093 in old BOUT++ runners)
-
-        Parameters
-        ----------
-        function
-        args
-        kwargs
-        """
-        pass
-
     def _raise_submit_error(self, result: subprocess.CompletedProcess) -> None:
         """
         Raise and error from the subprocess in a clean way.

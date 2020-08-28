@@ -20,17 +20,21 @@ def test_constructor(get_bout_run_setup: Callable[[str], BoutRunSetup]) -> None:
     run_graph.add_function_node("1")
 
     run_group_0 = RunGroup(run_graph, bout_run_setup)
-    assert run_group_0.bout_run_node_name == "bout_run_0"
+    run_number_first_run = int(run_group_0.bout_run_node_name.split("_")[-1])
+    assert run_group_0.bout_run_node_name == f"bout_run_{run_number_first_run}"
 
     run_group_test = RunGroup(run_graph, bout_run_setup, name="test")
     assert run_group_test.bout_run_node_name == "bout_run_test"
 
     run_group_1 = RunGroup(run_graph, bout_run_setup, waiting_for="1")
-    assert run_group_1.bout_run_node_name == "bout_run_1"
+    run_number_second_run = int(run_group_1.bout_run_node_name.split("_")[-1])
+
+    assert run_number_second_run > run_number_first_run
+    assert run_group_1.bout_run_node_name == f"bout_run_{run_number_second_run}"
 
     expected = (
         "1",
-        "bout_run_1",
+        f"bout_run_{run_number_second_run}",
     )
     assert expected == run_graph.get_waiting_for_tuple("1")
 
@@ -51,8 +55,12 @@ def test_pre_processor(get_bout_run_setup: Callable[[str], BoutRunSetup]) -> Non
         run_graph, bout_run_setup, name="test_pre", waiting_for="1"
     )
 
-    run_group_pre.add_pre_processor(lambda: None)
-    run_group_pre.add_pre_processor(lambda: None)
+    run_group_pre.add_pre_processor(
+        {"function": lambda: None, "args": None, "kwargs": None}
+    )
+    run_group_pre.add_pre_processor(
+        {"function": lambda: None, "args": None, "kwargs": None}
+    )
 
     root_nodes = next(run_graph)
     assert len(root_nodes) == 3
@@ -74,8 +82,12 @@ def test_post_processor(get_bout_run_setup: Callable[[str], BoutRunSetup]) -> No
         run_graph, bout_run_setup, name="test_post", waiting_for="1"
     )
 
-    run_group_post.add_post_processor(lambda: None)
-    run_group_post.add_post_processor(lambda: None)
+    run_group_post.add_post_processor(
+        {"function": lambda: None, "args": None, "kwargs": None}
+    )
+    run_group_post.add_post_processor(
+        {"function": lambda: None, "args": None, "kwargs": None}
+    )
 
     expected = (
         "1",

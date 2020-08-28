@@ -8,6 +8,8 @@ from typing import Optional, Dict, Callable, Tuple, Any
 from bout_runners.runner.run_graph import RunGraph
 from bout_runners.runner.bout_run_setup import BoutRunSetup
 from bout_runners.runner.run_group import RunGroup
+from bout_runners.submitter.abstract_submitter import AbstractSubmitter
+from bout_runners.submitter.local_submitter import LocalSubmitter
 
 
 class BoutRunner:
@@ -167,11 +169,10 @@ class BoutRunner:
         function: Callable,
         args: Optional[Tuple[Any, ...]] = None,
         kwargs: Optional[Dict[str, Any]] = None,
+        submitter: Optional[AbstractSubmitter] = None,
     ) -> None:
         """
-        Execute the function from the node.
-
-        # FIXME: You are here: Add submitter to the node
+        Submit the function from the node.
 
         Parameters
         ----------
@@ -180,25 +181,24 @@ class BoutRunner:
             its arguments
         function : function
             The function to call
-        args : tuple
+        args : None or tuple
             The positional arguments
-        kwargs : dict
+        kwargs : None or dict
             The keyword arguments
+        submitter : None or AbstractSubmitter
+            The submitter to submit the function with
+            Uses the default LocalSubmitter if None
         """
         logging.info(
-            "Calling %s, with positional parameters %s, and keyword parameters %s",
+            "Submitting %s, with positional parameters %s, and keyword parameters %s",
             function.__name__,
             args,
             kwargs,
         )
-        if args is None and kwargs is None:
-            function()
-        elif args is not None and kwargs is None:
-            function(*args)
-        elif args is None and kwargs is not None:
-            function(**kwargs)
-        elif args is not None and kwargs is not None:
-            function(*args, **kwargs)
+        submitter = submitter if submitter is not None else LocalSubmitter()
+        submitter.write_python_script(path, function, args, kwargs)
+        command = f"python3 {path}"
+        submitter.submit_command(command)
 
     def reset(self) -> None:
         """Reset the run_graph."""

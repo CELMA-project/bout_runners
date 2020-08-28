@@ -6,6 +6,8 @@ from pathlib import Path
 from typing import Optional, Callable, Tuple, Any, Dict, Iterable, Union
 import networkx as nx
 from bout_runners.runner.bout_run_setup import BoutRunSetup
+from bout_runners.submitter.abstract_submitter import AbstractSubmitter
+from bout_runners.submitter.local_submitter import LocalSubmitter
 
 
 class RunGraph:
@@ -137,10 +139,11 @@ class RunGraph:
     def add_function_node(
         self,
         name: str,
-        function: Optional[Callable] = None,
-        args: Optional[Tuple[Any, ...]] = None,
-        kwargs: Optional[Dict[str, Any]] = None,
+        function_dict: Optional[
+            Dict[str, Optional[Union[Callable, Tuple[Any, ...], Dict[str, Any]]]]
+        ] = None,
         path: Optional[Path] = None,
+        submitter: Optional[AbstractSubmitter] = None,
     ) -> None:
         """
         Add a node with an optionally attached callable to the graph.
@@ -149,16 +152,18 @@ class RunGraph:
         ----------
         name : str
             Name of the node
-        function : None or callable
-            The function to be called
-            Will be None in the case of the bout_run_setup
-        args : None or tuple
-            Optional arguments to the function
-        kwargs : None or dict
-            Optional keyword arguments to the function
+        function_dict : None or dict
+            Dict with the function to call
+            On the form
+            >>> {'function': None or callable,
+            ...  'args': None or tuple,
+            ...  'kwargs': None or dict}
         path : None or Path
             Absolute path to store the python file which holds the function and
             its arguments
+        submitter : AbstractSubmitter
+            Submitter to submit the function with
+            If None, the default LocalSubmitter will be used
 
         Raises
         ------
@@ -168,8 +173,26 @@ class RunGraph:
         if name in self.__node_set:
             raise ValueError(f"'{name}' is already present in the graph")
 
+        if function_dict is None:
+            function_dict = {"function": None, "args": None, "kwargs": None}
+
+        submitter = submitter if submitter is not None else LocalSubmitter()
+
+        logging.debug(
+            "Adding node=%s with function_dict=%s, path=%s and submitter=%s",
+            name,
+            function_dict,
+            path,
+            submitter,
+        )
         self.__graph.add_node(
-            name, function=function, args=args, kwargs=kwargs, path=path, status="ready"
+            name,
+            function=function_dict["function"],
+            args=function_dict["args"],
+            kwargs=function_dict["kwargs"],
+            path=path,
+            submitter=submitter,
+            status="ready",
         )
         self.__node_set = set(self.__graph.nodes)
 
@@ -190,6 +213,7 @@ class RunGraph:
             If the graph after adding the nodes becomes cyclic
         """
         self.__graph.add_edge(start_node, end_node)
+        logging.debug("Adding edge from %s to %s", start_node, end_node)
         if not nx.is_directed_acyclic_graph(self.__graph):
             raise ValueError(
                 f"The node connection from {start_node} to {end_node} "

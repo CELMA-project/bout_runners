@@ -3,6 +3,7 @@
 import pytest
 from bout_runners.runner.run_graph import RunGraph
 from bout_runners.runner.bout_run_setup import BoutRunSetup
+from bout_runners.submitter.local_submitter import LocalSubmitter
 
 
 def test_add_bout_run_node(get_bout_run_setup) -> None:
@@ -28,13 +29,15 @@ def test_add_bout_run_node(get_bout_run_setup) -> None:
 def test_add_function_node() -> None:
     """Test ability to write and rewrite a function node."""
     run_graph = RunGraph()
-    run_graph.add_function_node("test", args=("pass", 42))
+    run_graph.add_function_node(
+        "test", function_dict={"function": None, "args": ("pass", 42), "kwargs": None}
+    )
     assert len(run_graph.nodes) == 1
-    assert run_graph.nodes["test"] == {
-        "function": None,
-        "args": ("pass", 42),
-        "kwargs": None,
-    }
+    assert run_graph.nodes["test"]["function"] is None
+    assert run_graph.nodes["test"]["args"] == ("pass", 42)
+    assert run_graph.nodes["test"]["kwargs"] is None
+    assert isinstance(run_graph.nodes["test"]["submitter"], LocalSubmitter)
+
     with pytest.raises(ValueError):
         run_graph.add_function_node("test")
         assert len(run_graph.nodes) == 1
@@ -137,17 +140,21 @@ def test___next__(make_graph) -> None:
     """
     run_graph = make_graph
     nodes = next(run_graph)
-    expected_after_1st_pick = {
-        "0": {"args": None, "function": None, "kwargs": None, "status": "traversed"},
-    }
-    assert expected_after_1st_pick == nodes
+
+    assert nodes["0"]["function"] is None
+    assert nodes["0"]["args"] is None
+    assert nodes["0"]["kwargs"] is None
+    assert nodes["0"]["status"] == "traversed"
+    assert isinstance(nodes["0"]["submitter"], LocalSubmitter)
 
     nodes = next(run_graph)
-    expected_after_2nd_pick = {
-        "1": {"args": None, "function": None, "kwargs": None, "status": "traversed"},
-        "2": {"args": None, "function": None, "kwargs": None, "status": "traversed"},
-    }
-    assert expected_after_2nd_pick == nodes
+    for number_str in ["1", "2"]:
+        assert nodes[number_str]["function"] is None
+        assert nodes[number_str]["args"] is None
+        assert nodes[number_str]["kwargs"] is None
+        assert nodes[number_str]["status"] == "traversed"
+        assert isinstance(nodes[number_str]["submitter"], LocalSubmitter)
+
     nodes_with_ready_status = ("3", "4", "5")
     for node_name in run_graph.nodes:
         if node_name in nodes_with_ready_status:
@@ -177,5 +184,12 @@ def test_get_dot_string() -> None:
     """Test the ability to get the dot string."""
     run_graph = RunGraph()
     run_graph.add_function_node("42")
-    expected = "strict digraph  {\n42 [args=None, function=None, kwargs=None];\n}\n"
+    hex_id_submitter = hex(id(run_graph.nodes["42"]["submitter"]))
+    expected = (
+        "strict digraph  "
+        "{\n42 [args=None, function=None, kwargs=None, path=None, status=ready, "
+        "submitter=<bout_runners.submitter.local_submitter.LocalSubmitter object at "
+        f"{hex_id_submitter}"
+        ">];\n}\n"
+    )
     assert expected == run_graph.get_dot_string()

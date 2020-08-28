@@ -9,6 +9,11 @@ from bout_runners.runner.run_graph import RunGraph
 from bout_runners.database.database_reader import DatabaseReader
 from tests.utils.paths import change_directory
 from tests.utils.run import assert_first_run, assert_tables_has_len_1, assert_force_run
+from tests.utils.dummy_functions import (
+    return_none,
+    return_sum_of_two,
+    return_sum_of_three,
+)
 
 
 def test_constructor(yield_conduction_path) -> None:
@@ -25,9 +30,9 @@ def test_constructor(yield_conduction_path) -> None:
     project_path = yield_conduction_path
     with change_directory(project_path):
         runner = BoutRunner()
-    assert isinstance(
-        runner.run_graph.nodes["bout_run_0"]["bout_run_setup"], BoutRunSetup
-    )
+
+    node_name = list(runner.run_graph.nodes.keys())[0]
+    assert isinstance(runner.run_graph.nodes[node_name]["bout_run_setup"], BoutRunSetup)
 
     # Assert that an empty graph can be added
     run_graph = RunGraph()
@@ -84,11 +89,26 @@ def test_run_bout_run(
     assert_force_run(db_reader, yield_number_of_rows_for_all_tables)
 
 
-def test_function_run() -> None:
-    """Test the function run method."""
+def test_function_run(tmp_path: Path) -> None:
+    """
+    Test the function run method.
+
+    Parameters
+    ----------
+    tmp_path : Path
+        Temporary path
+    """
     run_graph = RunGraph()
     runner = BoutRunner(run_graph)
-    runner.run_function()
-    runner.run_function(lambda: None)
-    runner.run_function(lambda x, y: x + y, (1, 2))
-    runner.run_function(lambda x, y, z=0: x + y + z, (1, 2), {"z": 3})
+    path = tmp_path.joinpath("return_none.py")
+
+    runner.run_function(path, return_none)
+    assert path.is_file()
+
+    path = tmp_path.joinpath("return_sum_of_two.py")
+    runner.run_function(path, return_sum_of_two, (1, 2))
+    assert path.is_file()
+
+    path = tmp_path.joinpath("return_sum_of_three.py")
+    runner.run_function(path, return_sum_of_three, (1, 2), {"number_3": 3})
+    assert path.is_file()
