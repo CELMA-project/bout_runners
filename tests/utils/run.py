@@ -25,7 +25,10 @@ def assert_first_run(
         The database reader object
     """
     db_reader = DatabaseReader(db_connection)
-    assert bout_paths.bout_inp_dst_dir.joinpath("BOUT.dmp.0.nc").is_file()
+    assert (
+        bout_paths.bout_inp_dst_dir.joinpath("BOUT.dmp.0.nc").is_file()
+        or bout_paths.bout_inp_dst_dir.joinpath("BOUT.dmp.0.h5").is_file()
+    )
     assert db_reader.check_tables_created()
     return db_reader
 

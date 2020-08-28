@@ -114,7 +114,11 @@ class RunGraph:
         for node_name in self.__graph:
             self.__graph.nodes[node_name]["status"] = "ready"
 
-    def add_bout_run_node(self, name: str, bout_run_setup: BoutRunSetup,) -> None:
+    def add_bout_run_node(
+        self,
+        name: str,
+        bout_run_setup: BoutRunSetup,
+    ) -> None:
         """
         Add a node where the setup of a BOUT++ run is attached.
 

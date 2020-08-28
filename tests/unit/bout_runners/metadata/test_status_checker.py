@@ -147,10 +147,5 @@ def test_status_checker_until_complete_infinite(
     status_checker = StatusChecker(db_connector, project_path)
     status_checker.check_and_update_until_complete()
 
-    query = (
-        "SELECT name, id AS run_id FROM run WHERE\n"
-        "latest_status = 'submitted' OR\n"
-        "latest_status = 'created' OR\n"
-        "latest_status = 'running'"
-    )
+    query = status_checker.get_query_string_for_non_errored_runs()
     assert len(db_reader.query(query).index) == 0

@@ -29,6 +29,7 @@ jobs:
 
       - name: Setup prerequisites
         run: |
+          sudo apt update
           sudo apt install mpich
           sudo apt install libmpich-dev
           sudo apt install libfftw3-dev

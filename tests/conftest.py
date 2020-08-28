@@ -815,7 +815,9 @@ def mock_pid_exists(monkeypatch: MonkeyPatch) -> Callable:
 
 @pytest.fixture(scope="function")
 def copy_test_case_log_file(
-    copy_log_file: Callable, get_test_data_path: Path, yield_logs: Dict[str, Path],
+    copy_log_file: Callable,
+    get_test_data_path: Path,
+    yield_logs: Dict[str, Path],
 ) -> Callable:
     """
     Return the function for copying the test case log files.
