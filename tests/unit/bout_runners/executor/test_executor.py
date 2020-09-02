@@ -25,7 +25,9 @@ def test_executor(make_project: Path, get_executor: Callable[[str], Executor]) -
     executor = get_executor("test_executor")
 
     executor.execute()
-
     log_path = executor.bout_paths.bout_inp_dst_dir.joinpath("BOUT.log.0")
+    assert log_path.is_file()
 
+    executor.execute(restart=True)
+    log_path = executor.bout_paths.bout_inp_dst_dir.joinpath("BOUT.log.0")
     assert log_path.is_file()

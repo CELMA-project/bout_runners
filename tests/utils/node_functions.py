@@ -48,10 +48,6 @@ def node_zero(bout_run_directory_node_2: Path, pre_and_post_directory: Path) -> 
     """
     Preprocess before node 2.
 
-    FIXME: YOU ARE HERE: ALSO NEED TO TEST THAT NODE 2 IS ACTUALLY WAITING FOR 0 AND 1
-           IN OTHER WORDS: THAT A BOUT RUN IS ACTUALLY WAITING FOR PRE PROCESSORS
-           MAYBE NEED TO MAKE A SIMPLE CXX
-
     Parameters
     ----------
     bout_run_directory_node_2 : Path

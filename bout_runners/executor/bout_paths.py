@@ -31,7 +31,7 @@ class BoutPaths:
 
     Methods
     -------
-    _copy_inp()
+    _copy_files()
         Copy BOUT.inp from bout_inp_src_dir to bout_inp_dst_dir
 
     Examples
@@ -55,6 +55,7 @@ class BoutPaths:
         project_path: Optional[Union[Path, str]] = None,
         bout_inp_src_dir: Optional[Union[Path, str]] = None,
         bout_inp_dst_dir: Optional[Union[Path, str]] = None,
+        restart: bool = False,
     ) -> None:
         """
         Set the paths.
@@ -71,6 +72,8 @@ class BoutPaths:
             The path to the BOUT.inp bout_inp_dst_dir directory (relative to
             self.project_path)
             If None, the current time will be used
+        restart : bool
+            If True the restart files will be copied to bout_inp_dst_dir
         """
         # Declare variables to be used in the getters and setters
         # NOTE: When the variables will be set to absolute paths in the setters.
@@ -78,6 +81,7 @@ class BoutPaths:
         self.__project_path: Path = Path()
         self.__bout_inp_src_dir: Path = Path()
         self.__bout_inp_dst_dir: Path = Path()
+        self.__restart = restart
 
         # NOTE: type: ignore due to https://github.com/python/mypy/issues/3004
         # Set the project path
@@ -153,7 +157,7 @@ class BoutPaths:
 
         # Copy file to bout_inp_dst_dir if set
         if self.bout_inp_dst_dir != Path():
-            self._copy_inp()
+            self._copy_files()
 
     @property
     def bout_inp_dst_dir(self) -> Path:
@@ -186,12 +190,61 @@ class BoutPaths:
         self.__bout_inp_dst_dir.mkdir(exist_ok=True, parents=True)
         logging.debug("self.bout_inp_dst_dir set to %s", self.__bout_inp_dst_dir)
 
-        self._copy_inp()
+        self._copy_files()
 
-    def _copy_inp(self) -> None:
-        """Copy BOUT.inp from bout_inp_src_dir to bout_inp_dst_dir."""
+    @property
+    def restart(self) -> bool:
+        """
+        Set the properties of self.restart.
+
+        The setter will either copy or remove BOUT.restart.* files
+        according to the state change
+
+        Returns
+        -------
+        bool
+            Whether or not to restart
+        """
+        return self.__restart
+
+    @restart.setter
+    def restart(self, restart: bool) -> None:
+        if self.restart is False and restart is True:
+            self.__restart = restart
+            self._copy_files()
+        elif self.restart is True and restart is False:
+            self.__restart = restart
+            dst_list = list(self.__bout_inp_dst_dir.glob("BOUT.restart.*"))
+            for dst in dst_list:
+                dst.unlink()
+                logging.debug("Deleted %s", dst)
+
+    def _copy_files(self) -> None:
+        """
+        Copy files from bout_inp_src_dir to bout_inp_dst_dir.
+
+        BOUT.inp will always be copied.
+        The restart files will be copied if self.__restart is True
+
+        Raises
+        ------
+        FileNotFoundError
+            If self.restart is True but no restart files are found
+        """
         if self.bout_inp_src_dir != self.bout_inp_dst_dir:
             src = self.bout_inp_src_dir.joinpath("BOUT.inp")
             dst = self.bout_inp_dst_dir.joinpath(src.name)
             shutil.copy(src, dst)
             logging.debug("Copied %s to %s", src, dst)
+
+            if self.restart:
+                src_list = list(self.__bout_inp_src_dir.glob("BOUT.restart.*"))
+                if len(src_list) == 0:
+                    msg = f"No restart files files found in {self.__bout_inp_src_dir}"
+                    logging.error(msg)
+                    raise FileNotFoundError(msg)
+
+                for src in src_list:
+                    dst = self.bout_inp_dst_dir.joinpath(src.name)
+                    shutil.copy(src, dst)
+                    logging.debug("Copied %s to %s", src, dst)

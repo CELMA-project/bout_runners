@@ -135,24 +135,30 @@ class BoutRunner:
         return self.__run_graph
 
     @staticmethod
-    def run_bout_run(bout_run_setup: BoutRunSetup, force: bool = False) -> None:
+    def run_bout_run(
+        bout_run_setup: BoutRunSetup, restart: bool = False, force: bool = False
+    ) -> None:
         """
         Perform the BOUT++ run and capture data.
+
+        FIXME: YOU ARE HERE. TEST THE RESTART FUNCTIONALITY
 
         Parameters
         ----------
         bout_run_setup : BoutRunSetup
             The setup for the BOUT++ run
+        restart : bool
+            The BOUT++ runs in the run graph will be restarted
         force : bool
             Execute the run even if has been performed with the same parameters
         """
         run_id = bout_run_setup.metadata_recorder.capture_new_data_from_run(
-            bout_run_setup.executor.submitter.processor_split, force
+            bout_run_setup.executor.submitter.processor_split, restart, force
         )
 
         if run_id is None:
             logging.info("Executing the run")
-            bout_run_setup.executor.execute()
+            bout_run_setup.executor.execute(restart)
         else:
             logging.warning(
                 "Run with the same configuration has been executed before, "
@@ -204,12 +210,14 @@ class BoutRunner:
         """Reset the run_graph."""
         self.__run_graph.reset()
 
-    def run(self, force: bool = False) -> None:
+    def run(self, restart: bool = False, force: bool = False) -> None:
         """
         Execute all the nodes in the run_graph.
 
         Parameters
         ----------
+        restart : bool
+            The BOUT++ runs in the run graph will be restarted
         force : bool
             Execute the run even if has been performed with the same parameters
 
@@ -237,7 +245,7 @@ class BoutRunner:
                 logging.info("Executing %s", node)
                 if node.startswith("bout_run"):
                     self.run_bout_run(
-                        nodes_at_current_order[node]["bout_run_setup"], force
+                        nodes_at_current_order[node]["bout_run_setup"], restart, force
                     )
                 else:
                     function = nodes_at_current_order[node]["function"]

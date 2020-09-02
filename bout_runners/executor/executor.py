@@ -159,9 +159,19 @@ class Executor:
         )
         return command
 
-    def execute(self) -> None:
-        """Execute a BOUT++ run."""
+    def execute(self, restart: bool = False) -> None:
+        """
+        Execute a BOUT++ run.
+
+        Parameters
+        ----------
+        restart : bool
+            If True the 'restart' will be appended to the command string
+        """
         # Make the project if not already made
         self.__make.run_make()
         # Submit the command
-        self.submitter.submit_command(self.__command)
+        command = self.__command
+        if restart:
+            command += " restart"
+        self.submitter.submit_command(command)
