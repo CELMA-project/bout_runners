@@ -8,7 +8,7 @@ from bout_runners.runner.bout_run_setup import BoutRunSetup
 from bout_runners.runner.run_graph import RunGraph
 from bout_runners.database.database_reader import DatabaseReader
 from tests.utils.paths import change_directory
-from tests.utils.run import assert_first_run, assert_tables_has_len_1, assert_force_run
+from tests.utils.run import assert_first_run, assert_tables_have_expected_len
 from tests.utils.dummy_functions import (
     return_none,
     return_sum_of_two,
@@ -76,17 +76,40 @@ def test_run_bout_run(
     runner.run_bout_run(bout_run_setup)
     # Assert that the run went well
     db_reader = assert_first_run(bout_paths, db_connection)
-    # Assert that all the values are 1
-    assert_tables_has_len_1(db_reader, yield_number_of_rows_for_all_tables)
+    # Assert that the number of runs is 1
+    assert_tables_have_expected_len(
+        db_reader, yield_number_of_rows_for_all_tables, expected_run_number=1
+    )
 
     # Check that the run will not be executed again
     runner.run_bout_run(bout_run_setup)
     # Assert that all the values are 1
-    assert_tables_has_len_1(db_reader, yield_number_of_rows_for_all_tables)
+    assert_tables_have_expected_len(
+        db_reader, yield_number_of_rows_for_all_tables, expected_run_number=1
+    )
 
     # Check that force overrides the behaviour
     runner.run_bout_run(bout_run_setup, force=True)
-    assert_force_run(db_reader, yield_number_of_rows_for_all_tables)
+    assert_tables_have_expected_len(
+        db_reader, yield_number_of_rows_for_all_tables, expected_run_number=2
+    )
+
+    # Check that restart makes another entry
+    runner.run_bout_run(bout_run_setup, restart=True)
+    assert_tables_have_expected_len(
+        db_reader,
+        yield_number_of_rows_for_all_tables,
+        expected_run_number=3,
+        restarted=True,
+    )
+    # ...and yet another entry
+    runner.run_bout_run(bout_run_setup, restart=True)
+    assert_tables_have_expected_len(
+        db_reader,
+        yield_number_of_rows_for_all_tables,
+        expected_run_number=4,
+        restarted=True,
+    )
 
 
 def test_function_run(tmp_path: Path) -> None:

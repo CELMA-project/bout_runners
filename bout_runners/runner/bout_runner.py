@@ -141,8 +141,6 @@ class BoutRunner:
         """
         Perform the BOUT++ run and capture data.
 
-        FIXME: YOU ARE HERE. TEST THE RESTART FUNCTIONALITY
-
         Parameters
         ----------
         bout_run_setup : BoutRunSetup
@@ -208,6 +206,7 @@ class BoutRunner:
 
     def reset(self) -> None:
         """Reset the run_graph."""
+        logging.info("Resetting the graph")
         self.__run_graph.reset()
 
     def run(self, restart: bool = False, force: bool = False) -> None:
@@ -226,7 +225,10 @@ class BoutRunner:
         RuntimeError
             If none of the nodes in the `run_graph` has status "ready"
         """
-        if force:
+        if force or restart:
+            logging.debug(
+                "Resetting the graph as %s == True", "force" if force else "restart"
+            )
             self.reset()
 
         if len(self.__run_graph) == 0:

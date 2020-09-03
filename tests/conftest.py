@@ -496,7 +496,7 @@ def yield_number_of_rows_for_all_tables() -> Iterator[
         number_of_rows_dict : dict
             Dict on the form
 
-            >>> {'table_name': int}
+            >>> {'table_name_1': int, 'table_name_2': int, ...}
         """
         number_of_rows_dict = dict()
         query_str = (

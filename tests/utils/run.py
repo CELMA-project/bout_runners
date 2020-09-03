@@ -33,12 +33,14 @@ def assert_first_run(
     return db_reader
 
 
-def assert_tables_has_len_1(
+def assert_tables_have_expected_len(
     db_reader: DatabaseReader,
     yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
+    expected_run_number: int,
+    restarted: bool = False,
 ) -> None:
     """
-    Assert that tables has length 1.
+    Assert that tables are of expected length.
 
     Parameters
     ----------
@@ -47,30 +49,32 @@ def assert_tables_has_len_1(
     yield_number_of_rows_for_all_tables : function
         Function which returns the number of rows for all tables in a
         schema
+    expected_run_number : int
+        Expected number of runs to find
+    restarted : bool
+        Whether or not the run has been restarted
     """
     number_of_rows_dict = yield_number_of_rows_for_all_tables(db_reader)
+    special_tables_count = dict()
+    tables_changed_by_run = ("run",)
+    # NOTE: When restarting, global.restart will change, which means that global_id
+    #       in parameters will change
+    #       The restart table however, will not change as the parameters therein only
+    #       describes how the restart files are written
+    tables_changed_by_restart = ("global", "parameters")
+    for table_name in tables_changed_by_run + tables_changed_by_restart:
+        special_tables_count[table_name] = number_of_rows_dict.pop(table_name)
+
+    # Assert that all the runs are the same (with exception of run and restart)
     assert sum(number_of_rows_dict.values()) == len(number_of_rows_dict.keys())
 
+    # Assert that the number of runs are correct
+    assert special_tables_count["run"] == expected_run_number
 
-def assert_force_run(
-    db_reader: DatabaseReader,
-    yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
-) -> None:
-    """
-    Assert that the force run is effective.
-
-    Parameters
-    ----------
-    db_reader : DatabaseReader
-        The database reader object
-    yield_number_of_rows_for_all_tables : function
-        Function which returns the number of rows for all tables in a
-        schema
-    """
-    number_of_rows_dict = yield_number_of_rows_for_all_tables(db_reader)
-    tables_with_2 = dict()
-    tables_with_2["run"] = number_of_rows_dict.pop("run")
-    # Assert that all the values are 1
-    assert sum(number_of_rows_dict.values()) == len(number_of_rows_dict.keys())
-    # Assert that all the values are 2
-    assert sum(tables_with_2.values()) == 2 * len(tables_with_2.keys())
+    # Assert that the restart counter is correct
+    if not restarted:
+        expected_count = 1
+    else:
+        expected_count = 2
+    for table in tables_changed_by_restart:
+        assert special_tables_count[table] == expected_count
