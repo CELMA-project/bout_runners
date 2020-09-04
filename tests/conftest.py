@@ -1061,3 +1061,36 @@ def get_bout_run_setup(
         return bout_run_setup
 
     return _get_bout_run_setup
+
+
+@pytest.fixture(scope="function")
+def tear_down_restart_directories() -> Iterator[Callable[[Path], None]]:
+    r"""
+    Return a function for removal of restart directories.
+
+    Yields
+    ------
+    _tear_down_restart_directories : function
+        Function used for removal of restart directories
+    """
+    run_directory = list()
+
+    def _tear_down_restart_directories(directory_group: Path) -> None:
+        r"""
+        Add the directory which the restart directories are based on.
+
+        Parameters
+        ----------
+        directory_group : Path
+            The directory which the restart directories are based on
+        """
+        run_directory.append(directory_group)
+
+    yield _tear_down_restart_directories
+    run_directory_parent = run_directory[0].parent
+    run_directory_name = run_directory[0].name
+    run_directories_list = list(
+        run_directory_parent.glob(f"{run_directory_name}_restart_*")
+    )
+    for run_dir in run_directories_list:
+        shutil.rmtree(run_dir)

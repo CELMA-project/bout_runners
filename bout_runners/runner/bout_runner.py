@@ -1,7 +1,9 @@
 """Contains the BOUT runner class."""
 
 
+import re
 import logging
+import shutil
 from pathlib import Path
 from typing import Optional, Dict, Callable, Tuple, Any
 
@@ -136,7 +138,9 @@ class BoutRunner:
 
     @staticmethod
     def run_bout_run(
-        bout_run_setup: BoutRunSetup, restart: bool = False, force: bool = False
+        bout_run_setup: BoutRunSetup,
+        restart_from_bout_inp_dst: bool = False,
+        force: bool = False,
     ) -> None:
         """
         Perform the BOUT++ run and capture data.
@@ -145,27 +149,137 @@ class BoutRunner:
         ----------
         bout_run_setup : BoutRunSetup
             The setup for the BOUT++ run
-        restart : bool
-            The BOUT++ runs in the run graph will be restarted
+        restart_from_bout_inp_dst : bool
+            Restarts the run from the dump directory
+            (bout_run_setup.executor.bout_paths.bout_inp_dst_dir)
+            Note that it is also possible to specify the directory to restart from in
+            executor.restart_from
+            If True it will have precedence over anything specified in
+            executor.restart_from
         force : bool
             Execute the run even if has been performed with the same parameters
         """
+        if (
+            restart_from_bout_inp_dst
+            and bout_run_setup.executor.restart_from is not None
+        ):
+            logging.warning(
+                "Both restart_from_bout_inp_dst and "
+                "bout_run_setup.executor.restart_from specified. "
+                "Using restart_from_bout_inp_dst"
+            )
+
+        if restart_from_bout_inp_dst:
+            bout_run_setup.executor.restart_from = (
+                bout_run_setup.executor.bout_paths.bout_inp_dst_dir
+            )
+
+        if bout_run_setup.executor.restart_from is not None:
+            # NOTE: bout_run_setup is changed inplace
+            BoutRunner.__reset_bout_inp_dst_dir(bout_run_setup)
+            restart = True
+        else:
+            restart = False
+
+        if restart and force:
+            logging.warning(
+                "force has been set to True for a run which is to use restart files. "
+                "Will therefore ignore force"
+            )
+
         run_id = bout_run_setup.metadata_recorder.capture_new_data_from_run(
             bout_run_setup.executor.submitter.processor_split, restart, force
         )
 
         if run_id is None:
-            logging.info("Executing the run")
+            if not restart:
+                logging.info("Executing the run")
+            else:
+                BoutRunner.copy_restart_files(bout_run_setup)
+                logging.info("Executing the run from restart files")
             bout_run_setup.executor.execute(restart)
+        elif force:
+            logging.info("Executing the run as force==True")
+            bout_run_setup.executor.execute()
         else:
             logging.warning(
                 "Run with the same configuration has been executed before, "
                 "see run with run_id %d",
                 run_id,
             )
-            if force:
-                logging.info("Executing the run as force==True")
-                bout_run_setup.executor.execute()
+
+    @staticmethod
+    def copy_restart_files(bout_run_setup: BoutRunSetup) -> None:
+        """
+        Copy the restart files.
+
+        Parameters
+        ----------
+        bout_run_setup : BoutRunSetup
+            The BoutRunSetup object
+
+        Raises
+        ------
+        FileNotFoundError
+            If no restart files are found in bout_run_setup.executor.restart_from
+        """
+        if bout_run_setup.executor.restart_from is not None:
+            src_list = list(bout_run_setup.executor.restart_from.glob("BOUT.restart.*"))
+            if len(src_list) == 0:
+                msg = (
+                    f"No restart files files found in "
+                    f"{bout_run_setup.executor.restart_from}"
+                )
+                logging.error(msg)
+                raise FileNotFoundError(msg)
+            for src in src_list:
+                dst = bout_run_setup.executor.bout_paths.bout_inp_dst_dir.joinpath(
+                    src.name
+                )
+                shutil.copy(src, dst)
+                logging.debug("Copied %s to %s", src, dst)
+
+    @staticmethod
+    def __reset_bout_inp_dst_dir(bout_run_setup: BoutRunSetup):
+        """
+        Reset the bout_inp_dst_dir (inplace) to reflect that this is a restart run.
+
+        The new bout_inp_dst_dir will be the same as
+        bout_run_setup.executor.restart_from with _restart_/d* appended
+        /d* will be the next digit based on the number of other restart directories
+
+        Parameters
+        ----------
+        bout_run_setup : BoutRunSetup
+            BoutRunSetup where bout_run_setup.executor.bout_paths.bout_inp_dst_dir
+            is going to be altered
+        """
+        if bout_run_setup.executor.restart_from is not None:
+            restart_dir_parent = bout_run_setup.executor.restart_from.parent
+            restart_dir_name = bout_run_setup.executor.restart_from.name
+            restart_dirs = list(restart_dir_parent.glob(f"{restart_dir_name}*"))
+            restart_number = 0
+            restart_numbers = list()
+            pattern = r"_restart_(\d)+$"
+            for restart_dir in restart_dirs:
+                match = re.search(pattern, restart_dir.name)
+                if match is not None:
+                    # NOTE: THe zeroth group is the matching string
+                    restart_numbers.append(int(match.group(1)))
+            if len(restart_numbers) != 0:
+                restart_numbers.sort()
+                restart_number = restart_numbers[-1] + 1
+            prev_inp_dst_dir = bout_run_setup.executor.bout_paths.bout_inp_dst_dir
+            stripped_restart_dir_name = re.sub(pattern, "", restart_dir_name)
+            new_inp_dst_dir = restart_dir_parent.joinpath(
+                f"{stripped_restart_dir_name}_restart_{restart_number}"
+            )
+            bout_run_setup.executor.bout_paths.bout_inp_dst_dir = new_inp_dst_dir
+            logging.info(
+                "bout_run_setup.executor.bout_paths.bout_inp_dst_dir set from %s to %s",
+                prev_inp_dst_dir,
+                new_inp_dst_dir,
+            )
 
     @staticmethod
     def run_function(
@@ -209,14 +323,14 @@ class BoutRunner:
         logging.info("Resetting the graph")
         self.__run_graph.reset()
 
-    def run(self, restart: bool = False, force: bool = False) -> None:
+    def run(self, restart_all: bool = False, force: bool = False) -> None:
         """
         Execute all the nodes in the run_graph.
 
         Parameters
         ----------
-        restart : bool
-            The BOUT++ runs in the run graph will be restarted
+        restart_all : bool
+            All the BOUT++ runs in the run graph will be restarted
         force : bool
             Execute the run even if has been performed with the same parameters
 
@@ -224,10 +338,13 @@ class BoutRunner:
         ------
         RuntimeError
             If none of the nodes in the `run_graph` has status "ready"
+
+        # FIXME: You are here: Ensure that the nodes are completed before
+        #        starting the next one
         """
-        if force or restart:
+        if force or restart_all:
             logging.debug(
-                "Resetting the graph as %s == True", "force" if force else "restart"
+                "Resetting the graph as %s == True", "force" if force else "restart_all"
             )
             self.reset()
 
@@ -247,7 +364,9 @@ class BoutRunner:
                 logging.info("Executing %s", node)
                 if node.startswith("bout_run"):
                     self.run_bout_run(
-                        nodes_at_current_order[node]["bout_run_setup"], restart, force
+                        nodes_at_current_order[node]["bout_run_setup"],
+                        restart_all,
+                        force,
                     )
                 else:
                     function = nodes_at_current_order[node]["function"]

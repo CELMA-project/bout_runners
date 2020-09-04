@@ -211,8 +211,10 @@ class MetadataRecorder:
             )
 
         # Update the run
+        # NOTE: If restart is True, a new run_id will be given as the run_dict["name"]
+        #       will be unique
         run_id = self.__db_reader.get_entry_id("run", run_dict)
-        if force or restart or run_id is None:
+        if force or run_id is None:
             run_dict["latest_status"] = "submitted"
             run_dict["submitted_time"] = datetime.now().isoformat()
             _ = self.create_entry("run", run_dict)

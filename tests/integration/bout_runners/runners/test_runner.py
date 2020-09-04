@@ -19,13 +19,18 @@ from bout_runners.runner.bout_run_setup import BoutRunSetup
 from bout_runners.submitter.local_submitter import LocalSubmitter
 
 from tests.utils.paths import change_directory
-from tests.utils.run import assert_first_run, assert_tables_have_expected_len
+from tests.utils.run import (
+    assert_first_run,
+    assert_dump_files_exist,
+    assert_tables_have_expected_len,
+)
 
 
 def test_bout_runners_from_directory(
     make_project: Path,
     yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
     clean_default_db_dir: Path,
+    tear_down_restart_directories: Callable[[Path], None],
 ) -> None:
     """
     Test that the minimal BoutRunners setup works.
@@ -35,6 +40,7 @@ def test_bout_runners_from_directory(
     2. The metadata is properly stored
     3. We cannot execute the run again...
     4. ...unless we set force=True
+    5. Check the restart functionality twice
 
     Parameters
     ----------
@@ -44,6 +50,8 @@ def test_bout_runners_from_directory(
         Function which returns the number of rows for all tables in a schema
     clean_default_db_dir : Path
         Path to the default database directory
+    tear_down_restart_directories : function
+        Function used for removal of restart directories
     """
     # For automatic clean-up
     _ = clean_default_db_dir
@@ -56,6 +64,7 @@ def test_bout_runners_from_directory(
     runner.run()
 
     bout_paths = bout_run_setup.executor.bout_paths
+    tear_down_restart_directories(bout_run_setup.executor.bout_paths.bout_inp_dst_dir)
     db_connection = bout_run_setup.db_connector
     # Assert that the run went well
     db_reader = assert_first_run(bout_paths, db_connection)
@@ -82,22 +91,27 @@ def test_bout_runners_from_directory(
         db_reader, yield_number_of_rows_for_all_tables, expected_run_number=2
     )
 
+    dump_dir_parent = bout_paths.bout_inp_dst_dir.parent
+    dump_dir_name = bout_paths.bout_inp_dst_dir.name
+
     # Check that the restart functionality works
-    runner.run(restart=True)
+    runner.run(restart_all=True)
     assert_tables_have_expected_len(
         db_reader,
         yield_number_of_rows_for_all_tables,
         expected_run_number=3,
         restarted=True,
     )
+    assert_dump_files_exist(dump_dir_parent.joinpath(f"{dump_dir_name}_restart_0"))
     # ...twice
-    runner.run(restart=True)
+    runner.run(restart_all=True)
     assert_tables_have_expected_len(
         db_reader,
         yield_number_of_rows_for_all_tables,
         expected_run_number=4,
         restarted=True,
     )
+    assert_dump_files_exist(dump_dir_parent.joinpath(f"{dump_dir_name}_restart_1"))
 
 
 def test_full_bout_runner(

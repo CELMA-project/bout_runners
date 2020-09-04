@@ -8,7 +8,11 @@ from bout_runners.runner.bout_run_setup import BoutRunSetup
 from bout_runners.runner.run_graph import RunGraph
 from bout_runners.database.database_reader import DatabaseReader
 from tests.utils.paths import change_directory
-from tests.utils.run import assert_first_run, assert_tables_have_expected_len
+from tests.utils.run import (
+    assert_first_run,
+    assert_dump_files_exist,
+    assert_tables_have_expected_len,
+)
 from tests.utils.dummy_functions import (
     return_none,
     return_sum_of_two,
@@ -45,6 +49,7 @@ def test_run_bout_run(
     clean_default_db_dir: Path,
     get_bout_run_setup: Callable[[str], BoutRunSetup],
     yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
+    tear_down_restart_directories: Callable[[Path], None],
 ) -> None:
     """
     Test the BOUT++ run method.
@@ -59,6 +64,8 @@ def test_run_bout_run(
         Function which returns the BoutRunSetup object based on the conduction directory
     yield_number_of_rows_for_all_tables : function
         Function which returns the number of rows for all tables in a schema
+    tear_down_restart_directories : function
+        Function used for removal of restart directories
     """
     # For automatic clean-up
     _ = clean_default_db_dir
@@ -69,6 +76,7 @@ def test_run_bout_run(
     runner = BoutRunner(run_graph)
 
     bout_run_setup = get_bout_run_setup("test_run_bout_run")
+    tear_down_restart_directories(bout_run_setup.executor.bout_paths.bout_inp_dst_dir)
     bout_paths = bout_run_setup.executor.bout_paths
     db_connection = bout_run_setup.db_connector
 
@@ -83,7 +91,7 @@ def test_run_bout_run(
 
     # Check that the run will not be executed again
     runner.run_bout_run(bout_run_setup)
-    # Assert that all the values are 1
+    # Assert that the number of runs is 1
     assert_tables_have_expected_len(
         db_reader, yield_number_of_rows_for_all_tables, expected_run_number=1
     )
@@ -94,22 +102,27 @@ def test_run_bout_run(
         db_reader, yield_number_of_rows_for_all_tables, expected_run_number=2
     )
 
+    dump_dir_parent = bout_paths.bout_inp_dst_dir.parent
+    dump_dir_name = bout_paths.bout_inp_dst_dir.name
+
     # Check that restart makes another entry
-    runner.run_bout_run(bout_run_setup, restart=True)
+    runner.run_bout_run(bout_run_setup, restart_from_bout_inp_dst=True)
     assert_tables_have_expected_len(
         db_reader,
         yield_number_of_rows_for_all_tables,
         expected_run_number=3,
         restarted=True,
     )
+    assert_dump_files_exist(dump_dir_parent.joinpath(f"{dump_dir_name}_restart_0"))
     # ...and yet another entry
-    runner.run_bout_run(bout_run_setup, restart=True)
+    runner.run_bout_run(bout_run_setup, restart_from_bout_inp_dst=True)
     assert_tables_have_expected_len(
         db_reader,
         yield_number_of_rows_for_all_tables,
         expected_run_number=4,
         restarted=True,
     )
+    assert_dump_files_exist(dump_dir_parent.joinpath(f"{dump_dir_name}_restart_1"))
 
 
 def test_function_run(tmp_path: Path) -> None:

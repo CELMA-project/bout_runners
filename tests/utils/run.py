@@ -1,4 +1,6 @@
 """Contains functions for checking runs."""
+
+from pathlib import Path
 from typing import Callable, Dict
 
 from bout_runners.database.database_connector import DatabaseConnector
@@ -25,12 +27,24 @@ def assert_first_run(
         The database reader object
     """
     db_reader = DatabaseReader(db_connection)
-    assert (
-        bout_paths.bout_inp_dst_dir.joinpath("BOUT.dmp.0.nc").is_file()
-        or bout_paths.bout_inp_dst_dir.joinpath("BOUT.dmp.0.h5").is_file()
-    )
+    assert_dump_files_exist(bout_paths.bout_inp_dst_dir)
     assert db_reader.check_tables_created()
     return db_reader
+
+
+def assert_dump_files_exist(dump_dir: Path) -> None:
+    """
+    Assert that the dump files exits.
+
+    Parameters
+    ----------
+    dump_dir : Path
+        Path to the directory where the dump files of the project run is stored
+    """
+    assert (
+        dump_dir.joinpath("BOUT.dmp.0.nc").is_file()
+        or dump_dir.joinpath("BOUT.dmp.0.h5").is_file()
+    )
 
 
 def assert_tables_have_expected_len(

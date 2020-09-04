@@ -38,27 +38,6 @@ def test_bout_path(
 
     assert project_path.joinpath(tmp_path_name, "BOUT.inp").is_file()
 
-    # Test the restart functionality
-    with pytest.raises(FileNotFoundError):
-        BoutPaths(
-            project_path=project_path, bout_inp_dst_dir=tmp_path_name, restart=True
-        )
-
-    # Mock restart files
-    with bout_paths.bout_inp_src_dir.joinpath("BOUT.restart.0.nc").open("w") as file:
-        file.write("")
-
-    dst_restart_file = bout_paths.bout_inp_dst_dir.joinpath("BOUT.restart.0.nc")
-
-    bout_paths = BoutPaths(
-        project_path=project_path, bout_inp_dst_dir=tmp_path_name, restart=True
-    )
-    assert dst_restart_file.is_file()
-    bout_paths.restart = False
-    assert not dst_restart_file.is_file()
-    bout_paths.restart = True
-    assert dst_restart_file.is_file()
-
     # Test that an error is raised if the source dir is pointed to a directory
     # without BOUT.inp
     with pytest.raises(FileNotFoundError):
