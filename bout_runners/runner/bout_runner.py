@@ -141,7 +141,7 @@ class BoutRunner:
         bout_run_setup: BoutRunSetup,
         restart_from_bout_inp_dst: bool = False,
         force: bool = False,
-    ) -> None:
+    ) -> Optional[int]:
         """
         Perform the BOUT++ run and capture data.
 
@@ -158,6 +158,11 @@ class BoutRunner:
             executor.restart_from
         force : bool
             Execute the run even if has been performed with the same parameters
+
+        Returns
+        -------
+        pid : None or int
+            The process id if the run is not skipped
         """
         if (
             restart_from_bout_inp_dst
@@ -191,22 +196,25 @@ class BoutRunner:
             bout_run_setup.executor.submitter.processor_split, restart, force
         )
 
+        pid = None
         if run_id is None:
             if not restart:
                 logging.info("Executing the run")
             else:
                 BoutRunner.copy_restart_files(bout_run_setup)
                 logging.info("Executing the run from restart files")
-            bout_run_setup.executor.execute(restart)
+            pid = bout_run_setup.executor.execute(restart)
         elif force:
             logging.info("Executing the run as force==True")
-            bout_run_setup.executor.execute()
+            pid = bout_run_setup.executor.execute()
         else:
             logging.warning(
                 "Run with the same configuration has been executed before, "
                 "see run with run_id %d",
                 run_id,
             )
+
+        return pid
 
     @staticmethod
     def copy_restart_files(bout_run_setup: BoutRunSetup) -> None:
@@ -288,7 +296,7 @@ class BoutRunner:
         args: Optional[Tuple[Any, ...]] = None,
         kwargs: Optional[Dict[str, Any]] = None,
         submitter: Optional[AbstractSubmitter] = None,
-    ) -> None:
+    ) -> Optional[int]:
         """
         Submit the function from the node.
 
@@ -306,6 +314,11 @@ class BoutRunner:
         submitter : None or AbstractSubmitter
             The submitter to submit the function with
             Uses the default LocalSubmitter if None
+
+        Returns
+        -------
+        pid : int
+            The process id
         """
         logging.info(
             "Submitting %s, with positional parameters %s, and keyword parameters %s",
@@ -317,6 +330,7 @@ class BoutRunner:
         submitter.write_python_script(path, function, args, kwargs)
         command = f"python3 {path}"
         submitter.submit_command(command)
+        return submitter.pid
 
     def reset(self) -> None:
         """Reset the run_graph."""
@@ -360,17 +374,22 @@ class BoutRunner:
             raise RuntimeError(msg)
 
         for nodes_at_current_order in self.__run_graph:
-            for node in nodes_at_current_order.keys():
-                logging.info("Executing %s", node)
-                if node.startswith("bout_run"):
-                    self.run_bout_run(
-                        nodes_at_current_order[node]["bout_run_setup"],
+            pid_dict = dict()
+            for node_name in nodes_at_current_order.keys():
+                logging.info("Executing %s", node_name)
+                if node_name.startswith("bout_run"):
+                    pid = self.run_bout_run(
+                        nodes_at_current_order[node_name]["bout_run_setup"],
                         restart_all,
                         force,
                     )
+                    # NOTE: pid can be None if the run has already been executed
+                    pid_dict[node_name] = pid
                 else:
-                    function = nodes_at_current_order[node]["function"]
-                    args = nodes_at_current_order[node]["args"]
-                    kwargs = nodes_at_current_order[node]["kwargs"]
-                    path = nodes_at_current_order[node]["path"]
-                    self.run_function(function, args, kwargs, path)
+                    function = nodes_at_current_order[node_name]["function"]
+                    args = nodes_at_current_order[node_name]["args"]
+                    kwargs = nodes_at_current_order[node_name]["kwargs"]
+                    path = nodes_at_current_order[node_name]["path"]
+                    pid = self.run_function(function, args, kwargs, path)
+                    pid_dict[node_name] = pid
+                logging.debug("Job submitted with pid=%s", pid)

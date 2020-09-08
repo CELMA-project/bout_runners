@@ -11,7 +11,7 @@ class AbstractSubmitter(ABC):
     """The abstract base class of the submitters."""
 
     @abstractmethod
-    def submit_command(self, command: str):
+    def submit_command(self, command: str) -> Any:
         """
         Submit a command.
 
@@ -23,7 +23,7 @@ class AbstractSubmitter(ABC):
 
     @property
     @abstractmethod
-    def pid(self):
+    def pid(self) -> Optional[int]:
         """Return the process id."""
 
     @staticmethod
@@ -32,7 +32,7 @@ class AbstractSubmitter(ABC):
         function: Callable,
         args: Optional[Tuple[Any, ...]] = None,
         kwargs: Optional[Dict[str, Any]] = None,
-    ):
+    ) -> None:
         """
         Write python function to file.
 
@@ -84,7 +84,7 @@ class AbstractSubmitter(ABC):
         logging.info("Python script written to %s", path)
 
     @abstractmethod
-    def _raise_submit_error(self, result: Any):
+    def _raise_submit_error(self, result: Any) -> None:
         """
         Raise error if submission failed.
 
