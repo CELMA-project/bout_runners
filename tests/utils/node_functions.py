@@ -39,8 +39,6 @@ http://www.webgraphviz.com
 >>> g.add_edge(8, 10)
 ...
 >>> print(nx.nx_pydot.to_pydot(g))
-
-# FIXME: YOU ARE HERE - make the big test
 """
 
 from pathlib import Path
@@ -58,9 +56,9 @@ def node_zero(bout_run_directory_node_2: Path, pre_and_post_directory: Path) -> 
         Path where temporary files are stored to sign that nodes has been
         successfully processed
     """
-    # Node 2 completed before node 0
+    # Node 0 completed before node 2
     assert bout_run_directory_node_2.joinpath("BOUT.settings").is_file()
-    with pre_and_post_directory.joinpath("1.txt").open("w") as file:
+    with pre_and_post_directory.joinpath("0.txt").open("w") as file:
         file.write("Complete")
 
 
@@ -77,7 +75,7 @@ def node_one(bout_run_directory_node_2: Path, pre_and_post_directory: Path) -> N
         successfully processed
 
     """
-    # Node 2 completed before node 1
+    # Node 1 completed before node 2
     assert bout_run_directory_node_2.joinpath("BOUT.settings").is_file()
     with pre_and_post_directory.joinpath("1.txt").open("w") as file:
         file.write("Complete")
@@ -147,14 +145,14 @@ def node_eight(
         Path where temporary files are stored to sign that nodes has been
         successfully processed
     """
-    # Node 4 not completed before node 8
-    assert not bout_run_directory_node_4.joinpath("BOUT.settings").is_file()
+    # Node 4 completed before node 8
+    assert bout_run_directory_node_4.joinpath("BOUT.settings").is_file()
 
-    # Node 6 not completed before node 8
-    assert not bout_run_directory_node_6.joinpath("BOUT.settings").is_file()
+    # Node 6 completed before node 8
+    assert bout_run_directory_node_6.joinpath("BOUT.settings").is_file()
 
     # Node 8 completed before node 10
-    assert pre_and_post_directory.joinpath("10.txt").is_file()
+    assert not pre_and_post_directory.joinpath("10.txt").is_file()
 
     with pre_and_post_directory.joinpath("8.txt").open("w") as file:
         file.write("Complete")

@@ -1,5 +1,6 @@
 """Contains the RunGroup class."""
 
+import re
 import logging
 from pathlib import Path
 from typing import Optional, Union, Iterable, List, Callable, Tuple, Any, Dict
@@ -41,6 +42,7 @@ class RunGroup:
     """
 
     __counter = 0
+    __names = list()
 
     def __init__(
         self,
@@ -69,20 +71,46 @@ class RunGroup:
         """
         self.__run_graph = run_graph
         self.__name = name
-        self.__dst_dir = bout_run_setup.executor.bout_paths.bout_inp_dst_dir
+        self.__bout_run_setup = bout_run_setup
+        self.__dst_dir = self.__bout_run_setup.executor.bout_paths.bout_inp_dst_dir
         self.__pre_processors: List[str] = list()
         self.__post_processors: List[str] = list()
 
         if self.__name is None:
             self.__name = str(RunGroup.__counter)
             RunGroup.__counter += 1
+        if self.__name in RunGroup.__names:
+            self.__increment_name()
+        RunGroup.__names.append(self.__name)
 
         # Assign a node to bout_run_setup
         self.__bout_run_node_name = f"bout_run_{self.__name}"
-        self.__run_graph.add_bout_run_node(self.bout_run_node_name, bout_run_setup)
+        self.__run_graph.add_bout_run_node(
+            self.bout_run_node_name, self.__bout_run_setup
+        )
 
         # Add edges to the nodes
         self.__run_graph.add_waiting_for(self.bout_run_node_name, waiting_for)
+
+    def __increment_name(self):
+        """Increment the name of the RunGroup."""
+        old_name = self.__name
+        pattern = old_name + r"_(\d)+$"
+        numbers = list()
+        for name in RunGroup.__names:
+            match = re.search(pattern, name)
+            if match is not None:
+                # NOTE: THe zeroth group is the matching string
+                numbers.append(int(match.group(1)))
+        if len(numbers) == 0:
+            self.__name = f"{old_name}_1"
+        else:
+            self.__name = f"{old_name}_{max(numbers) + 1}"
+        logging.warning(
+            "%s is already registered as a RunGroup name. Changing the name to %s",
+            old_name,
+            self.__name,
+        )
 
     @property
     def bout_run_node_name(self) -> str:
@@ -96,6 +124,54 @@ class RunGroup:
         """
         return self.__bout_run_node_name
 
+    @property
+    def run_graph(self) -> RunGraph:
+        """
+        Return the run graph.
+
+        Returns
+        -------
+        RunGraph
+            The run graph
+        """
+        return self.__run_graph
+
+    @property
+    def bout_run_setup(self) -> BoutRunSetup:
+        """
+        Return the BoutRunSetup.
+
+        Returns
+        -------
+        BoutRunSetup
+            The BoutRunSetup
+        """
+        return self.__bout_run_setup
+
+    @property
+    def pre_processors(self) -> Tuple[str]:
+        """
+        Return the pre_processors.
+
+        Returns
+        -------
+        tuple
+            The tuple of pre_processors
+        """
+        return tuple(self.__pre_processors)
+
+    @property
+    def post_processors(self) -> Tuple[str]:
+        """
+        Return the post_processors.
+
+        Returns
+        -------
+        tuple
+            The tuple of post_processors
+        """
+        return tuple(self.__post_processors)
+
     def add_pre_processor(
         self,
         function_dict: Dict[
@@ -104,7 +180,7 @@ class RunGroup:
         directory: Optional[Path] = None,
         submitter: Optional[AbstractSubmitter] = None,
         waiting_for: Optional[Union[str, Iterable[str]]] = None,
-    ) -> None:
+    ) -> str:
         """
         Add a pre-processor to the BOUT++ run.
 
@@ -122,11 +198,16 @@ class RunGroup:
         directory : None or Path
             Absolute path to directory to store the python script
             If None, the destination directory of BoutRun will be used
-        waiting_for : None or str or iterable
-            Name of nodes this node will wait for to finish before executing
         submitter : AbstractSubmitter
             Submitter to submit the function with
             If None, the default LocalSubmitter will be used
+        waiting_for : None or str or iterable
+            Name of nodes this node will wait for to finish before executing
+
+        Returns
+        -------
+        pre_processor_node_name : str
+            The node name of the pre processor
 
         Raises
         ------
@@ -159,6 +240,7 @@ class RunGroup:
         self.__run_graph.add_edge(pre_processor_node_name, self.bout_run_node_name)
         self.__run_graph.add_waiting_for(pre_processor_node_name, waiting_for)
         self.__pre_processors.append(pre_processor_node_name)
+        return pre_processor_node_name
 
     def add_post_processor(
         self,
@@ -168,7 +250,7 @@ class RunGroup:
         directory: Optional[Path] = None,
         submitter: Optional[AbstractSubmitter] = None,
         waiting_for: Optional[Union[str, Iterable[str]]] = None,
-    ) -> None:
+    ) -> str:
         """
         Add a post-processor to the BOUT++ run.
 
@@ -191,6 +273,11 @@ class RunGroup:
         submitter : None or AbstractSubmitter
             Submitter to submit the function with
             If None, the default LocalSubmitter will be used
+
+        Returns
+        -------
+        post_processor_node_name : str
+            The node name of the pre processor
 
         Raises
         ------
@@ -223,3 +310,4 @@ class RunGroup:
         self.__run_graph.add_edge(self.bout_run_node_name, post_processor_node_name)
         self.__run_graph.add_waiting_for(post_processor_node_name, waiting_for)
         self.__post_processors.append(post_processor_node_name)
+        return post_processor_node_name
