@@ -42,7 +42,7 @@ class RunGroup:
     """
 
     __counter = 0
-    __names = list()
+    __names: List[str] = list()
 
     def __init__(
         self,
@@ -92,9 +92,9 @@ class RunGroup:
         # Add edges to the nodes
         self.__run_graph.add_waiting_for(self.bout_run_node_name, waiting_for)
 
-    def __increment_name(self):
+    def __increment_name(self) -> None:
         """Increment the name of the RunGroup."""
-        old_name = self.__name
+        old_name = self.__name if self.__name is not None else ""
         pattern = old_name + r"_(\d)+$"
         numbers = list()
         for name in RunGroup.__names:
@@ -149,7 +149,7 @@ class RunGroup:
         return self.__bout_run_setup
 
     @property
-    def pre_processors(self) -> Tuple[str]:
+    def pre_processors(self) -> Tuple[str, ...]:
         """
         Return the pre_processors.
 
@@ -161,7 +161,7 @@ class RunGroup:
         return tuple(self.__pre_processors)
 
     @property
-    def post_processors(self) -> Tuple[str]:
+    def post_processors(self) -> Tuple[str, ...]:
         """
         Return the post_processors.
 

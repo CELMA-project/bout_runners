@@ -41,140 +41,153 @@ http://www.webgraphviz.com
 >>> print(nx.nx_pydot.to_pydot(g))
 """
 
+from typing import Union
 from pathlib import Path
 
 
-def node_zero(bout_run_directory_node_2: Path, pre_and_post_directory: Path) -> None:
+def node_zero(
+    bout_run_directory_node_2: Union[Path, str],
+    pre_and_post_directory: Union[Path, str],
+) -> None:
     """
     Preprocess before node 2.
 
     Parameters
     ----------
-    bout_run_directory_node_2 : Path
+    bout_run_directory_node_2 : Path or str
         Directory where the dump files of the BOUT++ run of node 2 is stored
-    pre_and_post_directory : Path
+    pre_and_post_directory : Path or str
         Path where temporary files are stored to sign that nodes has been
         successfully processed
     """
     # Node 0 completed before node 2
-    assert bout_run_directory_node_2.joinpath("BOUT.settings").is_file()
-    with pre_and_post_directory.joinpath("0.txt").open("w") as file:
+    assert not Path(bout_run_directory_node_2).joinpath("BOUT.settings").is_file()
+    with Path(pre_and_post_directory).joinpath("0.txt").open("w") as file:
         file.write("Complete")
 
 
-def node_one(bout_run_directory_node_2: Path, pre_and_post_directory: Path) -> None:
+def node_one(
+    bout_run_directory_node_2: Union[Path, str],
+    pre_and_post_directory: Union[Path, str],
+) -> None:
     """
     Preprocess before node 2.
 
     Parameters
     ----------
-    bout_run_directory_node_2 : Path
+    bout_run_directory_node_2 : Path or str
         Directory where the dump files of the BOUT++ run of node 2 is stored
-    pre_and_post_directory : Path
+    pre_and_post_directory : Path or str
         Path where temporary files are stored to sign that nodes has been
         successfully processed
 
     """
     # Node 1 completed before node 2
-    assert bout_run_directory_node_2.joinpath("BOUT.settings").is_file()
-    with pre_and_post_directory.joinpath("1.txt").open("w") as file:
+    assert not Path(bout_run_directory_node_2).joinpath("BOUT.settings").is_file()
+    with Path(pre_and_post_directory).joinpath("1.txt").open("w") as file:
         file.write("Complete")
 
 
-def node_five(bout_run_directory_node_2: Path, pre_and_post_directory: Path) -> None:
+def node_five(
+    bout_run_directory_node_2: Union[Path, str],
+    pre_and_post_directory: Union[Path, str],
+) -> None:
     """
     Postprocess after node 2.
 
     Parameters
     ----------
-    bout_run_directory_node_2 : Path
+    bout_run_directory_node_2 : Path or str
         Directory where the dump files of the BOUT++ run of node 2 is stored
-    pre_and_post_directory : Path
+    pre_and_post_directory : Path or str
         Path where temporary files are stored to sign that nodes has been
         successfully processed
     """
-    # Node 2 not completed before node 5
-    assert not bout_run_directory_node_2.joinpath("BOUT.settings").is_file()
-    with pre_and_post_directory.joinpath("5.txt").open("w") as file:
+    # Node 2 completed before node 5
+    assert Path(bout_run_directory_node_2).joinpath("BOUT.settings").is_file()
+    with Path(pre_and_post_directory).joinpath("5.txt").open("w") as file:
         file.write("Complete")
 
 
 def node_seven(
-    bout_run_directory_node_2: Path,
-    bout_run_directory_node_9: Path,
-    pre_and_post_directory: Path,
+    bout_run_directory_node_2: Union[Path, str],
+    bout_run_directory_node_9: Union[Path, str],
+    pre_and_post_directory: Union[Path, str],
 ) -> None:
     """
     Postprocess after node 2, preprocess before node 9.
 
     Parameters
     ----------
-    bout_run_directory_node_2 : Path
+    bout_run_directory_node_2 : Path or str
         Directory where the dump files of the BOUT++ run of node 2 is stored
-    bout_run_directory_node_9 : Path
+    bout_run_directory_node_9 : Path or str
         Directory where the dump files of the BOUT++ run of node 9 is stored
-    pre_and_post_directory : Path
+    pre_and_post_directory : Path or str
         Path where temporary files are stored to sign that nodes has been
         successfully processed
     """
-    # Node 9 completed before node 7
-    assert bout_run_directory_node_9.joinpath("BOUT.settings").is_file()
+    # Node 2 completed before node 7
+    assert Path(bout_run_directory_node_2).joinpath("BOUT.settings").is_file()
 
-    # Node 2 not completed before node 7
-    assert not bout_run_directory_node_2.joinpath("BOUT.settings").is_file()
+    # Node 9 not completed before node 7
+    assert not Path(bout_run_directory_node_9).joinpath("BOUT.settings").is_file()
 
-    with pre_and_post_directory.joinpath("7.txt").open("w") as file:
+    with Path(pre_and_post_directory).joinpath("7.txt").open("w") as file:
         file.write("Complete")
 
 
 def node_eight(
-    bout_run_directory_node_4: Path,
-    bout_run_directory_node_6: Path,
-    pre_and_post_directory: Path,
+    bout_run_directory_node_4: Union[Path, str],
+    bout_run_directory_node_6: Union[Path, str],
+    pre_and_post_directory: Union[Path, str],
 ) -> None:
     """
     Postprocess after node 6 and 4, preprocess before node 10.
 
     Parameters
     ----------
-    bout_run_directory_node_4 : Path
+    bout_run_directory_node_4 : Path or str
         Directory where the dump files of the BOUT++ run of node 4 is stored
-    bout_run_directory_node_6 : Path
+    bout_run_directory_node_6 : Path or str
         Directory where the dump files of the BOUT++ run of node 6 is stored
-    pre_and_post_directory : Path
+    pre_and_post_directory : Path or str
         Path where temporary files are stored to sign that nodes has been
         successfully processed
     """
     # Node 4 completed before node 8
-    assert bout_run_directory_node_4.joinpath("BOUT.settings").is_file()
+    assert Path(bout_run_directory_node_4).joinpath("BOUT.settings").is_file()
 
     # Node 6 completed before node 8
-    assert bout_run_directory_node_6.joinpath("BOUT.settings").is_file()
+    assert Path(bout_run_directory_node_6).joinpath("BOUT.settings").is_file()
 
-    # Node 8 completed before node 10
-    assert not pre_and_post_directory.joinpath("10.txt").is_file()
+    # Node 8 not completed before node 10
+    assert not Path(pre_and_post_directory).joinpath("10.txt").is_file()
 
-    with pre_and_post_directory.joinpath("8.txt").open("w") as file:
+    with Path(pre_and_post_directory).joinpath("8.txt").open("w") as file:
         file.write("Complete")
 
 
-def node_ten(bout_run_directory_node_9: Path, pre_and_post_directory: Path) -> None:
+def node_ten(
+    bout_run_directory_node_9: Union[Path, str],
+    pre_and_post_directory: Union[Path, str],
+) -> None:
     """
     Postprocess after node 9 and 8.
 
     Parameters
     ----------
-    bout_run_directory_node_9 : Path
+    bout_run_directory_node_9 : Path or str
         Directory where the dump files of the BOUT++ run of node 6 is stored
-    pre_and_post_directory : Path
+    pre_and_post_directory : Path or str
         Path where temporary files are stored to sign that nodes has been
         successfully processed
     """
-    # Node 9 completed before node 8
-    assert not bout_run_directory_node_9.joinpath("BOUT.settings").is_file()
+    # Node 9 completed before node 10
+    assert Path(bout_run_directory_node_9).joinpath("BOUT.settings").is_file()
 
-    # Node 10 started before completion of node 10
-    assert not pre_and_post_directory.joinpath("8.txt").is_file()
+    # Node 8 completed before node 10
+    assert Path(pre_and_post_directory).joinpath("8.txt").is_file()
 
-    with pre_and_post_directory.joinpath("10.txt").open("w") as file:
+    with Path(pre_and_post_directory).joinpath("10.txt").open("w") as file:
         file.write("Complete")

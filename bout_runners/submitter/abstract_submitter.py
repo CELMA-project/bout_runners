@@ -2,9 +2,11 @@
 
 import sys
 import logging
+import json
 from abc import ABC, abstractmethod
 from typing import Any, Callable, Optional, Tuple, Dict
 from pathlib import Path
+from bout_runners.utils.serializers import is_jsonable
 
 
 class AbstractSubmitter(ABC):
@@ -50,7 +52,17 @@ class AbstractSubmitter(ABC):
         """
         # Make a string of the arguments
         if args is not None:
-            args_str = ", ".join(map(str, args))
+            args_list = list(args)
+            for index, arg in enumerate(args_list):
+                if not is_jsonable(arg):
+                    logging.warning(
+                        "The argument %s is not jsonable. "
+                        "Will try to cast it to a string",
+                        arg,
+                    )
+                    args_list[index] = str(arg)
+            # Use starred expressions due to json dumps
+            args_str = f"*{json.dumps(args_list)}"
         else:
             args_str = ""
 
@@ -58,14 +70,20 @@ class AbstractSubmitter(ABC):
         if kwargs is not None:
             if args is not None:
                 args_str += ", "
-            keyword_arguments = []
+            keyword_arguments = dict()
             for arg_name, value in kwargs.items():
-                if isinstance(value, str):
-                    value = f"'{value}'"
-                keyword_arguments.append(f"{arg_name}={value}")
-
-            # Put a comma in between the arguments
-            kwargs_str = ", ".join(map(str, keyword_arguments))
+                if is_jsonable(value):
+                    keyword_arguments[arg_name] = value
+                else:
+                    logging.warning(
+                        "The value %s of %s is not jsonable. "
+                        "Will try to cast it to a string",
+                        value,
+                        arg_name,
+                    )
+                    keyword_arguments[arg_name] = str(value)
+            # Use starred expressions due to json dumps
+            kwargs_str = f"**{json.dumps(keyword_arguments)}"
         else:
             kwargs_str = ""
 

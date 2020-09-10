@@ -165,6 +165,7 @@ def test_large_graph(
     The node setup can be found in node_functions.py
 
     # FIXME: You are here. 1. Run the graph, 2. check files, 3. check db, 4. check graph
+    # FIXME: You are here: Node 10 failing
 
     Parameters
     ----------
@@ -178,110 +179,137 @@ def test_large_graph(
         Function used for removal of restart directories
     """
     _ = clean_default_db_dir
+
     name = "test_large_graph"
+    paths = dict()
+    paths["project_path"] = make_project
+    paths["pre_and_post_directory"] = paths["project_path"].joinpath(
+        f"pre_and_post_{name}"
+    )
+    paths["pre_and_post_directory"].mkdir()
+    run_groups = dict()
 
     # RunGroup belonging to node 2
-    run_group_2 = make_run_group(name, make_project)
-    run_graph = run_group_2.run_graph
-    project_path = make_project
-    pre_and_post_directory = project_path.joinpath(f"pre_and_post_{name}")
-    pre_and_post_directory.mkdir()
-    bout_run_directory_node_2 = (
-        run_group_2.bout_run_setup.executor.bout_paths.bout_inp_dst_dir
-    )
-    tear_down_restart_directories(bout_run_directory_node_2)
-    run_group_2.add_pre_processor(
+    run_groups["run_group_2"] = make_run_group(name, make_project)
+    run_graph = run_groups["run_group_2"].run_graph
+    paths["bout_run_directory_node_2"] = run_groups[
+        "run_group_2"
+    ].bout_run_setup.executor.bout_paths.bout_inp_dst_dir
+
+    run_groups["run_group_2"].add_pre_processor(
         {
             "function": node_zero,
-            "args": (bout_run_directory_node_2, pre_and_post_directory),
+            "args": (
+                paths["bout_run_directory_node_2"],
+                paths["pre_and_post_directory"],
+            ),
             "kwargs": None,
         }
     )
-    run_group_2.add_pre_processor(
+    run_groups["run_group_2"].add_pre_processor(
         {
             "function": node_one,
-            "args": (bout_run_directory_node_2, pre_and_post_directory),
+            "args": (
+                paths["bout_run_directory_node_2"],
+                paths["pre_and_post_directory"],
+            ),
             "kwargs": None,
         }
     )
-    run_group_2.add_post_processor(
+    run_groups["run_group_2"].add_post_processor(
         {
             "function": node_five,
-            "args": (bout_run_directory_node_2, pre_and_post_directory),
+            "args": (
+                paths["bout_run_directory_node_2"],
+                paths["pre_and_post_directory"],
+            ),
             "kwargs": None,
         }
     )
+
+    tear_down_restart_directories(paths["bout_run_directory_node_2"])
 
     # RunGroup belonging to node 3
     _ = make_run_group(
         name,
         make_project,
         run_graph,
-        restart_from=run_group_2.bout_run_setup.executor.bout_paths.bout_inp_dst_dir,
-        waiting_for=run_group_2.bout_run_node_name,
+        restart_from=run_groups[
+            "run_group_2"
+        ].bout_run_setup.executor.bout_paths.bout_inp_dst_dir,
+        waiting_for=run_groups["run_group_2"].bout_run_node_name,
     )
 
     # RunGroup belonging to node 4
-    run_group_4 = make_run_group(name, make_project)
-    bout_run_directory_node_4 = (
-        run_group_4.bout_run_setup.executor.bout_paths.bout_inp_dst_dir
-    )
+    run_groups["run_group_4"] = make_run_group(name, make_project, run_graph)
+    paths["bout_run_directory_node_4"] = run_groups[
+        "run_group_4"
+    ].bout_run_setup.executor.bout_paths.bout_inp_dst_dir
 
     # RunGroup belonging to node 6
-    run_group_6 = make_run_group(
+    run_groups["run_group_6"] = make_run_group(
         name,
         make_project,
         run_graph,
-        restart_from=run_group_2.bout_run_setup.executor.bout_paths.bout_inp_dst_dir,
-        waiting_for=run_group_2.bout_run_node_name,
+        restart_from=run_groups[
+            "run_group_2"
+        ].bout_run_setup.executor.bout_paths.bout_inp_dst_dir,
+        waiting_for=run_groups["run_group_2"].bout_run_node_name,
     )
-    bout_run_directory_node_6 = (
-        run_group_6.bout_run_setup.executor.bout_paths.bout_inp_dst_dir
-    )
-    node_8 = run_group_6.add_post_processor(
+    paths["bout_run_directory_node_6"] = run_groups[
+        "run_group_6"
+    ].bout_run_setup.executor.bout_paths.bout_inp_dst_dir
+    node_8 = run_groups["run_group_6"].add_post_processor(
         {
             "function": node_eight,
             "args": (
-                bout_run_directory_node_4,
-                bout_run_directory_node_6,
-                pre_and_post_directory,
+                paths["bout_run_directory_node_4"],
+                paths["bout_run_directory_node_6"],
+                paths["pre_and_post_directory"],
             ),
             "kwargs": None,
         },
-        waiting_for=run_group_4.bout_run_node_name,
+        waiting_for=run_groups["run_group_4"].bout_run_node_name,
     )
 
     # RunGroup belonging to node 9
-    # NOTE: We need the bout_run_directory_node_9 as an input in node 7
-    #       As node 9 is waiting for node 7 we hard-code the name (as we will know what it will be)
-    bout_run_directory_node_9 = project_path.joinpath(f"{name}_4")
-    # The function of node_seven belongs to RunGroup2, but takes bout_run_directory_node_9 as an input
-    node_7_name = run_group_2.add_post_processor(
+    # NOTE: We need the paths['bout_run_directory_node_9'] as an input in node 7
+    #       As node 9 is waiting for node 7 we hard-code the name
+    #       (as we will know what it will be)
+    paths["bout_run_directory_node_9"] = paths["project_path"].joinpath(f"{name}_4")
+    # The function of node_seven belongs to RunGroup2, but takes
+    # paths['bout_run_directory_node_9'] as an input
+    node_7_name = run_groups["run_group_2"].add_post_processor(
         {
             "function": node_seven,
             "args": (
-                bout_run_directory_node_2,
-                bout_run_directory_node_9,
-                pre_and_post_directory,
+                paths["bout_run_directory_node_2"],
+                paths["bout_run_directory_node_9"],
+                paths["pre_and_post_directory"],
             ),
             "kwargs": None,
         }
     )
-    run_group_9 = make_run_group(
+    run_groups["run_group_9"] = make_run_group(
         name,
         make_project,
         run_graph,
-        restart_from=run_group_6.bout_run_setup.executor.bout_paths.bout_inp_dst_dir,
+        restart_from=run_groups[
+            "run_group_6"
+        ].bout_run_setup.executor.bout_paths.bout_inp_dst_dir,
         waiting_for=(
-            run_group_4.bout_run_node_name,
-            run_group_6.bout_run_node_name,
+            run_groups["run_group_4"].bout_run_node_name,
+            run_groups["run_group_6"].bout_run_node_name,
             node_7_name,
         ),
     )
-    run_group_9.add_post_processor(
+    run_groups["run_group_9"].add_post_processor(
         {
             "function": node_ten,
-            "args": (bout_run_directory_node_9, pre_and_post_directory),
+            "args": (
+                paths["bout_run_directory_node_9"],
+                paths["pre_and_post_directory"],
+            ),
             "kwargs": None,
         },
         waiting_for=node_8,
@@ -293,8 +321,8 @@ def test_large_graph(
 
     # Assert that the run went well
     db_reader = assert_first_run(
-        run_group_2.bout_run_setup.executor.bout_paths,
-        run_group_2.bout_run_setup.db_connector,
+        run_groups["run_group_2"].bout_run_setup.executor.bout_paths,
+        run_groups["run_group_2"].bout_run_setup.db_connector,
     )
     # Assert that all the values are 1
     assert_tables_have_expected_len(

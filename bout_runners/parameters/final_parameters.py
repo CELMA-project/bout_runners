@@ -123,7 +123,9 @@ class FinalParameters:
         # Assert to prevent "Incompatible types in assignment" with Optional
         if run_parameters_dict is None:
             raise RuntimeError("run_parameters_dict is None")
-        final_parameters_dict.update(run_parameters_dict)
+        run_parameter_sections = run_parameters_dict.keys()
+        for section in run_parameter_sections:
+            final_parameters_dict[section].update(run_parameters_dict[section])
 
         # Cast True to 1 and False to 0 as SQLite has no support for
         # bool

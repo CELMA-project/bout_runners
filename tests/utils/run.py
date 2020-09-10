@@ -110,7 +110,7 @@ def make_run_group(
     waiting_for: Optional[Union[str, Iterable[str]]] = None,
 ) -> RunGroup:
     """
-    Return a basic RunGroup
+    Return a basic RunGroup.
 
     Parameters
     ----------
@@ -119,6 +119,8 @@ def make_run_group(
         Name of RunGroup and DatabaseConnector
     make_project : Path
         The path to the conduction example
+    run_graph : RunGraph
+        The RunGraph object
     restart_from : Path or None
         The path to copy the restart files from
     waiting_for : None or str or iterable

@@ -386,10 +386,12 @@ class BoutRunner:
                     # NOTE: pid can be None if the run has already been executed
                     pid_dict[node_name] = pid
                 else:
-                    function = nodes_at_current_order[node_name]["function"]
-                    args = nodes_at_current_order[node_name]["args"]
-                    kwargs = nodes_at_current_order[node_name]["kwargs"]
-                    path = nodes_at_current_order[node_name]["path"]
-                    pid = self.run_function(function, args, kwargs, path)
+                    pid = self.run_function(
+                        nodes_at_current_order[node_name]["path"],
+                        nodes_at_current_order[node_name]["function"],
+                        nodes_at_current_order[node_name]["args"],
+                        nodes_at_current_order[node_name]["kwargs"],
+                        nodes_at_current_order[node_name]["submitter"],
+                    )
                     pid_dict[node_name] = pid
                 logging.debug("Job submitted with pid=%s", pid)
