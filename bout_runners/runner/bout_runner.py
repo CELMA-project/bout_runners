@@ -151,7 +151,7 @@ class BoutRunner:
             The setup for the BOUT++ run
         restart_from_bout_inp_dst : bool
             Restarts the run from the dump directory
-            (bout_run_setup.executor.bout_paths.bout_inp_dst_dir)
+            (bout_run_setup.bout_paths.bout_inp_dst_dir)
             Note that it is also possible to specify the directory to restart from in
             executor.restart_from
             If True it will have precedence over anything specified in
@@ -176,7 +176,7 @@ class BoutRunner:
 
         if restart_from_bout_inp_dst:
             bout_run_setup.executor.restart_from = (
-                bout_run_setup.executor.bout_paths.bout_inp_dst_dir
+                bout_run_setup.bout_paths.bout_inp_dst_dir
             )
 
         if bout_run_setup.executor.restart_from is not None:
@@ -241,9 +241,7 @@ class BoutRunner:
                 logging.error(msg)
                 raise FileNotFoundError(msg)
             for src in src_list:
-                dst = bout_run_setup.executor.bout_paths.bout_inp_dst_dir.joinpath(
-                    src.name
-                )
+                dst = bout_run_setup.bout_paths.bout_inp_dst_dir.joinpath(src.name)
                 shutil.copy(src, dst)
                 logging.debug("Copied %s to %s", src, dst)
 
@@ -259,7 +257,7 @@ class BoutRunner:
         Parameters
         ----------
         bout_run_setup : BoutRunSetup
-            BoutRunSetup where bout_run_setup.executor.bout_paths.bout_inp_dst_dir
+            BoutRunSetup where bout_run_setup.bout_paths.bout_inp_dst_dir
             is going to be altered
         """
         if bout_run_setup.executor.restart_from is not None:
@@ -277,14 +275,14 @@ class BoutRunner:
             if len(restart_numbers) != 0:
                 restart_numbers.sort()
                 restart_number = restart_numbers[-1] + 1
-            prev_inp_dst_dir = bout_run_setup.executor.bout_paths.bout_inp_dst_dir
+            prev_inp_dst_dir = bout_run_setup.bout_paths.bout_inp_dst_dir
             stripped_restart_dir_name = re.sub(pattern, "", restart_dir_name)
             new_inp_dst_dir = restart_dir_parent.joinpath(
                 f"{stripped_restart_dir_name}_restart_{restart_number}"
             )
-            bout_run_setup.executor.bout_paths.bout_inp_dst_dir = new_inp_dst_dir
+            bout_run_setup.bout_paths.bout_inp_dst_dir = new_inp_dst_dir
             logging.info(
-                "bout_run_setup.executor.bout_paths.bout_inp_dst_dir set from %s to %s",
+                "bout_run_setup.bout_paths.bout_inp_dst_dir set from %s to %s",
                 prev_inp_dst_dir,
                 new_inp_dst_dir,
             )

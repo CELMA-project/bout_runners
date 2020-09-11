@@ -5,7 +5,9 @@ import logging
 from pathlib import Path
 from typing import Optional, Union, Iterable, List, Callable, Tuple, Any, Dict
 
+from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.runner.bout_run_setup import BoutRunSetup
+from bout_runners.executor.bout_paths import BoutPaths
 from bout_runners.runner.run_graph import RunGraph
 from bout_runners.submitter.abstract_submitter import AbstractSubmitter
 from bout_runners.submitter.local_submitter import LocalSubmitter
@@ -72,7 +74,7 @@ class RunGroup:
         self.__run_graph = run_graph
         self.__name = name
         self.__bout_run_setup = bout_run_setup
-        self.__dst_dir = self.__bout_run_setup.executor.bout_paths.bout_inp_dst_dir
+        self.__dst_dir = self.__bout_run_setup.bout_paths.bout_inp_dst_dir
         self.__pre_processors: List[str] = list()
         self.__post_processors: List[str] = list()
 
@@ -137,16 +139,28 @@ class RunGroup:
         return self.__run_graph
 
     @property
-    def bout_run_setup(self) -> BoutRunSetup:
+    def bout_paths(self) -> BoutPaths:
         """
-        Return the BoutRunSetup.
+        Return the BoutPaths.
 
         Returns
         -------
-        BoutRunSetup
-            The BoutRunSetup
+        BoutPaths
+            The BoutPaths
         """
-        return self.__bout_run_setup
+        return self.__bout_run_setup.bout_paths
+
+    @property
+    def db_connector(self) -> DatabaseConnector:
+        """
+        Return the DatabaseConnector.
+
+        Returns
+        -------
+        BoutPaths
+            The DatabaseConnector
+        """
+        return self.__bout_run_setup.db_connector
 
     @property
     def pre_processors(self) -> Tuple[str, ...]:

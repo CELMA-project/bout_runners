@@ -6,6 +6,7 @@ from typing import Optional
 from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_creator import DatabaseCreator
 from bout_runners.executor.executor import Executor
+from bout_runners.executor.bout_paths import BoutPaths
 from bout_runners.metadata.metadata_recorder import MetadataRecorder
 from bout_runners.parameters.final_parameters import FinalParameters
 
@@ -108,6 +109,18 @@ class BoutRunSetup:
             The executor object
         """
         return self.__executor
+
+    @property
+    def bout_paths(self) -> BoutPaths:
+        """
+        Return the BoutPaths.
+
+        Returns
+        -------
+        BoutPaths
+            The BoutPaths
+        """
+        return self.executor.bout_paths
 
     @property
     def final_parameters(self) -> FinalParameters:

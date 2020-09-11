@@ -1,5 +1,6 @@
 """Contains unittests for the BoutRunner."""
 
+
 from pathlib import Path
 from typing import Callable, Dict
 
@@ -76,52 +77,55 @@ def test_run_bout_run(
     runner = BoutRunner(run_graph)
 
     bout_run_setup = get_bout_run_setup("test_run_bout_run")
-    tear_down_restart_directories(bout_run_setup.executor.bout_paths.bout_inp_dst_dir)
-    bout_paths = bout_run_setup.executor.bout_paths
+    tear_down_restart_directories(bout_run_setup.bout_paths.bout_inp_dst_dir)
+    bout_paths = bout_run_setup.bout_paths
     db_connection = bout_run_setup.db_connector
 
     # Run once
     runner.run_bout_run(bout_run_setup)
     # Assert that the run went well
-    db_reader = assert_first_run(bout_paths, db_connection)
+    database_reader = assert_first_run(bout_paths, db_connection)
     # Assert that the number of runs is 1
     assert_tables_have_expected_len(
-        db_reader, yield_number_of_rows_for_all_tables, expected_run_number=1
+        database_reader, yield_number_of_rows_for_all_tables, expected_run_number=1
     )
 
     # Check that the run will not be executed again
     runner.run_bout_run(bout_run_setup)
     # Assert that the number of runs is 1
     assert_tables_have_expected_len(
-        db_reader, yield_number_of_rows_for_all_tables, expected_run_number=1
+        database_reader, yield_number_of_rows_for_all_tables, expected_run_number=1
     )
 
     # Check that force overrides the behaviour
     runner.run_bout_run(bout_run_setup, force=True)
     assert_tables_have_expected_len(
-        db_reader, yield_number_of_rows_for_all_tables, expected_run_number=2
+        database_reader, yield_number_of_rows_for_all_tables, expected_run_number=2
     )
-
     dump_dir_parent = bout_paths.bout_inp_dst_dir.parent
     dump_dir_name = bout_paths.bout_inp_dst_dir.name
 
     # Check that restart makes another entry
     runner.run_bout_run(bout_run_setup, restart_from_bout_inp_dst=True)
     assert_tables_have_expected_len(
-        db_reader,
+        database_reader,
         yield_number_of_rows_for_all_tables,
         expected_run_number=3,
         restarted=True,
     )
+    # NOTE: The test in tests.unit.bout_runners.runner.test_bout_runner is testing
+    #       restart_all=True, whether this is testing restart_from_bout_inp_dst=True
     assert_dump_files_exist(dump_dir_parent.joinpath(f"{dump_dir_name}_restart_0"))
     # ...and yet another entry
     runner.run_bout_run(bout_run_setup, restart_from_bout_inp_dst=True)
     assert_tables_have_expected_len(
-        db_reader,
+        database_reader,
         yield_number_of_rows_for_all_tables,
         expected_run_number=4,
         restarted=True,
     )
+    # NOTE: The test in tests.unit.bout_runners.runner.test_bout_runner is testing
+    #       restart_all=True, whether this is testing restart_from_bout_inp_dst=True
     assert_dump_files_exist(dump_dir_parent.joinpath(f"{dump_dir_name}_restart_1"))
 
 

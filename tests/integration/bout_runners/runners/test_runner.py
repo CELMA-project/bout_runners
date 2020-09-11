@@ -1,5 +1,6 @@
 """Contains integration test for the runner."""
 
+
 import pytest
 
 from pathlib import Path
@@ -62,8 +63,8 @@ def test_bout_runners_from_directory(
 
     runner.run()
 
-    bout_paths = bout_run_setup.executor.bout_paths
-    tear_down_restart_directories(bout_run_setup.executor.bout_paths.bout_inp_dst_dir)
+    bout_paths = bout_run_setup.bout_paths
+    tear_down_restart_directories(bout_run_setup.bout_paths.bout_inp_dst_dir)
     db_connection = bout_run_setup.db_connector
     # Assert that the run went well
     db_reader = assert_first_run(bout_paths, db_connection)
@@ -89,27 +90,32 @@ def test_bout_runners_from_directory(
     assert_tables_have_expected_len(
         db_reader, yield_number_of_rows_for_all_tables, expected_run_number=2
     )
-
     dump_dir_parent = bout_paths.bout_inp_dst_dir.parent
     dump_dir_name = bout_paths.bout_inp_dst_dir.name
 
     # Check that the restart functionality works
     runner.run(restart_all=True)
+    expected_run_number = 3
     assert_tables_have_expected_len(
         db_reader,
         yield_number_of_rows_for_all_tables,
-        expected_run_number=3,
+        expected_run_number=expected_run_number,
         restarted=True,
     )
+    # NOTE: The test in tests.unit.bout_runners.runners.test_bout_runner is testing
+    #       restart_from_bout_inp_dst=True, whether this is testing restart_all=True
     assert_dump_files_exist(dump_dir_parent.joinpath(f"{dump_dir_name}_restart_0"))
     # ...twice
     runner.run(restart_all=True)
+    expected_run_number = 4
     assert_tables_have_expected_len(
         db_reader,
         yield_number_of_rows_for_all_tables,
-        expected_run_number=4,
+        expected_run_number=expected_run_number,
         restarted=True,
     )
+    # NOTE: The test in tests.unit.bout_runners.runners.test_bout_runner is testing
+    #       restart_from_bout_inp_dst=True, whether this is testing restart_all=True
     assert_dump_files_exist(dump_dir_parent.joinpath(f"{dump_dir_name}_restart_1"))
 
 
@@ -144,8 +150,8 @@ def test_full_bout_runner(
 
     # Assert that the run went well
     db_reader = assert_first_run(
-        run_group.bout_run_setup.executor.bout_paths,
-        run_group.bout_run_setup.db_connector,
+        run_group.bout_paths,
+        run_group.db_connector,
     )
     # Assert that all the values are 1
     assert_tables_have_expected_len(
@@ -163,9 +169,6 @@ def test_large_graph(
     Test that the graph with 10 nodes work as expected.
 
     The node setup can be found in node_functions.py
-
-    # FIXME: You are here. 1. Run the graph, 2. check files, 3. check db, 4. check graph
-    # FIXME: You are here: Node 10 failing
 
     Parameters
     ----------
@@ -194,7 +197,7 @@ def test_large_graph(
     run_graph = run_groups["run_group_2"].run_graph
     paths["bout_run_directory_node_2"] = run_groups[
         "run_group_2"
-    ].bout_run_setup.executor.bout_paths.bout_inp_dst_dir
+    ].bout_paths.bout_inp_dst_dir
 
     run_groups["run_group_2"].add_pre_processor(
         {
@@ -230,13 +233,11 @@ def test_large_graph(
     tear_down_restart_directories(paths["bout_run_directory_node_2"])
 
     # RunGroup belonging to node 3
-    _ = make_run_group(
+    run_groups["run_group_3"] = make_run_group(
         name,
         make_project,
         run_graph,
-        restart_from=run_groups[
-            "run_group_2"
-        ].bout_run_setup.executor.bout_paths.bout_inp_dst_dir,
+        restart_from=run_groups["run_group_2"].bout_paths.bout_inp_dst_dir,
         waiting_for=run_groups["run_group_2"].bout_run_node_name,
     )
 
@@ -244,21 +245,19 @@ def test_large_graph(
     run_groups["run_group_4"] = make_run_group(name, make_project, run_graph)
     paths["bout_run_directory_node_4"] = run_groups[
         "run_group_4"
-    ].bout_run_setup.executor.bout_paths.bout_inp_dst_dir
+    ].bout_paths.bout_inp_dst_dir
 
     # RunGroup belonging to node 6
     run_groups["run_group_6"] = make_run_group(
         name,
         make_project,
         run_graph,
-        restart_from=run_groups[
-            "run_group_2"
-        ].bout_run_setup.executor.bout_paths.bout_inp_dst_dir,
+        restart_from=run_groups["run_group_2"].bout_paths.bout_inp_dst_dir,
         waiting_for=run_groups["run_group_2"].bout_run_node_name,
     )
     paths["bout_run_directory_node_6"] = run_groups[
         "run_group_6"
-    ].bout_run_setup.executor.bout_paths.bout_inp_dst_dir
+    ].bout_paths.bout_inp_dst_dir
     node_8 = run_groups["run_group_6"].add_post_processor(
         {
             "function": node_eight,
@@ -276,7 +275,9 @@ def test_large_graph(
     # NOTE: We need the paths['bout_run_directory_node_9'] as an input in node 7
     #       As node 9 is waiting for node 7 we hard-code the name
     #       (as we will know what it will be)
-    paths["bout_run_directory_node_9"] = paths["project_path"].joinpath(f"{name}_4")
+    paths["bout_run_directory_node_9"] = paths["project_path"].joinpath(
+        f"{name}_restart_2"
+    )
     # The function of node_seven belongs to RunGroup2, but takes
     # paths['bout_run_directory_node_9'] as an input
     node_7_name = run_groups["run_group_2"].add_post_processor(
@@ -294,9 +295,7 @@ def test_large_graph(
         name,
         make_project,
         run_graph,
-        restart_from=run_groups[
-            "run_group_6"
-        ].bout_run_setup.executor.bout_paths.bout_inp_dst_dir,
+        restart_from=run_groups["run_group_6"].bout_paths.bout_inp_dst_dir,
         waiting_for=(
             run_groups["run_group_4"].bout_run_node_name,
             run_groups["run_group_6"].bout_run_node_name,
@@ -319,12 +318,33 @@ def test_large_graph(
     runner = BoutRunner(run_graph)
     runner.run()
 
-    # Assert that the run went well
-    db_reader = assert_first_run(
-        run_groups["run_group_2"].bout_run_setup.executor.bout_paths,
-        run_groups["run_group_2"].bout_run_setup.db_connector,
-    )
-    # Assert that all the values are 1
+    # Check that all the nodes have changed status
+    with pytest.raises(RuntimeError):
+        runner.run()
+
+    # Check that all files are present
+    # Check that the pre and post files are present
+    for node in (0, 1, 5, 7, 8, 10):
+        assert paths["pre_and_post_directory"].joinpath(f"{node}.txt").is_file()
+    # Check that all the dump files are present
+    for restart_str in ("", "_restart_0", "_restart_1", "_restart_2"):
+        assert (
+            paths["project_path"]
+            .joinpath(f"{name}{restart_str}")
+            .joinpath("BOUT.dmp.0.nc")
+            .is_file()
+            or paths["project_path"]
+            .joinpath(f"{name}{restart_str}")
+            .joinpath("BOUT.dmp.0.h5")
+            .is_file()
+        )
+
+    # NOTE: We will only have 4 runs as node 4 is a duplicate of node 2 and will
+    #       therefore be skipped
+    number_of_runs = 4
     assert_tables_have_expected_len(
-        db_reader, yield_number_of_rows_for_all_tables, expected_run_number=1
+        DatabaseReader(run_groups["run_group_2"].db_connector),
+        yield_number_of_rows_for_all_tables,
+        expected_run_number=number_of_runs,
+        restarted=True,
     )
