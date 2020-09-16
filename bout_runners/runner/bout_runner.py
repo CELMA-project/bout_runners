@@ -62,8 +62,8 @@ class BoutRunner:
     >>> from bout_runners.parameters.run_parameters import RunParameters
     >>> from bout_runners.parameters.final_parameters import FinalParameters
     >>> from bout_runners.submitter.local_submitter import LocalSubmitter
-    >>> from bout_runners.runner.run_graph import RunGraph
     >>> from bout_runners.runner.bout_run_setup import BoutRunSetup
+    >>> from bout_runners.runner.run_graph import RunGraph
     >>> from bout_runners.runner.run_group import RunGroup
 
     Create the `bout_paths` object

@@ -1,7 +1,9 @@
 Metadata
 ********
 
-.. Warning:: The columns and values in the following example is purely fictional, and may be inconsistent.
+.. warning::
+
+    The columns and values in the following example is purely fictional, and may be inconsistent.
 
 In the following examples we are looking at a project with the input sections ``foo``, ``bar`` and ``baz``.
 The section and parameters are as follows
@@ -36,8 +38,10 @@ This gives the following entity relationship diagram
 
 The metadata of a project is stored in it's own schema.
 
-.. Note:: ``sqlite`` does not implement a schema like other databases does.
-          Hence: Each project has its own database file.
+.. note::
+
+    ``sqlite`` does not implement a schema like other databases does.
+    Hence: Each project has its own database file.
 
 .. |db| image:: https://raw.githubusercontent.com/CELMA-project/bout_runners/master/docs/source/_static/db.png
     :alt: Example database
