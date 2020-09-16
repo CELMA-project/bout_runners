@@ -22,12 +22,14 @@ class Executor:
         Object containing the run parameters
     __make : Make
         Object for making the project
-    __command : str
-        The terminal command for executing the run
+    restart_from : None or Path
+        Path to copy restart files from prior to the execution
     submitter : AbstractSubmitter
         Object containing the submitter
     bout_paths : BoutPaths
         Object containing the paths
+    run_parameters : RunParameters
+        Object containing the run parameters
 
     Methods
     -------

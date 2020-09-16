@@ -20,23 +20,25 @@ class BoutRunSetup:
 
     Attributes
     ----------
-    self.__executor : Executor
+    __executor : Executor
         Getter variable for executor
-    self.__db_connector : DatabaseConnector
+    __db_connector : DatabaseConnector
         Getter variable for db_connector
-    self.__final_parameters : FinalParameters
+    __final_parameters : FinalParameters
         Getter variable for final_parameters
-    self.__db_creator : DatabaseCreator
+    __db_creator : DatabaseCreator
         Object used to create the database
-    self.__metadata_recorder : MetadataRecorder
+    __metadata_recorder : MetadataRecorder
         Object used to record the metadata about a run
-    self.executor : Executor
+    executor : Executor
         Object used to execute the run
-    self.db_creator : DatabaseCreator
-        Object used to create the database
-    self.final_parameters : FinalParameters
+    bout_paths : BoutPaths
+        The BoutPaths obtained through the get property
+    db_connector : DatabaseConnector
+        Object containing the database connection
+    final_parameters : FinalParameters
         Object containing the parameters to use
-    self.metadata_recorder : MetadataRecorder
+    metadata_recorder : MetadataRecorder
         Object containing the metadata recorder
 
     Methods
@@ -48,7 +50,7 @@ class BoutRunSetup:
     --------
     >>> run_setup = BoutRunSetup(executor, db_connector, final_parameters)
     >>> run_graph = RunGraph()
-    >>> run_graph.create_run_group(run_setup)
+    >>> run_group = RunGroup(run_graph, run_setup)
     >>> runner = BoutRunner(run_graph)
     >>> runner.run()
     """

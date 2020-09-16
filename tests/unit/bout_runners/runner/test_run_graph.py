@@ -19,7 +19,7 @@ def test_add_bout_run_node(get_bout_run_setup) -> None:
     bout_run_setup = get_bout_run_setup("test_run_graph")
     run_graph.add_bout_run_node("test", bout_run_setup)
     assert len(run_graph.nodes) == 1
-    assert isinstance(run_graph.nodes["test"]["bout_run_setup"], BoutRunSetup)
+    assert isinstance(run_graph["test"]["bout_run_setup"], BoutRunSetup)
 
     with pytest.raises(ValueError):
         run_graph.add_function_node("test")
@@ -33,10 +33,10 @@ def test_add_function_node() -> None:
         "test", function_dict={"function": None, "args": ("pass", 42), "kwargs": None}
     )
     assert len(run_graph.nodes) == 1
-    assert run_graph.nodes["test"]["function"] is None
-    assert run_graph.nodes["test"]["args"] == ("pass", 42)
-    assert run_graph.nodes["test"]["kwargs"] is None
-    assert isinstance(run_graph.nodes["test"]["submitter"], LocalSubmitter)
+    assert run_graph["test"]["function"] is None
+    assert run_graph["test"]["args"] == ("pass", 42)
+    assert run_graph["test"]["kwargs"] is None
+    assert isinstance(run_graph["test"]["submitter"], LocalSubmitter)
 
     with pytest.raises(ValueError):
         run_graph.add_function_node("test")
@@ -104,9 +104,9 @@ def test_change_status_node_and_dependencies(make_graph) -> None:
     nodes_with_ready_status = ("0", "1")
     for node_name in run_graph.nodes:
         if node_name in nodes_with_ready_status:
-            assert run_graph.nodes[node_name]["status"] == "ready"
+            assert run_graph[node_name]["status"] == "ready"
         else:
-            assert run_graph.nodes[node_name]["status"] == status
+            assert run_graph[node_name]["status"] == status
 
 
 def test_reset(make_graph) -> None:
@@ -158,9 +158,9 @@ def test___next__(make_graph) -> None:
     nodes_with_ready_status = ("3", "4", "5")
     for node_name in run_graph.nodes:
         if node_name in nodes_with_ready_status:
-            assert run_graph.nodes[node_name]["status"] == "ready"
+            assert run_graph[node_name]["status"] == "ready"
         else:
-            assert run_graph.nodes[node_name]["status"] == "traversed"
+            assert run_graph[node_name]["status"] == "traversed"
 
 
 def test___len__(make_graph) -> None:
@@ -184,7 +184,7 @@ def test_get_dot_string() -> None:
     """Test the ability to get the dot string."""
     run_graph = RunGraph()
     run_graph.add_function_node("42")
-    hex_id_submitter = hex(id(run_graph.nodes["42"]["submitter"]))
+    hex_id_submitter = hex(id(run_graph["42"]["submitter"]))
     expected = (
         "strict digraph  "
         "{\n42 [args=None, function=None, kwargs=None, path=None, status=ready, "

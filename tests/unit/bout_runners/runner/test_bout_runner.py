@@ -37,7 +37,7 @@ def test_constructor(yield_conduction_path) -> None:
         runner = BoutRunner()
 
     node_name = list(runner.run_graph.nodes.keys())[0]
-    assert isinstance(runner.run_graph.nodes[node_name]["bout_run_setup"], BoutRunSetup)
+    assert isinstance(runner.run_graph[node_name]["bout_run_setup"], BoutRunSetup)
 
     # Assert that an empty graph can be added
     run_graph = RunGraph()

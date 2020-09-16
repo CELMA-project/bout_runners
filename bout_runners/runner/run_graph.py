@@ -20,20 +20,51 @@ class RunGraph:
         The run graph
     __node_set : set
         The set of nodes belonging to the graph
-    node :
+    nodes : nx.classes.reportviews.NodeView
+        Return the nodes
 
     Methods
     -------
-    add_function_node(name, function=None, args=None, kwargs=None)
-        Add a node to the graph
+    __iter__()
+        Make the class iterable
+    __next__()
+        Return the next order nodes from graph (ordered by the breadth)
+    __len__()
+        Return the number of nodes with status ready
+    __getitem__(nodename)
+        Return the content of a node
+    __get_pruned_clone()
+        Return a clone of the "ready" nodes of self.__graph
+    add_bout_run_node(name, bout_run_setup)
+        Add a node where the setup of a BOUT++ run is attached
+    add_function_node(name, function_dict=None, path=None, submitter=None)
+        Add a node with an optionally attached callable to the graph
     add_edge(start_node, end_node)
         Connect two nodes through an directed edge
     add_waiting_for(nodes_to_wait_for, name_of_waiting_node)
         Make a node wait for the completion of one or more nodes
+    change_status_node_and_dependencies(start_node_name, status="errored")
+        Remove node and all nodes waiting for the specified node
+    get_waiting_for_tuple(start_node_name)
+        Return the list of nodes waiting for a given node
     pick_root()
         Picks and removes the root nodes from graph
-    create_run_group(self, bout_run_setup, name, nodes_to_wait_for)
-        Create a run group attached to the run graph
+    reset()
+        Reset the nodes by setting the status to 'ready'
+    get_dot_string()
+        Return the graph as a string i the dot format
+
+    Examples
+    --------
+    The RunGraph contains the graph executed by BoutRunners
+
+    >>> bout_run_setup = BoutRunSetup(executor, db_connector, final_parameters)
+    >>> run_graph = RunGraph()
+    >>> # The RunGroup can attach pre and post-processors to the run
+    >>> # See the user manual for more info
+    >>> _ = RunGroup(run_graph, bout_run_setup)
+    >>> runner = BoutRunner(run_graph)
+    >>> runner.run()
 
     See Also
     --------
@@ -100,6 +131,39 @@ class RunGraph:
             if self.__graph.nodes[node_name]["status"] == "ready":
                 length += 1
         return length
+
+    def __getitem__(self, node_name: str) -> Dict[str, Any]:
+        """
+        Return the content of a node.
+
+        Parameters
+        ----------
+        node_name : str
+            The name of the node
+
+        Returns
+        -------
+        dict
+            The node content
+        """
+        # It seems like this is producing a false positive
+        return self.nodes[node_name]  # type: ignore
+
+    def __get_pruned_clone(self) -> nx.DiGraph:
+        """
+        Return a clone of the "ready" nodes of self.__graph.
+
+        Returns
+        -------
+        clone : nx.Digraph
+            A clone of self.__graph where all nodes with another status than "ready"
+            has been removed
+        """
+        clone = self.__graph.copy()
+        for node_name in self.__graph:
+            if self.__graph.nodes[node_name]["status"] != "ready":
+                clone.remove_node(node_name)
+        return clone
 
     @property
     def nodes(self) -> nx.classes.reportviews.NodeView:
@@ -283,22 +347,6 @@ class RunGraph:
         nodes_to_remove = self.get_waiting_for_tuple(start_node_name)
         for node_name in nodes_to_remove:
             self.__graph.nodes[node_name]["status"] = status
-
-    def __get_pruned_clone(self) -> nx.DiGraph:
-        """
-        Return a clone of the "ready" nodes of self.__graph.
-
-        Returns
-        -------
-        clone : nx.Digraph
-            A clone of self.__graph where all nodes with another status than "ready"
-            has been removed
-        """
-        clone = self.__graph.copy()
-        for node_name in self.__graph:
-            if self.__graph.nodes[node_name]["status"] != "ready":
-                clone.remove_node(node_name)
-        return clone
 
     def get_dot_string(self) -> str:
         """

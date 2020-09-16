@@ -20,28 +20,24 @@ class BoutRunner:
 
     Attributes
     ----------
-    self.__executor : Executor
-        Getter variable for executor
-    self.__db_connector : DatabaseConnector
-        Getter variable for db_connector
-    self.__final_parameters : FinalParameters
-        Getter variable for final_parameters
-    self.__db_creator : DatabaseCreator
-        Object used to create the database
-    self.__metadata_recorder : MetadataRecorder
-        Object used to record the metadata about a run
-    self.executor : Executor
-        Object used to execute the run
-    self.db_creator : DatabaseCreator
-        Object used to create the database
-    self.final_parameters : FinalParameters
-        Object containing the parameters to use
+    __run_graph : RunGraph
+        Getter variable for executor the run graph
+    run_graph : Graph
+        The run graph to be executed
 
     Methods
     -------
-    create_schema()
-        Create the schema
-    run(force)
+    __reset_bout_inp_dst_dir(bout_run_setup)
+        Reset the bout_inp_dst_dir (inplace) to reflect that this is a restart run
+    copy_restart_files(bout_run_setup)
+        Copy the restart files (if any)
+    run_bout_run(bout_run_setup, restart_from_bout_inp_dst, force)
+        Perform the BOUT++ run and capture the related metadata
+    run_function(path, function, args, kwargs, submitter)
+        Submit a function for execution
+    reset()
+        Reset the RunGraph
+    run(restart_all, force)
         Execute the run
 
     Examples
@@ -66,6 +62,9 @@ class BoutRunner:
     >>> from bout_runners.parameters.run_parameters import RunParameters
     >>> from bout_runners.parameters.final_parameters import FinalParameters
     >>> from bout_runners.submitter.local_submitter import LocalSubmitter
+    >>> from bout_runners.runner.run_graph import RunGraph
+    >>> from bout_runners.runner.bout_run_setup import BoutRunSetup
+    >>> from bout_runners.runner.run_group import RunGroup
 
     Create the `bout_paths` object
 
@@ -86,13 +85,16 @@ class BoutRunner:
     ...     bout_paths=bout_paths,
     ...     submitter=LocalSubmitter(bout_paths.project_path),
     ...     run_parameters=run_parameters)
-    >>> db_connection = DatabaseConnector('name_of_database', db_root_path=Path())
+    >>> db_connector = DatabaseConnector('name_of_database', db_root_path=Path())
+    >>> bout_run_setup = BoutRunSetup(executor, db_connector, final_parameters)
+    >>> run_graph = RunGraph()
+    >>> # The RunGroup can attach pre and post-processors to the run
+    >>> # See the user manual for more info
+    >>> _ = RunGroup(run_graph, bout_run_setup, name='my_test_run')
 
     Run the project
 
-    >>> runner = BoutRunner(executor,
-    ...                     db_connection,
-    ...                     final_parameters)
+    >>> runner = BoutRunner(run_graph)
     >>> runner.run()
     """
 
@@ -143,7 +145,7 @@ class BoutRunner:
         force: bool = False,
     ) -> Optional[int]:
         """
-        Perform the BOUT++ run and capture data.
+        Perform the BOUT++ run and capture the related metadata.
 
         Parameters
         ----------
@@ -219,7 +221,7 @@ class BoutRunner:
     @staticmethod
     def copy_restart_files(bout_run_setup: BoutRunSetup) -> None:
         """
-        Copy the restart files.
+        Copy the restart files (if any).
 
         Parameters
         ----------
@@ -296,7 +298,7 @@ class BoutRunner:
         submitter: Optional[AbstractSubmitter] = None,
     ) -> Optional[int]:
         """
-        Submit the function from the node.
+        Submit a function for execution.
 
         Parameters
         ----------

@@ -26,20 +26,42 @@ class RunGroup:
     ----------
     __counter : int
         Counter used if no name is given in the constructor
+    __names : list of str
+        List of the run group names, makes sure there will be no name collision
+    __dst_dir : Path
+        The path to the dump directory
+    __name : str
+        Name of the RunGroup
     __run_graph : RunGraph
-        The RunGraph which the RunGroup is attached to
+        The getter variable of run_graph
     __bout_run_setup : BoutRunSetup
         The setup of the BOUT++ run
-    __pre_processors : list
+    __bout_run_node_name : str
+        Getter variable for bout_run_node_name
+    __pre_processors : list of str
+        Getter variable for pre_processors
+    __post_processors : list of str
+        Getter variable for post_processors
+    bout_run_node_name : str
+        Name of the BOUT++ run part of the run group
+    bout_paths : BoutPaths
+        The BoutPaths of the BOUT++ run
+    db_connector : DatabaseConnector
+        The DatabaseConnector of the BOUT++ run
+    run_graph : RunGraph
+        The RunGraph which the RunGroup will be attached to
+    pre_processors : list of str
         List of pre-processors (which will run before the BOUT++ run)
-    __post_processors
-        List of pre-processors (which will run after the BOUT++ run)
+    post_processors : list of str
+        List of post-processors (which will run after the BOUT++ run)
 
     Methods
     -------
-    add_pre_processor(function, name, args, kwargs, nodes_to_wait_for)
+    __increment_name()
+        Increment the name with a number to avoid name collision
+    add_pre_processor(function_dict, directory, submitter, waiting_for)
         Add a function which will run prior to the BOUT++ run
-    add_post_processor(function, name, args, kwargs, nodes_to_wait_for)
+    add_post_processor(function_dict, directory, submitter, waiting_for)
         Add a function which will run after the BOUT++ run
     """
 
@@ -62,7 +84,7 @@ class RunGroup:
         Parameters
         ----------
         run_graph : RunGraph
-            The RunGraph which the RunGroup is attached to
+            The RunGraph which the RunGroup will be attached to
         bout_run_setup : BoutRunSetup
             The setup of the BOUT++ run
         name : None or str

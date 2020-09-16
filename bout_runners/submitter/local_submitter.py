@@ -34,6 +34,8 @@ class LocalSubmitter(AbstractSubmitter):
     -------
     submit_command(command)
         Run a subprocess
+    write_python_script(path, function, args, kwargs)
+        Write python function to file
     _raise_submit_error(self, result):
         Raise and error from the subprocess in a clean way.
 

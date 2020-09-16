@@ -59,7 +59,7 @@ def test_bout_runners_from_directory(
     project_path = make_project
     with change_directory(project_path):
         runner = BoutRunner()
-        bout_run_setup = runner.run_graph.nodes["bout_run_0"]["bout_run_setup"]
+        bout_run_setup = runner.run_graph["bout_run_0"]["bout_run_setup"]
 
     runner.run()
 
