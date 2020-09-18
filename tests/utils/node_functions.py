@@ -12,30 +12,30 @@ http://www.webgraphviz.com
 ...
 >>> # The following nodes are meant as BOUT++ runs:
 >>> # 2, 3, 4, 6, 9
->>> # Pre processors to 2
+>>> # Pre-processors to 2
 >>> g.add_edge(0, 2)
 >>> g.add_edge(1, 2)
 ...
->>> # Post processors from 2
+>>> # Post-processors from 2
 >>> g.add_edge(2, 3)
 >>> g.add_edge(2, 5)
 ...
 >>> g.add_edge(2, 6)
 >>> g.add_edge(2, 7)
 ...
->>> # Pre processors to 9
+>>> # Pre-processors to 9
 >>> g.add_edge(4, 9)
 >>> g.add_edge(6, 9)
 >>> g.add_edge(7, 9)
 ...
->>> # Post processors to 9
+>>> # Post-processors to 9
 >>> g.add_edge(9, 10)
 ...
->>> # Pre processor to 8
+>>> # Pre-processor to 8
 >>> g.add_edge(4, 8)
 >>> g.add_edge(6, 8)
 ...
->>> # Post processor to 8
+>>> # Post-processor to 8
 >>> g.add_edge(8, 10)
 ...
 >>> print(nx.nx_pydot.to_pydot(g))

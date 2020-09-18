@@ -60,8 +60,7 @@ class RunGraph:
 
     >>> bout_run_setup = BoutRunSetup(executor, db_connector, final_parameters)
     >>> run_graph = RunGraph()
-    >>> # The RunGroup can attach pre and post-processors to the run
-    >>> # See the user manual for more info
+    >>> # Attach a RunGroup to the run_graph
     >>> _ = RunGroup(run_graph, bout_run_setup)
     >>> runner = BoutRunner(run_graph)
     >>> runner.run()

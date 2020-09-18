@@ -63,6 +63,30 @@ class RunGroup:
         Add a function which will run prior to the BOUT++ run
     add_post_processor(function_dict, directory, submitter, waiting_for)
         Add a function which will run after the BOUT++ run
+
+    Examples
+    --------
+    The RunGroup contains the a bout run and it's pre- and post-processors
+
+    >>> bout_run_setup = BoutRunSetup(executor, db_connector, final_parameters)
+    >>> run_graph = RunGraph()
+    >>> # Attach a RunGroups to the run_graph
+    >>> run_group_1 = RunGroup(run_graph, bout_run_setup_1)
+    >>> run_group_2 = RunGroup(run_graph, bout_run_setup_2)
+    >>> # Add the function `foo` as a post-processor to run_group_1
+    >>> post_processor_node_name = run_group_1.add_post_processor(
+    ... {'function': foo, 'args': (foo_1,), 'kwargs':None})
+    >>> # Add the function `bar` as a pre-processor to run_group_2,
+    ... # which waits for the post-processor of run_group_1
+    >>> run_group_2.add_pre_processor(
+    ... {'function': bar, 'args': None, 'kwargs':None}),
+    ... waiting_for=post_processor_node_name)
+    >>> runner = BoutRunner(run_graph)
+    >>> runner.run()
+
+    See Also
+    --------
+    RunGraph : Class to create a run graph
     """
 
     __counter = 0
@@ -243,7 +267,7 @@ class RunGroup:
         Returns
         -------
         pre_processor_node_name : str
-            The node name of the pre processor
+            The node name of the pre-processor
 
         Raises
         ------
@@ -313,7 +337,7 @@ class RunGroup:
         Returns
         -------
         post_processor_node_name : str
-            The node name of the pre processor
+            The node name of the pre-processor
 
         Raises
         ------

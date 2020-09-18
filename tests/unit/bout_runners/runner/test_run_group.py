@@ -41,7 +41,7 @@ def test_constructor(get_bout_run_setup: Callable[[str], BoutRunSetup]) -> None:
 
 def test_pre_processor(get_bout_run_setup: Callable[[str], BoutRunSetup]) -> None:
     """
-    Test the pre processor.
+    Test the pre-processor.
 
     Parameters
     ----------
@@ -68,7 +68,7 @@ def test_pre_processor(get_bout_run_setup: Callable[[str], BoutRunSetup]) -> Non
 
 def test_post_processor(get_bout_run_setup: Callable[[str], BoutRunSetup]) -> None:
     """
-    Test the post processor.
+    Test the post-processor.
 
     Parameters
     ----------

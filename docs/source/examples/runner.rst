@@ -34,7 +34,7 @@ If you do not care about run graphs, and you are only interested in restarting o
 .. note::
 
     You can also make a graph of runs, where one of the nodes is a restart of the other.
-    See :ref:`the run graph<_RunGraphTag>` for details.
+    See :ref:`chaining restarts<_ChainRestarts>` for details.
 
 
 .. _ConstructTag:
@@ -44,6 +44,8 @@ Constructing the BoutRunner
 
 Although it's nice to run the scripts from the root of the project directory, it may in certain cases be too strict.
 The following example shows how to get a more fine-grained control of the ``runner`` class.
+
+.. _BoutRunSetup:
 
 Constructing the BoutRunSetup
 -----------------------------
