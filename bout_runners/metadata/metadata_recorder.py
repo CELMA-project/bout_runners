@@ -67,8 +67,8 @@ class MetadataRecorder:
 
     Create the metadata recorder object
 
-    >>> db_connection = DatabaseConnector('name')
-    >>> metadata_recorder = MetadataRecorder(db_connection,
+    >>> db_connector = DatabaseConnector('name')
+    >>> metadata_recorder = MetadataRecorder(db_connector,
     ...                                      bout_paths,
     ...                                      final_parameters)
 
@@ -135,7 +135,10 @@ class MetadataRecorder:
         return self.__db_writer
 
     def capture_new_data_from_run(
-        self, processor_split: ProcessorSplit, force: bool = False
+        self,
+        processor_split: ProcessorSplit,
+        restart: bool = False,
+        force: bool = False,
     ) -> Optional[int]:
         """
         Capture new data from a run.
@@ -148,6 +151,8 @@ class MetadataRecorder:
         ----------
         processor_split : ProcessorSplit
             The processor split object
+        restart : bool
+            If True, the data will be captured (even if it has been executed before)
         force : bool
             Store entry to the run table even if a entry with the same parameter exists
             This will typically be used if the bout_runners is forcefully executing
@@ -166,6 +171,8 @@ class MetadataRecorder:
 
         # Update the parameters
         parameters_dict = self.__final_parameters.get_final_parameters()
+        if restart:
+            parameters_dict["global"]["restart"] = 1
 
         run_dict["parameters_id"] = self._create_parameter_tables_entry(parameters_dict)
 
@@ -204,6 +211,8 @@ class MetadataRecorder:
             )
 
         # Update the run
+        # NOTE: If restart is True, a new run_id will be given as the run_dict["name"]
+        #       will be unique
         run_id = self.__db_reader.get_entry_id("run", run_dict)
         if force or run_id is None:
             run_dict["latest_status"] = "submitted"

@@ -2,6 +2,7 @@
 
 
 from typing import Optional
+from pathlib import Path
 
 from bout_runners.executor.bout_paths import BoutPaths
 from bout_runners.make.make import Make
@@ -21,12 +22,14 @@ class Executor:
         Object containing the run parameters
     __make : Make
         Object for making the project
-    __command : str
-        The terminal command for executing the run
+    restart_from : None or Path
+        Path to copy restart files from prior to the execution
     submitter : AbstractSubmitter
         Object containing the submitter
     bout_paths : BoutPaths
         Object containing the paths
+    run_parameters : RunParameters
+        Object containing the run parameters
 
     Methods
     -------
@@ -80,6 +83,7 @@ class Executor:
         bout_paths: Optional[BoutPaths] = None,
         submitter: Optional[LocalSubmitter] = None,
         run_parameters: Optional[RunParameters] = None,
+        restart_from: Optional[Path] = None,
     ) -> None:
         """
         Set the input parameters.
@@ -94,8 +98,11 @@ class Executor:
         run_parameters : RunParameters or None
             Object containing the run parameters
             If None, default parameters will be used
+        restart_from : Path or None
+            The path to copy the restart files from
         """
         # Set member data
+        self.restart_from = restart_from
         # NOTE: We are not setting the default as a keyword argument
         #       as this would mess up the paths
         self.submitter = submitter if submitter is not None else LocalSubmitter()
@@ -104,7 +111,6 @@ class Executor:
             run_parameters if run_parameters is not None else RunParameters()
         )
         self.__make = Make(self.__bout_paths.project_path)
-        self.__command = self.get_execute_command()
 
     @property
     def bout_paths(self) -> BoutPaths:
@@ -159,9 +165,25 @@ class Executor:
         )
         return command
 
-    def execute(self) -> None:
-        """Execute a BOUT++ run."""
+    def execute(self, restart: bool = False) -> Optional[int]:
+        """
+        Execute a BOUT++ run.
+
+        Parameters
+        ----------
+        restart : bool
+            If True the 'restart' will be appended to the command string
+
+        Returns
+        -------
+        pid : int
+            The process id
+        """
         # Make the project if not already made
         self.__make.run_make()
         # Submit the command
-        self.submitter.submit_command(self.__command)
+        command = self.get_execute_command()
+        if restart:
+            command += " restart"
+        self.submitter.submit_command(command)
+        return self.submitter.pid

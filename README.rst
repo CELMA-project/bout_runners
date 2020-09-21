@@ -67,10 +67,10 @@ Overview
 ``BOUT Runners`` is a package to manage and orchestrate your |BOUT++|_ runs.
 More specifically it's a tool:
 
-- Which automatically makes your project
+- That automatically makes your project
 - Where you can override default parameters, and parameters found in ``BOUT.inp``
 - Where you can submit a single run, or even a chain of runs either locally, or to a cluster
-- Which automatically stores parameters and other metadata in a database (inspired by |sacred|_)
+- That automatically stores parameters and other metadata in a database (inspired by |sacred|_)
 - Logs the entire process
 
 Read the full documentation_ at ReadTheDocs_

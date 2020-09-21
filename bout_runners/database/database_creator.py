@@ -67,8 +67,8 @@ class DatabaseCreator:
 
     Create the database
 
-    >>> db_connection = DatabaseConnector('name')
-    >>> db_creator = DatabaseCreator(db_connection)
+    >>> db_connector = DatabaseConnector('name')
+    >>> db_creator = DatabaseCreator(db_connector)
     >>> db_creator.create_all_schema_tables(final_parameters_as_sql_types)
     """
 

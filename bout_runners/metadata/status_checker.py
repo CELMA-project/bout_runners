@@ -98,7 +98,8 @@ class StatusChecker:
         # Check that run table exist
         if not self.__db_reader.check_tables_created():
             logging.error(
-                "No tables found in %s", self.__db_reader.db_connector.db_path,
+                "No tables found in %s",
+                self.__db_reader.db_connector.db_path,
             )
             message = "Can not check the status of schemas that does not exist"
             raise RuntimeError(message)
@@ -120,6 +121,23 @@ class StatusChecker:
         running_to_check = self.__db_reader.query(query)
         self.__check_running(metadata_updater, running_to_check)
 
+    @staticmethod
+    def get_query_string_for_non_errored_runs() -> str:
+        """
+        Return the query string for non errored results.
+
+        Returns
+        -------
+        str
+            Query string for non errored results
+        """
+        return (
+            "SELECT name, id AS run_id FROM run WHERE\n"
+            "latest_status = 'submitted' OR\n"
+            "latest_status = 'created' OR\n"
+            "latest_status = 'running'"
+        )
+
     def check_and_update_until_complete(self, seconds_between_update: int = 5) -> None:
         """
         Check and update the status until all runs are stopped.
@@ -129,12 +147,7 @@ class StatusChecker:
         seconds_between_update : int
             Number of seconds before a new status check is performed
         """
-        query = (
-            "SELECT name, id AS run_id FROM run WHERE\n"
-            "latest_status = 'submitted' OR\n"
-            "latest_status = 'created' OR\n"
-            "latest_status = 'running'"
-        )
+        query = self.get_query_string_for_non_errored_runs()
         while len(self.__db_reader.query(query).index) != 0:
             self.check_and_update_status()
             time.sleep(seconds_between_update)

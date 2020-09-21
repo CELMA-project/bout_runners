@@ -4,11 +4,12 @@
 from pathlib import Path
 from typing import Callable
 
+from bout_runners.executor.bout_paths import BoutPaths
 from bout_runners.parameters.default_parameters import DefaultParameters
 
 
 def test_default_parameters(
-    get_test_data_path: Path, yield_bout_path_conduction: Callable
+    get_test_data_path: Path, yield_bout_path_conduction: Callable[[str], BoutPaths]
 ) -> None:
     """
     Test the DefaultParameter.

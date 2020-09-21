@@ -102,7 +102,7 @@ class DefaultParameters:
 
         if not self.__settings_path.is_file():
             logging.info(
-                "Running parameter run as the parameters of " "the project are unknown"
+                "Running parameter run as the parameters of the project are unknown"
             )
             self.run_parameters_run(self.__bout_paths)
 
@@ -121,8 +121,14 @@ class DefaultParameters:
         if bout_paths is None:
             bout_paths = BoutPaths(bout_inp_dst_dir="settings_run")
         else:
-            # NOTE: type: ignore due to https://github.com/python/mypy/issues/3004
-            bout_paths.bout_inp_dst_dir = "settings_run"  # type: ignore
+            # NOTE: We are creating a new BoutPaths object instead of using the
+            #       property setter as the object is mutable
+            project_path = bout_paths.bout_inp_src_dir.parent
+            bout_paths = BoutPaths(
+                project_path=project_path,
+                bout_inp_src_dir=bout_paths.bout_inp_src_dir,
+                bout_inp_dst_dir=project_path.joinpath("settings_run"),
+            )
 
         executor = self.get_test_executor(bout_paths)
 

@@ -3,10 +3,14 @@
 
 from typing import Callable
 
+from bout_runners.database.database_reader import DatabaseConnector
 from bout_runners.database.database_reader import DatabaseReader
 
 
-def test_db_reader(make_test_database: Callable, write_to_split: Callable) -> None:
+def test_db_reader(
+    make_test_database: Callable[[str], DatabaseConnector],
+    write_to_split: Callable[[str], DatabaseConnector],
+) -> None:
     """
     Test we can create read from the database.
 
@@ -26,8 +30,8 @@ def test_db_reader(make_test_database: Callable, write_to_split: Callable) -> No
     write_to_split : function
         Function returning the database connection where `split` has been populated
     """
-    empty_db_connection = make_test_database("empty_read_test")
-    empty_db_reader = DatabaseReader(empty_db_connection)
+    empty_db_connector = make_test_database("empty_read_test")
+    empty_db_reader = DatabaseReader(empty_db_connector)
 
     # Check that we can make a query
     table = empty_db_reader.query("SELECT 1+1 AS col")
@@ -36,8 +40,8 @@ def test_db_reader(make_test_database: Callable, write_to_split: Callable) -> No
     # Check that the tables has not been created in an empty db
     assert not empty_db_reader.check_tables_created()
 
-    db_connection = write_to_split("read_test")
-    db_reader = DatabaseReader(db_connection)
+    db_connector = write_to_split("read_test")
+    db_reader = DatabaseReader(db_connector)
 
     # Check that tables exist
     assert db_reader.check_tables_created()

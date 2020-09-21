@@ -34,6 +34,8 @@ class LocalSubmitter(AbstractSubmitter):
     -------
     submit_command(command)
         Run a subprocess
+    write_python_script(path, function, args, kwargs)
+        Write python function to file
     _raise_submit_error(self, result):
         Raise and error from the subprocess in a clean way.
 
@@ -48,7 +50,9 @@ class LocalSubmitter(AbstractSubmitter):
     """
 
     def __init__(
-        self, path: Optional[Path] = None, processor_split: None = None
+        self,
+        path: Optional[Path] = None,
+        processor_split: Optional[ProcessorSplit] = None,
     ) -> None:
         """
         Set the path from where the calls are made from.
@@ -110,6 +114,7 @@ class LocalSubmitter(AbstractSubmitter):
         )
         std_out, std_err = process.communicate()
         return_code = process.poll()
+        return_code = return_code if return_code is not None else 0
         result = subprocess.CompletedProcess(
             process.args, return_code, std_out, std_err
         )

@@ -1,118 +1,36 @@
 """Contains integration test for the runner."""
 
-import contextlib
-import os
+
+import pytest
+
 from pathlib import Path
-from typing import Callable, Iterator
+from typing import Callable, Dict
 
-from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_reader import DatabaseReader
-from bout_runners.executor.bout_paths import BoutPaths
-from bout_runners.executor.executor import Executor
-from bout_runners.parameters.default_parameters import DefaultParameters
-from bout_runners.parameters.final_parameters import FinalParameters
-from bout_runners.parameters.run_parameters import RunParameters
 from bout_runners.runner.bout_runner import BoutRunner
-from bout_runners.submitter.local_submitter import LocalSubmitter
 
-
-@contextlib.contextmanager
-def change_directory(new_path: Path) -> Iterator[None]:
-    """
-    Change working directory and return to previous directory on exit.
-
-    Parameters
-    ----------
-    new_path : Path
-        Path to change to
-
-    Yields
-    ------
-    None
-        The function will revert to original directory on exit
-
-    References
-    ----------
-    [1] https://stackoverflow.com/a/42441759/2786884
-    [2] https://stackoverflow.com/a/13197763/2786884
-    """
-    previous_path = Path.cwd().absolute()
-    os.chdir(str(new_path))
-    try:
-        yield
-    finally:
-        os.chdir(str(previous_path))
-
-
-def assert_first_run(
-    bout_paths: BoutPaths, db_connection: DatabaseConnector
-) -> DatabaseReader:
-    """
-    Assert that the first run went well.
-
-    Parameters
-    ----------
-    bout_paths : BoutPaths
-        The object containing the paths
-    db_connection : DatabaseConnector
-        The database connection
-
-    Returns
-    -------
-    db_reader : DatabaseReader
-        The database reader object
-    """
-    db_reader = DatabaseReader(db_connection)
-    assert bout_paths.bout_inp_dst_dir.joinpath("BOUT.dmp.0.nc").is_file()
-    assert db_reader.check_tables_created()
-    return db_reader
-
-
-def assert_tables_has_len_1(
-    db_reader: DatabaseReader, yield_number_of_rows_for_all_tables: Callable
-) -> None:
-    """
-    Assert that tables has length 1.
-
-    Parameters
-    ----------
-    db_reader : DatabaseReader
-        The database reader object
-    yield_number_of_rows_for_all_tables : function
-        Function which returns the number of rows for all tables in a
-        schema
-    """
-    number_of_rows_dict = yield_number_of_rows_for_all_tables(db_reader)
-    assert sum(number_of_rows_dict.values()) == len(number_of_rows_dict.keys())
-
-
-def assert_force_run(
-    db_reader: DatabaseReader, yield_number_of_rows_for_all_tables: Callable
-) -> None:
-    """
-    Assert that the force run is effective.
-
-    Parameters
-    ----------
-    db_reader : DatabaseReader
-        The database reader object
-    yield_number_of_rows_for_all_tables : function
-        Function which returns the number of rows for all tables in a
-        schema
-    """
-    number_of_rows_dict = yield_number_of_rows_for_all_tables(db_reader)
-    tables_with_2 = dict()
-    tables_with_2["run"] = number_of_rows_dict.pop("run")
-    # Assert that all the values are 1
-    assert sum(number_of_rows_dict.values()) == len(number_of_rows_dict.keys())
-    # Assert that all the values are 2
-    assert sum(tables_with_2.values()) == 2 * len(tables_with_2.keys())
+from tests.utils.node_functions import (
+    node_zero,
+    node_one,
+    node_five,
+    node_seven,
+    node_eight,
+    node_ten,
+)
+from tests.utils.paths import change_directory
+from tests.utils.run import (
+    assert_first_run,
+    assert_dump_files_exist,
+    assert_tables_have_expected_len,
+    make_run_group,
+)
 
 
 def test_bout_runners_from_directory(
     make_project: Path,
-    yield_number_of_rows_for_all_tables: Callable,
+    yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
     clean_default_db_dir: Path,
+    tear_down_restart_directories: Callable[[Path], None],
 ) -> None:
     """
     Test that the minimal BoutRunners setup works.
@@ -122,6 +40,7 @@ def test_bout_runners_from_directory(
     2. The metadata is properly stored
     3. We cannot execute the run again...
     4. ...unless we set force=True
+    5. Check the restart functionality twice
 
     Parameters
     ----------
@@ -131,36 +50,78 @@ def test_bout_runners_from_directory(
         Function which returns the number of rows for all tables in a schema
     clean_default_db_dir : Path
         Path to the default database directory
+    tear_down_restart_directories : function
+        Function used for removal of restart directories
     """
+    # For automatic clean-up
     _ = clean_default_db_dir
     # Make project to save time
     project_path = make_project
     with change_directory(project_path):
         runner = BoutRunner()
-        runner.run()
+        bout_run_setup = runner.run_graph["bout_run_0"]["bout_run_setup"]
 
-        bout_paths = runner.executor.bout_paths
-        db_connection = runner.db_connector
+    runner.run()
+
+    bout_paths = bout_run_setup.bout_paths
+    tear_down_restart_directories(bout_run_setup.bout_paths.bout_inp_dst_dir)
+    db_connector = bout_run_setup.db_connector
     # Assert that the run went well
-    db_reader = assert_first_run(bout_paths, db_connection)
-    # Assert that all the values are 1
-    assert_tables_has_len_1(db_reader, yield_number_of_rows_for_all_tables)
+    db_reader = assert_first_run(bout_paths, db_connector)
+    # Assert that the number of runs is 1
+    assert_tables_have_expected_len(
+        db_reader, yield_number_of_rows_for_all_tables, expected_run_number=1
+    )
+
+    # Check that all the nodes have changed status
+    with pytest.raises(RuntimeError):
+        runner.run()
 
     # Check that the run will not be executed again
-    with change_directory(project_path):
-        runner.run()
-    # Assert that all the values are 1
-    assert_tables_has_len_1(db_reader, yield_number_of_rows_for_all_tables)
+    runner.reset()
+    runner.run()
+    # Assert that the number of runs is 1
+    assert_tables_have_expected_len(
+        db_reader, yield_number_of_rows_for_all_tables, expected_run_number=1
+    )
 
     # Check that force overrides the behaviour
-    with change_directory(project_path):
-        runner.run(force=True)
-    assert_force_run(db_reader, yield_number_of_rows_for_all_tables)
+    runner.run(force=True)
+    assert_tables_have_expected_len(
+        db_reader, yield_number_of_rows_for_all_tables, expected_run_number=2
+    )
+    dump_dir_parent = bout_paths.bout_inp_dst_dir.parent
+    dump_dir_name = bout_paths.bout_inp_dst_dir.name
+
+    # Check that the restart functionality works
+    runner.run(restart_all=True)
+    expected_run_number = 3
+    assert_tables_have_expected_len(
+        db_reader,
+        yield_number_of_rows_for_all_tables,
+        expected_run_number=expected_run_number,
+        restarted=True,
+    )
+    # NOTE: The test in tests.unit.bout_runners.runners.test_bout_runner is testing
+    #       restart_from_bout_inp_dst=True, whether this is testing restart_all=True
+    assert_dump_files_exist(dump_dir_parent.joinpath(f"{dump_dir_name}_restart_0"))
+    # ...twice
+    runner.run(restart_all=True)
+    expected_run_number = 4
+    assert_tables_have_expected_len(
+        db_reader,
+        yield_number_of_rows_for_all_tables,
+        expected_run_number=expected_run_number,
+        restarted=True,
+    )
+    # NOTE: The test in tests.unit.bout_runners.runners.test_bout_runner is testing
+    #       restart_from_bout_inp_dst=True, whether this is testing restart_all=True
+    assert_dump_files_exist(dump_dir_parent.joinpath(f"{dump_dir_name}_restart_1"))
 
 
 def test_full_bout_runner(
     make_project: Path,
-    yield_number_of_rows_for_all_tables: Callable,
+    yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
     clean_default_db_dir: Path,
 ) -> None:
     """
@@ -169,8 +130,6 @@ def test_full_bout_runner(
     This test will test that:
     1. We can execute a run
     2. The metadata is properly stored
-    3. We cannot execute the run again...
-    4. ...unless we set force=True
 
     Parameters
     ----------
@@ -183,40 +142,209 @@ def test_full_bout_runner(
     """
     _ = clean_default_db_dir
     name = "test_bout_runner_integration"
-    # Make project to save time
-    project_path = make_project
-
-    # Create the `bout_paths` object
-    bout_paths = BoutPaths(
-        project_path=project_path,
-        bout_inp_src_dir=project_path.joinpath("data"),
-        bout_inp_dst_dir=project_path.joinpath(name),
-    )
-
-    # Create the input objects
-    run_parameters = RunParameters({"global": {"nout": 0}})
-    default_parameters = DefaultParameters(bout_paths)
-    final_parameters = FinalParameters(default_parameters, run_parameters)
-    submitter = LocalSubmitter(bout_paths.project_path)
-    executor = Executor(
-        bout_paths=bout_paths, submitter=submitter, run_parameters=run_parameters,
-    )
-    db_connection = DatabaseConnector(name)
+    run_group = make_run_group(name, make_project)
 
     # Run the project
-    runner = BoutRunner(executor, db_connection, final_parameters)
+    runner = BoutRunner(run_group.run_graph)
     runner.run()
 
     # Assert that the run went well
-    db_reader = assert_first_run(bout_paths, db_connection)
+    db_reader = assert_first_run(
+        run_group.bout_paths,
+        run_group.db_connector,
+    )
     # Assert that all the values are 1
-    assert_tables_has_len_1(db_reader, yield_number_of_rows_for_all_tables)
+    assert_tables_have_expected_len(
+        db_reader, yield_number_of_rows_for_all_tables, expected_run_number=1
+    )
 
-    # Check that the run will not be executed again
+
+def test_large_graph(
+    make_project: Path,
+    yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
+    clean_default_db_dir: Path,
+    tear_down_restart_directories: Callable[[Path], None],
+) -> None:
+    """
+    Test that the graph with 10 nodes work as expected.
+
+    The node setup can be found in node_functions.py
+
+    Parameters
+    ----------
+    make_project : Path
+        The path to the conduction example
+    yield_number_of_rows_for_all_tables : function
+        Function which returns the number of rows for all tables in a schema
+    clean_default_db_dir : Path
+        Path to the default database directory
+    tear_down_restart_directories : function
+        Function used for removal of restart directories
+    """
+    _ = clean_default_db_dir
+
+    name = "test_large_graph"
+    paths = dict()
+    paths["project_path"] = make_project
+    paths["pre_and_post_directory"] = paths["project_path"].joinpath(
+        f"pre_and_post_{name}"
+    )
+    paths["pre_and_post_directory"].mkdir()
+    run_groups = dict()
+
+    # RunGroup belonging to node 2
+    run_groups["run_group_2"] = make_run_group(name, make_project)
+    run_graph = run_groups["run_group_2"].run_graph
+    paths["bout_run_directory_node_2"] = run_groups[
+        "run_group_2"
+    ].bout_paths.bout_inp_dst_dir
+
+    run_groups["run_group_2"].add_pre_processor(
+        {
+            "function": node_zero,
+            "args": (
+                paths["bout_run_directory_node_2"],
+                paths["pre_and_post_directory"],
+            ),
+            "kwargs": None,
+        }
+    )
+    run_groups["run_group_2"].add_pre_processor(
+        {
+            "function": node_one,
+            "args": (
+                paths["bout_run_directory_node_2"],
+                paths["pre_and_post_directory"],
+            ),
+            "kwargs": None,
+        }
+    )
+    run_groups["run_group_2"].add_post_processor(
+        {
+            "function": node_five,
+            "args": (
+                paths["bout_run_directory_node_2"],
+                paths["pre_and_post_directory"],
+            ),
+            "kwargs": None,
+        }
+    )
+
+    tear_down_restart_directories(paths["bout_run_directory_node_2"])
+
+    # RunGroup belonging to node 3
+    run_groups["run_group_3"] = make_run_group(
+        name,
+        make_project,
+        run_graph,
+        restart_from=run_groups["run_group_2"].bout_paths.bout_inp_dst_dir,
+        waiting_for=run_groups["run_group_2"].bout_run_node_name,
+    )
+
+    # RunGroup belonging to node 4
+    run_groups["run_group_4"] = make_run_group(name, make_project, run_graph)
+    paths["bout_run_directory_node_4"] = run_groups[
+        "run_group_4"
+    ].bout_paths.bout_inp_dst_dir
+
+    # RunGroup belonging to node 6
+    run_groups["run_group_6"] = make_run_group(
+        name,
+        make_project,
+        run_graph,
+        restart_from=run_groups["run_group_2"].bout_paths.bout_inp_dst_dir,
+        waiting_for=run_groups["run_group_2"].bout_run_node_name,
+    )
+    paths["bout_run_directory_node_6"] = run_groups[
+        "run_group_6"
+    ].bout_paths.bout_inp_dst_dir
+    node_8 = run_groups["run_group_6"].add_post_processor(
+        {
+            "function": node_eight,
+            "args": (
+                paths["bout_run_directory_node_4"],
+                paths["bout_run_directory_node_6"],
+                paths["pre_and_post_directory"],
+            ),
+            "kwargs": None,
+        },
+        waiting_for=run_groups["run_group_4"].bout_run_node_name,
+    )
+
+    # RunGroup belonging to node 9
+    # NOTE: We need the paths['bout_run_directory_node_9'] as an input in node 7
+    #       As node 9 is waiting for node 7 we hard-code the name
+    #       (as we will know what it will be)
+    paths["bout_run_directory_node_9"] = paths["project_path"].joinpath(
+        f"{name}_restart_2"
+    )
+    # The function of node_seven belongs to RunGroup2, but takes
+    # paths['bout_run_directory_node_9'] as an input
+    node_7_name = run_groups["run_group_2"].add_post_processor(
+        {
+            "function": node_seven,
+            "args": (
+                paths["bout_run_directory_node_2"],
+                paths["bout_run_directory_node_9"],
+                paths["pre_and_post_directory"],
+            ),
+            "kwargs": None,
+        }
+    )
+    run_groups["run_group_9"] = make_run_group(
+        name,
+        make_project,
+        run_graph,
+        restart_from=run_groups["run_group_6"].bout_paths.bout_inp_dst_dir,
+        waiting_for=(
+            run_groups["run_group_4"].bout_run_node_name,
+            run_groups["run_group_6"].bout_run_node_name,
+            node_7_name,
+        ),
+    )
+    run_groups["run_group_9"].add_post_processor(
+        {
+            "function": node_ten,
+            "args": (
+                paths["bout_run_directory_node_9"],
+                paths["pre_and_post_directory"],
+            ),
+            "kwargs": None,
+        },
+        waiting_for=node_8,
+    )
+
+    # Run the project
+    runner = BoutRunner(run_graph)
     runner.run()
-    # Assert that all the values are 1
-    assert_tables_has_len_1(db_reader, yield_number_of_rows_for_all_tables)
 
-    # Check that force overrides the behaviour
-    runner.run(force=True)
-    assert_force_run(db_reader, yield_number_of_rows_for_all_tables)
+    # Check that all the nodes have changed status
+    with pytest.raises(RuntimeError):
+        runner.run()
+
+    # Check that all files are present
+    # Check that the pre and post files are present
+    for node in (0, 1, 5, 7, 8, 10):
+        assert paths["pre_and_post_directory"].joinpath(f"{node}.txt").is_file()
+    # Check that all the dump files are present
+    for restart_str in ("", "_restart_0", "_restart_1", "_restart_2"):
+        assert (
+            paths["project_path"]
+            .joinpath(f"{name}{restart_str}")
+            .joinpath("BOUT.dmp.0.nc")
+            .is_file()
+            or paths["project_path"]
+            .joinpath(f"{name}{restart_str}")
+            .joinpath("BOUT.dmp.0.h5")
+            .is_file()
+        )
+
+    # NOTE: We will only have 4 runs as node 4 is a duplicate of node 2 and will
+    #       therefore be skipped
+    number_of_runs = 4
+    assert_tables_have_expected_len(
+        DatabaseReader(run_groups["run_group_2"].db_connector),
+        yield_number_of_rows_for_all_tables,
+        expected_run_number=number_of_runs,
+        restarted=True,
+    )

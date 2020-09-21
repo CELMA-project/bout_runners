@@ -1,14 +1,18 @@
 """Contains unittests for the database writer."""
 
 
-from typing import Callable
+from typing import Callable, Tuple
 
 import numpy as np
+
+from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.database.database_writer import DatabaseWriter
 
 
-def test_db_writer(make_test_schema: Callable) -> None:
+def test_db_writer(
+    make_test_schema: Callable[[str], Tuple[DatabaseConnector, str]]
+) -> None:
     """
     Test we can create write to the database schemas.
 
@@ -24,10 +28,10 @@ def test_db_writer(make_test_schema: Callable) -> None:
     make_test_schema : function
         Function returning the database connection with the schema created
     """
-    db_connection, _ = make_test_schema("write_test")
-    db_reader = DatabaseReader(db_connection)
+    db_connector, _ = make_test_schema("write_test")
+    db_reader = DatabaseReader(db_connector)
 
-    db_writer = DatabaseWriter(db_connection)
+    db_writer = DatabaseWriter(db_connector)
     table_name = "split"
     dummy_split_dict = {
         "number_of_processors": 41,

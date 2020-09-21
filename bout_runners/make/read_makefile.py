@@ -20,7 +20,6 @@ class MakefileReaderError(Exception):
             Path searched at
         """
         message = f"Could not find {variable} in {path}"
-
         super().__init__(message)
 
 
@@ -84,12 +83,12 @@ class BoutMakefileVariableReader(BoutMakefileReader):
 
     Examples
     --------
-    Makefile
+    Makefile (remember to use TABS instead of SPACES in the Makefile)
 
-    >>> BOUT_SUPER	= /super/path/to/BOUT-dev
-    ... BOUT_TOP	= $(BOUT_SUPER)/BOUT-dev
+    >>> BOUT_SUPER = /super/path/to/BOUT-dev
+    ... BOUT_TOP   = $(BOUT_SUPER)/BOUT-dev
     ...
-    ... SOURCEC		= bout_model.cxx
+    ... SOURCEC    = bout_model.cxx
     ...
     ... include $(BOUT_TOP)/make.config
 
@@ -110,7 +109,7 @@ class BoutMakefileVariableReader(BoutMakefileReader):
         variable_name : str
             The variable under consideration
         """
-        super(BoutMakefileVariableReader, self).__init__(path)
+        super().__init__(path)
 
         self.variable_name = variable_name
 

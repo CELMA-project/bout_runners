@@ -1,14 +1,16 @@
+# pylint: disable=c0302
 """Global fixtures for the test routines."""
 
 
 import shutil
 from distutils.dir_util import copy_tree, remove_tree
 from pathlib import Path
-from typing import Callable, Dict, Iterator, Tuple
+from typing import Callable, Dict, Iterator, Tuple, Optional
 
 import pandas as pd
 import psutil
 import pytest
+from pandas import DataFrame
 from _pytest.monkeypatch import MonkeyPatch
 from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_creator import DatabaseCreator
@@ -21,7 +23,9 @@ from bout_runners.metadata.metadata_updater import MetadataUpdater
 from bout_runners.parameters.default_parameters import DefaultParameters
 from bout_runners.parameters.final_parameters import FinalParameters
 from bout_runners.utils.paths import get_bout_directory, get_config_path
-from pandas import DataFrame
+from bout_runners.executor.executor import Executor
+from bout_runners.runner.run_graph import RunGraph
+from bout_runners.runner.bout_run_setup import BoutRunSetup
 
 
 @pytest.fixture(scope="session", name="yield_bout_path")
@@ -105,8 +109,8 @@ def make_make_object(yield_bout_path: Path) -> Iterator[Tuple[Make, Path]]:
     remove_tree(str(tmp_path))
 
 
-@pytest.fixture(scope="session")
-def make_project(yield_conduction_path: Path) -> Iterator[Path]:
+@pytest.fixture(scope="session", name="make_project")
+def fixture_make_project(yield_conduction_path: Path) -> Iterator[Path]:
     """
     Set up and tear down the Make object.
 
@@ -166,7 +170,9 @@ def fixture_get_tmp_db_dir() -> Iterator[Path]:
 
 
 @pytest.fixture(scope="session", name="make_test_database")
-def fixture_make_test_database(get_tmp_db_dir: Path) -> Callable:
+def fixture_make_test_database(
+    get_tmp_db_dir: Path,
+) -> Callable[[Optional[str]], DatabaseConnector]:
     """
     Return the wrapped function for the database connection.
 
@@ -178,10 +184,10 @@ def fixture_make_test_database(get_tmp_db_dir: Path) -> Callable:
     Returns
     -------
     _make_db : function
-        The function making the database
+        Function making an empty database
     """
 
-    def _make_db(db_name=None):
+    def _make_db(db_name: Optional[str] = None) -> DatabaseConnector:
         """
         Make a database.
 
@@ -225,8 +231,11 @@ def fixture_get_default_parameters(get_test_data_path: Path) -> DefaultParameter
 
 @pytest.fixture(scope="session", name="make_test_schema")
 def fixture_make_test_schema(
-    get_default_parameters: DefaultParameters, make_test_database: Callable
-) -> Iterator[Callable]:
+    get_default_parameters: DefaultParameters,
+    make_test_database: Callable[[Optional[str]], DatabaseConnector],
+) -> Iterator[
+    Callable[[Optional[str]], Tuple[DatabaseConnector, Dict[str, Dict[str, str]]]]
+]:
     """
     Return the wrapped function for schema creation.
 
@@ -243,7 +252,9 @@ def fixture_make_test_schema(
         The function making the schema (i.e. making all the tables)
     """
 
-    def _make_schema(db_name=None):
+    def _make_schema(
+        db_name: Optional[str] = None,
+    ) -> Tuple[DatabaseConnector, Dict[str, Dict[str, str]]]:
         """
         Create the schema (i.e. make all the tables) of the database.
 
@@ -254,12 +265,12 @@ def fixture_make_test_schema(
 
         Returns
         -------
-        db_connection : DatabaseConnector
+        db_connector : DatabaseConnector
             The database connection object
         final_parameters_as_sql_types : dict
             Final parameters as sql types
         """
-        db_connection = make_test_database(db_name)
+        db_connector = make_test_database(db_name)
 
         default_parameters = get_default_parameters
         final_parameters = FinalParameters(default_parameters)
@@ -268,17 +279,21 @@ def fixture_make_test_schema(
             final_parameters_dict
         )
 
-        db_creator = DatabaseCreator(db_connection)
+        db_creator = DatabaseCreator(db_connector)
 
         db_creator.create_all_schema_tables(final_parameters_as_sql_types)
 
-        return db_connection, final_parameters_as_sql_types
+        return db_connector, final_parameters_as_sql_types
 
     yield _make_schema
 
 
 @pytest.fixture(scope="session")
-def write_to_split(make_test_schema: Callable) -> Iterator[Callable]:
+def write_to_split(
+    make_test_schema: Callable[
+        [Optional[str]], Tuple[DatabaseConnector, Dict[str, Dict[str, str]]]
+    ],
+) -> Iterator[Callable[[Optional[str]], DatabaseConnector]]:
     """
     Return the wrapped function for writing to the split table.
 
@@ -293,7 +308,7 @@ def write_to_split(make_test_schema: Callable) -> Iterator[Callable]:
         The function writing to the split table
     """
 
-    def _write_split(db_name=None):
+    def _write_split(db_name: Optional[str] = None) -> DatabaseConnector:
         """
         Write to the split table.
 
@@ -304,12 +319,12 @@ def write_to_split(make_test_schema: Callable) -> Iterator[Callable]:
 
         Returns
         -------
-        db_connection : DatabaseConnector
+        db_connector : DatabaseConnector
             The database connection object
         """
-        db_connection, _ = make_test_schema(db_name)
+        db_connector, _ = make_test_schema(db_name)
 
-        db_writer = DatabaseWriter(db_connection)
+        db_writer = DatabaseWriter(db_connector)
         dummy_split_dict = {
             "number_of_processors": 1,
             "number_of_nodes": 2,
@@ -317,13 +332,13 @@ def write_to_split(make_test_schema: Callable) -> Iterator[Callable]:
         }
         db_writer.create_entry("split", dummy_split_dict)
 
-        return db_connection
+        return db_connector
 
     yield _write_split
 
 
 @pytest.fixture(scope="session")
-def copy_bout_inp() -> Iterator[Callable]:
+def copy_bout_inp() -> Iterator[Callable[[Path, str], Path]]:
     """
     Copy BOUT.inp to a temporary directory.
 
@@ -338,7 +353,7 @@ def copy_bout_inp() -> Iterator[Callable]:
     # https://docs.pytest.org/en/latest/fixture.html#factories-as-fixtures
     tmp_dir_list = []
 
-    def _copy_inp_path(project_path, tmp_path_name):
+    def _copy_inp_path(project_path: Path, tmp_path_name: str) -> Path:
         """
         Copy BOUT.inp to a temporary directory.
 
@@ -370,8 +385,10 @@ def copy_bout_inp() -> Iterator[Callable]:
         shutil.rmtree(tmp_dir_path)
 
 
-@pytest.fixture(scope="function")
-def yield_bout_path_conduction(yield_conduction_path: Path) -> Iterator[Callable]:
+@pytest.fixture(scope="function", name="yield_bout_path_conduction")
+def fixture_yield_bout_path_conduction(
+    yield_conduction_path: Path,
+) -> Iterator[Callable[[str], BoutPaths]]:
     """
     Make the bout_path object and clean up after use.
 
@@ -391,7 +408,7 @@ def yield_bout_path_conduction(yield_conduction_path: Path) -> Iterator[Callable
     # https://docs.pytest.org/en/latest/fixture.html#factories-as-fixtures
     tmp_dir_list = []
 
-    def _make_bout_path(tmp_path_name):
+    def _make_bout_path(tmp_path_name: str) -> BoutPaths:
         """
         Create BoutPaths from the conduction directory.
 
@@ -453,7 +470,9 @@ def copy_makefile(get_test_data_path: Path) -> Iterator[Path]:
 
 
 @pytest.fixture(scope="function")
-def yield_number_of_rows_for_all_tables() -> Iterator[Callable]:
+def yield_number_of_rows_for_all_tables() -> Iterator[
+    Callable[[DatabaseReader], Dict[str, int]]
+]:
     """
     Yield the function used to count number of rows in a table.
 
@@ -463,7 +482,7 @@ def yield_number_of_rows_for_all_tables() -> Iterator[Callable]:
         Function which returns the number of rows for all tables in a schema
     """
 
-    def _get_number_of_rows_for_all_tables(db_reader):
+    def _get_number_of_rows_for_all_tables(db_reader: DatabaseReader) -> Dict[str, int]:
         """
         Return the number of rows for all tables in a schema.
 
@@ -477,7 +496,7 @@ def yield_number_of_rows_for_all_tables() -> Iterator[Callable]:
         number_of_rows_dict : dict
             Dict on the form
 
-            >>> {'table_name': int}
+            >>> {'table_name_1': int, 'table_name_2': int, ...}
         """
         number_of_rows_dict = dict()
         query_str = (
@@ -513,8 +532,8 @@ def yield_metadata_reader(get_test_data_path: Path) -> Iterator[MetadataReader]:
     MetadataReader
         The instance to read the metadata
     """
-    test_db_connection = DatabaseConnector(name="test", db_root_path=get_test_data_path)
-    yield MetadataReader(test_db_connection, drop_id=None)
+    test_db_connector = DatabaseConnector(name="test", db_root_path=get_test_data_path)
+    yield MetadataReader(test_db_connector, drop_id=None)
 
 
 @pytest.fixture(scope="session")
@@ -607,8 +626,10 @@ def fixture_yield_logs(get_test_data_path: Path) -> Iterator[Dict[str, Path]]:
 
 @pytest.fixture(scope="function", name="get_test_db_copy")
 def fixture_get_test_db_copy(
-    get_tmp_db_dir: Path, get_test_data_path: Path, make_test_database: Callable,
-) -> Callable:
+    get_tmp_db_dir: Path,
+    get_test_data_path: Path,
+    make_test_database: Callable[[Optional[str]], DatabaseConnector],
+) -> Callable[[str], DatabaseConnector]:
     """
     Return a function which returns a DatabaseConnector connected to a copy of test.db.
 
@@ -629,7 +650,7 @@ def fixture_get_test_db_copy(
     """
     source = get_test_data_path.joinpath("test.db")
 
-    def _get_test_db_copy(name):
+    def _get_test_db_copy(name: str) -> DatabaseConnector:
         """
         Return a database connector to the copy of the test database.
 
@@ -670,7 +691,9 @@ def get_metadata_updater_and_db_reader(get_test_db_copy: Callable) -> Callable:
         connection to the database and a corresponding DatabaseReader object
     """
 
-    def _get_metadata_updater_and_db_reader(name):
+    def _get_metadata_updater_and_db_reader(
+        name: str,
+    ) -> Tuple[MetadataUpdater, DatabaseReader]:
         """
         Return a MetadataUpdater and its DatabaseConnector.
 
@@ -712,7 +735,7 @@ def fixture_copy_log_file(get_test_data_path: Path) -> Iterator[Callable]:
     # NOTE: This corresponds to names in test.db
     paths_to_remove = list()
 
-    def _copy_log_file(log_file_to_copy, destination_dir_name):
+    def _copy_log_file(log_file_to_copy: Path, destination_dir_name: str) -> None:
         """
         Copy log files to a temporary directory.
 
@@ -751,7 +774,7 @@ def mock_pid_exists(monkeypatch: MonkeyPatch) -> Callable:
         Function which returns a monkeypatch for psutil.pid_exists
     """
 
-    def mock_wrapper(test_case):
+    def mock_wrapper(test_case: str):
         """
         Return monkeypatch for psutil.pid_exists.
 
@@ -769,7 +792,7 @@ def mock_pid_exists(monkeypatch: MonkeyPatch) -> Callable:
             ...  '<whether_pid_exists>_<new_status>')
         """
 
-        def _pid_exists_mock(pid):
+        def _pid_exists_mock(pid: Optional[int]) -> bool:
             """
             Mock psutil.pid_exists.
 
@@ -792,7 +815,9 @@ def mock_pid_exists(monkeypatch: MonkeyPatch) -> Callable:
 
 @pytest.fixture(scope="function")
 def copy_test_case_log_file(
-    copy_log_file: Callable, get_test_data_path: Path, yield_logs: Dict[str, Path],
+    copy_log_file: Callable,
+    get_test_data_path: Path,
+    yield_logs: Dict[str, Path],
 ) -> Callable:
     """
     Return the function for copying the test case log files.
@@ -812,7 +837,7 @@ def copy_test_case_log_file(
         Function which copy the test case log files
     """
 
-    def _copy_test_case_log_file(test_case):
+    def _copy_test_case_log_file(test_case: str) -> None:
         """
         Copy the test case log files.
 
@@ -907,15 +932,235 @@ def get_mock_config_path(monkeypatch: MonkeyPatch) -> Iterator[Path]:
 
 
 @pytest.fixture(scope="session")
-def clean_default_db_dir() -> Iterator[Path]:
+def clean_default_db_dir(get_test_data_path: Path) -> Iterator[Path]:
     """
     Yield the default database dir, and clean it during the teardown.
+
+    Parameters
+    ----------
+    get_test_data_path : Path
+        Path to the test data
 
     Yields
     ------
     default_dir : Path
         Path to the default database directory
     """
-    default_dir = Path().home().joinpath("BOUT_db")
+    test_data_path = get_test_data_path
+    default_dir = test_data_path.joinpath("BOUT_db")
+    default_dir.mkdir(parents=True, exist_ok=True)
     yield default_dir
     shutil.rmtree(default_dir)
+
+
+@pytest.fixture(scope="function")
+def make_graph() -> RunGraph:
+    """
+    Yield a simple graph.
+
+    Returns
+    -------
+    run_graph : RunGraph
+        A simple graph
+    """
+    run_graph = RunGraph()
+    for i in range(6):
+        run_graph.add_function_node(str(i))
+
+    run_graph.add_waiting_for("4", "3")
+    run_graph.add_waiting_for("5", "3")
+    run_graph.add_waiting_for("3", "2")
+    run_graph.add_waiting_for("2", "0")
+    run_graph.add_waiting_for("1", "0")
+    return run_graph
+
+
+@pytest.fixture(scope="function", name="get_executor")
+def fixture_get_executor(
+    yield_bout_path_conduction: Callable[[str], BoutPaths]
+) -> Callable[[str], Executor]:
+    """
+    Return a function which returns an Executor object.
+
+    Parameters
+    ----------
+    yield_bout_path_conduction : function
+        Function which makes the BoutPaths object for the conduction example
+
+    Returns
+    -------
+    _get_executor : function
+        Function which returns an Executor based on the conduction directory
+    """
+
+    def _get_executor(tmp_path_name: str) -> Executor:
+        """
+        Create Executor based on the conduction directory.
+
+        Parameters
+        ----------
+        tmp_path_name : str
+            Name of the temporary directory
+
+        Returns
+        -------
+        executor : Executor
+            The Executor object
+        """
+        bout_paths = yield_bout_path_conduction(tmp_path_name)
+        executor = DefaultParameters.get_test_executor(bout_paths)
+
+        return executor
+
+    return _get_executor
+
+
+@pytest.fixture(scope="function")
+def get_bout_run_setup(
+    get_executor: Callable[[str], Executor],
+    make_test_database: Callable[[Optional[str]], DatabaseConnector],
+    get_default_parameters: DefaultParameters,
+) -> Callable[[str], BoutRunSetup]:
+    """
+    Return a function which returns a BoutRunSetup object.
+
+    Parameters
+    ----------
+    get_executor : function
+        Function which returns an Executor based on the conduction directory
+    make_test_database : function
+        Function making an empty database
+    get_default_parameters : DefaultParameters
+        The DefaultParameters object
+
+    Returns
+    -------
+    _get_bout_run_setup : function
+        Function which returns the BoutRunSetup object based on the conduction directory
+    """
+
+    def _get_bout_run_setup(tmp_path_name: str) -> BoutRunSetup:
+        """
+        Create BoutRunSetup based on the conduction directory.
+
+        Parameters
+        ----------
+        tmp_path_name : str
+            Name of the temporary directory
+
+        Returns
+        -------
+        bout_run_setup : BoutRunSetup
+            The BoutRunSetup object
+        """
+        executor = get_executor(tmp_path_name)
+        db_connector = make_test_database(tmp_path_name)
+        final_parameters = FinalParameters(get_default_parameters)
+        bout_run_setup = BoutRunSetup(executor, db_connector, final_parameters)
+
+        return bout_run_setup
+
+    return _get_bout_run_setup
+
+
+@pytest.fixture(scope="function", name="tear_down_restart_directories")
+def fixture_tear_down_restart_directories() -> Iterator[Callable[[Path], None]]:
+    r"""
+    Return a function for removal of restart directories.
+
+    Yields
+    ------
+    _tear_down_restart_directories : function
+        Function used for removal of restart directories
+    """
+    run_directory = list()
+
+    def _tear_down_restart_directories(directory_group: Path) -> None:
+        r"""
+        Add the directory which the restart directories are based on.
+
+        Parameters
+        ----------
+        directory_group : Path
+            The directory which the restart directories are based on
+        """
+        run_directory.append(directory_group)
+
+    yield _tear_down_restart_directories
+    run_directory_parent = run_directory[0].parent
+    run_directory_name = run_directory[0].name
+    run_directories_list = list(
+        run_directory_parent.glob(f"{run_directory_name}_restart_*")
+    )
+    for run_dir in run_directories_list:
+        if run_dir.is_dir():
+            shutil.rmtree(run_dir)
+
+
+@pytest.fixture(scope="function")
+def clean_up_bout_inp_src_and_dst(
+    make_project: Path, tear_down_restart_directories: Callable[[Path], None]
+) -> Iterator[Callable[[str, str], Tuple[Path, Path, Path]]]:
+    """
+    Return a function which adds temporary BOUT.inp directories to removal.
+
+    Warnings
+    --------
+    Will not clean any databases
+
+    Parameters
+    ----------
+    make_project : Path
+        Path to the project directory
+    tear_down_restart_directories : function
+        Function which add restart directories for removal
+
+    Yields
+    ------
+    _clean_up_bout_inp_src_and_dst : function
+        Function which adds temporary BOUT.inp directories to removal
+    """
+    dirs_to_delete = list()
+
+    def _clean_up_bout_inp_src_and_dst(
+        bout_inp_src_name: str, bout_inp_dst_name: str
+    ) -> Tuple[Path, Path, Path]:
+        """
+        Add temporary BOUT.inp directories to removal.
+
+        Parameters
+        ----------
+        bout_inp_src_name : str
+            Name of the directory where the BOUT.inp source file resides
+        bout_inp_dst_name : str
+            Name of the source of the BOUT.inp destination directory
+
+        Returns
+        -------
+        project_path : Path
+            Path to the conduction example
+        bout_inp_src_dir : Path
+            Path to the BOUT.inp source dir
+        bout_inp_dst_dir : Path
+            Path to the BOUT.inp destination dir
+        """
+        project_path = make_project
+        project_bout_inp = project_path.joinpath("data")
+        bout_inp_src_dir = project_path.joinpath(bout_inp_src_name)
+        bout_inp_dst_dir = project_path.joinpath(bout_inp_dst_name)
+
+        tear_down_restart_directories(bout_inp_dst_dir)
+
+        dirs_to_delete.append(bout_inp_src_dir)
+        dirs_to_delete.append(bout_inp_dst_dir)
+
+        bout_inp_src_dir.mkdir(exist_ok=True)
+        shutil.copy(project_bout_inp.joinpath("BOUT.inp"), bout_inp_src_dir)
+
+        return project_path, bout_inp_src_dir, bout_inp_dst_dir
+
+    yield _clean_up_bout_inp_src_and_dst
+
+    for dir_to_delete in dirs_to_delete:
+        if dir_to_delete.is_dir():
+            shutil.rmtree(dir_to_delete)

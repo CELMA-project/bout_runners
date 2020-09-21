@@ -59,13 +59,13 @@ class DatabaseReader:
 
     Create the database
 
-    >>> db_connection = DatabaseConnector('name')
-    >>> db_creator = DatabaseCreator(db_connection)
+    >>> db_connector = DatabaseConnector('name')
+    >>> db_creator = DatabaseCreator(db_connector)
     >>> db_creator.create_all_schema_tables(final_parameters_as_sql_types)
 
     Write to the database
 
-    >>> db_writer = DatabaseWriter(db_connection)
+    >>> db_writer = DatabaseWriter(db_connector)
     >>> dummy_split_dict = {'number_of_processors': 1,
     ...                     'number_of_nodes': 2,
     ...                     'processors_per_node': 3}
@@ -73,7 +73,7 @@ class DatabaseReader:
 
     Read from the database
 
-    >>> db_reader = DatabaseReader(db_connection)
+    >>> db_reader = DatabaseReader(db_connector)
     >>> db_reader.query('SELECT * FROM split')
         id  number_of_processors  number_of_nodes  processors_per_node
      0   1                     1                1                    1

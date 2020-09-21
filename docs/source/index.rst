@@ -20,7 +20,7 @@ Contents
 
    structure
    examples/runner
-   examples/bundle
+   examples/run_graph
    examples/metadata
 
 .. toctree::

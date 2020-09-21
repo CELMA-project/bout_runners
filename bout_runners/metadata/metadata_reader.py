@@ -221,7 +221,9 @@ class MetadataReader:
         return self.__table_names
 
     @property
-    def table_column_dict(self,) -> Dict[str, Tuple[str, ...]]:
+    def table_column_dict(
+        self,
+    ) -> Dict[str, Tuple[str, ...]]:
         """
         Set the properties of self.table_column_dict.
 
@@ -234,7 +236,9 @@ class MetadataReader:
         return self.__table_column_dict
 
     @property
-    def table_connection(self,) -> Dict[str, Tuple[str, ...]]:
+    def table_connection(
+        self,
+    ) -> Dict[str, Tuple[str, ...]]:
         """
         Set the properties of self.table_connections.
 

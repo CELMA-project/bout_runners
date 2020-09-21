@@ -2,20 +2,24 @@
 
 
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Tuple, Dict
 
+from bout_runners.executor.bout_paths import BoutPaths
+from bout_runners.database.database_connector import DatabaseConnector
+from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.metadata.metadata_recorder import MetadataRecorder
+from bout_runners.metadata.metadata_reader import MetadataReader
 from bout_runners.parameters.default_parameters import DefaultParameters
 from bout_runners.parameters.final_parameters import FinalParameters
 from bout_runners.submitter.processor_split import ProcessorSplit
 
 
 def test_metadata_recorder(
-    yield_bout_path_conduction: Callable,
+    yield_bout_path_conduction: Callable[[str], BoutPaths],
     get_default_parameters: DefaultParameters,
     make_project: Path,
-    make_test_schema: Callable,
-    yield_number_of_rows_for_all_tables: Callable,
+    make_test_schema: Callable[[str], Tuple[DatabaseConnector, MetadataReader]],
+    yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
 ) -> None:
     """
     Test the metadata recorder.
@@ -48,12 +52,12 @@ def test_metadata_recorder(
     # fail when the get_file_modification is trying to get the last
     # edited time of the executable
     _ = make_project
-    db_connection, _ = make_test_schema("test_metadata_recorder")
+    db_connector, _ = make_test_schema("test_metadata_recorder")
     bout_paths = yield_bout_path_conduction("test_metadata_recorder")
     default_parameters = get_default_parameters
     final_parameters = FinalParameters(default_parameters)
 
-    metadata_recorder = MetadataRecorder(db_connection, bout_paths, final_parameters)
+    metadata_recorder = MetadataRecorder(db_connector, bout_paths, final_parameters)
 
     # Assert that this is a new entry
     run_id = metadata_recorder.capture_new_data_from_run(ProcessorSplit())

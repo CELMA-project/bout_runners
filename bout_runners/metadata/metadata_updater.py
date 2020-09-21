@@ -65,7 +65,7 @@ class MetadataUpdater:
         start_time : datetime
             The start time of the execution
         """
-        self.update_column("start_time", start_time)
+        self.update_field("start_time", start_time)
 
     def update_stop_time(self, end_time: datetime) -> None:
         """
@@ -76,7 +76,7 @@ class MetadataUpdater:
         end_time : datetime
             The end time of the execution
         """
-        self.update_column("stop_time", end_time)
+        self.update_field("stop_time", end_time)
 
     def update_latest_status(self, status: str) -> None:
         """
@@ -87,9 +87,9 @@ class MetadataUpdater:
         status : str
             The latest status
         """
-        self.update_column("latest_status", status)
+        self.update_field("latest_status", status)
 
-    def update_column(self, column: str, value: Union[datetime, str]) -> None:
+    def update_field(self, column: str, value: Union[datetime, str]) -> None:
         """
         Update a field with a certain row in the run table.
 

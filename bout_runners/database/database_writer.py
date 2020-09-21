@@ -56,14 +56,14 @@ class DatabaseWriter:
 
     Create the database
 
-    >>> db_connection = DatabaseConnector('name')
-    >>> db_creator = DatabaseCreator(db_connection)
+    >>> db_connector = DatabaseConnector('name')
+    >>> db_creator = DatabaseCreator(db_connector)
     >>> db_creator.create_all_schema_tables(
     ...     final_parameters_as_sql_types)
 
     Write to the database
 
-    >>> db_writer = DatabaseWriter(db_connection)
+    >>> db_writer = DatabaseWriter(db_connector)
     >>> dummy_split_dict = {'number_of_processors': 1,
     ...                     'number_of_nodes': 2,
     ...                     'processors_per_node': 3}
@@ -111,7 +111,9 @@ class DatabaseWriter:
 
     @staticmethod
     def create_update_string(
-        field_names: Tuple[str, ...], table_name: str, search_condition: str,
+        field_names: Tuple[str, ...],
+        table_name: str,
+        search_condition: str,
     ) -> str:
         """
         Create a question mark style string for database update.
@@ -174,7 +176,11 @@ class DatabaseWriter:
 
         logging.info("Made insertion to %s", table_name)
 
-    def update(self, update_str: str, values: Any,) -> None:
+    def update(
+        self,
+        update_str: str,
+        values: Any,
+    ) -> None:
         """
         Insert to the database.
 

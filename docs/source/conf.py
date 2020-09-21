@@ -39,6 +39,7 @@ extensions = [
     "sphinx.ext.viewcode",  # Add [source] link
     "numpydoc",  # Convert numpy to rst
     "sphinx_rtd_theme",  # Gives read the docs theme
+    "sphinx.ext.autosectionlabel",  # For propper sectioning
 ]
 exclude_patterns = []  # When looking for source files
 templates_path = ["_templates"]  # Templates relative to this direction
