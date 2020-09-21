@@ -32,17 +32,17 @@ def test_db_creator(
     make_test_schema : function
         Function returning the database connection and the final parameters as sql types
     """
-    db_connection_no_schema = make_test_database("test_creation_without_schema")
-    db_reader_no_schema = DatabaseReader(db_connection_no_schema)
+    db_connector_no_schema = make_test_database("test_creation_without_schema")
+    db_reader_no_schema = DatabaseReader(db_connector_no_schema)
 
     # There should be no tables before creating them
     assert not db_reader_no_schema.check_tables_created()
 
-    db_connection_schema, final_parameters_as_sql_types = make_test_schema(
+    db_connector_schema, final_parameters_as_sql_types = make_test_schema(
         "test_creation_with_schema"
     )
-    db_reader_schema = DatabaseReader(db_connection_schema)
-    db_creator = DatabaseCreator(db_connection_schema)
+    db_reader_schema = DatabaseReader(db_connector_schema)
+    db_creator = DatabaseCreator(db_connector_schema)
 
     # The tables should now have been created
     assert db_reader_schema.check_tables_created()

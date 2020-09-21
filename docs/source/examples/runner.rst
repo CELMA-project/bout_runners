@@ -2,7 +2,7 @@ Runner
 ******
 
 The ``BoutRunner`` class is the orchestrator of the run.
-Its responsibility is to execute the nodes of the :ref:`the run graph<_RunGraphTag>`, and to capture the metadata about the run.
+Its responsibility is to execute the nodes of the :ref:`the run graph<RunGraphTag>`, and to capture the metadata about the run.
 It is composed of several other classes which each performs one specific task in the orchestration.
 In its simplest form it can be called from a project directory (i.e. a directory with a ``make`` file and a directory which holds a ``BOUT.inp`` file) in the following way
 
@@ -12,7 +12,7 @@ In its simplest form it can be called from a project directory (i.e. a directory
     BoutRunner().run()
 
 In the example above ``BoutRunner`` and its classes will be populated with default values.
-For a more fine grained control of the setup of the ``BOUT++`` run, see :ref:`Constructing the BoutRunSetup<_ConstructTag>`.
+For a more fine grained control of the setup of the ``BOUT++`` run, see :ref:`Constructing the BoutRunSetup<ConstructTag>`.
 
 Restarting
 ==========
@@ -34,7 +34,7 @@ If you do not care about run graphs, and you are only interested in restarting o
 .. note::
 
     You can also make a graph of runs, where one of the nodes is a restart of the other.
-    See :ref:`chaining restarts<_ChainRestarts>` for details.
+    See :ref:`chaining restarts<ChainRestarts>` for details.
 
 
 .. _ConstructTag:
@@ -59,7 +59,7 @@ The ``BoutRunSetup`` controls all aspects of a single ``BOUT++`` run.
     The "bout run" and the "function run".
     A "bout run" is a run where a ``BOUT++`` project is involved.
     A "function run" is a run where a python function is involved.
-    The "function runs" can be used for pre- and post-processor for a "bout run" as described in :ref:`the run graph<_RunGraphTag>`.
+    The "function runs" can be used for pre- and post-processor for a "bout run" as described in :ref:`the run graph<RunGraphTag>`.
 
 First we import the necessary dependencies
 
@@ -74,6 +74,9 @@ First we import the necessary dependencies
     from bout_runners.parameters.final_parameters import FinalParameters
     from bout_runners.submitter.local_submitter import LocalSubmitter
     from bout_runners.runner.bout_run_setup import BoutRunSetup
+    from bout_runners.runner.run_graph import RunGraph
+    from bout_runners.runner.run_group import RunGroup
+    from bout_runners.runner.bout_runner import BoutRunner
 
 Next, we create the ``bout_paths`` object.
 This object handles the path to the project.
@@ -124,7 +127,7 @@ In addition, we need to know what database to write to.
 
 .. code:: python
 
-    db_connection = DatabaseConnector('name_of_database',
+    db_connector = DatabaseConnector('name_of_database',
                                       db_root_path=Path().joinpath('path', 'to', 'dir')
 
 We are now ready to build the ``BoutRunSetup`` object
@@ -141,7 +144,7 @@ Constructing the RunGroup and RunGraph
 --------------------------------------
 
 As we are just interested in a single bout run in this example, we will treat the ``RunGroup`` and the ``RunGraph`` as abstract concepts.
-You can read more about them and see more elaborate examples in :ref:`the run graph<_RunGraphTag>`.
+You can read more about them and see more elaborate examples in :ref:`the run graph<RunGraphTag>`.
 
 The ``BoutRunner`` accepts a ``RunGraph``.
 The following code will create the ``RunGraph`` and populate it with a ``RunGroup`` which contains the ``BoutRunSetup``

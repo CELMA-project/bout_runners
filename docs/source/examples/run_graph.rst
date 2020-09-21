@@ -26,7 +26,7 @@ In the following example we will run a non-restart run, one run which restarts f
 Making the basic BoutRunSetup
 -----------------------------
 
-First we make the ``BoutRunSetup`` as we did in :ref:`constructing the BoutRunner<_BoutRunSetup>` for details on how to make
+First we make the ``BoutRunSetup`` as we did in :ref:`constructing the BoutRunner<BoutRunSetup>` for details on how to make
 
 .. code:: python
 
@@ -39,6 +39,9 @@ First we make the ``BoutRunSetup`` as we did in :ref:`constructing the BoutRunne
     from bout_runners.parameters.final_parameters import FinalParameters
     from bout_runners.submitter.local_submitter import LocalSubmitter
     from bout_runners.runner.bout_run_setup import BoutRunSetup
+    from bout_runners.runner.run_graph import RunGraph
+    from bout_runners.runner.run_group import RunGroup
+    from bout_runners.runner.bout_runner import BoutRunner
 
     project_path = Path().joinpath('path', 'to', 'project')
     bout_inp_src_dir = Path().joinpath('path', 'to', 'source', 'BOUT.inp')
@@ -57,7 +60,7 @@ First we make the ``BoutRunSetup`` as we did in :ref:`constructing the BoutRunne
         submitter=LocalSubmitter(bout_paths.project_path),
         run_parameters=run_parameters)
 
-    db_connection = DatabaseConnector('name_of_database',
+    db_connector = DatabaseConnector('name_of_database',
                                       db_root_path=Path().joinpath('path', 'to', 'dir')
 
     basic_bout_run_setup = BoutRunSetup(basic_executor, db_connector, final_parameters)
@@ -80,7 +83,7 @@ Next we add the restart run without changing any parameters
         restart_from=bout_paths.bout_inp_dst_dir,
     )
 
-    restart_bout_run_setup = BoutRunSetup(restart_executor, db_connection, final_parameters)
+    restart_bout_run_setup = BoutRunSetup(restart_executor, db_connector, final_parameters)
 
     RunGroup(run_graph, restart_bout_run_setup, name=name, waiting_for=basic_run_group.bout_run_node_name)
 
@@ -100,7 +103,7 @@ and the restart where we are changing the parameters are changing
         restart_from=bout_paths.bout_inp_dst_dir,
     )
 
-    restart_with_changing_parameters_bout_run_setup = BoutRunSetup(restart_with_changing_parameters_executor, db_connection, new_final_parameters)
+    BoutRunSetup(restart_with_changing_parameters_executor, db_connector, new_final_parameters)
 
     RunGroup(run_graph, restart_bout_run_setup, name=name, waiting_for=basic_run_group.bout_run_node_name)
 
@@ -137,10 +140,10 @@ We will therefore expand the dimensions and add noise to the restart files befor
 
 .. note::
 
-    We are here assuming that the original run has `nz=1`
+    We are here assuming that the original run has ``nz=1``
 
 
-We start by building the ``basic_bout_run_setup`` as we did in :ref:`Making the basic BoutRunSetup<_basicBoutRunSetup>`.
+We start by building the ``basic_bout_run_setup`` as we did in :ref:`Making the basic BoutRunSetup<basicBoutRunSetup>`.
 Then, we add two post-processors: One post-processors which makes a plot, and another which expands the dimension.
 
 .. code:: python
@@ -148,10 +151,10 @@ Then, we add two post-processors: One post-processors which makes a plot, and an
     from boutdata.restart import resizeZ
 
     basic_run_group.add_post_processor({'function': my_plotting_function, 'args': None, 'kwargs':None})
-    expanded_restarts_dir = bout_paths.bout_inp_dst_dir.parent.joinpath('expanded_restarts')
+    expanded_noise_restarts_dir = bout_paths.bout_inp_dst_dir.parent.joinpath('expanded_noise_restarts')
     kwargs = {'newNz': 16,
               'path': bout_paths.bout_inp_dst_dir,
-              'output': expanded_restarts_dir}
+              'output': expanded_noise_restarts_dir}
     expand_node_name = basic_run_group.add_post_processor({'function': resizeZ, 'args': None, 'kwargs':kwargs})
 
 Next, we make a run group for the restart run, and add noise to the restart files as a pre-processing step
@@ -161,24 +164,20 @@ Next, we make a run group for the restart run, and add noise to the restart file
     import shutil
     from boutdata.restart import addnoise
 
-    # Move files
-    restart_noise_dir = bout_paths.bout_inp_dst_dir.parent.joinpath('restart_noise')
-    shutil.copytree(expanded_restarts_dir, restart_noise_dir)
-
     # Create the RunGroup
     restart_executor = Executor(
         bout_paths=bout_paths,
         submitter=LocalSubmitter(bout_paths.project_path),
         run_parameters=run_parameters,
-        restart_from=restart_noise_dir,
+        restart_from=expanded_noise_restarts_dir,
     )
 
-    restart_bout_run_setup = BoutRunSetup(restart_executor, db_connection, final_parameters)
+    restart_bout_run_setup = BoutRunSetup(restart_executor, db_connector, final_parameters)
 
-    resart_run_group = RunGroup(run_graph, restart_bout_run_setup, name=name)
+    restart_run_group = RunGroup(run_graph, restart_bout_run_setup, name=name)
 
-    kwargs = {'path': restart_noise_dir,
-              'scale': 1e-5)}
+    kwargs = {'path': expanded_noise_restarts_dir,
+              'scale': 1e-5}
     restart_run_group.add_pre_processor(
         {'function': addnoise, 'args': None, 'kwargs':kwargs}, waiting_for=expand_node_name)
 

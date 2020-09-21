@@ -28,10 +28,10 @@ def test_db_writer(
     make_test_schema : function
         Function returning the database connection with the schema created
     """
-    db_connection, _ = make_test_schema("write_test")
-    db_reader = DatabaseReader(db_connection)
+    db_connector, _ = make_test_schema("write_test")
+    db_reader = DatabaseReader(db_connector)
 
-    db_writer = DatabaseWriter(db_connection)
+    db_writer = DatabaseWriter(db_connector)
     table_name = "split"
     dummy_split_dict = {
         "number_of_processors": 41,

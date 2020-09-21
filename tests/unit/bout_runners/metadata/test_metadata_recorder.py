@@ -52,12 +52,12 @@ def test_metadata_recorder(
     # fail when the get_file_modification is trying to get the last
     # edited time of the executable
     _ = make_project
-    db_connection, _ = make_test_schema("test_metadata_recorder")
+    db_connector, _ = make_test_schema("test_metadata_recorder")
     bout_paths = yield_bout_path_conduction("test_metadata_recorder")
     default_parameters = get_default_parameters
     final_parameters = FinalParameters(default_parameters)
 
-    metadata_recorder = MetadataRecorder(db_connection, bout_paths, final_parameters)
+    metadata_recorder = MetadataRecorder(db_connector, bout_paths, final_parameters)
 
     # Assert that this is a new entry
     run_id = metadata_recorder.capture_new_data_from_run(ProcessorSplit())

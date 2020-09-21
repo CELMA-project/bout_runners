@@ -30,8 +30,8 @@ def test_db_reader(
     write_to_split : function
         Function returning the database connection where `split` has been populated
     """
-    empty_db_connection = make_test_database("empty_read_test")
-    empty_db_reader = DatabaseReader(empty_db_connection)
+    empty_db_connector = make_test_database("empty_read_test")
+    empty_db_reader = DatabaseReader(empty_db_connector)
 
     # Check that we can make a query
     table = empty_db_reader.query("SELECT 1+1 AS col")
@@ -40,8 +40,8 @@ def test_db_reader(
     # Check that the tables has not been created in an empty db
     assert not empty_db_reader.check_tables_created()
 
-    db_connection = write_to_split("read_test")
-    db_reader = DatabaseReader(db_connection)
+    db_connector = write_to_split("read_test")
+    db_reader = DatabaseReader(db_connector)
 
     # Check that tables exist
     assert db_reader.check_tables_created()

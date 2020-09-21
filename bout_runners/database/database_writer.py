@@ -56,14 +56,14 @@ class DatabaseWriter:
 
     Create the database
 
-    >>> db_connection = DatabaseConnector('name')
-    >>> db_creator = DatabaseCreator(db_connection)
+    >>> db_connector = DatabaseConnector('name')
+    >>> db_creator = DatabaseCreator(db_connector)
     >>> db_creator.create_all_schema_tables(
     ...     final_parameters_as_sql_types)
 
     Write to the database
 
-    >>> db_writer = DatabaseWriter(db_connection)
+    >>> db_writer = DatabaseWriter(db_connector)
     >>> dummy_split_dict = {'number_of_processors': 1,
     ...                     'number_of_nodes': 2,
     ...                     'processors_per_node': 3}

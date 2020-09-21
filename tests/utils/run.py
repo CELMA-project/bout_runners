@@ -17,7 +17,7 @@ from bout_runners.submitter.local_submitter import LocalSubmitter
 
 
 def assert_first_run(
-    bout_paths: BoutPaths, db_connection: DatabaseConnector
+    bout_paths: BoutPaths, db_connector: DatabaseConnector
 ) -> DatabaseReader:
     """
     Assert that the first run went well.
@@ -26,7 +26,7 @@ def assert_first_run(
     ----------
     bout_paths : BoutPaths
         The object containing the paths
-    db_connection : DatabaseConnector
+    db_connector : DatabaseConnector
         The database connection
 
     Returns
@@ -34,7 +34,7 @@ def assert_first_run(
     db_reader : DatabaseReader
         The database reader object
     """
-    db_reader = DatabaseReader(db_connection)
+    db_reader = DatabaseReader(db_connector)
     assert_dump_files_exist(bout_paths.bout_inp_dst_dir)
     assert db_reader.check_tables_created()
     return db_reader
@@ -149,8 +149,8 @@ def make_run_group(
         run_parameters=run_parameters,
         restart_from=restart_from,
     )
-    db_connection = DatabaseConnector(name)
-    bout_run_setup = BoutRunSetup(executor, db_connection, final_parameters)
+    db_connector = DatabaseConnector(name)
+    bout_run_setup = BoutRunSetup(executor, db_connector, final_parameters)
     # Create the `run_group`
     run_graph = run_graph if run_graph is not None else RunGraph()
     run_group = RunGroup(run_graph, bout_run_setup, name=name, waiting_for=waiting_for)

@@ -109,8 +109,8 @@ def make_make_object(yield_bout_path: Path) -> Iterator[Tuple[Make, Path]]:
     remove_tree(str(tmp_path))
 
 
-@pytest.fixture(scope="session")
-def make_project(yield_conduction_path: Path) -> Iterator[Path]:
+@pytest.fixture(scope="session", name="make_project")
+def fixture_make_project(yield_conduction_path: Path) -> Iterator[Path]:
     """
     Set up and tear down the Make object.
 
@@ -265,12 +265,12 @@ def fixture_make_test_schema(
 
         Returns
         -------
-        db_connection : DatabaseConnector
+        db_connector : DatabaseConnector
             The database connection object
         final_parameters_as_sql_types : dict
             Final parameters as sql types
         """
-        db_connection = make_test_database(db_name)
+        db_connector = make_test_database(db_name)
 
         default_parameters = get_default_parameters
         final_parameters = FinalParameters(default_parameters)
@@ -279,11 +279,11 @@ def fixture_make_test_schema(
             final_parameters_dict
         )
 
-        db_creator = DatabaseCreator(db_connection)
+        db_creator = DatabaseCreator(db_connector)
 
         db_creator.create_all_schema_tables(final_parameters_as_sql_types)
 
-        return db_connection, final_parameters_as_sql_types
+        return db_connector, final_parameters_as_sql_types
 
     yield _make_schema
 
@@ -319,12 +319,12 @@ def write_to_split(
 
         Returns
         -------
-        db_connection : DatabaseConnector
+        db_connector : DatabaseConnector
             The database connection object
         """
-        db_connection, _ = make_test_schema(db_name)
+        db_connector, _ = make_test_schema(db_name)
 
-        db_writer = DatabaseWriter(db_connection)
+        db_writer = DatabaseWriter(db_connector)
         dummy_split_dict = {
             "number_of_processors": 1,
             "number_of_nodes": 2,
@@ -332,7 +332,7 @@ def write_to_split(
         }
         db_writer.create_entry("split", dummy_split_dict)
 
-        return db_connection
+        return db_connector
 
     yield _write_split
 
@@ -532,8 +532,8 @@ def yield_metadata_reader(get_test_data_path: Path) -> Iterator[MetadataReader]:
     MetadataReader
         The instance to read the metadata
     """
-    test_db_connection = DatabaseConnector(name="test", db_root_path=get_test_data_path)
-    yield MetadataReader(test_db_connection, drop_id=None)
+    test_db_connector = DatabaseConnector(name="test", db_root_path=get_test_data_path)
+    yield MetadataReader(test_db_connector, drop_id=None)
 
 
 @pytest.fixture(scope="session")
@@ -1063,8 +1063,8 @@ def get_bout_run_setup(
     return _get_bout_run_setup
 
 
-@pytest.fixture(scope="function")
-def tear_down_restart_directories() -> Iterator[Callable[[Path], None]]:
+@pytest.fixture(scope="function", name="tear_down_restart_directories")
+def fixture_tear_down_restart_directories() -> Iterator[Callable[[Path], None]]:
     r"""
     Return a function for removal of restart directories.
 
@@ -1093,4 +1093,74 @@ def tear_down_restart_directories() -> Iterator[Callable[[Path], None]]:
         run_directory_parent.glob(f"{run_directory_name}_restart_*")
     )
     for run_dir in run_directories_list:
-        shutil.rmtree(run_dir)
+        if run_dir.is_dir():
+            shutil.rmtree(run_dir)
+
+
+@pytest.fixture(scope="function")
+def clean_up_bout_inp_src_and_dst(
+    make_project: Path, tear_down_restart_directories: Callable[[Path], None]
+) -> Iterator[Callable[[str, str], Tuple[Path, Path, Path]]]:
+    """
+    Return a function which adds temporary BOUT.inp directories to removal.
+
+    Warnings
+    --------
+    Will not clean any databases
+
+    Parameters
+    ----------
+    make_project : Path
+        Path to the project directory
+    tear_down_restart_directories : function
+        Function which add restart directories for removal
+
+    Yields
+    ------
+    _clean_up_bout_inp_src_and_dst : function
+        Function which adds temporary BOUT.inp directories to removal
+    """
+    dirs_to_delete = list()
+
+    def _clean_up_bout_inp_src_and_dst(
+        bout_inp_src_name: str, bout_inp_dst_name: str
+    ) -> Tuple[Path, Path, Path]:
+        """
+        Add temporary BOUT.inp directories to removal.
+
+        Parameters
+        ----------
+        bout_inp_src_name : str
+            Name of the directory where the BOUT.inp source file resides
+        bout_inp_dst_name : str
+            Name of the source of the BOUT.inp destination directory
+
+        Returns
+        -------
+        project_path : Path
+            Path to the conduction example
+        bout_inp_src_dir : Path
+            Path to the BOUT.inp source dir
+        bout_inp_dst_dir : Path
+            Path to the BOUT.inp destination dir
+        """
+        project_path = make_project
+        project_bout_inp = project_path.joinpath("data")
+        bout_inp_src_dir = project_path.joinpath(bout_inp_src_name)
+        bout_inp_dst_dir = project_path.joinpath(bout_inp_dst_name)
+
+        tear_down_restart_directories(bout_inp_dst_dir)
+
+        dirs_to_delete.append(bout_inp_src_dir)
+        dirs_to_delete.append(bout_inp_dst_dir)
+
+        bout_inp_src_dir.mkdir(exist_ok=True)
+        shutil.copy(project_bout_inp.joinpath("BOUT.inp"), bout_inp_src_dir)
+
+        return project_path, bout_inp_src_dir, bout_inp_dst_dir
+
+    yield _clean_up_bout_inp_src_and_dst
+
+    for dir_to_delete in dirs_to_delete:
+        if dir_to_delete.is_dir():
+            shutil.rmtree(dir_to_delete)

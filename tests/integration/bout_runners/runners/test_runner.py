@@ -65,9 +65,9 @@ def test_bout_runners_from_directory(
 
     bout_paths = bout_run_setup.bout_paths
     tear_down_restart_directories(bout_run_setup.bout_paths.bout_inp_dst_dir)
-    db_connection = bout_run_setup.db_connector
+    db_connector = bout_run_setup.db_connector
     # Assert that the run went well
-    db_reader = assert_first_run(bout_paths, db_connection)
+    db_reader = assert_first_run(bout_paths, db_connector)
     # Assert that the number of runs is 1
     assert_tables_have_expected_len(
         db_reader, yield_number_of_rows_for_all_tables, expected_run_number=1
