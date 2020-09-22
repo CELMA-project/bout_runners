@@ -4,12 +4,15 @@
 import re
 import logging
 import shutil
+import psutil
+from time import sleep
 from pathlib import Path
 from typing import Optional, Dict, Callable, Tuple, Any
 
 from bout_runners.runner.run_graph import RunGraph
 from bout_runners.runner.bout_run_setup import BoutRunSetup
 from bout_runners.runner.run_group import RunGroup
+from bout_runners.metadata.status_checker import StatusChecker
 from bout_runners.submitter.abstract_submitter import AbstractSubmitter
 from bout_runners.submitter.local_submitter import LocalSubmitter
 
@@ -337,7 +340,13 @@ class BoutRunner:
         logging.info("Resetting the graph")
         self.__run_graph.reset()
 
-    def run(self, restart_all: bool = False, force: bool = False) -> None:
+    def run(
+        self,
+        restart_all: bool = False,
+        force: bool = False,
+        raise_errors: bool = False,
+        wait_time: int = 1,
+    ) -> None:
         """
         Execute all the nodes in the run_graph.
 
@@ -347,14 +356,18 @@ class BoutRunner:
             All the BOUT++ runs in the run graph will be restarted
         force : bool
             Execute the run even if has been performed with the same parameters
+        raise_errors : bool
+            If True the program will raise any error caught when during the running
+            of the nodes
+            If False the program will continue execution, but all nodes depending on
+            the errored node will be marked as errored and not submitted
+        wait_time : int
+            Time to wait before checking if a job has completed
 
         Raises
         ------
         RuntimeError
             If none of the nodes in the `run_graph` has status "ready"
-
-        # FIXME: You are here: Ensure that the nodes are completed before
-        #        starting the next one
         """
         if force or restart_all:
             logging.debug(
@@ -385,6 +398,12 @@ class BoutRunner:
                     )
                     # NOTE: pid can be None if the run has already been executed
                     pid_dict[node_name] = pid
+                    pid_dict["db_connector"] = nodes_at_current_order[node_name][
+                        "bout_run_setup"
+                    ].db_connector
+                    pid_dict["project_path"] = nodes_at_current_order[node_name][
+                        "bout_run_setup"
+                    ].bout_paths.project_path
                 else:
                     pid = self.run_function(
                         nodes_at_current_order[node_name]["path"],
@@ -395,3 +414,56 @@ class BoutRunner:
                     )
                     pid_dict[node_name] = pid
                 logging.debug("Job submitted with pid=%s", pid)
+
+            # Selecting only the jobs with an actual pid
+            node_names = list(
+                node_name
+                for node_name in pid_dict.keys()
+                if pid_dict[node_name] is not None
+            )
+            while len(node_names) != 0:
+                for node_name in node_names:
+                    pid = pid_dict[node_name]
+
+                    if not psutil.pid_exists(pid):
+                        # FIXME: Return the submitter instead of the pid. The submitter can be found in executor.execute
+                        if errored(submitter):
+                            # FIXME: Log error
+                            if raise_errors:
+                                pass
+                                # FIXME: Raise the error
+
+                        if node_name.startswith("bout_run"):
+                            if completed():
+                                logging.info(
+                                    "%s with pid=%s has successfully completed",
+                                    node_name,
+                                    pid,
+                                )
+                            else:
+                                pass
+                                # FIXME: Run stopped without giving error, give an error and stop the other nodes
+
+                        else:
+                            # FIXME: As for now: If the pid of a function is removed, and did not throw any errors, we assume that it's completed
+                            logging.debug("%s with pid=%s finished", node_name, pid)
+                        node_names.remove(node_name)
+                    else:
+                        logging.debug(
+                            "pid=%s found, %s seems to be running", pid, node_name
+                        )
+
+                    if node_name.startswith("bout_run"):
+                        StatusChecker(
+                            pid_dict["db_connector"], pid_dict["project_path"]
+                        ).check_and_update_status()
+
+                sleep(wait_time)
+                # FIXME: Refactor status checker
+                # FIXME: Consider a raise on error flag - if error everything stops, else only dependecies stop
+
+                # Check that pid is present
+
+                # If no, check if successful or error, if bout_run in name check db
+                # If error, set dependency graph to not run
+                # pop from pids
