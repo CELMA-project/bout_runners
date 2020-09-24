@@ -4,11 +4,11 @@
 import re
 import logging
 import shutil
-import psutil
 from time import sleep
 from pathlib import Path
-from typing import Optional, Dict, Callable, Tuple, Any
+from typing import Optional, Dict, Callable, Tuple, Any, Union
 
+from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.runner.run_graph import RunGraph
 from bout_runners.runner.bout_run_setup import BoutRunSetup
 from bout_runners.runner.run_group import RunGroup
@@ -146,7 +146,7 @@ class BoutRunner:
         bout_run_setup: BoutRunSetup,
         restart_from_bout_inp_dst: bool = False,
         force: bool = False,
-    ) -> Optional[int]:
+    ) -> Optional[AbstractSubmitter]:
         """
         Perform the BOUT++ run and capture the related metadata.
 
@@ -166,8 +166,9 @@ class BoutRunner:
 
         Returns
         -------
-        pid : None or int
-            The process id if the run is not skipped
+        submitter : AbstractSubmitter or None
+            The submitter used
+            If the run is skipped None will be returned
         """
         if (
             restart_from_bout_inp_dst
@@ -201,17 +202,17 @@ class BoutRunner:
             bout_run_setup.executor.submitter.processor_split, restart, force
         )
 
-        pid = None
+        submitter = None
         if run_id is None:
             if not restart:
                 logging.info("Executing the run")
             else:
                 BoutRunner.copy_restart_files(bout_run_setup)
                 logging.info("Executing the run from restart files")
-            pid = bout_run_setup.executor.execute(restart)
+            submitter = bout_run_setup.executor.execute(restart)
         elif force:
             logging.info("Executing the run as force==True")
-            pid = bout_run_setup.executor.execute()
+            submitter = bout_run_setup.executor.execute()
         else:
             logging.warning(
                 "Run with the same configuration has been executed before, "
@@ -219,7 +220,7 @@ class BoutRunner:
                 run_id,
             )
 
-        return pid
+        return submitter
 
     @staticmethod
     def copy_restart_files(bout_run_setup: BoutRunSetup) -> None:
@@ -299,7 +300,7 @@ class BoutRunner:
         args: Optional[Tuple[Any, ...]] = None,
         kwargs: Optional[Dict[str, Any]] = None,
         submitter: Optional[AbstractSubmitter] = None,
-    ) -> Optional[int]:
+    ) -> AbstractSubmitter:
         """
         Submit a function for execution.
 
@@ -320,8 +321,8 @@ class BoutRunner:
 
         Returns
         -------
-        pid : int
-            The process id
+        submitter : AbstractSubmitter
+            The submitter used
         """
         logging.info(
             "Submitting %s, with positional parameters %s, and keyword parameters %s",
@@ -333,7 +334,7 @@ class BoutRunner:
         submitter.write_python_script(path, function, args, kwargs)
         command = f"python3 {path}"
         submitter.submit_command(command)
-        return submitter.pid
+        return submitter
 
     def reset(self) -> None:
         """Reset the run_graph."""
@@ -387,83 +388,125 @@ class BoutRunner:
             raise RuntimeError(msg)
 
         for nodes_at_current_order in self.__run_graph:
-            pid_dict = dict()
+            submitter_dict: Dict[
+                str,
+                Dict[
+                    str,
+                    Union[Optional[AbstractSubmitter], Union[DatabaseConnector, Path]],
+                ],
+            ] = dict()
             for node_name in nodes_at_current_order.keys():
                 logging.info("Executing %s", node_name)
+                submitter_dict[node_name] = dict()
                 if node_name.startswith("bout_run"):
-                    pid = self.run_bout_run(
+                    submitter = self.run_bout_run(
                         nodes_at_current_order[node_name]["bout_run_setup"],
                         restart_all,
                         force,
                     )
-                    # NOTE: pid can be None if the run has already been executed
-                    pid_dict[node_name] = pid
-                    pid_dict["db_connector"] = nodes_at_current_order[node_name][
-                        "bout_run_setup"
-                    ].db_connector
-                    pid_dict["project_path"] = nodes_at_current_order[node_name][
-                        "bout_run_setup"
-                    ].bout_paths.project_path
+                    submitter_dict[node_name]["submitter"] = submitter
+                    submitter_dict[node_name]["db_connector"] = nodes_at_current_order[
+                        node_name
+                    ]["bout_run_setup"].db_connector
+                    submitter_dict[node_name]["project_path"] = nodes_at_current_order[
+                        node_name
+                    ]["bout_run_setup"].bout_paths.project_path
                 else:
-                    pid = self.run_function(
+                    submitter = self.run_function(
                         nodes_at_current_order[node_name]["path"],
                         nodes_at_current_order[node_name]["function"],
                         nodes_at_current_order[node_name]["args"],
                         nodes_at_current_order[node_name]["kwargs"],
                         nodes_at_current_order[node_name]["submitter"],
                     )
-                    pid_dict[node_name] = pid
-                logging.debug("Job submitted with pid=%s", pid)
+                    submitter_dict[node_name]["submitter"] = submitter
 
-            # Selecting only the jobs with an actual pid
-            node_names = list(
-                node_name
-                for node_name in pid_dict.keys()
-                if pid_dict[node_name] is not None
-            )
-            while len(node_names) != 0:
-                for node_name in node_names:
-                    pid = pid_dict[node_name]
+                if submitter is not None:
+                    logging.debug(
+                        "Node '%s' submitted with pid %s", node_name, submitter.pid
+                    )
 
-                    if not psutil.pid_exists(pid):
-                        # FIXME: Return the submitter instead of the pid. The submitter can be found in executor.execute
-                        if errored(submitter):
-                            # FIXME: Log error
-                            if raise_errors:
-                                pass
-                                # FIXME: Raise the error
+            self.__monitor_runs(submitter_dict, raise_errors, wait_time)
 
-                        if node_name.startswith("bout_run"):
-                            if completed():
-                                logging.info(
-                                    "%s with pid=%s has successfully completed",
-                                    node_name,
-                                    pid,
-                                )
-                            else:
-                                pass
-                                # FIXME: Run stopped without giving error, give an error and stop the other nodes
+    def __monitor_runs(
+        self,
+        submitter_dict: Dict[
+            str,
+            Dict[
+                str, Union[Optional[AbstractSubmitter], Union[DatabaseConnector, Path]]
+            ],
+        ],
+        raise_errors: bool,
+        wait_time: int,
+    ) -> None:
+        """
+        Monitor the runs belonging to the same order.
 
-                        else:
-                            # FIXME: As for now: If the pid of a function is removed, and did not throw any errors, we assume that it's completed
-                            logging.debug("%s with pid=%s finished", node_name, pid)
-                        node_names.remove(node_name)
-                    else:
-                        logging.debug(
-                            "pid=%s found, %s seems to be running", pid, node_name
+        Parameters
+        ----------
+        submitter_dict : dict
+            Dict containing the the node names as keys and a new dict as values
+            The new dict contains the keywords 'submitter' with value AbstractSubmitter
+            If the submitter contains a bout run, the new dict will also contain the
+            keyword 'db_connector' with the value DatabaseConnector and the keyword
+            'project_path' with the value Path which will be used in the StatusChecker
+        raise_errors : bool
+            If True the program will raise any error caught when during the running
+            of the nodes
+            If False the program will continue execution, but all nodes depending on
+            the errored node will be marked as errored and not submitted
+        wait_time : int
+            Time to wait before checking if a job has completed
+
+        Raises
+        ------
+        RuntimeError
+            If the types in the dict are unexpected
+        """
+        node_names = list(
+            node_name
+            for node_name in submitter_dict.keys()
+            if submitter_dict[node_name]["submitter"] is not None
+        )
+
+        while len(node_names) != 0:
+            for node_name in node_names:
+                submitter = submitter_dict[node_name]["submitter"]
+                if not isinstance(submitter, AbstractSubmitter):
+                    raise RuntimeError(
+                        f"The submitter of the '{node_name}' node was expected to be "
+                        f"of type 'AbstractSubmitter', but got '{type(submitter)}' "
+                        f"instead"
+                    )
+
+                if submitter.completed():
+                    if submitter.errored():
+                        self.__run_graph.change_status_node_and_dependencies(node_name)
+                        if raise_errors:
+                            submitter.raise_error()
+
+                    node_names.remove(node_name)
+                else:
+                    logging.debug(
+                        "pid=%s found, %s seems to be running", submitter.pid, node_name
+                    )
+
+                if node_name.startswith("bout_run"):
+                    db_connector = submitter_dict[node_name]["db_connector"]
+                    if not isinstance(db_connector, DatabaseConnector):
+                        raise RuntimeError(
+                            f"The db_connector of the '{node_name}' node was expected "
+                            f"to be of type 'DatabaseConnector', but got "
+                            f"'{type(db_connector)}' instead"
                         )
 
-                    if node_name.startswith("bout_run"):
-                        StatusChecker(
-                            pid_dict["db_connector"], pid_dict["project_path"]
-                        ).check_and_update_status()
+                    project_path = submitter_dict[node_name]["project_path"]
+                    if not isinstance(project_path, Path):
+                        raise RuntimeError(
+                            f"The project_path of the '{node_name}' node was expected "
+                            f"to be of type 'Path', but got '{type(project_path)}' "
+                            f"instead"
+                        )
+                    StatusChecker(db_connector, project_path).check_and_update_status()
 
-                sleep(wait_time)
-                # FIXME: Refactor status checker
-                # FIXME: Consider a raise on error flag - if error everything stops, else only dependecies stop
-
-                # Check that pid is present
-
-                # If no, check if successful or error, if bout_run in name check db
-                # If error, set dependency graph to not run
-                # pop from pids
+            sleep(wait_time)

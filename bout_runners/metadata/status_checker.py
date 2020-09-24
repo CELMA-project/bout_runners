@@ -195,10 +195,11 @@ class StatusChecker:
                     latest_status = self.check_if_running_or_errored(log_reader)
             else:
                 # No log file exists
-                # FIXME: Check pid
                 # NOTE: This means that the execution is either in a
                 #       queue or has failed the submission.
                 #       For now, we still consider this as submitted
+                #       This can maybe be decided by checking either the
+                #       pid or the status from the submitter
                 latest_status = "submitted"
 
             metadata_updater.update_latest_status(latest_status)

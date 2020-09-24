@@ -7,6 +7,7 @@ from pathlib import Path
 from bout_runners.executor.bout_paths import BoutPaths
 from bout_runners.make.make import Make
 from bout_runners.parameters.run_parameters import RunParameters
+from bout_runners.submitter.abstract_submitter import AbstractSubmitter
 from bout_runners.submitter.local_submitter import LocalSubmitter
 
 
@@ -165,7 +166,7 @@ class Executor:
         )
         return command
 
-    def execute(self, restart: bool = False) -> Optional[int]:
+    def execute(self, restart: bool = False) -> AbstractSubmitter:
         """
         Execute a BOUT++ run.
 
@@ -176,8 +177,8 @@ class Executor:
 
         Returns
         -------
-        pid : int
-            The process id
+        submitter : AbstractSubmitter
+            The submitter
         """
         # Make the project if not already made
         self.__make.run_make()
@@ -186,4 +187,4 @@ class Executor:
         if restart:
             command += " restart"
         self.submitter.submit_command(command)
-        return self.submitter.pid
+        return self.submitter

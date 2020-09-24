@@ -346,6 +346,7 @@ class RunGraph:
         nodes_to_remove = self.get_waiting_for_tuple(start_node_name)
         for node_name in nodes_to_remove:
             self.__graph.nodes[node_name]["status"] = status
+            logging.debug("Changed status of %s to %s", node_name, status)
 
     def get_dot_string(self) -> str:
         """

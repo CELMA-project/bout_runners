@@ -91,8 +91,10 @@ def get_git_sha(path: Path) -> str:
         The git hash
     """
     try:
-        result = LocalSubmitter(path).submit_command("git rev-parse HEAD")
-        git_sha: str = result.stdout.decode("utf8").strip()
+        submitter = LocalSubmitter(path)
+        submitter.submit_command("git rev-parse HEAD")
+        submitter.wait_until_completed()
+        git_sha = submitter.std_out
     # FileNotFoundError when `git` is not found
     except (FileNotFoundError, CalledProcessError) as error:
         if isinstance(error, FileNotFoundError):
@@ -103,6 +105,9 @@ def get_git_sha(path: Path) -> str:
             error_str = "Unknown error"
         logging.warning("Could not retrieve git sha: %s", error_str)
         git_sha = "None"
+
+    git_sha = git_sha if git_sha is not None else "None"
+
     return git_sha
 
 

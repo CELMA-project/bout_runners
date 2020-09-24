@@ -82,7 +82,9 @@ def test_run_bout_run(
     db_connector = bout_run_setup.db_connector
 
     # Run once
-    runner.run_bout_run(bout_run_setup)
+    submitter = runner.run_bout_run(bout_run_setup)
+    if submitter is not None:
+        submitter.wait_until_completed()
     # Assert that the run went well
     database_reader = assert_first_run(bout_paths, db_connector)
     # Assert that the number of runs is 1
@@ -91,14 +93,16 @@ def test_run_bout_run(
     )
 
     # Check that the run will not be executed again
-    runner.run_bout_run(bout_run_setup)
+    assert runner.run_bout_run(bout_run_setup) is None
     # Assert that the number of runs is 1
     assert_tables_have_expected_len(
         database_reader, yield_number_of_rows_for_all_tables, expected_run_number=1
     )
 
     # Check that force overrides the behaviour
-    runner.run_bout_run(bout_run_setup, force=True)
+    submitter = runner.run_bout_run(bout_run_setup, force=True)
+    if submitter is not None:
+        submitter.wait_until_completed()
     assert_tables_have_expected_len(
         database_reader, yield_number_of_rows_for_all_tables, expected_run_number=2
     )
@@ -106,7 +110,9 @@ def test_run_bout_run(
     dump_dir_name = bout_paths.bout_inp_dst_dir.name
 
     # Check that restart makes another entry
-    runner.run_bout_run(bout_run_setup, restart_from_bout_inp_dst=True)
+    submitter = runner.run_bout_run(bout_run_setup, restart_from_bout_inp_dst=True)
+    if submitter is not None:
+        submitter.wait_until_completed()
     assert_tables_have_expected_len(
         database_reader,
         yield_number_of_rows_for_all_tables,
@@ -117,7 +123,9 @@ def test_run_bout_run(
     #       restart_all=True, whether this is testing restart_from_bout_inp_dst=True
     assert_dump_files_exist(dump_dir_parent.joinpath(f"{dump_dir_name}_restart_0"))
     # ...and yet another entry
-    runner.run_bout_run(bout_run_setup, restart_from_bout_inp_dst=True)
+    submitter = runner.run_bout_run(bout_run_setup, restart_from_bout_inp_dst=True)
+    if submitter is not None:
+        submitter.wait_until_completed()
     assert_tables_have_expected_len(
         database_reader,
         yield_number_of_rows_for_all_tables,
@@ -142,13 +150,16 @@ def test_function_run(tmp_path: Path) -> None:
     runner = BoutRunner(run_graph)
     path = tmp_path.joinpath("return_none.py")
 
-    runner.run_function(path, return_none)
+    submitter = runner.run_function(path, return_none)
+    submitter.wait_until_completed()
     assert path.is_file()
 
     path = tmp_path.joinpath("return_sum_of_two.py")
-    runner.run_function(path, return_sum_of_two, (1, 2))
+    submitter = runner.run_function(path, return_sum_of_two, (1, 2))
+    submitter.wait_until_completed()
     assert path.is_file()
 
     path = tmp_path.joinpath("return_sum_of_three.py")
-    runner.run_function(path, return_sum_of_three, (1, 2), {"number_3": 3})
+    submitter = runner.run_function(path, return_sum_of_three, (1, 2), {"number_3": 3})
+    submitter.wait_until_completed()
     assert path.is_file()
