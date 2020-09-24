@@ -28,6 +28,21 @@ class AbstractSubmitter(ABC):
     def pid(self) -> Optional[int]:
         """Return the process id."""
 
+    @property
+    @abstractmethod
+    def return_code(self) -> Optional[int]:
+        """Return the return code."""
+
+    @property
+    @abstractmethod
+    def std_out(self) -> Optional[str]:
+        """Return the standard output."""
+
+    @property
+    @abstractmethod
+    def std_err(self) -> Optional[str]:
+        """Return the standard error."""
+
     @staticmethod
     def write_python_script(
         path: Path,
@@ -102,12 +117,24 @@ class AbstractSubmitter(ABC):
         logging.info("Python script written to %s", path)
 
     @abstractmethod
-    def _raise_submit_error(self, result: Any) -> None:
+    def wait_until_completed(self, raise_error: bool = True) -> None:
         """
-        Raise error if submission failed.
+        Wait until the process has completed.
 
         Parameters
         ----------
-        result : object
-            The result from the subprocess
+        raise_error : bool
+            Whether or not to raise errors
         """
+
+    @abstractmethod
+    def completed(self) -> bool:
+        """Return the completed status."""
+
+    @abstractmethod
+    def errored(self) -> bool:
+        """Return True if the process errored."""
+
+    @abstractmethod
+    def raise_error(self) -> None:
+        """Raise and error from the subprocess in a clean way."""

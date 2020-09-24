@@ -133,6 +133,7 @@ class DefaultParameters:
         executor = self.get_test_executor(bout_paths)
 
         executor.execute()
+        executor.submitter.wait_until_completed()
 
         self.__settings_path = bout_paths.bout_inp_dst_dir.joinpath("BOUT.settings")
 
