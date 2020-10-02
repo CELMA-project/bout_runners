@@ -132,8 +132,15 @@ class AbstractSubmitter(ABC):
         """Return the completed status."""
 
     @abstractmethod
-    def errored(self) -> bool:
-        """Return True if the process errored."""
+    def errored(self, raise_error: bool = False) -> bool:
+        """
+        Return True if the process errored.
+
+        Parameters
+        ----------
+        raise_error : bool
+            Whether or not to raise errors
+        """
 
     @abstractmethod
     def raise_error(self) -> None:
