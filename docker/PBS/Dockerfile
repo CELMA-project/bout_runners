@@ -22,6 +22,16 @@ ARG SET_QUEUE="\/opt\/pbs\/bin\/qmgr -c \"set node pbs queue=workq\""
 # https://unix.stackexchange.com/questions/41571/what-is-the-difference-between-and#
 ARG RUN_CMD_AS_PBSUSER="su -c \"\$*\" - \"pbsuser\""
 
+# Install mpi
+RUN yum install gcc gcc-c++ gcc-gfortran make wget -y \
+    && wget http://www.mpich.org/static/downloads/3.3.2/mpich-3.3.2.tar.gz \
+    && tar -xvzf mpich-3.3.2.tar.gz \
+    && cd mpich-3.3.2 \
+    && ./configure --prefix=/usr \
+    && make \
+    && make install \
+    && rm -rf mpich*
+
 # Change the start-script in order to enter a started cluster
 # First we remove the executions at the end of the script
 RUN sed -i "s/exec \"\$@\"//" entrypoint.sh
