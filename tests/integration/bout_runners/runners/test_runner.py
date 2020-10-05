@@ -242,10 +242,20 @@ def test_large_graph(
     )
 
     # RunGroup belonging to node 4
-    run_groups["run_group_4"] = make_run_group(name, make_project, run_graph)
+    # NOTE: The name changes as there is a chance that node 4 finishes before
+    #       node 0 and 1
+    #       If this happens, node_zero or node_one may fail
+    #       (as they are looking for .settings files)
+    run_groups["run_group_4"] = make_run_group(
+        f"a_different_{name}", make_project, run_graph
+    )
     paths["bout_run_directory_node_4"] = run_groups[
         "run_group_4"
     ].bout_paths.bout_inp_dst_dir
+
+    # Remember to remove run_group_4 as well since we are operating with a different
+    # name
+    tear_down_restart_directories(paths["bout_run_directory_node_4"])
 
     # RunGroup belonging to node 6
     run_groups["run_group_6"] = make_run_group(

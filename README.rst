@@ -7,7 +7,7 @@
 
 |lint| |test| |docker| |ltgm_grade| |codecov| |docs|
 
-|pypi| |python| |license|
+|pypi| |python| |license| |fossa_licence|
 
 |bandit| |code_style| |mypy|
 
@@ -46,6 +46,10 @@
 .. |license| image:: https://img.shields.io/badge/license-LGPL--3.0-blue.svg
     :alt: licence
     :target: https://github.com/CELMA-project/bout_runners/blob/master/LICENSE
+
+.. |fossa_licence| image:: https://app.fossa.com/api/projects/git%2Bgithub.com%2FCELMA-project%2Fbout_runners.svg?type=shield
+    :alt: fossa status
+    :target: https://app.fossa.com/projects/git%2Bgithub.com%2FCELMA-project%2Fbout_runners?ref=badge_shield
 
 .. |code_style| image:: https://img.shields.io/badge/code%20style-black-000000.svg
     :alt: code standard
@@ -199,6 +203,10 @@ License
 This project is licensed under the ``GNU LESSER GENERAL PUBLIC LICENSE`` - see the LICENSE_ file for details
 
 .. _LICENSE: https://github.com/CELMA-project/bout_runners/blob/master/LICENSE
+
+.. image:: https://app.fossa.com/api/projects/git%2Bgithub.com%2FCELMA-project%2Fbout_runners.svg?type=large
+    :alt: licence status
+    :target: https://app.fossa.com/projects/git%2Bgithub.com%2FCELMA-project%2Fbout_runners?ref=badge_large
 
 Acknowledgments
 ---------------
