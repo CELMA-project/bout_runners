@@ -3,10 +3,12 @@
 
 import logging
 
+from bout_runners.submitter.local_submitter import AbstractSubmitter
 from bout_runners.submitter.local_submitter import LocalSubmitter
+from bout_runners.submitter.pbs_submitter import PBSSubmitter
 
 
-def get_submitter(name: str, *args, **kwargs) -> LocalSubmitter:
+def get_submitter(name: str, *args, **kwargs) -> AbstractSubmitter:
     """
     Return a Submitter object.
 
@@ -29,14 +31,14 @@ def get_submitter(name: str, *args, **kwargs) -> LocalSubmitter:
     NotImplementedError
         If the name is not a supported submitter class
     """
-    implemented = ("local",)
+    implemented = ("local", "pbs")
+
+    logging.debug("Selecting a %s submitter", name)
 
     if name == "local":
-        submitter = LocalSubmitter(*args, **kwargs)
-    else:
-        msg = f"{name} is not a valid submitter class, choose " f"from {implemented}"
-        raise NotImplementedError(msg)
+        return LocalSubmitter(**kwargs)
+    if name == "pbs":
+        return PBSSubmitter(*args, **kwargs)
 
-    logging.debug("%s submitter selected", name)
-
-    return submitter
+    msg = f"{name} is not a valid submitter class, choose " f"from {implemented}"
+    raise NotImplementedError(msg)
