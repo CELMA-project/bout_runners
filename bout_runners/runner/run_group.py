@@ -9,7 +9,7 @@ from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.runner.bout_run_setup import BoutRunSetup
 from bout_runners.executor.bout_paths import BoutPaths
 from bout_runners.runner.run_graph import RunGraph
-from bout_runners.submitter.abstract_submitter import AbstractSubmitter
+from bout_runners.submitter.abstract_submitters import AbstractSubmitter
 from bout_runners.submitter.local_submitter import LocalSubmitter
 
 

@@ -10,7 +10,7 @@ from pathlib import Path
 
 from typing import Optional, Union, Dict
 
-from bout_runners.submitter.abstract_submitter import AbstractSubmitter
+from bout_runners.submitter.abstract_submitters import AbstractSubmitter
 from bout_runners.submitter.processor_split import ProcessorSplit
 from bout_runners.utils.file_operations import get_caller_dir
 
@@ -71,7 +71,7 @@ class LocalSubmitter(AbstractSubmitter):
 
     def __init__(
         self,
-        path: Optional[Path] = None,
+        run_path: Optional[Path] = None,
         processor_split: Optional[ProcessorSplit] = None,
     ) -> None:
         """
@@ -79,7 +79,7 @@ class LocalSubmitter(AbstractSubmitter):
 
         Parameters
         ----------
-        path : Path or str or None
+        run_path : Path or str or None
             Directory to run the command from
             If None, the calling directory will be used
         processor_split : ProcessorSplit or None
@@ -88,7 +88,9 @@ class LocalSubmitter(AbstractSubmitter):
         """
         # NOTE: We are not setting the default as a keyword argument
         #       as this would mess up the paths
-        self.__path = Path(path).absolute() if path is not None else get_caller_dir()
+        self.__path = (
+            Path(run_path).absolute() if run_path is not None else get_caller_dir()
+        )
         self.__process: Optional[subprocess.Popen] = None
 
         self.__logged_complete_status = False
