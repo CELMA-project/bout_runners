@@ -8,7 +8,7 @@ import logging
 import subprocess  # nosec
 from pathlib import Path
 
-from typing import Optional, Union, Dict
+from typing import Optional
 
 from bout_runners.submitter.abstract_submitters import AbstractSubmitter
 from bout_runners.submitter.processor_split import ProcessorSplit
@@ -21,17 +21,17 @@ class LocalSubmitter(AbstractSubmitter):
 
     Attributes
     ----------
-    __status : dict of str
+    _status : dict of str
         Status of the submission
     __path : Path or str
         Directory to run the command from
     __process : None or Popen
         The Popen process if it has been created
-    __logged_complete_status : bool
+    _logged_complete_status : bool
         Whether the complete status has been logged
     processor_split : ProcessorSplit
         Object containing the processor split
-    pid : None or int
+    job_id : None or int
         The processor id if the process has started
     return_code : None or int
         The return code if the process has finished
@@ -42,7 +42,7 @@ class LocalSubmitter(AbstractSubmitter):
 
     Methods
     -------
-    __wait_for_std_out_and_std_err()
+    _wait_for_std_out_and_std_err()
         Wait until the process completes, populate return_code, std_out and std_err
     __catch_error()
         Log the error
@@ -86,6 +86,7 @@ class LocalSubmitter(AbstractSubmitter):
             Object containing the processor split
             If None, default values will be used
         """
+        AbstractSubmitter.__init__(self)
         # NOTE: We are not setting the default as a keyword argument
         #       as this would mess up the paths
         self.__path = (
@@ -93,83 +94,23 @@ class LocalSubmitter(AbstractSubmitter):
         )
         self.__process: Optional[subprocess.Popen] = None
 
-        self.__logged_complete_status = False
-
-        # Attributes with getters
-        self.__status: Dict[str, Union[Optional[int], Optional[str]]] = dict()
-        self.__status["pid"] = None
-        self.__status["return_code"] = None
-        self.__status["std_out"] = None
-        self.__status["std_err"] = None
-
         self.processor_split = (
             processor_split if processor_split is not None else ProcessorSplit()
         )
 
     @property
-    def pid(self) -> Optional[int]:
+    def job_id(self) -> Optional[str]:
         """
         Return the process id.
 
         Returns
         -------
-        self.__status["pid"] : int or None
+        self._status["job_id"] : int or None
             The process id if a process has been called, else None
         """
         # Added mypy guard as type of key cannot be set separately
-        return self.__status["pid"] if isinstance(self.__status["pid"], int) else None
-
-    @property
-    def return_code(self) -> Optional[int]:
-        """
-        Return the return code.
-
-        Returns
-        -------
-        self.__status["return_code"] : int or None
-            The return code if the process has completed
-        """
-        # Added mypy guard as type of key cannot be set separately
         return (
-            self.__status["return_code"]
-            if isinstance(self.__status["return_code"], int)
-            else None
-        )
-
-    @property
-    def std_out(self) -> Optional[str]:
-        """
-        Return the standard output.
-
-        Returns
-        -------
-        self.__status["std_out"] : str or None
-            The standard output
-            None if the process has not completed
-        """
-        # Added mypy guard as type of key cannot be set separately
-        return (
-            self.__status["std_out"]
-            if isinstance(self.__status["std_out"], str)
-            else None
-        )
-
-    @property
-    def std_err(self) -> Optional[str]:
-        """
-        Return the standard error.
-
-        Returns
-        -------
-        self.__status["std_err"] : str or None
-            The standard error
-            None if the process has not completed
-        """
-        # Added mypy guard as type of key cannot be set separately
-        return (
-            self.__status["std_err"]
-            if isinstance(self.__status["std_err"], str)
-            else None
+            self._status["job_id"] if isinstance(self._status["job_id"], str) else None
         )
 
     def submit_command(self, command: str) -> None:
@@ -190,34 +131,23 @@ class LocalSubmitter(AbstractSubmitter):
             # https://github.com/PyCQA/bandit/issues/280
             shell=False,  # nosec
         )
-        self.__status["pid"] = self.__process.pid
-        logging.info("pid %s given %s in %s", self.pid, command, self.__path)
+        self._status["job_id"] = str(self.__process.pid)
+        logging.info("job_id %s given %s in %s", self.job_id, command, self.__path)
 
-    def wait_until_completed(self, raise_error: bool = True) -> None:
+    def _wait_for_std_out_and_std_err(self) -> None:
         """
-        Wait until the process has completed.
-
-        Parameters
-        ----------
-        raise_error : bool
-            Whether or not to raise errors
-        """
-        if self.__process is not None:
-            self.__wait_for_std_out_and_std_err()
-            self.__status["return_code"] = self.__process.poll()
-            self.errored(raise_error)
-
-    def __wait_for_std_out_and_std_err(self) -> None:
-        """
-        Wait until the process completes.
+        Wait until the process completes if a process has been started.
 
         Populate return_code, std_out and std_err
         """
         if self.__process is not None:
             std_out, std_err = self.__process.communicate()
-            self.__status["return_code"] = self.__process.poll()
-            self.__status["std_out"] = std_out.decode("utf8").strip()
-            self.__status["std_err"] = std_err.decode("utf8").strip()
+            self._status["return_code"] = self.__process.poll()
+            self._status["std_out"] = std_out.decode("utf8").strip()
+            self._status["std_err"] = std_err.decode("utf8").strip()
+        logging.warning(
+            "No process started, return_code, std_out, std_err not populated"
+        )
 
     def completed(self) -> bool:
         """
@@ -233,51 +163,9 @@ class LocalSubmitter(AbstractSubmitter):
         if self.__process is not None:
             return_code = self.__process.poll()
             if return_code is not None:
-                self.__status["return_code"] = return_code
+                self._status["return_code"] = return_code
                 return True
         return False
-
-    def errored(self, raise_error: bool = False) -> bool:
-        """
-        Return True if the process errored.
-
-        Parameters
-        ----------
-        raise_error : bool
-            Whether or not to raise errors
-
-        Returns
-        -------
-        bool
-            True if the process returned a non-zero code
-        """
-        if self.completed():
-            if self.__status["return_code"] != 0:
-                self.__catch_error()
-                if raise_error:
-                    self.raise_error()
-                return True
-            if not self.__logged_complete_status:
-                logging.info("pid %s completed successfully", self.pid)
-                self.__logged_complete_status = True
-        return False
-
-    def __catch_error(self) -> None:
-        """Log the error."""
-        if self.completed() and self.return_code != 0:
-            self.__wait_for_std_out_and_std_err()
-
-            if not self.__logged_complete_status:
-                logging.error(
-                    "pid %s failed with return code %s",
-                    self.pid,
-                    self.return_code,
-                )
-                logging.error("stdout:")
-                logging.error(self.std_out)
-                logging.error("stderr:")
-                logging.error(self.std_err)
-                self.__logged_complete_status = True
 
     def raise_error(self) -> None:
         """Raise and error from the subprocess in a clean way."""

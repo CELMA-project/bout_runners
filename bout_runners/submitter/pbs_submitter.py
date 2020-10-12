@@ -1,9 +1,11 @@
 """Contains the PBS submitter class."""
 
+import re
 import logging
 
 from pathlib import Path
-from typing import Optional, Dict, List, Tuple
+from typing import Optional, Dict, List, Tuple, Iterable
+from time import sleep
 
 from bout_runners.submitter.processor_split import ProcessorSplit
 from bout_runners.submitter.local_submitter import LocalSubmitter
@@ -26,8 +28,6 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         """
         Set the member data.
 
-        # FIXME: self.__status from LocalSubmitter should be in the parent class
-
         Parameters
         ----------
         job_name : str
@@ -48,14 +48,18 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
             Object containing the processor split
             If None, default values will be used
         """
-        super().__init__(job_name, store_path, submission_dict, processor_split)
+        # https://stackoverflow.com/questions/9575409/calling-parent-class-init-with-multiple-inheritance-whats-the-right-way/50465583
+        AbstractSubmitter.__init__(self)
+        AbstractClusterSubmitter.__init__(
+            self, job_name, store_path, submission_dict, processor_split
+        )
         if self.__submission_dict["walltime"] is not None:
             self.__submission_dict["walltime"] = self.structure_time_to_pbs_format(
                 self.__submission_dict["walltime"]
             )
         self.__waiting_for: List[str] = list()
-        self.__submission_id: Optional[str] = None
-        self.__pid: Optional[int] = None
+        self.__job_id: Optional[str] = None
+        self.__log_and_error_base: Path = Path()
 
     @staticmethod
     def structure_time_to_pbs_format(time_str: str) -> str:
@@ -97,7 +101,7 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         """
         return tuple(self.__waiting_for)
 
-    def add_waiting_for(self, waiting_for_id: str) -> None:
+    def add_waiting_for(self, waiting_for_ids: Iterable[str]) -> None:
         """
         Add a waiting for id to the waiting for list.
 
@@ -106,10 +110,14 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
 
         Parameters
         ----------
-        waiting_for_id : str
+        waiting_for_ids : list of str
             Id to the job waiting for
         """
-        self.__waiting_for.append(waiting_for_id)
+        logging.debug(
+            "Adding the following to the waiting_for_list: %s", waiting_for_ids
+        )
+        for waiting_for_id in waiting_for_ids:
+            self.__waiting_for.append(waiting_for_id)
 
     def create_submission_string(self, command: str) -> str:
         """
@@ -131,7 +139,8 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         account = self.__submission_dict["account"]
         queue = self.__submission_dict["queue"]
         mail = self.__submission_dict["mail"]
-        log_and_error_base = self.__job_name
+        # Notice that we do not add the stem here
+        self.__log_and_error_base = self.__store_path.joinpath(self.__job_name)
         waiting_for_str = (
             f"#PBS -W depend=afterok:{':'.join(self.waiting_for)}{newline}"
             if len(self.waiting_for) != 0
@@ -146,8 +155,8 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
             f"{f'#PBS -l walltime={walltime}{newline}' if walltime is not None else ''}"
             f"{'#PBS -A {account}{newline}' if account is not None else ''}"
             f"{f'#PBS -q {queue}{newline}' if queue is not None else ''}"
-            f"#PBS -o {log_and_error_base}.log\n"
-            f"#PBS -e {log_and_error_base}.err\n"
+            f"#PBS -o {self.__log_and_error_base}.log\n"
+            f"#PBS -e {self.__log_and_error_base}.err\n"
             # a=abort b=begin e=end
             f"{'#PBS -m abe{newline}' if mail is not None else ''}"
             f"{'#PBS -M {mail}{newline}' if mail is not None else ''}"
@@ -172,8 +181,8 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
             f"{'#SBATCH --time={walltime}{newline}}' if walltime is not None else ''}"
             f"{'#SBATCH --account={account}{newline}' if account is not None else ''}"
             f"{'#SBATCH -p {queue}{newline}' if queue is not None else ''}"
-            f"#SBATCH -o {log_and_error_base}.log\n"
-            f"#SBATCH -e {log_and_error_base}.err\n"
+            f"#SBATCH -o {self.__log_and_error_base}.log\n"
+            f"#SBATCH -e {self.__log_and_error_base}.err\n"
             f"{'#SBATCH --mail-type=ALL{newline}' if mail is not None else ''}"
             f"{'#SBATCH --mail-user={mail}{newline}' if mail is not None else ''}"
             f"{waiting_for_str}"
@@ -189,9 +198,6 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         """
         Submit a command.
 
-        FIXME: 4346 in bout-dev
-        FIXME: Before sending command to this function one must inject the dependency
-
         Parameters
         ----------
         command : str
@@ -204,71 +210,50 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         # Submit the command through a local submitter
         local_submitter = LocalSubmitter(run_path=self.__store_path)
         local_submitter.submit_command(f"qsub {script_path}")
-        self.__pid = local_submitter.pid
         local_submitter.wait_until_completed()
-        self.__submission_id = local_submitter.std_out
+        self.__job_id = local_submitter.std_out
 
     @property
-    def pid(self) -> Optional[int]:
+    def job_id(self) -> Optional[str]:
         """
-        Return the process id.
-
-        FIXME: This could be removed as we are interested in submission id
-               rather than pid
-        """
-        return self.__pid
-
-    @property
-    def submission_id(self) -> Optional[str]:
-        """
-        Return the submission id.
+        Return the job id.
 
         Returns
         -------
-        self.__submission_id : None or str
+        self.__job_id : None or str
             The job id given the process by the cluster
             None is given if the process has not been submitted
         """
-        return self.__submission_id
+        return self.__job_id
 
-    @property
-    def std_out(self) -> Optional[str]:
+    def _wait_for_std_out_and_std_err(self) -> None:
         """
-        Return the standard output.
+        Wait until the process completes if a process has been started.
 
-        FIXME: Can be the tail from the .log
+        Populate return_code, std_out and std_err
         """
+        if self.job_id is not None:
+            while not self.completed():
+                sleep(5)
 
-    @property
-    def std_err(self) -> Optional[str]:
-        """
-        Return the standard error.
+            trace = self.__get_trace()
+            self._status["return_code"] = self.get_return_code(trace)
 
-        FIXME: Can be the tail from the .err
-        """
+            log_path = self.__log_and_error_base.parent.joinpath(
+                f"{self.__log_and_error_base.stem}.log"
+            )
+            with log_path.open("r") as file:
+                self._status["std_out"] = file.read()
 
-    @property
-    def return_code(self) -> Optional[int]:
-        r"""
-        Return the return code.
+            err_path = self.__log_and_error_base.parent.joinpath(
+                f"{self.__log_and_error_base.stem}.err"
+            )
+            with err_path.open("r") as file:
+                self._status["std_err"] = file.read()
 
-        FIXME: Must be obtained from qstat or the like?
-        FIXME: You are here: Use `jobtrace pbs_id` regex Exit_status=(\d*)
-        https://stackoverflow.com/questions/24248735/how-get-information-of-completed-pbs-or-torque-jobs/35511337
-        """
-
-    def wait_until_completed(self, raise_error: bool = True) -> None:
-        """
-        Wait until the process has completed.
-
-        FIXME
-
-        Parameters
-        ----------
-        raise_error : bool
-            Whether or not to raise errors
-        """
-        logging.critical("%s", raise_error)
+        logging.warning(
+            "No process started, return_code, std_out, std_err not populated"
+        )
 
     def completed(self) -> bool:
         """
@@ -279,24 +264,91 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         bool
             Whether the job has completed
         """
+        if self.job_id is not None:
+            trace = self.__get_trace()
+            return_code = self.get_return_code(trace)
+            if return_code is not None:
+                self._status["return_code"] = return_code
+                return True
+            if self.has_dequeue(trace):
+                return True
         return False
 
-    def errored(self, raise_error: bool = False) -> bool:
+    def __get_trace(self) -> str:
         """
-        Return True if the process errored.
+        Return the trace from `tracejob`.
+
+        Returns
+        -------
+        trace : str
+            Trace obtained from the `tracejob`
+        """
+        # Submit the command through a local submitter
+        local_submitter = LocalSubmitter(run_path=self.__store_path)
+        local_submitter.submit_command(f"tracejob -n 365 {self.job_id}")
+        local_submitter.wait_until_completed()
+        trace = local_submitter.std_out if local_submitter.std_out is not None else ""
+        return trace
+
+    @staticmethod
+    def get_return_code(trace: str) -> Optional[int]:
+        """
+        Return the exit code if any.
 
         Parameters
         ----------
-        raise_error : bool
-            Whether or not to raise errors
+        trace : str
+            Trace obtained from the `tracejob` command
+
+        Returns
+        -------
+        return_code : None or int
+            Return code obtained from the cluster
+        """
+        pattern = r"Exit_status=(\d*)"
+        # Using search as match will only search the beginning of
+        # the string
+        # https://stackoverflow.com/a/32134461/2786884
+        match = re.search(pattern, trace, flags=re.MULTILINE)
+        if match is None:
+            return None
+        return int(match.group(1))
+
+    @staticmethod
+    def has_dequeue(trace: str) -> bool:
+        """
+        Return whether or not the job has been removed from the queue.
+
+        Parameters
+        ----------
+        trace : str
+            Trace obtained from the `tracejob` command
 
         Returns
         -------
         bool
-            Whether the job has errored
+            True if the job has been removed from the queue
         """
-        logging.critical("%s", raise_error)
+        pattern = r"dequeuing"
+        # Using search as match will only search the beginning of
+        # the string
+        # https://stackoverflow.com/a/32134461/2786884
+        match = re.search(pattern, trace, flags=re.MULTILINE)
+        if match is None:
+            return False
         return True
 
     def raise_error(self) -> None:
-        """Raise and error from the subprocess in a clean way."""
+        """
+        Raise and error from the subprocess in a clean way.
+
+        Raises
+        ------
+        RuntimeError
+            If an error was caught
+        """
+        if self.completed():
+            if self.return_code != 0:
+                raise RuntimeError(
+                    f"Submission errored with error code {self.return_code}"
+                )

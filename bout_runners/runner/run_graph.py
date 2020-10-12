@@ -171,6 +171,24 @@ class RunGraph:
         #       attributes
         return self.__graph.nodes
 
+    def predecessors(self, node_name: str) -> Tuple[str, ...]:
+        """
+        Return the predecessors of the node.
+
+        Parameters
+        ----------
+        node_name : str
+            Name of the node to get the predecessors from
+
+        Returns
+        -------
+        predecessor_names : tuple of str
+            Names of predecessors
+        """
+        # NOTE: The set of nodes only contain the name of the nodes, not their
+        #       attributes
+        return tuple(self.__graph.predecessors(node_name))
+
     def reset(self) -> None:
         """Reset the nodes by setting the status to 'ready'."""
         logging.info("Resetting status in nodes to 'ready'")
@@ -200,7 +218,12 @@ class RunGraph:
         if name in self.__node_set:
             raise ValueError(f"'{name}' is already present in the graph")
 
-        self.__graph.add_node(name, bout_run_setup=bout_run_setup, status="ready")
+        self.__graph.add_node(
+            name,
+            bout_run_setup=bout_run_setup,
+            submitter=bout_run_setup.submitter,
+            status="ready",
+        )
         self.__node_set = set(self.__graph.nodes)
 
     def add_function_node(

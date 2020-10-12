@@ -4,6 +4,7 @@
 from pathlib import Path
 from typing import Callable, Dict
 
+from bout_runners.submitter.local_submitter import LocalSubmitter
 from bout_runners.runner.bout_runner import BoutRunner
 from bout_runners.runner.bout_run_setup import BoutRunSetup
 from bout_runners.runner.run_graph import RunGraph
@@ -82,8 +83,8 @@ def test_run_bout_run(
     db_connector = bout_run_setup.db_connector
 
     # Run once
-    submitter = runner.run_bout_run(bout_run_setup)
-    if submitter is not None:
+    submitter = bout_run_setup.submitter
+    if runner.run_bout_run(bout_run_setup) is not None:
         submitter.wait_until_completed()
     # Assert that the run went well
     database_reader = assert_first_run(bout_paths, db_connector)
@@ -100,8 +101,7 @@ def test_run_bout_run(
     )
 
     # Check that force overrides the behaviour
-    submitter = runner.run_bout_run(bout_run_setup, force=True)
-    if submitter is not None:
+    if runner.run_bout_run(bout_run_setup, force=True):
         submitter.wait_until_completed()
     assert_tables_have_expected_len(
         database_reader, yield_number_of_rows_for_all_tables, expected_run_number=2
@@ -110,8 +110,7 @@ def test_run_bout_run(
     dump_dir_name = bout_paths.bout_inp_dst_dir.name
 
     # Check that restart makes another entry
-    submitter = runner.run_bout_run(bout_run_setup, restart_from_bout_inp_dst=True)
-    if submitter is not None:
+    if runner.run_bout_run(bout_run_setup, restart_from_bout_inp_dst=True):
         submitter.wait_until_completed()
     assert_tables_have_expected_len(
         database_reader,
@@ -123,8 +122,7 @@ def test_run_bout_run(
     #       restart_all=True, whether this is testing restart_from_bout_inp_dst=True
     assert_dump_files_exist(dump_dir_parent.joinpath(f"{dump_dir_name}_restart_0"))
     # ...and yet another entry
-    submitter = runner.run_bout_run(bout_run_setup, restart_from_bout_inp_dst=True)
-    if submitter is not None:
+    if runner.run_bout_run(bout_run_setup, restart_from_bout_inp_dst=True):
         submitter.wait_until_completed()
     assert_tables_have_expected_len(
         database_reader,
@@ -150,16 +148,19 @@ def test_function_run(tmp_path: Path) -> None:
     runner = BoutRunner(run_graph)
     path = tmp_path.joinpath("return_none.py")
 
-    submitter = runner.run_function(path, return_none)
+    submitter = LocalSubmitter()
+    runner.run_function(path, submitter, return_none)
     submitter.wait_until_completed()
     assert path.is_file()
 
     path = tmp_path.joinpath("return_sum_of_two.py")
-    submitter = runner.run_function(path, return_sum_of_two, (1, 2))
+    submitter = LocalSubmitter()
+    runner.run_function(path, submitter, return_sum_of_two, (1, 2))
     submitter.wait_until_completed()
     assert path.is_file()
 
     path = tmp_path.joinpath("return_sum_of_three.py")
-    submitter = runner.run_function(path, return_sum_of_three, (1, 2), {"number_3": 3})
+    submitter = LocalSubmitter()
+    runner.run_function(path, submitter, return_sum_of_three, (1, 2), {"number_3": 3})
     submitter.wait_until_completed()
     assert path.is_file()

@@ -7,6 +7,7 @@ from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_creator import DatabaseCreator
 from bout_runners.executor.executor import Executor
 from bout_runners.executor.bout_paths import BoutPaths
+from bout_runners.submitter.abstract_submitters import AbstractSubmitter
 from bout_runners.metadata.metadata_recorder import MetadataRecorder
 from bout_runners.parameters.final_parameters import FinalParameters
 
@@ -40,6 +41,8 @@ class BoutRunSetup:
         Object containing the parameters to use
     metadata_recorder : MetadataRecorder
         Object containing the metadata recorder
+    submitter : AbstractSubmitter
+        The submitter obtained through the get property
 
     Methods
     -------
@@ -159,6 +162,18 @@ class BoutRunSetup:
             The object holding the metadata recorder
         """
         return self.__metadata_recorder
+
+    @property
+    def submitter(self) -> AbstractSubmitter:
+        """
+        Return the AbstractSubmitter.
+
+        Returns
+        -------
+        AbstractSubmitter
+            The submitter which will be used for submitting the job
+        """
+        return self.executor.submitter
 
     def __create_schema(self) -> None:
         """Create the schema."""

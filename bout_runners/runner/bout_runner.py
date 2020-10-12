@@ -14,6 +14,7 @@ from bout_runners.runner.bout_run_setup import BoutRunSetup
 from bout_runners.runner.run_group import RunGroup
 from bout_runners.metadata.status_checker import StatusChecker
 from bout_runners.submitter.abstract_submitters import AbstractSubmitter
+from bout_runners.submitter.abstract_submitters import AbstractClusterSubmitter
 from bout_runners.submitter.local_submitter import LocalSubmitter
 
 
@@ -146,7 +147,7 @@ class BoutRunner:
         bout_run_setup: BoutRunSetup,
         restart_from_bout_inp_dst: bool = False,
         force: bool = False,
-    ) -> Optional[AbstractSubmitter]:
+    ) -> bool:
         """
         Perform the BOUT++ run and capture the related metadata.
 
@@ -166,9 +167,8 @@ class BoutRunner:
 
         Returns
         -------
-        submitter : AbstractSubmitter or None
-            The submitter used
-            If the run is skipped None will be returned
+        bool
+            Whether or not to submit the run
         """
         if (
             restart_from_bout_inp_dst
@@ -202,25 +202,25 @@ class BoutRunner:
             bout_run_setup.executor.submitter.processor_split, restart, force
         )
 
-        submitter = None
         if run_id is None:
             if not restart:
                 logging.info("Executing the run")
             else:
                 BoutRunner.copy_restart_files(bout_run_setup)
                 logging.info("Executing the run from restart files")
-            submitter = bout_run_setup.executor.execute(restart)
+            bout_run_setup.executor.execute(restart)
         elif force:
             logging.info("Executing the run as force==True")
-            submitter = bout_run_setup.executor.execute()
+            bout_run_setup.executor.execute()
         else:
             logging.warning(
                 "Run with the same configuration has been executed before, "
                 "see run with run_id %d",
                 run_id,
             )
+            return False
 
-        return submitter
+        return True
 
     @staticmethod
     def copy_restart_files(bout_run_setup: BoutRunSetup) -> None:
@@ -296,10 +296,10 @@ class BoutRunner:
     @staticmethod
     def run_function(
         path: Path,
+        submitter: AbstractSubmitter,
         function: Callable,
         args: Optional[Tuple[Any, ...]] = None,
         kwargs: Optional[Dict[str, Any]] = None,
-        submitter: Optional[AbstractSubmitter] = None,
     ) -> AbstractSubmitter:
         """
         Submit a function for execution.
@@ -309,15 +309,15 @@ class BoutRunner:
         path : Path
             Absolute path to store the python file which holds the function and
             its arguments
+        submitter : AbstractSubmitter
+            The submitter to submit the function with
+            Uses the default LocalSubmitter if None
         function : function
             The function to call
         args : None or tuple
             The positional arguments
         kwargs : None or dict
             The keyword arguments
-        submitter : None or AbstractSubmitter
-            The submitter to submit the function with
-            Uses the default LocalSubmitter if None
 
         Returns
         -------
@@ -330,7 +330,6 @@ class BoutRunner:
             args,
             kwargs,
         )
-        submitter = submitter if submitter is not None else LocalSubmitter()
         submitter.write_python_script(path, function, args, kwargs)
         command = f"python3 {path}"
         submitter.submit_command(command)
@@ -397,36 +396,69 @@ class BoutRunner:
             ] = dict()
             for node_name in nodes_at_current_order.keys():
                 logging.info("Executing %s", node_name)
+                if isinstance(
+                    nodes_at_current_order[node_name]["submitter"],
+                    AbstractClusterSubmitter,
+                ):
+                    # Adding job_ids to wait for in the submission script
+                    predecessors = self.__run_graph.predecessors(node_name)
+                    waiting_for = (
+                        p_name
+                        for p_name in predecessors
+                        if isinstance(
+                            self.__run_graph[p_name]["submitter"],
+                            AbstractClusterSubmitter,
+                        )
+                    )
+                    nodes_at_current_order[node_name]["submitter"].add_waiting_for(
+                        waiting_for
+                    )
+
                 submitter_dict[node_name] = dict()
+                submit = True
                 if node_name.startswith("bout_run"):
-                    submitter = self.run_bout_run(
+                    submit = self.run_bout_run(
                         nodes_at_current_order[node_name]["bout_run_setup"],
                         restart_all,
                         force,
                     )
-                    submitter_dict[node_name]["submitter"] = submitter
-                    submitter_dict[node_name]["db_connector"] = nodes_at_current_order[
-                        node_name
-                    ]["bout_run_setup"].db_connector
-                    submitter_dict[node_name]["project_path"] = nodes_at_current_order[
-                        node_name
-                    ]["bout_run_setup"].bout_paths.project_path
+                    if submit:
+                        submitter_dict[node_name][
+                            "db_connector"
+                        ] = nodes_at_current_order[node_name][
+                            "bout_run_setup"
+                        ].db_connector
+                        submitter_dict[node_name][
+                            "project_path"
+                        ] = nodes_at_current_order[node_name][
+                            "bout_run_setup"
+                        ].bout_paths.project_path
+                    else:
+                        submitter_dict.pop(node_name)
                 else:
-                    submitter = self.run_function(
+                    self.run_function(
                         nodes_at_current_order[node_name]["path"],
+                        nodes_at_current_order[node_name]["submitter"],
                         nodes_at_current_order[node_name]["function"],
                         nodes_at_current_order[node_name]["args"],
                         nodes_at_current_order[node_name]["kwargs"],
-                        nodes_at_current_order[node_name]["submitter"],
                     )
-                    submitter_dict[node_name]["submitter"] = submitter
 
-                if submitter is not None:
+                if submit is not None:
                     logging.debug(
-                        "Node '%s' submitted with pid %s", node_name, submitter.pid
+                        "Node '%s' submitted with job_id %s",
+                        node_name,
+                        nodes_at_current_order[node_name]["submitter"].job_id,
                     )
 
-            self.__monitor_runs(submitter_dict, raise_errors, wait_time)
+            # We only monitor the local_submitters as the clusters have their own
+            # scheduling system
+            local_submitter_dict = {
+                node_name: val
+                for node_name, val in submitter_dict.items()
+                if isinstance(submitter_dict[node_name]["submitter"], LocalSubmitter)
+            }
+            self.__monitor_runs(local_submitter_dict, raise_errors, wait_time)
 
     def __monitor_runs(
         self,
@@ -463,12 +495,7 @@ class BoutRunner:
         RuntimeError
             If the types in the dict are unexpected
         """
-        node_names = list(
-            node_name
-            for node_name in submitter_dict.keys()
-            if submitter_dict[node_name]["submitter"] is not None
-        )
-
+        node_names = list(node_name for node_name in submitter_dict.keys())
         while len(node_names) != 0:
             for node_name in node_names:
                 submitter = submitter_dict[node_name]["submitter"]
@@ -488,7 +515,9 @@ class BoutRunner:
                     node_names.remove(node_name)
                 else:
                     logging.debug(
-                        "pid=%s found, %s seems to be running", submitter.pid, node_name
+                        "job_id=%s found, %s seems to be running",
+                        submitter.job_id,
+                        node_name,
                     )
 
                 if node_name.startswith("bout_run"):

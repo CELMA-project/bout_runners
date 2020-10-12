@@ -17,7 +17,7 @@ def test_local_submitter() -> None:
     submitter.wait_until_completed()
 
     submitter.errored()
-    assert isinstance(submitter.pid, int)
+    assert isinstance(submitter.job_id, str)
     assert isinstance(submitter.return_code, int)
     assert isinstance(submitter.std_out, str)
     assert isinstance(submitter.std_err, str)

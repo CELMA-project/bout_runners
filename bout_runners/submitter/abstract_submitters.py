@@ -5,7 +5,7 @@ import re
 import logging
 import json
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Optional, Tuple, Dict
+from typing import Any, Callable, Optional, Tuple, Dict, Union
 from pathlib import Path
 
 from bout_runners.submitter.processor_split import ProcessorSplit
@@ -14,6 +14,15 @@ from bout_runners.utils.serializers import is_jsonable
 
 class AbstractSubmitter(ABC):
     """The abstract base class of the submitters."""
+
+    def __init__(self) -> None:
+        """Declare common variables."""
+        self._logged_complete_status = False
+        self._status: Dict[str, Union[Optional[int], Optional[str]]] = dict()
+        self._status["job_id"] = None
+        self._status["return_code"] = None
+        self._status["std_out"] = None
+        self._status["std_err"] = None
 
     @abstractmethod
     def submit_command(self, command: str) -> Any:
@@ -28,23 +37,54 @@ class AbstractSubmitter(ABC):
 
     @property
     @abstractmethod
-    def pid(self) -> Optional[int]:
-        """Return the process id."""
+    def job_id(self) -> Optional[str]:
+        """Return the job id."""
 
     @property
-    @abstractmethod
     def return_code(self) -> Optional[int]:
         """Return the return code."""
+        # Added mypy guard as type of key cannot be set separately
+        return (
+            self._status["return_code"]
+            if isinstance(self._status["return_code"], int)
+            else None
+        )
 
     @property
-    @abstractmethod
     def std_out(self) -> Optional[str]:
-        """Return the standard output."""
+        """
+        Return the standard output.
+
+        Returns
+        -------
+        self._status["std_out"] : str or None
+            The standard output
+            None if the process has not completed
+        """
+        # Added mypy guard as type of key cannot be set separately
+        return (
+            self._status["std_out"]
+            if isinstance(self._status["std_out"], str)
+            else None
+        )
 
     @property
-    @abstractmethod
     def std_err(self) -> Optional[str]:
-        """Return the standard error."""
+        """
+        Return the standard error.
+
+        Returns
+        -------
+        self._status["std_err"] : str or None
+            The standard error
+            None if the process has not completed
+        """
+        # Added mypy guard as type of key cannot be set separately
+        return (
+            self._status["std_err"]
+            if isinstance(self._status["std_err"], str)
+            else None
+        )
 
     @staticmethod
     def write_python_script(
@@ -119,7 +159,6 @@ class AbstractSubmitter(ABC):
             python_file.write(script_str)
         logging.info("Python script written to %s", path)
 
-    @abstractmethod
     def wait_until_completed(self, raise_error: bool = True) -> None:
         """
         Wait until the process has completed.
@@ -129,12 +168,14 @@ class AbstractSubmitter(ABC):
         raise_error : bool
             Whether or not to raise errors
         """
+        if self.job_id is not None:
+            self._wait_for_std_out_and_std_err()
+            self.errored(raise_error)
 
     @abstractmethod
     def completed(self) -> bool:
         """Return the completed status."""
 
-    @abstractmethod
     def errored(self, raise_error: bool = False) -> bool:
         """
         Return True if the process errored.
@@ -143,6 +184,46 @@ class AbstractSubmitter(ABC):
         ----------
         raise_error : bool
             Whether or not to raise errors
+
+        Returns
+        -------
+        bool
+            True if the process returned a non-zero code
+        """
+        if self.completed():
+            if self._status["return_code"] != 0:
+                self.__catch_error()
+                if raise_error:
+                    self.raise_error()
+                return True
+            if not self._logged_complete_status:
+                logging.info("job_id %s completed successfully", self.job_id)
+                self._logged_complete_status = True
+        return False
+
+    def __catch_error(self) -> None:
+        """Log the error."""
+        if self.completed() and self.return_code != 0:
+            self._wait_for_std_out_and_std_err()
+
+            if not self._logged_complete_status:
+                logging.error(
+                    "job_id %s failed with return code %s",
+                    self.job_id,
+                    self.return_code,
+                )
+                logging.error("stdout:")
+                logging.error(self.std_out)
+                logging.error("stderr:")
+                logging.error(self.std_err)
+                self._logged_complete_status = True
+
+    @abstractmethod
+    def _wait_for_std_out_and_std_err(self) -> None:
+        """
+        Wait until the process completes if a process has been started.
+
+        Populate return_code, std_out and std_err
         """
 
     @abstractmethod
