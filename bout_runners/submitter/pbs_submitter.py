@@ -21,7 +21,7 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
     def __init__(
         self,
         job_name: str,
-        store_path: Path,
+        store_directory: Path,
         submission_dict: Optional[Dict[str, Optional[str]]] = None,
         processor_split: Optional[ProcessorSplit] = None,
     ):
@@ -32,8 +32,8 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         ----------
         job_name : str
             Name of the job
-        store_path : path
-            Path to store the script
+        store_directory : path
+            Directory to store the script
         submission_dict : None or dict of str of None or str
             Dict containing optional submission options
             One the form
@@ -51,11 +51,11 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         # https://stackoverflow.com/questions/9575409/calling-parent-class-init-with-multiple-inheritance-whats-the-right-way/50465583
         AbstractSubmitter.__init__(self)
         AbstractClusterSubmitter.__init__(
-            self, job_name, store_path, submission_dict, processor_split
+            self, job_name, store_directory, submission_dict, processor_split
         )
-        if self.__submission_dict["walltime"] is not None:
-            self.__submission_dict["walltime"] = self.structure_time_to_pbs_format(
-                self.__submission_dict["walltime"]
+        if self._submission_dict["walltime"] is not None:
+            self._submission_dict["walltime"] = self.structure_time_to_pbs_format(
+                self._submission_dict["walltime"]
             )
         self.__waiting_for: List[str] = list()
         self.__job_id: Optional[str] = None
@@ -135,12 +135,12 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         """
         # Backslash not allowed in f-string expression
         newline = "\n"
-        walltime = self.__submission_dict["walltime"]
-        account = self.__submission_dict["account"]
-        queue = self.__submission_dict["queue"]
-        mail = self.__submission_dict["mail"]
+        walltime = self._submission_dict["walltime"]
+        account = self._submission_dict["account"]
+        queue = self._submission_dict["queue"]
+        mail = self._submission_dict["mail"]
         # Notice that we do not add the stem here
-        self.__log_and_error_base = self.__store_path.joinpath(self.__job_name)
+        self.__log_and_error_base = self._store_dir.joinpath(self._job_name)
         waiting_for_str = (
             f"#PBS -W depend=afterok:{':'.join(self.waiting_for)}{newline}"
             if len(self.waiting_for) != 0
@@ -148,47 +148,22 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         )
         job_string = (
             "#!/bin/bash\n"
-            f"#PBS -N {self.__job_name}\n"
-            f"#PBS -l nodes={self.__processor_split.number_of_nodes}"
-            f":ppn={self.__processor_split.processors_per_node}\n"
+            f"#PBS -N {self._job_name}\n"
+            f"#PBS -l nodes={self._processor_split.number_of_nodes}"
+            f":ppn={self._processor_split.processors_per_node}\n"
             # hh:mm:ss
             f"{f'#PBS -l walltime={walltime}{newline}' if walltime is not None else ''}"
-            f"{'#PBS -A {account}{newline}' if account is not None else ''}"
+            f"{f'#PBS -A {account}{newline}' if account is not None else ''}"
             f"{f'#PBS -q {queue}{newline}' if queue is not None else ''}"
             f"#PBS -o {self.__log_and_error_base}.log\n"
             f"#PBS -e {self.__log_and_error_base}.err\n"
             # a=abort b=begin e=end
-            f"{'#PBS -m abe{newline}' if mail is not None else ''}"
-            f"{'#PBS -M {mail}{newline}' if mail is not None else ''}"
+            f"{f'#PBS -m abe{newline}' if mail is not None else ''}"
+            f"{f'#PBS -M {mail}{newline}' if mail is not None else ''}"
             f"{waiting_for_str}"
             "\n"
             # Change directory to the directory of this script
             "cd $PBS_O_WORKDIR\n"
-            f"{command}"
-        )
-
-        waiting_for_str = (
-            f"#SBATCH --dependency=afterok:{':'.join(self.waiting_for)}{newline}"
-            if len(self.waiting_for) != 0
-            else ""
-        )
-        job_string = (
-            "#!/bin/bash\n"
-            f"#SBATCH --job-name={self.__job_name}\n"
-            f"#SBATCH --nodes={self.__processor_split.number_of_nodes}\n"
-            f"#SBATCH -n {self.__processor_split.processors_per_node}\n"
-            # d-hh:mm:ss
-            f"{'#SBATCH --time={walltime}{newline}}' if walltime is not None else ''}"
-            f"{'#SBATCH --account={account}{newline}' if account is not None else ''}"
-            f"{'#SBATCH -p {queue}{newline}' if queue is not None else ''}"
-            f"#SBATCH -o {self.__log_and_error_base}.log\n"
-            f"#SBATCH -e {self.__log_and_error_base}.err\n"
-            f"{'#SBATCH --mail-type=ALL{newline}' if mail is not None else ''}"
-            f"{'#SBATCH --mail-user={mail}{newline}' if mail is not None else ''}"
-            f"{waiting_for_str}"
-            "\n"
-            # Change directory to the directory of this script
-            "cd $SLURM_SUBMIT_DIR\n"
             f"{command}"
         )
 
@@ -203,12 +178,12 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         command : str
             Command to submit
         """
-        script_path = self.__store_path.joinpath(f"{self.__job_name}.sh")
+        script_path = self._store_dir.joinpath(f"{self._job_name}.sh")
         with script_path.open("w") as file:
             file.write(self.create_submission_string(command))
 
         # Submit the command through a local submitter
-        local_submitter = LocalSubmitter(run_path=self.__store_path)
+        local_submitter = LocalSubmitter(run_path=self._store_dir)
         local_submitter.submit_command(f"qsub {script_path}")
         local_submitter.wait_until_completed()
         self.__job_id = local_submitter.std_out
@@ -284,7 +259,7 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
             Trace obtained from the `tracejob`
         """
         # Submit the command through a local submitter
-        local_submitter = LocalSubmitter(run_path=self.__store_path)
+        local_submitter = LocalSubmitter(run_path=self._store_dir)
         local_submitter.submit_command(f"tracejob -n 365 {self.job_id}")
         local_submitter.wait_until_completed()
         trace = local_submitter.std_out if local_submitter.std_out is not None else ""

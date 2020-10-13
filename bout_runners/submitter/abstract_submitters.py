@@ -237,7 +237,7 @@ class AbstractClusterSubmitter(ABC):
     def __init__(
         self,
         job_name: str,
-        store_path: Path,
+        store_dir: Path,
         submission_dict: Optional[Dict[str, Optional[str]]] = None,
         processor_split: Optional[ProcessorSplit] = None,
     ) -> None:
@@ -248,8 +248,8 @@ class AbstractClusterSubmitter(ABC):
         ----------
         job_name : str
             Name of the job
-        store_path : path
-            Path to store the script
+        store_dir : path
+            Directory to store the script
         submission_dict : None or dict of str of None or str
             Dict containing optional submission options
             One the form
@@ -264,18 +264,18 @@ class AbstractClusterSubmitter(ABC):
             Object containing the processor split
             If None, default values will be used
         """
-        self.__job_name = job_name
-        self.__store_path = store_path
-        self.__processor_split = (
+        self._job_name = job_name
+        self._store_dir = store_dir
+        self._processor_split = (
             processor_split if processor_split is not None else ProcessorSplit()
         )
-        self.__submission_dict = (
+        self._submission_dict = (
             submission_dict.copy() if submission_dict is not None else dict()
         )
-        submission_dict_keys = self.__submission_dict.keys()
+        submission_dict_keys = self._submission_dict.keys()
         for key in ("walltime", "mail", "queue", "account"):
             if key not in submission_dict_keys:
-                self.__submission_dict[key] = None
+                self._submission_dict[key] = None
 
     @abstractmethod
     def create_submission_string(self, command: str) -> str:
