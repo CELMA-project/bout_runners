@@ -97,14 +97,19 @@ class LocalSubmitter(AbstractSubmitter):
 
         # Attributes with getters
         self.__status: Dict[str, Union[Optional[int], Optional[str]]] = dict()
-        self.__status["pid"] = None
-        self.__status["return_code"] = None
-        self.__status["std_out"] = None
-        self.__status["std_err"] = None
+        self.__reset_status()
 
         self.processor_split = (
             processor_split if processor_split is not None else ProcessorSplit()
         )
+
+    def __reset_status(self) -> None:
+        """Reset the status dict."""
+        logging.debug("Resetting pid, return_code, std_out and std_err")
+        self.__status["pid"] = None
+        self.__status["return_code"] = None
+        self.__status["std_out"] = None
+        self.__status["std_err"] = None
 
     @property
     def pid(self) -> Optional[int]:
@@ -181,6 +186,7 @@ class LocalSubmitter(AbstractSubmitter):
         command : str
             The command to run
         """
+        self.__reset_status()
         self.__process = subprocess.Popen(
             command.split(),
             stdout=subprocess.PIPE,
@@ -202,9 +208,8 @@ class LocalSubmitter(AbstractSubmitter):
         raise_error : bool
             Whether or not to raise errors
         """
-        if self.__process is not None:
+        if self.__process is not None and self.return_code is None:
             self.__wait_for_std_out_and_std_err()
-            self.__status["return_code"] = self.__process.poll()
             self.errored(raise_error)
 
     def __wait_for_std_out_and_std_err(self) -> None:
@@ -231,9 +236,11 @@ class LocalSubmitter(AbstractSubmitter):
             True if the process has completed
         """
         if self.__process is not None:
+            if self.return_code is not None:
+                return True
             return_code = self.__process.poll()
             if return_code is not None:
-                self.__status["return_code"] = return_code
+                self.__wait_for_std_out_and_std_err()
                 return True
         return False
 
@@ -252,7 +259,7 @@ class LocalSubmitter(AbstractSubmitter):
             True if the process returned a non-zero code
         """
         if self.completed():
-            if self.__status["return_code"] != 0:
+            if self.return_code != 0:
                 self.__catch_error()
                 if raise_error:
                     self.raise_error()
@@ -265,7 +272,6 @@ class LocalSubmitter(AbstractSubmitter):
     def __catch_error(self) -> None:
         """Log the error."""
         if self.completed() and self.return_code != 0:
-            self.__wait_for_std_out_and_std_err()
 
             if not self.__logged_complete_status:
                 logging.error(
