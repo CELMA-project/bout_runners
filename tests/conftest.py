@@ -899,16 +899,10 @@ def copy_test_case_log_file(
     return _copy_test_case_log_file
 
 
-# NOTE: MonkeyPatch is function scoped
-@pytest.fixture(scope="function")
-def get_mock_config_path(monkeypatch: MonkeyPatch) -> Iterator[Path]:
+@pytest.fixture(scope="session", name="create_mock_config_path")
+def fixture_create_mock_config_path():
     """
-    Return a mock path for the config dir and redirects get_config_path.
-
-    Parameters
-    ----------
-    monkeypatch : MonkeyPatch
-        MonkeyPatch from pytest
+    Yield a mock path for the config dir and deletes it on teardown.
 
     Yields
     ------
@@ -919,6 +913,31 @@ def get_mock_config_path(monkeypatch: MonkeyPatch) -> Iterator[Path]:
     config_path = get_config_path()
     mock_config_path = config_path.parent.joinpath("delme_config_for_test")
     shutil.copytree(config_path, mock_config_path)
+    yield mock_config_path
+    shutil.rmtree(mock_config_path)
+
+
+# NOTE: MonkeyPatch is function scoped
+@pytest.fixture(scope="function")
+def get_mock_config_path(
+    monkeypatch: MonkeyPatch, create_mock_config_path: Path
+) -> Path:
+    """
+    Return a mock path for the config dir and redirects get_config_path.
+
+    Parameters
+    ----------
+    monkeypatch : MonkeyPatch
+        MonkeyPatch from pytest
+    create_mock_config_path : Path
+        Path to a mock config
+
+    Returns
+    -------
+    mock_config_path : Path
+        The mocked config directory
+    """
+    mock_config_path = create_mock_config_path
 
     # Redirect reading of config_files to mock_config_path for these
     # tests
@@ -926,9 +945,7 @@ def get_mock_config_path(monkeypatch: MonkeyPatch) -> Iterator[Path]:
         "bout_runners.utils.paths.get_config_path", lambda: mock_config_path
     )
 
-    yield mock_config_path
-
-    shutil.rmtree(mock_config_path)
+    return mock_config_path
 
 
 @pytest.fixture(scope="session")

@@ -58,8 +58,8 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
                 self._submission_dict["walltime"]
             )
         self.__waiting_for: List[str] = list()
-        self.__job_id: Optional[str] = None
         self.__log_and_error_base: Path = Path()
+        self.__dequeued = True
 
     @staticmethod
     def structure_time_to_pbs_format(time_str: str) -> str:
@@ -178,6 +178,7 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         command : str
             Command to submit
         """
+        self._reset_status()
         script_path = self._store_dir.joinpath(f"{self._job_name}.sh")
         with script_path.open("w") as file:
             file.write(self.create_submission_string(command))
@@ -186,20 +187,8 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         local_submitter = LocalSubmitter(run_path=self._store_dir)
         local_submitter.submit_command(f"qsub {script_path}")
         local_submitter.wait_until_completed()
-        self.__job_id = local_submitter.std_out
-
-    @property
-    def job_id(self) -> Optional[str]:
-        """
-        Return the job id.
-
-        Returns
-        -------
-        self.__job_id : None or str
-            The job id given the process by the cluster
-            None is given if the process has not been submitted
-        """
-        return self.__job_id
+        self._status["job_id"] = local_submitter.std_out
+        logging.info("job_id %s given %s", self.job_id, script_path)
 
     def _wait_for_std_out_and_std_err(self) -> None:
         """
@@ -208,11 +197,11 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         Populate return_code, std_out and std_err
         """
         if self.job_id is not None:
-            while not self.completed():
+            while self.return_code is None or self.__dequeued:
+                trace = self.__get_trace()
+                self._status["return_code"] = self.get_return_code(trace)
+                self.__dequeued = self.has_dequeue(trace)
                 sleep(5)
-
-            trace = self.__get_trace()
-            self._status["return_code"] = self.get_return_code(trace)
 
             log_path = self.__log_and_error_base.parent.joinpath(
                 f"{self.__log_and_error_base.stem}.log"
@@ -240,12 +229,16 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
             Whether the job has completed
         """
         if self.job_id is not None:
+            if self.return_code is not None:
+                return True
             trace = self.__get_trace()
             return_code = self.get_return_code(trace)
             if return_code is not None:
                 self._status["return_code"] = return_code
+                self._wait_for_std_out_and_std_err()
                 return True
-            if self.has_dequeue(trace):
+            self.__dequeued = self.has_dequeue(trace)
+            if self.__dequeued:
                 return True
         return False
 

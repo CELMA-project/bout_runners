@@ -415,6 +415,9 @@ class BoutRunner:
                     )
 
                 submitter_dict[node_name] = dict()
+                submitter_dict[node_name]["submitter"] = nodes_at_current_order[
+                    node_name
+                ]["submitter"]
                 submit = True
                 if node_name.startswith("bout_run"):
                     submit = self.run_bout_run(

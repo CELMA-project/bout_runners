@@ -19,6 +19,11 @@ class AbstractSubmitter(ABC):
         """Declare common variables."""
         self._logged_complete_status = False
         self._status: Dict[str, Union[Optional[int], Optional[str]]] = dict()
+        self._reset_status()
+
+    def _reset_status(self) -> None:
+        """Reset the status dict."""
+        logging.debug("Resetting job_id, return_code, std_out and std_err")
         self._status["job_id"] = None
         self._status["return_code"] = None
         self._status["std_out"] = None
@@ -36,9 +41,19 @@ class AbstractSubmitter(ABC):
         """
 
     @property
-    @abstractmethod
     def job_id(self) -> Optional[str]:
-        """Return the job id."""
+        """
+        Return the process id.
+
+        Returns
+        -------
+        self._status["job_id"] : int or None
+            The process id if a process has been called, else None
+        """
+        # Added mypy guard as type of key cannot be set separately
+        return (
+            self._status["job_id"] if isinstance(self._status["job_id"], str) else None
+        )
 
     @property
     def return_code(self) -> Optional[int]:
@@ -168,7 +183,7 @@ class AbstractSubmitter(ABC):
         raise_error : bool
             Whether or not to raise errors
         """
-        if self.job_id is not None:
+        if self.job_id is not None and self.return_code is None:
             self._wait_for_std_out_and_std_err()
             self.errored(raise_error)
 
@@ -191,8 +206,8 @@ class AbstractSubmitter(ABC):
             True if the process returned a non-zero code
         """
         if self.completed():
-            if self._status["return_code"] != 0:
-                self.__catch_error()
+            if self.return_code != 0:
+                self._catch_error()
                 if raise_error:
                     self.raise_error()
                 return True
@@ -201,10 +216,9 @@ class AbstractSubmitter(ABC):
                 self._logged_complete_status = True
         return False
 
-    def __catch_error(self) -> None:
+    def _catch_error(self) -> None:
         """Log the error."""
         if self.completed() and self.return_code != 0:
-            self._wait_for_std_out_and_std_err()
 
             if not self._logged_complete_status:
                 logging.error(

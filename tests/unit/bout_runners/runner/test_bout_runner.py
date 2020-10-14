@@ -84,7 +84,7 @@ def test_run_bout_run(
 
     # Run once
     submitter = bout_run_setup.submitter
-    if runner.run_bout_run(bout_run_setup) is not None:
+    if runner.run_bout_run(bout_run_setup):
         submitter.wait_until_completed()
     # Assert that the run went well
     database_reader = assert_first_run(bout_paths, db_connector)
@@ -94,7 +94,7 @@ def test_run_bout_run(
     )
 
     # Check that the run will not be executed again
-    assert runner.run_bout_run(bout_run_setup) is None
+    assert not runner.run_bout_run(bout_run_setup)
     # Assert that the number of runs is 1
     assert_tables_have_expected_len(
         database_reader, yield_number_of_rows_for_all_tables, expected_run_number=1

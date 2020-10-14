@@ -98,39 +98,6 @@ class LocalSubmitter(AbstractSubmitter):
             processor_split if processor_split is not None else ProcessorSplit()
         )
 
-        self.__logged_complete_status = False
-
-        # Attributes with getters
-        self.__status: Dict[str, Union[Optional[int], Optional[str]]] = dict()
-        self.__reset_status()
-
-        self.processor_split = (
-            processor_split if processor_split is not None else ProcessorSplit()
-        )
-
-    def __reset_status(self) -> None:
-        """Reset the status dict."""
-        logging.debug("Resetting pid, return_code, std_out and std_err")
-        self.__status["pid"] = None
-        self.__status["return_code"] = None
-        self.__status["std_out"] = None
-        self.__status["std_err"] = None
-
-    @property
-    def job_id(self) -> Optional[str]:
-        """
-        Return the process id.
-
-        Returns
-        -------
-        self._status["job_id"] : int or None
-            The process id if a process has been called, else None
-        """
-        # Added mypy guard as type of key cannot be set separately
-        return (
-            self._status["job_id"] if isinstance(self._status["job_id"], str) else None
-        )
-
     def submit_command(self, command: str) -> None:
         """
         Submit a subprocess.
@@ -140,7 +107,7 @@ class LocalSubmitter(AbstractSubmitter):
         command : str
             The command to run
         """
-        self.__reset_status()
+        self._reset_status()
         self.__process = subprocess.Popen(
             command.split(),
             stdout=subprocess.PIPE,
@@ -185,47 +152,9 @@ class LocalSubmitter(AbstractSubmitter):
             return_code = self.__process.poll()
             if return_code is not None:
                 self._status["return_code"] = return_code
-                self.__wait_for_std_out_and_std_err()
+                self._wait_for_std_out_and_std_err()
                 return True
         return False
-
-    def errored(self, raise_error: bool = False) -> bool:
-        """
-        Return True if the process errored.
-
-        Parameters
-        ----------
-        raise_error : bool
-            Whether or not to raise errors
-
-        Returns
-        -------
-        bool
-            True if the process returned a non-zero code
-        """
-        if self.completed():
-            if self.return_code != 0:
-                self.__catch_error()
-                if raise_error:
-                    self.raise_error()
-                return True
-        return False
-
-    def __catch_error(self) -> None:
-        """Log the error."""
-        if self.completed() and self.return_code != 0:
-
-            if not self.__logged_complete_status:
-                logging.error(
-                    "pid %s failed with return code %s",
-                    self.pid,
-                    self.return_code,
-                )
-                logging.error("stdout:")
-                logging.error(self.std_out)
-                logging.error("stderr:")
-                logging.error(self.std_err)
-                self.__logged_complete_status = True
 
     def raise_error(self) -> None:
         """Raise and error from the subprocess in a clean way."""
