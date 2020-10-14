@@ -7,7 +7,7 @@ from pathlib import Path
 from bout_runners.executor.bout_paths import BoutPaths
 from bout_runners.make.make import Make
 from bout_runners.parameters.run_parameters import RunParameters
-from bout_runners.submitter.abstract_submitter import AbstractSubmitter
+from bout_runners.submitter.abstract_submitters import AbstractSubmitter
 from bout_runners.submitter.local_submitter import LocalSubmitter
 
 

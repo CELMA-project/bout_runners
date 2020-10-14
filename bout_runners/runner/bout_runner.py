@@ -13,7 +13,7 @@ from bout_runners.runner.run_graph import RunGraph
 from bout_runners.runner.bout_run_setup import BoutRunSetup
 from bout_runners.runner.run_group import RunGroup
 from bout_runners.metadata.status_checker import StatusChecker
-from bout_runners.submitter.abstract_submitter import AbstractSubmitter
+from bout_runners.submitter.abstract_submitters import AbstractSubmitter
 from bout_runners.submitter.local_submitter import LocalSubmitter
 
 
