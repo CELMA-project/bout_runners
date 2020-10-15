@@ -197,11 +197,12 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         Populate return_code, std_out and std_err
         """
         if self.job_id is not None:
-            while self.return_code is None or self.__dequeued:
+            while self.return_code is None or not self.__dequeued:
                 trace = self.__get_trace()
                 self._status["return_code"] = self.get_return_code(trace)
                 self.__dequeued = self.has_dequeue(trace)
                 sleep(5)
+                logging.debug("Trace is reading:\n%s", trace)
 
             log_path = self.__log_and_error_base.parent.joinpath(
                 f"{self.__log_and_error_base.stem}.log"

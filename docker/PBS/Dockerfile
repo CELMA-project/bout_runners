@@ -1,8 +1,8 @@
-# Building pbspro-test
-# docker build -f Dockerfile -t pbspro-test:latest .
+# Building pbspro-test *NOTE* must be built from root of this repo due to setup.cfg
+# docker build -f Dockerfile -t pbspro-test:latest -f docker/PBS/Dockerfile .
 
 # Run with
-# docker run -it --rm --name pbs -h pbs -e PBS_START_MOM=1 pbspro-test:latest "qsub -- /bin/sleep && qstat"
+# docker run -it --rm -h pbs -e PBS_START_MOM=1 pbspro-test:latest "qsub -- /bin/sleep && qstat"
 
 # Use PBSPro built from
 # https://hub.docker.com/r/pbspro/pbspro/
@@ -30,7 +30,26 @@ RUN yum install gcc gcc-c++ gcc-gfortran make wget -y \
     && ./configure --prefix=/usr \
     && make \
     && make install \
+    && cd ..\
     && rm -rf mpich*
+
+# Add python to the path
+# This is needed for pip install under
+# Unfortunately this will not add anaconda to the path, so we do it again in the entrypoint script
+ENV PATH="/opt/anaconda/bin:${PATH}"
+
+# Install python3 and dependencies
+COPY setup.cfg .
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh \
+    && chmod +x Miniconda3-latest-Linux-x86_64.sh \
+    && ./Miniconda3-latest-Linux-x86_64.sh -b -p /opt/anaconda \
+    && python -c "import configparser; c = configparser.ConfigParser(); c.read('setup.cfg'); print(c['options']['install_requires'], c['options.extras_require']['test'])" | xargs pip install \
+    && rm -rf setup.cfg Miniconda3-latest-Linux-x86_64.sh
+
+# Set the python path for all users (appending it directly to /etc/profile hides other paths)
+# https://forums.centos.org/viewtopic.php?t=60887
+RUN echo "export PATH=/opt/anaconda/bin:$PATH" > /etc/profile.d/anaconda.sh \
+    && chmod +x /etc/profile.d/anaconda.sh
 
 # Change the start-script in order to enter a started cluster
 # First we remove the executions at the end of the script

@@ -131,9 +131,10 @@ class LocalSubmitter(AbstractSubmitter):
             self._status["return_code"] = self.__process.poll()
             self._status["std_out"] = std_out.decode("utf8").strip()
             self._status["std_err"] = std_err.decode("utf8").strip()
-        logging.warning(
-            "No process started, return_code, std_out, std_err not populated"
-        )
+        else:
+            logging.warning(
+                "No process started, return_code, std_out, std_err not populated"
+            )
 
     def completed(self) -> bool:
         """

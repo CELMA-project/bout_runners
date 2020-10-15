@@ -1,4 +1,4 @@
-"""Contains unittests for the PBS submitter."""
+"""Contains unittests for the local part of the PBS submitter."""
 
 
 from pathlib import Path
@@ -9,7 +9,7 @@ from bout_runners.submitter.pbs_submitter import PBSSubmitter
 
 def test___init__() -> None:
     """Test that the PBSSubmitter constructor gives correct type."""
-    submitter = PBSSubmitter("test", Path())
+    submitter = PBSSubmitter("__init__test", Path())
     assert isinstance(submitter, AbstractSubmitter)
     assert isinstance(submitter, AbstractClusterSubmitter)
     assert isinstance(submitter, PBSSubmitter)
@@ -38,22 +38,24 @@ def test_structure_time_to_pbs_format() -> None:
 
 def test_create_submission_string() -> None:
     """Test that the format of the submission string is correct."""
-    submitter = PBSSubmitter("test", Path())
+    job_name = "test_create_submission_string_small"
+    submitter = PBSSubmitter(job_name, Path())
     result = submitter.create_submission_string("ls")
     expected = (
         "#!/bin/bash\n"
-        "#PBS -N test\n"
+        f"#PBS -N {job_name}\n"
         "#PBS -l nodes=1:ppn=1\n"
-        "#PBS -o test.log\n"
-        "#PBS -e test.err\n"
+        f"#PBS -o {job_name}.log\n"
+        f"#PBS -e {job_name}.err\n"
         "\n"
         "cd $PBS_O_WORKDIR\n"
         "ls"
     )
     assert result == expected
 
+    job_name = "test_create_submission_string_full"
     submitter = PBSSubmitter(
-        "test",
+        job_name,
         Path(),
         {
             "walltime": "65:43:21",
@@ -65,13 +67,13 @@ def test_create_submission_string() -> None:
     result = submitter.create_submission_string("ls")
     expected = (
         "#!/bin/bash\n"
-        "#PBS -N test\n"
+        f"#PBS -N {job_name}\n"
         "#PBS -l nodes=1:ppn=1\n"
         "#PBS -l walltime=65:43:21\n"
         "#PBS -A common\n"
         "#PBS -q workq\n"
-        "#PBS -o test.log\n"
-        "#PBS -e test.err\n"
+        f"#PBS -o {job_name}.log\n"
+        f"#PBS -e {job_name}.err\n"
         "#PBS -m abe\n"
         "#PBS -M joe@doe.com\n"
         "\n"
@@ -95,12 +97,16 @@ def test_get_return_code(get_test_data_path: Path) -> None:
     with trace_path.open("r") as file:
         trace = file.read()
 
-    return_code = PBSSubmitter("test", Path()).get_return_code(trace)
+    return_code = PBSSubmitter("test_get_return_code_success", Path()).get_return_code(
+        trace
+    )
     assert return_code == 0
 
     trace = trace.replace("Exit_status=0", "Exit_status=255")
 
-    return_code = PBSSubmitter("test", Path()).get_return_code(trace)
+    return_code = PBSSubmitter("test_get_return_code_fail", Path()).get_return_code(
+        trace
+    )
     assert return_code == 255
 
 
@@ -117,8 +123,8 @@ def test_has_dequeue(get_test_data_path: Path) -> None:
     with trace_path.open("r") as file:
         trace = file.read()
 
-    assert PBSSubmitter("test", Path()).has_dequeue(trace)
+    assert PBSSubmitter("test_dequeue_success", Path()).has_dequeue(trace)
 
     trace = "\n".join(trace.split("\n")[:3])
 
-    assert not PBSSubmitter("test", Path()).has_dequeue(trace)
+    assert not PBSSubmitter("test_dequeue_fail", Path()).has_dequeue(trace)

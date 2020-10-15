@@ -49,11 +49,15 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -e ".[test]"
-          pip install pytest-cov
 
       - name: Generate coverage report
         # Install and run the coverage report
-        run: pytest --cov=./ --cov-report=xml
+        # NOTE: Only the latest python versions are supported in the docker containers
+        run: |
+          coverage run --source=. -p -m pytest tests/local
+          docker run --rm -h pbs -e PBS_START_MOM=1 -v $(PWD):/opt/bout_runners loeiten/pbspro-test:latest "cd /opt/bout_runners && coverage run --source=. -p -m pytest tests/pbs"
+          coverage combine
+          coverage xml
 
       - name: Upload coverage to Codecov
         # Use the v1 tag of: https://github.com/codecov/codecov-action
