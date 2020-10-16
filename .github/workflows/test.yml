@@ -11,51 +11,155 @@ on:
     - cron: "0 0 1 * *"
 
 jobs:
-  build:
+  # As we are running on different environments, we are splitting the jobs
+  # https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions#jobs
+  local:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: true
       matrix:
-        python-version: [3.6, 3.7, 3.8]
+        python-version: [3.6]
         os: [ubuntu-latest]
 
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout repo
+        uses: actions/checkout@v2
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Setup prerequisites
-        run: |
-          sudo apt update
-          sudo apt install mpich
-          sudo apt install libmpich-dev
-          sudo apt install libfftw3-dev
-          sudo apt install libnetcdf-dev
-          sudo apt install libnetcdf-cxx-legacy-dev
-          sudo apt install g++
-
-      - name: Setting up BOUT-dev next
-        run: |
-          git clone git://github.com/boutproject/BOUT-dev.git ${HOME}/BOUT-dev
-          cd ${HOME}/BOUT-dev
-          git checkout next
-          ./configure
-          make
-          cd -
-
       - name: Install dependencies
         run: |
           pip install -e ".[test]"
 
-      - name: Generate coverage report
+      - name: Test local run
         # Install and run the coverage report
         # NOTE: Only the latest python versions are supported in the docker containers
         run: |
-          coverage run --source=. -p -m pytest tests/local
-          docker run --rm -h pbs -e PBS_START_MOM=1 -v $(PWD):/opt/bout_runners loeiten/pbspro-test:latest "cd /opt/bout_runners && coverage run --source=. -p -m pytest tests/pbs"
+          coverage run --source=. -p -m pytest tests/local/unit/bout_runners/log
+          echo "$(ls -rat)"
+
+      - name: Upload Artifact
+        # https://docs.github.com/en/free-pro-team@latest/actions/guides/storing-workflow-data-as-artifacts
+        uses: actions/upload-artifact@v2
+        # Notice that we add ${{ matrix.python-version }} in order not to corrupt files
+        # https://github.com/actions/upload-artifact#uploading-to-the-same-artifact
+        with:
+          name: local-coverage-${{ matrix.python-version }}
+          path: .coverage*
+
+  pbs:
+    runs-on: ubuntu-latest
+    container:
+      image: loeiten/pbspro-test:latest
+      env:
+        PBS_START_MOM: 1
+      # -v ${{ github.workspace }}:/opt/bout_runners/:rw
+      options: --hostname pbs --user root
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+
+
+       # Problem: Setting entrypoint, but maybe can call the script later...
+#      - name: Setting up container
+#      # https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions#example-using-a-docker-hub-action
+#        uses: docker://loeiten/pbspro-test:latest
+#        with:
+#          env: PBS_START_MOM=1
+
+#      # Problem: Writing permissions
+#      - name: Start docker container
+#        run : |
+#          echo $(PWD)
+#          echo "$PWD"
+#          sudo chown -R 0777 /home/runner/work/bout_runners/
+#          docker run --name pbs -h pbs -v /home/runner/work/bout_runners/bout_runners:/opt/bout_runners -e PBS_START_MOM=1 loeiten/pbspro-test:latest "cd /opt/bout_runners && coverage run --source=. -p -m pytest tests/local/unit/bout_runners/database/test_database_utils.py"
+
+#      - name: Move directory
+#        # For some reason github action clones to No source for code: /__w/bout_runners/bout_runners/
+#        # instead of ${{ github.workspace }} (aka. /home/runner/work/bout_runners/bout_runners)
+#        # This then gives No source for code: '/__w/bout_runners/bout_runners/bout_runners/__init__.py' for
+#        # coverage xml below
+#        # Hence we move the content to the proper workdir
+#        run: |
+#          echo ${{ github.workspace }}
+#          mkdir -p ${{ github.workspace }}
+#          cp -r /__w/bout_runners/bout_runners/* ${{ github.workspace }}
+#          echo "$(ls -rat ${{ github.workspace }})"
+
+#      - name: Test PBS run
+#        # For some reason github action clones to No source for code: /__w/bout_runners/bout_runners/
+#        # instead of ${{ github.workspace }} (aka. /home/runner/work/bout_runners/bout_runners)
+#        # This then gives No source for code: '/__w/bout_runners/bout_runners/bout_runners/__init__.py' for
+#        # coverage xml below
+#        # Hence we move the content to the proper workdir
+#        run: |
+#          echo "$PWD"
+#          echo "$USER"
+#          echo "$(ls -rat)"
+#          echo "$PATH"
+#          bash /entrypoint.sh "qsub -- ls && qstat && sleep 10 && qstat && qstat -answ1 && pbsnodes -av"
+#
+#          cd ${{ github.workspace }}
+#          coverage run --source=. -p -m pytest tests/local/unit/bout_runners/log
+#          cp .coverage* /__w/bout_runners/bout_runners/
+#
+#          echo "$(ls -rat)"
+
+      - name: Test PBS run
+        # For some reason github action clones to No source for code: /__w/bout_runners/bout_runners/
+        # instead of ${{ github.workspace }} (aka. /home/runner/work/bout_runners/bout_runners)
+        # This then gives No source for code: '/__w/bout_runners/bout_runners/bout_runners/__init__.py' for
+        # coverage xml below
+        # Hence we move the content to the proper workdir
+        run: |
+          echo "$PWD"
+          echo "$USER"
+          echo "$(ls -rat)"
+          echo "$PATH"
+          bash /entrypoint.sh "qsub -- ls && qstat && sleep 10 && qstat && qstat -answ1 && pbsnodes -av"
+
+          coverage run --source=. -p -m pytest tests/local/unit/bout_runners/database/test_database_utils.py
+
+          echo "$(ls -rat)"
+
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: pbs-coverage
+          path: .coverage*
+
+  upload-to-codecov:
+    needs: [local, pbs]
+    runs-on: ubuntu-latest
+
+    steps:
+      # We need the repo in order for codecov to count lines
+      - uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+
+      - name: Download all artifacts
+        # https://github.com/actions/download-artifact
+        uses: actions/download-artifact@v2
+
+      - name: Install coverage
+        run: |
+          pip install coverage
+
+      - name: Combine
+        # coverage combine --debug=callers,config,dataio,dataop,multiproc,pid,plugin,process,self,sql,sys,trace
+        run: |
+          cp local-coverage*/.coverage* .
+          cp pbs-coverage/.coverage* .
+          echo "$(ls -rat)"
           coverage combine
           coverage xml
 
