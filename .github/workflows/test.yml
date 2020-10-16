@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        python-version: [3.6]
+        python-version: [3.6, 3.7, 3.8]
         os: [ubuntu-latest]
 
     steps:
@@ -30,16 +30,32 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Setup prerequisites
+        run: |
+          sudo apt update
+          sudo apt install mpich
+          sudo apt install libmpich-dev
+          sudo apt install libfftw3-dev
+          sudo apt install libnetcdf-dev
+          sudo apt install libnetcdf-cxx-legacy-dev
+          sudo apt install g++
+
+      - name: Setting up BOUT-dev next
+        run: |
+          git clone git://github.com/boutproject/BOUT-dev.git ${HOME}/BOUT-dev
+          cd ${HOME}/BOUT-dev
+          git checkout next
+          ./configure
+          make
+          cd -
+
       - name: Install dependencies
         run: |
           pip install -e ".[test]"
 
       - name: Test local run
-        # Install and run the coverage report
-        # NOTE: Only the latest python versions are supported in the docker containers
         run: |
-          coverage run --source=. -p -m pytest tests/local/unit/bout_runners/log
-          echo "$(ls -rat)"
+          coverage run --source=. -p -m pytest tests/local/
 
       - name: Upload Artifact
         # https://docs.github.com/en/free-pro-team@latest/actions/guides/storing-workflow-data-as-artifacts
@@ -56,118 +72,22 @@ jobs:
       image: loeiten/pbspro-test:latest
       env:
         PBS_START_MOM: 1
-      # -v ${{ github.workspace }}:/opt/bout_runners/:rw
-      options: --hostname pbs --user root -v ${{ github.workspace }}:/opt/bout_runners/:rw
+      # We mount the checked out repo to opt/bout_runners as the checkout action for repos are mounted in a strange
+      # place (/__w/bout_runners/bout_runners/)
+      options:
+        --hostname pbs --user root -v ${{ github.workspace }}:/opt/bout_runners/:rw
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
 
-
-
-       # Problem: Setting entrypoint, but maybe can call the script later...
-#      - name: Setting up container
-#      # https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions#example-using-a-docker-hub-action
-#        uses: docker://loeiten/pbspro-test:latest
-#        with:
-#          env: PBS_START_MOM=1
-
-#      # Problem: Writing permissions
-#      - name: Start docker container
-#        run : |
-#          echo $(PWD)
-#          echo "$PWD"
-#          sudo chown -R 0777 /home/runner/work/bout_runners/
-#          docker run --name pbs -h pbs -v /home/runner/work/bout_runners/bout_runners:/opt/bout_runners -e PBS_START_MOM=1 loeiten/pbspro-test:latest "cd /opt/bout_runners && coverage run --source=. -p -m pytest tests/local/unit/bout_runners/database/test_database_utils.py"
-
-#      - name: Move directory
-#        # For some reason github action clones to No source for code: /__w/bout_runners/bout_runners/
-#        # instead of ${{ github.workspace }} (aka. /home/runner/work/bout_runners/bout_runners)
-#        # This then gives No source for code: '/__w/bout_runners/bout_runners/bout_runners/__init__.py' for
-#        # coverage xml below
-#        # Hence we move the content to the proper workdir
-#        run: |
-#          echo ${{ github.workspace }}
-#          mkdir -p ${{ github.workspace }}
-#          cp -r /__w/bout_runners/bout_runners/* ${{ github.workspace }}
-#          echo "$(ls -rat ${{ github.workspace }})"
-
-#      - name: Test PBS run
-#        # For some reason github action clones to No source for code: /__w/bout_runners/bout_runners/
-#        # instead of ${{ github.workspace }} (aka. /home/runner/work/bout_runners/bout_runners)
-#        # This then gives No source for code: '/__w/bout_runners/bout_runners/bout_runners/__init__.py' for
-#        # coverage xml below
-#        # Hence we move the content to the proper workdir
-#        run: |
-#          echo "$PWD"
-#          echo "$USER"
-#          echo "$(ls -rat)"
-#          echo "$PATH"
-#          bash /entrypoint.sh "qsub -- ls && qstat && sleep 10 && qstat && qstat -answ1 && pbsnodes -av"
-#
-#          cd ${{ github.workspace }}
-#          coverage run --source=. -p -m pytest tests/local/unit/bout_runners/log
-#          cp .coverage* /__w/bout_runners/bout_runners/
-#
-#          echo "$(ls -rat)"
-
       - name: Test PBS run
-        # For some reason github action clones to No source for code: /__w/bout_runners/bout_runners/
-        # instead of ${{ github.workspace }} (aka. /home/runner/work/bout_runners/bout_runners)
-        # This then gives No source for code: '/__w/bout_runners/bout_runners/bout_runners/__init__.py' for
-        # coverage xml below
-        # Hence we move the content to the proper workdir
+        # First we set permissions for all users in /opt/bout_runners, then we run the test through the entrypoint
+        # Note that the sleep period in the start seems to be essential in order for the submissions not to be stuck
+        # forever in the queue
         run: |
-          echo "$PWD"
-          echo "$USER"
-          echo "$(ls -rat)"
-          echo "$PATH"
-
-          # Ensure that we have the correct permissions
           chmod -R 777 /opt/bout_runners
-
-          # The sleep period in the start seems to be essential in order for the submissions not to be stucked forever in the queue
-          bash /entrypoint.sh "sleep 10 && cd /opt/bout_runners && coverage run --source=. -p -m pytest tests/pbs  && qstat -answ1 && pbsnodes -av"
-
-          echo "$(ls -rat)"
-
-
-#      - name: Test PBS run
-#        # For some reason github action clones to No source for code: /__w/bout_runners/bout_runners/
-#        # instead of ${{ github.workspace }} (aka. /home/runner/work/bout_runners/bout_runners)
-#        # This then gives No source for code: '/__w/bout_runners/bout_runners/bout_runners/__init__.py' for
-#        # coverage xml below
-#        # Hence we move the content to the proper workdir
-#        #           bash /entrypoint.sh "cd /home/pbsuser/bout_runners && ls -rat && coverage run --source=. -p -m pytest tests/local/unit/bout_runners/database/test_database_utils.py && qsub -- ls && qstat && sleep 10 && qstat && qstat -answ1 && pbsnodes -av"
-#        run: |
-#          echo "$PWD"
-#          echo "$USER"
-#          echo "$(ls -rat)"
-#          echo "$PATH"
-#          pbs_conf_file=/etc/pbs.conf
-#          mom_conf_file=/var/spool/pbs/mom_priv/config
-#          hostname=$(hostname)
-#
-#          # replace hostname in pbs.conf and mom_priv/config
-#          sed -i "s/PBS_SERVER=.*/PBS_SERVER=$hostname/" $pbs_conf_file
-#          sed -i "s/\$clienthost .*/\$clienthost $hostname/" $mom_conf_file
-#
-#
-#          # start PBS Pro
-#          /etc/init.d/pbs start
-#
-#          /opt/pbs/bin/qmgr -c "create node pbs"
-#          /opt/pbs/bin/qmgr -c "set node pbs queue=workq"
-#
-#          # create default non-root user
-#          adduser pbsuser
-#          cp -r /opt/bout_runners /home/pbsuser/bout_runners
-#          # Overriding permissions?
-#          # https://docs.github.com/en/free-pro-team@latest/actions/creating-actions/dockerfile-support-for-github-actions#dockerfile-instructions-and-overrides
-#          chmod -R 777 /home/pbsuser/bout_runners
-#          su -c "cd /home/pbsuser/bout_runners && ls -lrat && coverage run --source=. -p -m pytest tests/local/unit/bout_runners/database/test_database_utils.py" - "pbsuser"
-#
-#          echo "$(ls -rat)"
+          bash /entrypoint.sh "sleep 10 && cd /opt/bout_runners && coverage run --source=. -p -m pytest tests/pbs"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v2
@@ -195,11 +115,9 @@ jobs:
           pip install coverage
 
       - name: Combine
-        # coverage combine --debug=callers,config,dataio,dataop,multiproc,pid,plugin,process,self,sql,sys,trace
         run: |
-          cp local-coverage*/.coverage* .
-          cp pbs-coverage/.coverage* .
-          echo "$(ls -rat)"
+          cp -rf local-coverage*/.coverage.* .
+          cp -rf pbs-coverage/.coverage* .
           coverage combine
           coverage xml
 
