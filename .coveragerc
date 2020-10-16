@@ -16,3 +16,4 @@ omit =
 source =
     ./
     /__w/bout_runners/bout_runners
+    /opt/bout_runners
