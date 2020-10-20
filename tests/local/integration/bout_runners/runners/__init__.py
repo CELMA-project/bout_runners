@@ -1,1 +1,1 @@
-"""Package containing the integration test for the runners package."""
+"""Package containing the local integration test for the runners package."""

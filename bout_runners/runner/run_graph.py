@@ -189,6 +189,24 @@ class RunGraph:
         #       attributes
         return tuple(self.__graph.predecessors(node_name))
 
+    def successors(self, node_name: str) -> Tuple[str, ...]:
+        """
+        Return the successors of the node.
+
+        Parameters
+        ----------
+        node_name : str
+            Name of the node to get the predecessors from
+
+        Returns
+        -------
+        successors_names : tuple of str
+            Names of predecessors
+        """
+        # NOTE: The set of nodes only contain the name of the nodes, not their
+        #       attributes
+        return tuple(self.__graph.successors(node_name))
+
     def reset(self) -> None:
         """Reset the nodes by setting the status to 'ready'."""
         logging.info("Resetting status in nodes to 'ready'")

@@ -107,7 +107,7 @@ class LocalSubmitter(AbstractSubmitter):
         command : str
             The command to run
         """
-        self._reset_status()
+        self._reset_submitter()
         self.__process = subprocess.Popen(
             command.split(),
             stdout=subprocess.PIPE,
@@ -118,7 +118,9 @@ class LocalSubmitter(AbstractSubmitter):
             shell=False,  # nosec
         )
         self._status["job_id"] = str(self.__process.pid)
-        logging.info("job_id %s given %s in %s", self.job_id, command, self.__path)
+        logging.info(
+            "job_id %s given to command '%s' in %s", self.job_id, command, self.__path
+        )
 
     def _wait_for_std_out_and_std_err(self) -> None:
         """

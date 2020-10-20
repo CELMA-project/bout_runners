@@ -1,4 +1,4 @@
-"""Contains integration test for the runner."""
+"""Contains local integration tests for the runner."""
 
 
 import pytest
@@ -9,7 +9,7 @@ from typing import Callable, Dict
 from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.runner.bout_runner import BoutRunner
 
-from tests.utils.node_functions import (
+from tests.utils.local_node_functions import (
     node_zero,
     node_one,
     node_five,

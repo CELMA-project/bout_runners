@@ -1,1 +1,1 @@
-"""Package containing the integrations tests."""
+"""Package containing the local integrations tests."""

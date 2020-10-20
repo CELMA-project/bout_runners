@@ -4,7 +4,7 @@ import re
 import logging
 
 from pathlib import Path
-from typing import Optional, Dict, List, Tuple, Iterable
+from typing import Optional, Dict, List, Tuple, Iterable, Union
 from time import sleep
 
 from bout_runners.submitter.processor_split import ProcessorSplit
@@ -59,7 +59,12 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
             )
         self.__waiting_for: List[str] = list()
         self.__log_and_error_base: Path = Path()
-        self.__dequeued = True
+        self.__dequeued = False
+
+    def _reset_submitter(self) -> None:
+        """Reset the status dict."""
+        self.__dequeued = False
+        self._reset_status()
 
     @staticmethod
     def structure_time_to_pbs_format(time_str: str) -> str:
@@ -101,7 +106,9 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         """
         return tuple(self.__waiting_for)
 
-    def add_waiting_for(self, waiting_for_ids: Iterable[str]) -> None:
+    def add_waiting_for(
+        self, waiting_for_id: Union[Optional[str], Iterable[str]]
+    ) -> None:
         """
         Add a waiting for id to the waiting for list.
 
@@ -110,14 +117,21 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
 
         Parameters
         ----------
-        waiting_for_ids : list of str
+        waiting_for_id : None or list of str
             Id to the job waiting for
         """
-        logging.debug(
-            "Adding the following to the waiting_for_list: %s", waiting_for_ids
-        )
-        for waiting_for_id in waiting_for_ids:
-            self.__waiting_for.append(waiting_for_id)
+        if waiting_for_id is not None:
+            if isinstance(waiting_for_id, str):
+                self.__waiting_for.append(waiting_for_id)
+                logging.debug(
+                    "Adding the following to the waiting_for_list: %s", waiting_for_id
+                )
+            else:
+                for waiting_id in waiting_for_id:
+                    self.__waiting_for.append(waiting_id)
+                    logging.debug(
+                        "Adding the following to the waiting_for_list: %s", waiting_id
+                    )
 
     def create_submission_string(self, command: str) -> str:
         """
@@ -166,7 +180,6 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
             "cd $PBS_O_WORKDIR\n"
             f"{command}"
         )
-
         return job_string
 
     def submit_command(self, command: str) -> None:
@@ -178,7 +191,7 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         command : str
             Command to submit
         """
-        self._reset_status()
+        self._reset_submitter()
         script_path = self._store_dir.joinpath(f"{self._job_name}.sh")
         with script_path.open("w") as file:
             file.write(self.create_submission_string(command))
@@ -188,7 +201,9 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         local_submitter.submit_command(f"qsub {script_path}")
         local_submitter.wait_until_completed()
         self._status["job_id"] = local_submitter.std_out
-        logging.info("job_id %s given %s", self.job_id, script_path)
+        logging.info(
+            "job_id %s given to command '%s' in %s", self.job_id, command, script_path
+        )
 
     def _wait_for_std_out_and_std_err(self) -> None:
         """
@@ -196,29 +211,47 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
 
         Populate return_code, std_out and std_err
         """
-        if self.job_id is not None:
-            while self.return_code is None or not self.__dequeued:
+        if self._status["job_id"] is not None:
+            while self._status["return_code"] is None and not self.__dequeued:
                 trace = self.__get_trace()
                 self._status["return_code"] = self.get_return_code(trace)
                 self.__dequeued = self.has_dequeue(trace)
                 sleep(5)
                 logging.debug("Trace is reading:\n%s", trace)
 
-            log_path = self.__log_and_error_base.parent.joinpath(
-                f"{self.__log_and_error_base.stem}.log"
-            )
-            with log_path.open("r") as file:
-                self._status["std_out"] = file.read()
+            if self._status["return_code"] is not None:
+                log_path = self.__log_and_error_base.parent.joinpath(
+                    f"{self.__log_and_error_base.stem}.log"
+                )
+                with log_path.open("r") as file:
+                    self._status["std_out"] = file.read()
 
-            err_path = self.__log_and_error_base.parent.joinpath(
-                f"{self.__log_and_error_base.stem}.err"
-            )
-            with err_path.open("r") as file:
-                self._status["std_err"] = file.read()
+                err_path = self.__log_and_error_base.parent.joinpath(
+                    f"{self.__log_and_error_base.stem}.err"
+                )
+                with err_path.open("r") as file:
+                    self._status["std_err"] = file.read()
 
-        logging.warning(
-            "No process started, return_code, std_out, std_err not populated"
-        )
+                logging.debug(
+                    "std_out and std_err populated for job_id %s",
+                    self._status["job_id"],
+                )
+
+            else:
+                # If the return code is empty it must be because the while loop
+                # exited because the job was dequeued
+                logging.error(
+                    "The process dequeued before starting. "
+                    "No process started, so "
+                    "return_code, std_out, std_err are not populated"
+                )
+        else:
+            # No job_id
+            logging.warning(
+                "Tried to wait for a process without job_id. "
+                "No process started, so "
+                "return_code, std_out, std_err are not populated"
+            )
 
     def completed(self) -> bool:
         """
@@ -229,8 +262,8 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         bool
             Whether the job has completed
         """
-        if self.job_id is not None:
-            if self.return_code is not None:
+        if self._status["job_id"] is not None:
+            if self._status["return_code"] is not None:
                 return True
             trace = self.__get_trace()
             return_code = self.get_return_code(trace)
@@ -254,7 +287,7 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         """
         # Submit the command through a local submitter
         local_submitter = LocalSubmitter(run_path=self._store_dir)
-        local_submitter.submit_command(f"tracejob -n 365 {self.job_id}")
+        local_submitter.submit_command(f"tracejob -n 365 {self._status['job_id']}")
         local_submitter.wait_until_completed()
         trace = local_submitter.std_out if local_submitter.std_out is not None else ""
         return trace
@@ -318,6 +351,11 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         """
         if self.completed():
             if self.return_code != 0:
+                if self.return_code is None:
+                    raise RuntimeError(
+                        "Submission was never submitted. "
+                        "Were the job dependencies valid (i.e. in the queue system)?"
+                    )
                 raise RuntimeError(
                     f"Submission errored with error code {self.return_code}"
                 )

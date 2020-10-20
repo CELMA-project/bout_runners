@@ -168,7 +168,7 @@ class BoutRunner:
         Returns
         -------
         bool
-            Whether or not to submit the run
+            Whether or not the run was submitted
         """
         if (
             restart_from_bout_inp_dst
@@ -363,6 +363,135 @@ class BoutRunner:
             the errored node will be marked as errored and not submitted
         wait_time : int
             Time to wait before checking if a job has completed
+        """
+        self.__prepare_run(force, restart_all)
+
+        for nodes_at_current_order in self.__run_graph:
+            submitter_dict: Dict[
+                str,
+                Dict[
+                    str,
+                    Union[Optional[AbstractSubmitter], Union[DatabaseConnector, Path]],
+                ],
+            ] = dict()
+            for node_name in nodes_at_current_order.keys():
+                logging.info("Processing %s", node_name)
+                if isinstance(
+                    nodes_at_current_order[node_name]["submitter"],
+                    AbstractClusterSubmitter,
+                ):
+                    self.__add_waiting_for(node_name, nodes_at_current_order)
+
+                submitter_dict[node_name] = dict()
+                submitter_dict[node_name]["submitter"] = nodes_at_current_order[
+                    node_name
+                ]["submitter"]
+                if node_name.startswith("bout_run"):
+                    submitted = self.run_bout_run(
+                        nodes_at_current_order[node_name]["bout_run_setup"],
+                        restart_all,
+                        force,
+                    )
+                    self.__update_submitter_dict_after_run_bout_run(
+                        node_name, nodes_at_current_order, submitted, submitter_dict
+                    )
+                else:
+                    self.run_function(
+                        nodes_at_current_order[node_name]["path"],
+                        nodes_at_current_order[node_name]["submitter"],
+                        nodes_at_current_order[node_name]["function"],
+                        nodes_at_current_order[node_name]["args"],
+                        nodes_at_current_order[node_name]["kwargs"],
+                    )
+
+            # We only monitor the runs if any local_submitters are present in
+            # the current or the next order
+            # Else the clusters will handle the monitoring
+            monitor_run = False
+            if self.__this_order_has_local(
+                submitter_dict
+            ) or self.__next_order_has_local(submitter_dict):
+                monitor_run = True
+
+            if monitor_run:
+                self.__monitor_runs(submitter_dict, raise_errors, wait_time)
+
+    @staticmethod
+    def __update_submitter_dict_after_run_bout_run(
+        node_name: str,
+        nodes_at_current_order: Dict[str, Dict[str, Any]],
+        submitted: bool,
+        submitter_dict: Dict[
+            str,
+            Dict[
+                str,
+                Union[Optional[AbstractSubmitter], Union[DatabaseConnector, Path]],
+            ],
+        ],
+    ):
+        """
+        Update the submitter dict after calling run_bout_run.
+
+        If the run has been submitted we add information about the database in the dict.
+        Else we pop the node name from the dict in order not to monitor it.
+
+        Parameters
+        ----------
+        node_name : str
+            Name of current node
+        nodes_at_current_order : dict of str, dict
+            Dict of the attributes of the nodes
+        submitted : bool
+            Whether or not the run was submitted
+        submitter_dict : dict
+            Dict containing the the node names as keys and a new dict as values
+            The new dict contains the keywords 'submitter' with value AbstractSubmitter
+        """
+        if submitted:
+            submitter_dict[node_name]["db_connector"] = nodes_at_current_order[
+                node_name
+            ]["bout_run_setup"].db_connector
+            submitter_dict[node_name]["project_path"] = nodes_at_current_order[
+                node_name
+            ]["bout_run_setup"].bout_paths.project_path
+        else:
+            submitter_dict.pop(node_name)
+
+    def __add_waiting_for(
+        self, node_name: str, nodes_at_current_order: Dict[str, Dict[str, Any]]
+    ) -> None:
+        """
+        Add the job_ids to wait for in the submission script.
+
+        Parameters
+        ----------
+        node_name : str
+            Name of current node
+        nodes_at_current_order : dict of str, dict
+            Dict of the attributes of the nodes
+        """
+        predecessors = self.__run_graph.predecessors(node_name)
+        waiting_for = (
+            self.__run_graph[p_name]["submitter"].job_id
+            for p_name in predecessors
+            if isinstance(
+                self.__run_graph[p_name]["submitter"],
+                AbstractClusterSubmitter,
+            )
+            and not self.__run_graph[p_name]["submitter"].completed()
+        )
+        nodes_at_current_order[node_name]["submitter"].add_waiting_for(waiting_for)
+
+    def __prepare_run(self, force: bool, restart_all: bool) -> None:
+        """
+        Prepare the run sequence.
+
+        Parameters
+        ----------
+        restart_all : bool
+            All the BOUT++ runs in the run graph will be restarted
+        force : bool
+            Execute the run even if has been performed with the same parameters
 
         Raises
         ------
@@ -374,7 +503,6 @@ class BoutRunner:
                 "Resetting the graph as %s == True", "force" if force else "restart_all"
             )
             self.reset()
-
         if len(self.__run_graph) == 0:
             if len(self.__run_graph.nodes) == 0:
                 msg = "The 'run_graph' does not contain any nodes."
@@ -386,82 +514,73 @@ class BoutRunner:
             logging.error(msg)
             raise RuntimeError(msg)
 
-        for nodes_at_current_order in self.__run_graph:
-            submitter_dict: Dict[
-                str,
-                Dict[
-                    str,
-                    Union[Optional[AbstractSubmitter], Union[DatabaseConnector, Path]],
-                ],
-            ] = dict()
-            for node_name in nodes_at_current_order.keys():
-                logging.info("Executing %s", node_name)
+    @staticmethod
+    def __this_order_has_local(
+        submitter_dict: Dict[
+            str,
+            Dict[
+                str, Union[Optional[AbstractSubmitter], Union[DatabaseConnector, Path]]
+            ],
+        ]
+    ) -> bool:
+        """
+        Check if the current order of nodes has any local submitters.
+
+        Parameters
+        ----------
+        submitter_dict : dict
+            Dict containing the the node names as keys and a new dict as values
+            The new dict contains the keywords 'submitter' with value AbstractSubmitter
+
+        Returns
+        -------
+        bool
+            True if the current order has local submitters
+        """
+        for node_name in submitter_dict.keys():
+            if isinstance(submitter_dict[node_name]["submitter"], LocalSubmitter):
+                logging.info(
+                    "%s is of local submitter type, will monitor this node order",
+                    node_name,
+                )
+                return True
+        return False
+
+    def __next_order_has_local(
+        self,
+        submitter_dict: Dict[
+            str,
+            Dict[
+                str, Union[Optional[AbstractSubmitter], Union[DatabaseConnector, Path]]
+            ],
+        ],
+    ) -> bool:
+        """
+        Check if the current order of nodes has any local submitters.
+
+        Parameters
+        ----------
+        submitter_dict : dict
+            Dict containing the the node names as keys and a new dict as values
+            The new dict contains the keywords 'submitter' with value AbstractSubmitter
+
+        Returns
+        -------
+        bool
+            True if the current order has local submitters
+        """
+        for node_name in submitter_dict.keys():
+            for successor_name in self.__run_graph.successors(node_name):
                 if isinstance(
-                    nodes_at_current_order[node_name]["submitter"],
-                    AbstractClusterSubmitter,
+                    self.__run_graph[successor_name]["submitter"], LocalSubmitter
                 ):
-                    # Adding job_ids to wait for in the submission script
-                    predecessors = self.__run_graph.predecessors(node_name)
-                    waiting_for = (
-                        p_name
-                        for p_name in predecessors
-                        if isinstance(
-                            self.__run_graph[p_name]["submitter"],
-                            AbstractClusterSubmitter,
-                        )
+                    logging.info(
+                        "%s in the next node order is of local submitter type, "
+                        "will monitor this node order",
+                        successor_name,
                     )
-                    nodes_at_current_order[node_name]["submitter"].add_waiting_for(
-                        waiting_for
-                    )
-
-                submitter_dict[node_name] = dict()
-                submitter_dict[node_name]["submitter"] = nodes_at_current_order[
-                    node_name
-                ]["submitter"]
-                submit = True
-                if node_name.startswith("bout_run"):
-                    submit = self.run_bout_run(
-                        nodes_at_current_order[node_name]["bout_run_setup"],
-                        restart_all,
-                        force,
-                    )
-                    if submit:
-                        submitter_dict[node_name][
-                            "db_connector"
-                        ] = nodes_at_current_order[node_name][
-                            "bout_run_setup"
-                        ].db_connector
-                        submitter_dict[node_name][
-                            "project_path"
-                        ] = nodes_at_current_order[node_name][
-                            "bout_run_setup"
-                        ].bout_paths.project_path
-                    else:
-                        submitter_dict.pop(node_name)
-                else:
-                    self.run_function(
-                        nodes_at_current_order[node_name]["path"],
-                        nodes_at_current_order[node_name]["submitter"],
-                        nodes_at_current_order[node_name]["function"],
-                        nodes_at_current_order[node_name]["args"],
-                        nodes_at_current_order[node_name]["kwargs"],
-                    )
-
-                if submit is not None:
-                    logging.debug(
-                        "Node '%s' submitted with job_id %s",
-                        node_name,
-                        nodes_at_current_order[node_name]["submitter"].job_id,
-                    )
-
-            # We only monitor the local_submitters as the clusters have their own
-            # scheduling system
-            local_submitter_dict = {
-                node_name: val
-                for node_name, val in submitter_dict.items()
-                if isinstance(submitter_dict[node_name]["submitter"], LocalSubmitter)
-            }
-            self.__monitor_runs(local_submitter_dict, raise_errors, wait_time)
+                    return True
+        return False
 
     def __monitor_runs(
         self,
@@ -542,3 +661,6 @@ class BoutRunner:
                     StatusChecker(db_connector, project_path).check_and_update_status()
 
             sleep(wait_time)
+        logging.info(
+            "All runs of this order has completed, will continue to the next node order"
+        )

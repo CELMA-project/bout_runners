@@ -19,11 +19,20 @@ class AbstractSubmitter(ABC):
         """Declare common variables."""
         self._logged_complete_status = False
         self._status: Dict[str, Union[Optional[int], Optional[str]]] = dict()
+        self._reset_submitter()
+
+    def _reset_submitter(self) -> None:
+        """Reset the submitter."""
         self._reset_status()
 
     def _reset_status(self) -> None:
         """Reset the status dict."""
-        logging.debug("Resetting job_id, return_code, std_out and std_err")
+        if "job_id" in self._status.keys() and self._status["job_id"] is not None:
+            logging.debug(
+                "Resetting job_id, return_code, std_out and std_err. "
+                "Previous job_id=%s",
+                self._status["job_id"],
+            )
         self._status["job_id"] = None
         self._status["return_code"] = None
         self._status["std_out"] = None
