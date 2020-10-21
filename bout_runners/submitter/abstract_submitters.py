@@ -38,6 +38,30 @@ class AbstractSubmitter(ABC):
         self._status["std_out"] = None
         self._status["std_err"] = None
 
+    def _catch_error(self) -> None:
+        """Log the error."""
+        if self.completed() and self.return_code != 0:
+
+            if not self._logged_complete_status:
+                logging.error(
+                    "job_id %s failed with return code %s",
+                    self.job_id,
+                    self.return_code,
+                )
+                logging.error("stdout:")
+                logging.error(self.std_out)
+                logging.error("stderr:")
+                logging.error(self.std_err)
+                self._logged_complete_status = True
+
+    @abstractmethod
+    def _wait_for_std_out_and_std_err(self) -> None:
+        """
+        Wait until the process completes if a process has been started.
+
+        Populate return_code, std_out and std_err
+        """
+
     @abstractmethod
     def submit_command(self, command: str) -> Any:
         """
@@ -48,6 +72,14 @@ class AbstractSubmitter(ABC):
         command : str
             Command to submit
         """
+
+    @abstractmethod
+    def completed(self) -> bool:
+        """Return the completed status."""
+
+    @abstractmethod
+    def raise_error(self) -> None:
+        """Raise and error from the subprocess in a clean way."""
 
     @property
     def job_id(self) -> Optional[str]:
@@ -196,10 +228,6 @@ class AbstractSubmitter(ABC):
             self._wait_for_std_out_and_std_err()
             self.errored(raise_error)
 
-    @abstractmethod
-    def completed(self) -> bool:
-        """Return the completed status."""
-
     def errored(self, raise_error: bool = False) -> bool:
         """
         Return True if the process errored.
@@ -224,34 +252,6 @@ class AbstractSubmitter(ABC):
                 logging.info("job_id %s completed successfully", self.job_id)
                 self._logged_complete_status = True
         return False
-
-    def _catch_error(self) -> None:
-        """Log the error."""
-        if self.completed() and self.return_code != 0:
-
-            if not self._logged_complete_status:
-                logging.error(
-                    "job_id %s failed with return code %s",
-                    self.job_id,
-                    self.return_code,
-                )
-                logging.error("stdout:")
-                logging.error(self.std_out)
-                logging.error("stderr:")
-                logging.error(self.std_err)
-                self._logged_complete_status = True
-
-    @abstractmethod
-    def _wait_for_std_out_and_std_err(self) -> None:
-        """
-        Wait until the process completes if a process has been started.
-
-        Populate return_code, std_out and std_err
-        """
-
-    @abstractmethod
-    def raise_error(self) -> None:
-        """Raise and error from the subprocess in a clean way."""
 
 
 class AbstractClusterSubmitter(ABC):

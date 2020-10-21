@@ -98,6 +98,22 @@ class LocalSubmitter(AbstractSubmitter):
             processor_split if processor_split is not None else ProcessorSplit()
         )
 
+    def _wait_for_std_out_and_std_err(self) -> None:
+        """
+        Wait until the process completes if a process has been started.
+
+        Populate return_code, std_out and std_err
+        """
+        if self.__process is not None:
+            std_out, std_err = self.__process.communicate()
+            self._status["return_code"] = self.__process.poll()
+            self._status["std_out"] = std_out.decode("utf8").strip()
+            self._status["std_err"] = std_err.decode("utf8").strip()
+        else:
+            logging.warning(
+                "No process started, return_code, std_out, std_err not populated"
+            )
+
     def submit_command(self, command: str) -> None:
         """
         Submit a subprocess.
@@ -121,22 +137,6 @@ class LocalSubmitter(AbstractSubmitter):
         logging.info(
             "job_id %s given to command '%s' in %s", self.job_id, command, self.__path
         )
-
-    def _wait_for_std_out_and_std_err(self) -> None:
-        """
-        Wait until the process completes if a process has been started.
-
-        Populate return_code, std_out and std_err
-        """
-        if self.__process is not None:
-            std_out, std_err = self.__process.communicate()
-            self._status["return_code"] = self.__process.poll()
-            self._status["std_out"] = std_out.decode("utf8").strip()
-            self._status["std_err"] = std_err.decode("utf8").strip()
-        else:
-            logging.warning(
-                "No process started, return_code, std_out, std_err not populated"
-            )
 
     def completed(self) -> bool:
         """
