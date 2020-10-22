@@ -1,4 +1,5 @@
-# Building pbspro-test *NOTE* must be built from root of this repo due to setup.cfg
+# Building pbspro-test
+# *NOTE* must be built from root of this repo due to setup.cfg
 # docker build -f Dockerfile -t pbspro-test:latest -f docker/PBS/Dockerfile .
 
 # Run with
@@ -22,20 +23,27 @@ ARG SET_QUEUE="\/opt\/pbs\/bin\/qmgr -c \"set node pbs queue=workq\""
 # https://unix.stackexchange.com/questions/41571/what-is-the-difference-between-and#
 ARG RUN_CMD_AS_PBSUSER="su -c \"\$*\" - \"pbsuser\""
 
-# Install mpi
-RUN yum install gcc gcc-c++ gcc-gfortran make wget -y \
-    && wget http://www.mpich.org/static/downloads/3.3.2/mpich-3.3.2.tar.gz \
-    && tar -xvzf mpich-3.3.2.tar.gz \
-    && cd mpich-3.3.2 \
-    && ./configure --prefix=/usr \
-    && make \
-    && make install \
-    && cd ..\
-    && rm -rf mpich*
+# Install depenencies
+RUN yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+RUN yum-config-manager --enable epel
+RUN yum install centos-release-scl -y
+RUN yum install devtoolset-7-gcc* -y
+# For some reason mpich2 seems not to be installing properly
+RUN yum install \
+    make \
+    which \
+    git \
+    fftw3-devel \
+    netcdf-devel \
+    netcdf-cxx-devel \
+    openmpi \
+    openmpi-devel \
+    wget \
+    -y
 
 # Add python to the path
 # This is needed for pip install under
-# Unfortunately this will not add anaconda to the path, so we do it again in the entrypoint script
+# Unfortunately this will not add anaconda to the path, so we do it again in profile.d
 ENV PATH="/opt/anaconda/bin:${PATH}"
 
 # Install python3 and dependencies
@@ -48,8 +56,12 @@ RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh \
 
 # Set the python path for all users (appending it directly to /etc/profile hides other paths)
 # https://forums.centos.org/viewtopic.php?t=60887
-RUN echo "export PATH=/opt/anaconda/bin:$PATH" > /etc/profile.d/anaconda.sh \
-    && chmod +x /etc/profile.d/anaconda.sh
+# As we are installing OpenMPI rather than MPICH2, we need to export the executable
+# In addition we add the new gcc path as the standard does not contain c++-14
+RUN echo "export PATH=/opt/anaconda/bin:$PATH" > /etc/profile.d/bout-specific.sh \
+    && echo "export PATH=/usr/lib64/openmpi/bin:$PATH" >> /etc/profile.d/bout-specific.sh \
+    && echo ". /opt/rh/devtoolset-7/enable" >> /etc/profile.d/bout-specific.sh \
+    && chmod +x /etc/profile.d/bout-specific.sh
 
 # Change the start-script in order to enter a started cluster
 # First we remove the executions at the end of the script

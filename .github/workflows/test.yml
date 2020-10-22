@@ -40,7 +40,7 @@ jobs:
           sudo apt install libnetcdf-cxx-legacy-dev
           sudo apt install g++
 
-      - name: Setting up BOUT-dev next
+      - name: Setup BOUT-dev next
         run: |
           git clone git://github.com/boutproject/BOUT-dev.git ${HOME}/BOUT-dev
           cd ${HOME}/BOUT-dev
@@ -80,6 +80,14 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v2
+
+      - name: Setup BOUT-dev next
+        run: |
+          git clone git://github.com/boutproject/BOUT-dev.git ${HOME}/BOUT-dev
+          cd ${HOME}/BOUT-dev
+          git checkout next
+          ./configure
+          make
 
       - name: Test PBS run
         # First we set permissions for all users in /opt/bout_runners, then we run the test through the entrypoint
