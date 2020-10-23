@@ -9,7 +9,7 @@ import yaml
 from bout_runners.utils.logs import get_log_config, set_up_logger
 from bout_runners.utils.paths import (
     get_bout_directory,
-    get_bout_log_config_path,
+    get_logger_config_path,
     get_bout_runners_config_path,
     get_bout_runners_configuration,
     get_log_file_directory,
@@ -72,7 +72,7 @@ def set_log_level(level: Optional[str] = None) -> None:
     config["handlers"]["console_handler"]["level"] = level
     config["root"]["level"] = level
 
-    with get_bout_log_config_path().open("w") as log_file:
+    with get_logger_config_path().open("w") as log_file:
         log_file.write(yaml.dump(config))
 
     set_up_logger(config)

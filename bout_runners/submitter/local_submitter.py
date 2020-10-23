@@ -77,6 +77,8 @@ class LocalSubmitter(AbstractSubmitter):
         """
         Set the path from where the calls are made from.
 
+        FIXME: Processor split from submitters.ini
+
         Parameters
         ----------
         run_path : Path or str or None

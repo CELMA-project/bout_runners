@@ -8,8 +8,8 @@ from bout_runners.submitter.submitter_factory import get_submitter
 
 def test_submitter_factory() -> None:
     """Test that the SubmitterFactory returns Submitter objects."""
-    submitter = get_submitter("local")
+    submitter = get_submitter(name="local")
     assert isinstance(submitter, LocalSubmitter)
 
     with pytest.raises(NotImplementedError):
-        get_submitter("not a class")
+        get_submitter(name="not a class")

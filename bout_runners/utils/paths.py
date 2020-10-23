@@ -55,16 +55,49 @@ def get_bout_runners_config_path() -> Path:
     return get_config_path().joinpath("bout_runners.ini")
 
 
-def get_bout_log_config_path() -> Path:
+def get_default_submitters_config_path() -> Path:
     """
-    Return the absolute path to the log configuration.
+    Return the absolute path to the default submitters configuration.
 
     Returns
     -------
     Path
-        The path to the bout_runners configuration file
+        The default path to the submitters configuration file
     """
-    return get_config_path().joinpath("logging_config.yaml")
+    return get_config_path().joinpath("submitters.ini")
+
+
+def get_submitters_config_path() -> Path:
+    """
+    Return the path to the submitter configuration.
+
+    Returns
+    -------
+    submitters_config_path : Path
+        Path to the submitters configuration
+    """
+    config = get_bout_runners_configuration()
+    path_str = config["submitter_config"]["directory"]
+    if path_str.lower() == "none":
+        submitters_config_path = get_default_submitters_config_path()
+    else:
+        submitters_config_path = Path(path_str)
+
+    return submitters_config_path
+
+
+def get_submitters_configuration() -> configparser.ConfigParser:
+    """
+    Return the submitters configuration.
+
+    Returns
+    -------
+    config : configparser.ConfigParser
+        The submitter configuration
+    """
+    config = configparser.ConfigParser()
+    config.read(get_submitters_config_path())
+    return config
 
 
 def get_bout_runners_configuration() -> configparser.ConfigParser:
@@ -92,7 +125,7 @@ def get_log_file_directory() -> Path:
     """
     config = get_bout_runners_configuration()
     path_str = config["log"]["directory"]
-    if path_str == "None":
+    if path_str.lower() == "none":
         log_file_dir = get_bout_runners_package_path().joinpath("logs")
     else:
         log_file_dir = Path(path_str)
@@ -141,7 +174,11 @@ def get_bout_directory() -> Path:
     """
     config = get_bout_runners_configuration()
     path_str = config["bout++"]["directory"]
-    if "$HOME/" or "${HOME}/" in path_str.lower():
+    if (
+        "$home/" in path_str.lower()
+        or "${home}/" in path_str.lower()
+        or "$(home)/" in path_str.lower()
+    ):
         path_str = "/".join(path_str.split("/")[1:])
         path_str = f"{Path.home()}/{path_str}"
     bout_path = Path(path_str).absolute()

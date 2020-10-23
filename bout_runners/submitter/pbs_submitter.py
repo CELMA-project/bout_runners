@@ -40,9 +40,9 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
             One the form
 
             >>> {'walltime': None or str,
-            ...  'mail': None or str,
+            ...  'account': None or str,
             ...  'queue': None or str,
-            ...  'account': None or str}
+            ...  'mail': None or str}
 
             These options will not be used if the submission_dict is None
         processor_split : ProcessorSplit or None

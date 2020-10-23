@@ -10,7 +10,7 @@ from bout_runners.runner.bout_run_setup import BoutRunSetup
 from bout_runners.executor.bout_paths import BoutPaths
 from bout_runners.runner.run_graph import RunGraph
 from bout_runners.submitter.abstract_submitters import AbstractSubmitter
-from bout_runners.submitter.local_submitter import LocalSubmitter
+from bout_runners.submitter.submitter_factory import get_submitter
 
 
 class RunGroup:
@@ -290,7 +290,7 @@ class RunGroup:
         path = directory.joinpath(
             f"{function_dict['function'].__name__}_{pre_processor_node_name}.py"
         )
-        submitter = submitter if submitter is not None else LocalSubmitter()
+        submitter = submitter if submitter is not None else get_submitter()
         self.__run_graph.add_function_node(
             pre_processor_node_name,
             function_dict=function_dict,
@@ -360,7 +360,7 @@ class RunGroup:
         path = directory.joinpath(
             f"{function_dict['function'].__name__}_{post_processor_node_name}.py"
         )
-        submitter = submitter if submitter is not None else LocalSubmitter()
+        submitter = submitter if submitter is not None else get_submitter()
         self.__run_graph.add_function_node(
             post_processor_node_name,
             function_dict=function_dict,

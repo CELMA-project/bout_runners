@@ -19,6 +19,7 @@ class AbstractSubmitter(ABC):
         """Declare common variables."""
         self._logged_complete_status = False
         self._status: Dict[str, Union[Optional[int], Optional[str]]] = dict()
+        self.processor_split = ProcessorSplit()
         self._reset_submitter()
 
     def _reset_submitter(self) -> None:

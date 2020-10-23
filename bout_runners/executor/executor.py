@@ -7,7 +7,8 @@ from pathlib import Path
 from bout_runners.executor.bout_paths import BoutPaths
 from bout_runners.make.make import Make
 from bout_runners.parameters.run_parameters import RunParameters
-from bout_runners.submitter.local_submitter import LocalSubmitter
+from bout_runners.submitter.abstract_submitters import AbstractSubmitter
+from bout_runners.submitter.submitter_factory import get_submitter
 
 
 class Executor:
@@ -81,7 +82,7 @@ class Executor:
     def __init__(
         self,
         bout_paths: Optional[BoutPaths] = None,
-        submitter: Optional[LocalSubmitter] = None,
+        submitter: Optional[AbstractSubmitter] = None,
         run_parameters: Optional[RunParameters] = None,
         restart_from: Optional[Path] = None,
     ) -> None:
@@ -105,7 +106,7 @@ class Executor:
         self.restart_from = restart_from
         # NOTE: We are not setting the default as a keyword argument
         #       as this would mess up the paths
-        self.submitter = submitter if submitter is not None else LocalSubmitter()
+        self.submitter = submitter if submitter is not None else get_submitter()
         self.__bout_paths = bout_paths if bout_paths is not None else BoutPaths()
         self.__run_parameters = (
             run_parameters if run_parameters is not None else RunParameters()

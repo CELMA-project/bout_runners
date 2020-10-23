@@ -11,9 +11,12 @@ from bout_runners.parameters.default_parameters import DefaultParameters
 from bout_runners.parameters.final_parameters import FinalParameters
 from bout_runners.parameters.run_parameters import RunParameters
 from bout_runners.runner.bout_run_setup import BoutRunSetup
+from bout_runners.runner.bout_runner import BoutRunner
 from bout_runners.runner.run_graph import RunGraph
 from bout_runners.runner.run_group import RunGroup
+from bout_runners.submitter.abstract_submitters import AbstractSubmitter
 from bout_runners.submitter.local_submitter import LocalSubmitter
+from tests.utils.cluster_node_functions import node_zero, node_one, node_two, node_three
 
 
 def assert_first_run(
@@ -155,3 +158,59 @@ def make_run_group(
     run_graph = run_graph if run_graph is not None else RunGraph()
     run_group = RunGroup(run_graph, bout_run_setup, name=name, waiting_for=waiting_for)
     return run_group
+
+
+def assert_waiting_for_graph(
+    node_zero_submitter: AbstractSubmitter,
+    node_one_submitter: AbstractSubmitter,
+    node_two_submitter: AbstractSubmitter,
+    node_three_submitter: AbstractSubmitter,
+    save_dir,
+) -> None:
+    """
+    Assert that the graph is running in correct order.
+
+    Parameters
+    ----------
+    node_zero_submitter : AbstractSubmitter
+        Submitter object for node one
+    node_one_submitter : AbstractSubmitter
+        Submitter object for node one
+    node_two_submitter : AbstractSubmitter
+        Submitter object for node one
+    node_three_submitter : AbstractSubmitter
+        Submitter object for node one
+    save_dir : Path
+        Path to where the job artifacts are stored
+    """
+    graph = RunGraph()
+    graph.add_function_node(
+        "node_zero",
+        {"function": node_zero, "args": (save_dir,), "kwargs": None},
+        save_dir.joinpath("node_zero.py"),
+        node_zero_submitter,
+    )
+    graph.add_function_node(
+        "node_one",
+        {"function": node_one, "args": (save_dir,), "kwargs": None},
+        save_dir.joinpath("node_one.py"),
+        node_one_submitter,
+    )
+    graph.add_function_node(
+        "node_two",
+        {"function": node_two, "args": (save_dir,), "kwargs": None},
+        save_dir.joinpath("node_two.py"),
+        node_two_submitter,
+    )
+    graph.add_function_node(
+        "node_three",
+        {"function": node_three, "args": (save_dir,), "kwargs": None},
+        save_dir.joinpath("node_three.py"),
+        node_three_submitter,
+    )
+    graph.add_waiting_for("node_two", "node_one")
+    graph.add_waiting_for("node_three", ("node_one", "node_two"))
+    runner = BoutRunner(graph)
+    runner.run()
+    node_three_submitter.wait_until_completed()
+    assert save_dir.joinpath("node_three.log").is_file()
