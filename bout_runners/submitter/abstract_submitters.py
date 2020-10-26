@@ -5,9 +5,11 @@ import re
 import logging
 import json
 from abc import ABC, abstractmethod
+from datetime import datetime
 from typing import Any, Callable, Optional, Tuple, Dict, Union
 from pathlib import Path
 
+from bout_runners.utils.file_operations import get_caller_dir
 from bout_runners.submitter.processor_split import ProcessorSplit
 from bout_runners.utils.serializers import is_jsonable
 
@@ -260,8 +262,8 @@ class AbstractClusterSubmitter(ABC):
 
     def __init__(
         self,
-        job_name: str,
-        store_dir: Path,
+        job_name: Optional[str] = None,
+        store_dir: Optional[Path] = None,
         submission_dict: Optional[Dict[str, Optional[str]]] = None,
         processor_split: Optional[ProcessorSplit] = None,
     ) -> None:
@@ -270,10 +272,12 @@ class AbstractClusterSubmitter(ABC):
 
         Parameters
         ----------
-        job_name : str
+        job_name : str or None
             Name of the job
-        store_dir : path
+            If None, a timestamp will be given as job_name
+        store_dir : Path or None
             Directory to store the script
+            If None, the caller directory will be used as the store directory
         submission_dict : None or dict of str of None or str
             Dict containing optional submission options
             One the form
@@ -288,8 +292,15 @@ class AbstractClusterSubmitter(ABC):
             Object containing the processor split
             If None, default values will be used
         """
-        self._job_name = job_name
-        self._store_dir = store_dir
+        if job_name is None:
+            self._job_name = datetime.now().strftime("%m-%d-%Y_%H-%M-%S-%f")
+        else:
+            self._job_name = job_name
+
+        if store_dir is None:
+            self._store_dir = get_caller_dir()
+        else:
+            self._store_dir = store_dir
         self._processor_split = (
             processor_split if processor_split is not None else ProcessorSplit()
         )
@@ -365,3 +376,37 @@ class AbstractClusterSubmitter(ABC):
             logging.error(msg)
             raise ValueError(msg)
         return days, hours, minutes, seconds
+
+    @property
+    def job_name(self) -> str:
+        """
+        Set the properties of self.job_name.
+
+        Returns
+        -------
+        str
+            The job name
+        """
+        return self._job_name
+
+    @job_name.setter
+    def job_name(self, job_name: str) -> None:
+        self._job_name = job_name
+        logging.info("job_name changed to %s", job_name)
+
+    @property
+    def store_dir(self) -> Path:
+        """
+        Set the properties of self.store_dir.
+
+        Returns
+        -------
+        Path
+            Path to the store directory
+        """
+        return self._store_dir
+
+    @store_dir.setter
+    def store_dir(self, store_dir: Union[str, Path]) -> None:
+        self._store_dir = Path(store_dir).absolute()
+        logging.info("store_dir changed to %s", store_dir)

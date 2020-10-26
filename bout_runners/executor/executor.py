@@ -8,6 +8,7 @@ from bout_runners.executor.bout_paths import BoutPaths
 from bout_runners.make.make import Make
 from bout_runners.parameters.run_parameters import RunParameters
 from bout_runners.submitter.abstract_submitters import AbstractSubmitter
+from bout_runners.submitter.abstract_submitters import AbstractClusterSubmitter
 from bout_runners.submitter.submitter_factory import get_submitter
 
 
@@ -106,12 +107,15 @@ class Executor:
         self.restart_from = restart_from
         # NOTE: We are not setting the default as a keyword argument
         #       as this would mess up the paths
-        self.submitter = submitter if submitter is not None else get_submitter()
         self.__bout_paths = bout_paths if bout_paths is not None else BoutPaths()
         self.__run_parameters = (
             run_parameters if run_parameters is not None else RunParameters()
         )
         self.__make = Make(self.__bout_paths.project_path)
+        if submitter is None:
+            self.submitter = get_submitter()
+            if isinstance(self.submitter, AbstractClusterSubmitter):
+                self.submitter.store_dir = self.__bout_paths.bout_inp_dst_dir
 
     @property
     def bout_paths(self) -> BoutPaths:

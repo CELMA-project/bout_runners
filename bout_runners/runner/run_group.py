@@ -10,6 +10,7 @@ from bout_runners.runner.bout_run_setup import BoutRunSetup
 from bout_runners.executor.bout_paths import BoutPaths
 from bout_runners.runner.run_graph import RunGraph
 from bout_runners.submitter.abstract_submitters import AbstractSubmitter
+from bout_runners.submitter.abstract_submitters import AbstractClusterSubmitter
 from bout_runners.submitter.submitter_factory import get_submitter
 
 
@@ -133,6 +134,8 @@ class RunGroup:
 
         # Assign a node to bout_run_setup
         self.__bout_run_node_name = f"bout_run_{self.__name}"
+        if isinstance(self.__bout_run_setup.submitter, AbstractClusterSubmitter):
+            self.__bout_run_setup.submitter.job_name = self.__bout_run_node_name
         self.__run_graph.add_bout_run_node(
             self.bout_run_node_name, self.__bout_run_setup
         )
@@ -290,7 +293,12 @@ class RunGroup:
         path = directory.joinpath(
             f"{function_dict['function'].__name__}_{pre_processor_node_name}.py"
         )
-        submitter = submitter if submitter is not None else get_submitter()
+        if submitter is None:
+            submitter = get_submitter()
+            if isinstance(submitter, AbstractClusterSubmitter):
+                submitter.job_name = pre_processor_node_name
+                submitter.store_dir = self.__bout_run_setup.bout_paths.bout_inp_dst_dir
+
         self.__run_graph.add_function_node(
             pre_processor_node_name,
             function_dict=function_dict,
@@ -360,7 +368,12 @@ class RunGroup:
         path = directory.joinpath(
             f"{function_dict['function'].__name__}_{post_processor_node_name}.py"
         )
-        submitter = submitter if submitter is not None else get_submitter()
+        if submitter is None:
+            submitter = get_submitter()
+            if isinstance(submitter, AbstractClusterSubmitter):
+                submitter.job_name = post_processor_node_name
+                submitter.store_dir = self.__bout_run_setup.bout_paths.bout_inp_dst_dir
+
         self.__run_graph.add_function_node(
             post_processor_node_name,
             function_dict=function_dict,

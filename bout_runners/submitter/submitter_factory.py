@@ -21,9 +21,6 @@ def get_submitter(
     """
     Return a Submitter object.
 
-    FIXME: New test to this
-    FIXME: Use critical when raising error, if error is ignored use error
-
     Parameters
     ----------
     name : str or None
@@ -138,14 +135,6 @@ def infer_submitter() -> Tuple[str, Dict[str, Any]]:
     """
     Infer the submitter and return appropriate positional and keyword arguments.
 
-    FIXME: Make the .ini file for storing of default parameters
-    FIXME: Make a test where you have to specify the submitter, just to see
-    how cumbersome it is
-    FIXME: You are here - decide how to obtain the arguments of the
-    submitters - possible to do through setters?
-    local -- kwargs - run_path(caller_dir) - from where to call, processor_split
-    pbs - args - job_name, store_directory -- kwargs submission_dict, processor_split
-
     Returns
     -------
     name : str
@@ -193,9 +182,14 @@ def slurm_is_available() -> bool:
     """
     # Submit the command through a local submitter
     local_submitter = LocalSubmitter()
-    local_submitter.submit_command("squeue")
-    local_submitter.wait_until_completed()
-    slurm_available = not local_submitter.errored()
+    try:
+        local_submitter.submit_command("squeue")
+        local_submitter.wait_until_completed(raise_error=False)
+        slurm_available = not local_submitter.errored()
+    except FileNotFoundError:
+        # subprocess.Popen throws FileNotFoundError if a command is not in scope
+        slurm_available = False
+
     logging.debug("SLURM is%s available", " not" if slurm_available else "")
     return slurm_available
 
@@ -211,8 +205,14 @@ def pbs_is_available() -> bool:
     """
     # Submit the command through a local submitter
     local_submitter = LocalSubmitter()
-    local_submitter.submit_command("qstat")
-    pbs_available = not local_submitter.errored()
+    try:
+        local_submitter.submit_command("qstat")
+        local_submitter.wait_until_completed(raise_error=False)
+        pbs_available = not local_submitter.errored()
+    except FileNotFoundError:
+        # subprocess.Popen throws FileNotFoundError if a command is not in scope
+        pbs_available = False
+
     logging.debug("PBS is%s available", " not" if pbs_available else "")
     return pbs_available
 

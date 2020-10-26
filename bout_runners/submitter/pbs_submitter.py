@@ -21,8 +21,8 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
 
     def __init__(
         self,
-        job_name: str,
-        store_directory: Path,
+        job_name: Optional[str] = None,
+        store_directory: Optional[Path] = None,
         submission_dict: Optional[Dict[str, Optional[str]]] = None,
         processor_split: Optional[ProcessorSplit] = None,
     ):
@@ -31,10 +31,12 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
 
         Parameters
         ----------
-        job_name : str
+        job_name : str or None
             Name of the job
-        store_directory : path
+            If None, a timestamp will be given as job_name
+        store_directory : Path or None
             Directory to store the script
+            If None, the caller directory will be used as the store directory
         submission_dict : None or dict of str of None or str
             Dict containing optional submission options
             One the form
