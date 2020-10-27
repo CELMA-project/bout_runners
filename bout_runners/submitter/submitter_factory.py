@@ -3,7 +3,6 @@
 
 import logging
 import configparser
-from pathlib import Path
 from typing import Optional, Tuple, Any, Dict
 
 from bout_runners.submitter.local_submitter import AbstractSubmitter
@@ -15,7 +14,6 @@ from bout_runners.submitter.processor_split import ProcessorSplit
 
 def get_submitter(
     name: Optional[str] = None,
-    processor_split: Optional[ProcessorSplit] = None,
     argument_dict: Optional[Dict[str, Any]] = None,
 ) -> AbstractSubmitter:
     """
@@ -26,14 +24,16 @@ def get_submitter(
     name : str or None
         Name of the submitter to use
         If None the submitter will be inferred
-    processor_split : ProcessorSplit or None
-        Object containing the processor split
-        Used for all submitters
     argument_dict : dict
         Dict containing positional and keyword arguments
 
     Other Parameters
     ----------------
+    The following parameters can be given argument_dict
+
+    processor_split : ProcessorSplit or None
+        Object containing the processor split
+        Used for all submitters
     run_path : Path or str or None
         Positional argument
         Directory to run the command from
@@ -76,55 +76,27 @@ def get_submitter(
     if name is None or argument_dict is None:
         name, argument_dict = infer_submitter()
 
-    logging.debug("Selecting a %s submitter", name)
+    logging.debug("Choosing a %s submitter", name)
 
-    error_base_str = "%s must a %s included in argument_dict when calling %s"
-
+    if "processor_split" not in argument_dict.keys():
+        argument_dict["processor_split"] = ProcessorSplit()
     if name == "local":
-        if "run_path" not in argument_dict.keys() and not isinstance(
-            argument_dict["run_path"], Path
-        ):
-            logging.critical(error_base_str, "run_path", "Path", "LocalSubmitter")
-            raise ValueError(error_base_str % ("run_path", "Path", "LocalSubmitter"))
-        run_path = argument_dict["run_path"]
-        return LocalSubmitter(run_path=run_path, processor_split=processor_split)
+        if "run_path" not in argument_dict.keys():
+            argument_dict["run_path"] = None
+        return LocalSubmitter(
+            run_path=argument_dict["run_path"],
+            processor_split=argument_dict["processor_split"],
+        )
     if name in ("pbs", "slurm"):
-        if "job_name" not in argument_dict.keys() and not isinstance(
-            argument_dict["job_name"], Path
-        ):
-            logging.critical(
-                error_base_str, "job_name", "str", "AbstractClusterSubmitter"
-            )
-            raise ValueError(
-                error_base_str % ("job_name", "str", "AbstractClusterSubmitter")
-            )
-        job_name = argument_dict["job_name"]
-        if "store_directory" not in argument_dict.keys() and not isinstance(
-            argument_dict["store_directory"], Path
-        ):
-            logging.critical(
-                error_base_str, "store_directory", "Path", "AbstractClusterSubmitter"
-            )
-            raise ValueError(
-                error_base_str % ("store_directory", "Path", "AbstractClusterSubmitter")
-            )
-        store_directory = argument_dict["store_directory"]
-        if "submission_dict" not in argument_dict.keys() and not isinstance(
-            argument_dict["submission_dict"], Path
-        ):
-            logging.critical(
-                error_base_str, "submission_dict", "str", "AbstractClusterSubmitter"
-            )
-            raise ValueError(
-                error_base_str % ("submission_dict", "str", "AbstractClusterSubmitter")
-            )
-        submission_dict = argument_dict["submission_dict"]
+        for argument in ("job_name", "store_directory", "submission_dict"):
+            if argument not in argument_dict.keys():
+                argument_dict[argument] = None
     if name == "pbs":
         return PBSSubmitter(
-            job_name,
-            store_directory,
-            submission_dict=submission_dict,
-            processor_split=processor_split,
+            job_name=argument_dict["job_name"],
+            store_directory=argument_dict["store_directory"],
+            submission_dict=argument_dict["submission_dict"],
+            processor_split=argument_dict["processor_split"],
         )
 
     msg = f"{name} is not a valid submitter class, choose " f"from {implemented}"

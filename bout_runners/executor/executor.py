@@ -112,10 +112,9 @@ class Executor:
             run_parameters if run_parameters is not None else RunParameters()
         )
         self.__make = Make(self.__bout_paths.project_path)
-        if submitter is None:
-            self.submitter = get_submitter()
-            if isinstance(self.submitter, AbstractClusterSubmitter):
-                self.submitter.store_dir = self.__bout_paths.bout_inp_dst_dir
+        self.submitter = submitter if submitter is not None else get_submitter()
+        if isinstance(self.submitter, AbstractClusterSubmitter):
+            self.submitter.store_dir = self.__bout_paths.bout_inp_dst_dir
 
     @property
     def bout_paths(self) -> BoutPaths:
