@@ -82,6 +82,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Setup BOUT-dev next
+        # NOTE: We must source the .bashrc as the paths are not available at login
         # Update the submodule due to
         # https://github.com/boutproject/BOUT-dev/issues/2110
         run: |
