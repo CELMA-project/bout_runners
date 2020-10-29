@@ -102,7 +102,9 @@ class BoutRunner:
     >>> runner.run()
     """
 
-    def __init__(self, run_graph: Optional[RunGraph] = None) -> None:
+    def __init__(
+        self, run_graph: Optional[RunGraph] = None, wait_time: int = 5
+    ) -> None:
         """
         Set the member data.
 
@@ -112,7 +114,10 @@ class BoutRunner:
             The run graph to be executed
             If None the run graph will be constructed and added parameters from the
             default BoutRunSetup
+        wait_time : int
+            Time to wait before checking if a job has completed
         """
+        self.wait_time = wait_time
         if run_graph is None:
             self.__run_graph = RunGraph()
             _ = RunGroup(self.__run_graph, BoutRunSetup())
@@ -232,7 +237,6 @@ class BoutRunner:
             ],
         ],
         raise_errors: bool,
-        wait_time: int,
     ) -> None:
         """
         Monitor the runs belonging to the same order.
@@ -250,8 +254,6 @@ class BoutRunner:
             of the nodes
             If False the program will continue execution, but all nodes depending on
             the errored node will be marked as errored and not submitted
-        wait_time : int
-            Time to wait before checking if a job has completed
 
         Raises
         ------
@@ -284,27 +286,43 @@ class BoutRunner:
                     )
 
                 if node_name.startswith("bout_run"):
-                    db_connector = submitter_dict[node_name]["db_connector"]
-                    if not isinstance(db_connector, DatabaseConnector):
-                        raise RuntimeError(
-                            f"The db_connector of the '{node_name}' node was expected "
-                            f"to be of type 'DatabaseConnector', but got "
-                            f"'{type(db_connector)}' instead"
-                        )
+                    self.__run_status_checker(node_name)
 
-                    project_path = submitter_dict[node_name]["project_path"]
-                    if not isinstance(project_path, Path):
-                        raise RuntimeError(
-                            f"The project_path of the '{node_name}' node was expected "
-                            f"to be of type 'Path', but got '{type(project_path)}' "
-                            f"instead"
-                        )
-                    StatusChecker(db_connector, project_path).check_and_update_status()
-
-            sleep(wait_time)
+            sleep(self.wait_time)
         logging.info(
             "All runs of this order has completed, will continue to the next node order"
         )
+
+    def __run_status_checker(self, node_name: str) -> None:
+        """
+        Run the status checker.
+
+        Parameters
+        ----------
+        node_name : str
+            Name of node to run the status checker for
+
+        Raises
+        ------
+        RuntimeError
+            If the types of self.__run_graph[node_name]["db_connector"] or
+            self.__run_graph[node_name]["project_path"] are unexpected
+        """
+        db_connector = self.__run_graph[node_name]["db_connector"]
+        if not isinstance(db_connector, DatabaseConnector):
+            raise RuntimeError(
+                f"The db_connector of the '{node_name}' node was expected "
+                f"to be of type 'DatabaseConnector', but got "
+                f"'{type(db_connector)}' instead"
+            )
+        project_path = self.__run_graph[node_name]["project_path"]
+        if not isinstance(project_path, Path):
+            raise RuntimeError(
+                f"The project_path of the '{node_name}' node was expected "
+                f"to be of type 'Path', but got '{type(project_path)}' "
+                f"instead"
+            )
+        StatusChecker(db_connector, project_path).check_and_update_status()
 
     @staticmethod
     def __reset_bout_inp_dst_dir(bout_run_setup: BoutRunSetup):
@@ -380,8 +398,8 @@ class BoutRunner:
                 return True
         return False
 
-    @staticmethod
     def __update_submitter_dict_after_run_bout_run(
+        self,
         node_name: str,
         nodes_at_current_order: Dict[str, Dict[str, Any]],
         submitted: bool,
@@ -392,7 +410,7 @@ class BoutRunner:
                 Union[Optional[AbstractSubmitter], Union[DatabaseConnector, Path]],
             ],
         ],
-    ):
+    ) -> None:
         """
         Update the submitter dict after calling run_bout_run.
 
@@ -412,10 +430,10 @@ class BoutRunner:
             The new dict contains the keywords 'submitter' with value AbstractSubmitter
         """
         if submitted:
-            submitter_dict[node_name]["db_connector"] = nodes_at_current_order[
+            self.__run_graph[node_name]["db_connector"] = nodes_at_current_order[
                 node_name
             ]["bout_run_setup"].db_connector
-            submitter_dict[node_name]["project_path"] = nodes_at_current_order[
+            self.__run_graph[node_name]["project_path"] = nodes_at_current_order[
                 node_name
             ]["bout_run_setup"].bout_paths.project_path
         else:
@@ -590,11 +608,7 @@ class BoutRunner:
         self.__run_graph.reset()
 
     def run(
-        self,
-        restart_all: bool = False,
-        force: bool = False,
-        raise_errors: bool = False,
-        wait_time: int = 1,
+        self, restart_all: bool = False, force: bool = False, raise_errors: bool = False
     ) -> None:
         """
         Execute all the nodes in the run_graph.
@@ -610,8 +624,6 @@ class BoutRunner:
             of the nodes
             If False the program will continue execution, but all nodes depending on
             the errored node will be marked as errored and not submitted
-        wait_time : int
-            Time to wait before checking if a job has completed
         """
         self.__prepare_run(force, restart_all)
 
@@ -653,6 +665,8 @@ class BoutRunner:
                         nodes_at_current_order[node_name]["kwargs"],
                     )
 
+                self.__run_graph[node_name]["status"] = "submitted"
+
             # We only monitor the runs if any local_submitters are present in
             # the current or the next order
             # Else the clusters will handle the monitoring
@@ -663,4 +677,13 @@ class BoutRunner:
                 monitor_run = True
 
             if monitor_run:
-                self.__monitor_runs(submitter_dict, raise_errors, wait_time)
+                self.__monitor_runs(submitter_dict, raise_errors)
+
+    def wait_until_completed(self) -> None:
+        """Wait until all submitted nodes are completed."""
+        for node_name in self.__run_graph.nodes():
+            if self.__run_graph[node_name]["status"] == "submitted":
+                self.__run_graph[node_name]["submitter"].wait_until_completed()
+                self.__run_graph[node_name]["status"] = "completed"
+                if node_name.startswith("bout_run"):
+                    self.__run_status_checker(node_name)

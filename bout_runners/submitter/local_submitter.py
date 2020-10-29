@@ -23,7 +23,7 @@ class LocalSubmitter(AbstractSubmitter):
     ----------
     _status : dict of str
         Status of the submission
-    __path : Path or str
+    run_path : Path or str
         Directory to run the command from
     __process : None or Popen
         The Popen process if it has been created
@@ -89,7 +89,7 @@ class LocalSubmitter(AbstractSubmitter):
         AbstractSubmitter.__init__(self)
         # NOTE: We are not setting the default as a keyword argument
         #       as this would mess up the paths
-        self.__path = (
+        self.run_path = (
             Path(run_path).absolute() if run_path is not None else get_caller_dir()
         )
         self.__process: Optional[subprocess.Popen] = None
@@ -128,14 +128,14 @@ class LocalSubmitter(AbstractSubmitter):
             command.split(),
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            cwd=self.__path,
+            cwd=self.run_path,
             # https://docs.python.org/3/library/subprocess.html#security-considerations
             # https://github.com/PyCQA/bandit/issues/280
             shell=False,  # nosec
         )
         self._status["job_id"] = str(self.__process.pid)
         logging.info(
-            "job_id %s given to command '%s' in %s", self.job_id, command, self.__path
+            "job_id %s given to command '%s' in %s", self.job_id, command, self.run_path
         )
 
     def completed(self) -> bool:

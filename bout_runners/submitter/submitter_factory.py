@@ -162,7 +162,7 @@ def slurm_is_available() -> bool:
         # subprocess.Popen throws FileNotFoundError if a command is not in scope
         slurm_available = False
 
-    logging.debug("SLURM is%s available", " not" if slurm_available else "")
+    logging.debug("SLURM is%s available", " not" if not slurm_available else "")
     return slurm_available
 
 
@@ -185,7 +185,7 @@ def pbs_is_available() -> bool:
         # subprocess.Popen throws FileNotFoundError if a command is not in scope
         pbs_available = False
 
-    logging.debug("PBS is%s available", " not" if pbs_available else "")
+    logging.debug("PBS is%s available", " not" if not pbs_available else "")
     return pbs_available
 
 

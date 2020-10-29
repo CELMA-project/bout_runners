@@ -262,8 +262,12 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         with script_path.open("w") as file:
             file.write(self.create_submission_string(command))
 
-        # Submit the command through a local submitter
+        # Make the script executable
         local_submitter = LocalSubmitter(run_path=self._store_dir)
+        local_submitter.submit_command(f"chmod +x {script_path}")
+        local_submitter.wait_until_completed()
+
+        # Submit the command through a local submitter
         local_submitter.submit_command(f"qsub {script_path}")
         local_submitter.wait_until_completed()
         self._status["job_id"] = local_submitter.std_out

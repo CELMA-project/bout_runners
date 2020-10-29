@@ -16,6 +16,7 @@ from bout_runners.runner.run_graph import RunGraph
 from bout_runners.runner.run_group import RunGroup
 from bout_runners.submitter.abstract_submitters import AbstractSubmitter
 from bout_runners.submitter.local_submitter import LocalSubmitter
+from bout_runners.submitter.submitter_factory import get_submitter
 from tests.utils.cluster_node_functions import node_zero, node_one, node_two, node_three
 
 
@@ -146,9 +147,12 @@ def make_run_group(
     run_parameters = RunParameters({"global": {"nout": 0}})
     default_parameters = DefaultParameters(bout_paths)
     final_parameters = FinalParameters(default_parameters, run_parameters)
+    submitter = get_submitter()
+    if isinstance(submitter, LocalSubmitter):
+        submitter.run_path = bout_paths.project_path
     executor = Executor(
         bout_paths=bout_paths,
-        submitter=LocalSubmitter(bout_paths.project_path),
+        submitter=submitter,
         run_parameters=run_parameters,
         restart_from=restart_from,
     )

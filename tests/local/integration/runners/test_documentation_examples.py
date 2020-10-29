@@ -1,5 +1,6 @@
 """Contains the test for the documentation."""
 
+
 from typing import Callable, Tuple
 
 from pathlib import Path

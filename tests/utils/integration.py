@@ -331,6 +331,7 @@ def bout_runner_from_path_tester(
         runner = BoutRunner()
         bout_run_setup = runner.run_graph["bout_run_0"]["bout_run_setup"]
     runner.run()
+    runner.wait_until_completed()
 
     assert isinstance(bout_run_setup.executor.submitter, submitter_type)
 
@@ -347,15 +348,18 @@ def bout_runner_from_path_tester(
     # Check that all the nodes have changed status
     with pytest.raises(RuntimeError):
         runner.run()
+        runner.wait_until_completed()
     # Check that the run will not be executed again
     runner.reset()
     runner.run()
+    runner.wait_until_completed()
     # Assert that the number of runs is 1
     assert_tables_have_expected_len(
         db_reader, yield_number_of_rows_for_all_tables, expected_run_number=1
     )
     # Check that force overrides the behaviour
     runner.run(force=True)
+    runner.wait_until_completed()
     assert_tables_have_expected_len(
         db_reader, yield_number_of_rows_for_all_tables, expected_run_number=2
     )
@@ -364,6 +368,7 @@ def bout_runner_from_path_tester(
     dump_dir_name = bout_paths.bout_inp_dst_dir.name
     # Check that the restart functionality works
     runner.run(restart_all=True)
+    runner.wait_until_completed()
     expected_run_number = 3
     assert_tables_have_expected_len(
         db_reader,
@@ -376,6 +381,7 @@ def bout_runner_from_path_tester(
     assert_dump_files_exist(dump_dir_parent.joinpath(f"{dump_dir_name}_restart_0"))
     # ...twice
     runner.run(restart_all=True)
+    runner.wait_until_completed()
     expected_run_number = 4
     assert_tables_have_expected_len(
         db_reader,
@@ -418,6 +424,7 @@ def full_bout_runner_tester(
     # Run the project
     runner = BoutRunner(run_group.run_graph)
     runner.run()
+    runner.wait_until_completed()
 
     assert isinstance(
         runner.run_graph["bout_run_test_bout_runner_integration"]["submitter"],
@@ -479,9 +486,11 @@ def large_graph_tester(
     # Run the project
     runner = BoutRunner(node_adder.run_graph)
     runner.run()
+    runner.wait_until_completed()
     # Check that all the nodes have changed status
     with pytest.raises(RuntimeError):
         runner.run()
+        runner.wait_until_completed()
     # Check that all files are present
     # Check that the pre and post files are present
     for node in (0, 1, 5, 7, 8, 10):

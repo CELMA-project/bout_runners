@@ -28,6 +28,8 @@ class Executor:
         Path to copy restart files from prior to the execution
     submitter : AbstractSubmitter
         Object containing the submitter
+    exec_name : str
+        Name of the executable
     bout_paths : BoutPaths
         Object containing the paths
     run_parameters : RunParameters
@@ -119,7 +121,7 @@ class Executor:
     @property
     def bout_paths(self) -> BoutPaths:
         """
-        Set the properties of self.bout_paths.
+        Get the properties of self.bout_paths.
 
         Returns
         -------
@@ -133,9 +135,25 @@ class Executor:
         return self.__bout_paths
 
     @property
-    def run_parameters(self):
+    def exec_name(self) -> str:
         """
-        Set the properties of self.run_parameters.
+        Set the properties of self.bout_paths.
+
+        Returns
+        -------
+        self.__bout_paths : BoutPaths
+            Object containing the paths
+
+        Notes
+        -----
+        The exec_name is read only
+        """
+        return self.__make.exec_name
+
+    @property
+    def run_parameters(self) -> RunParameters:
+        """
+        Get the properties of self.run_parameters.
 
         Returns
         -------
@@ -163,7 +181,7 @@ class Executor:
         command = (
             f"{mpi_cmd} "
             f"{self.submitter.processor_split.number_of_processors} "
-            f"./{self.__make.exec_name} "
+            f"{self.__bout_paths.project_path.joinpath(self.exec_name)} "
             f"-d {self.__bout_paths.bout_inp_dst_dir} "
             f"{self.__run_parameters.run_parameters_str}"
         )

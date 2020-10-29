@@ -196,5 +196,9 @@ class LogReader:
             raise ValueError(f"No matches in {self.file_str} with pattern {pattern}")
 
         time_str = match.group(1)
-        time = datetime.strptime(time_str, "%c")
+        try:
+            time = datetime.strptime(time_str, "%c")
+        except ValueError:
+            # Observed on CentOS
+            time = datetime.strptime(time_str, "%a %d %b %Y %H:%M:%S %p %Z")
         return time

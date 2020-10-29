@@ -1,11 +1,11 @@
-"""Contains local integration tests for the runner."""
+"""Contains the PBS integration tests for the runner."""
 
 
 from pathlib import Path
 from typing import Callable, Dict
 
 from bout_runners.database.database_reader import DatabaseReader
-from bout_runners.submitter.local_submitter import LocalSubmitter
+from bout_runners.submitter.pbs_submitter import PBSSubmitter
 from tests.utils.integration import (
     bout_runner_from_path_tester,
     full_bout_runner_tester,
@@ -20,7 +20,7 @@ def test_bout_runners_from_directory(
     tear_down_restart_directories: Callable[[Path], None],
 ) -> None:
     """
-    Test that the minimal BoutRunners setup works with the LocalSubmitter.
+    Test that the minimal BoutRunners setup works with the PBSSubmitter.
 
     This test will test that:
     1. We can execute a run from the (mocked) current work directory
@@ -42,7 +42,7 @@ def test_bout_runners_from_directory(
         Function used for removal of restart directories
     """
     bout_runner_from_path_tester(
-        LocalSubmitter,
+        PBSSubmitter,
         make_project,
         yield_number_of_rows_for_all_tables,
         clean_default_db_dir,
@@ -56,7 +56,7 @@ def test_full_bout_runner(
     clean_default_db_dir: Path,
 ) -> None:
     """
-    Test that the BoutRunner can execute a run with the LocalSubmitter.
+    Test that the BoutRunner can execute a run with the PBSSubmitter.
 
     This test will test that:
     1. We can execute a run
@@ -72,7 +72,7 @@ def test_full_bout_runner(
         Path to the default database directory
     """
     full_bout_runner_tester(
-        LocalSubmitter,
+        PBSSubmitter,
         make_project,
         yield_number_of_rows_for_all_tables,
         clean_default_db_dir,
@@ -86,7 +86,7 @@ def test_large_graph(
     tear_down_restart_directories: Callable[[Path], None],
 ) -> None:
     """
-    Test that the graph with 10 nodes work as expected with the LocalSubmitter.
+    Test that the graph with 10 nodes work as expected with the PBSSubmitter.
 
     The node setup can be found in node_functions.py
 
@@ -101,12 +101,10 @@ def test_large_graph(
     tear_down_restart_directories : function
         Function used for removal of restart directories
     """
-    submitter_type = LocalSubmitter
-
     large_graph_tester(
         make_project,
         yield_number_of_rows_for_all_tables,
         clean_default_db_dir,
         tear_down_restart_directories,
-        submitter_type,
+        PBSSubmitter,
     )
