@@ -145,6 +145,8 @@ We will therefore expand the dimensions and add noise to the restart files befor
 
 We start by building the ``basic_bout_run_setup`` as we did in :ref:`Making the basic BoutRunSetup<basicBoutRunSetup>`.
 Then, we add two post-processors: One post-processors which makes a plot, and another which expands the dimension.
+Note that copying of restart files is handled through function nodes.
+As we will have runs depending on the restart files in the following node we must specify ``copy_restart_files=True``
 
 .. code:: python
 
@@ -155,7 +157,10 @@ Then, we add two post-processors: One post-processors which makes a plot, and an
     kwargs = {'newNz': 16,
               'path': bout_paths.bout_inp_dst_dir,
               'output': expanded_noise_restarts_dir}
-    expand_node_name = basic_run_group.add_post_processor({'function': resizeZ, 'args': None, 'kwargs':kwargs})
+    expand_node_name = basic_run_group.add_post_processor({'function': resizeZ,
+                                                           'args': None,
+                                                           'kwargs':kwargs,
+                                                           'copy_restart_files'=True})
 
 Next, we make a run group for the restart run, and add noise to the restart files as a pre-processing step
 
@@ -179,7 +184,8 @@ Next, we make a run group for the restart run, and add noise to the restart file
     kwargs = {'path': expanded_noise_restarts_dir,
               'scale': 1e-5}
     restart_run_group.add_pre_processor(
-        {'function': addnoise, 'args': None, 'kwargs':kwargs}, waiting_for=expand_node_name)
+        {'function': addnoise, 'args': None, 'kwargs':kwargs, 'copy_restart_files'=True},
+        waiting_for=expand_node_name)
 
 The dot graph (which can be viewed at for example http://www.webgraphviz.com) can be obtained by
 

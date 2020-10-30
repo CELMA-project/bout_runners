@@ -169,7 +169,12 @@ def test_pre_and_post_documentation(
         "output": expanded_noise_restarts_dir,
     }
     expand_node_name = basic_run_group.add_post_processor(
-        {"function": mock_expand, "args": None, "kwargs": kwargs}
+        {
+            "function": mock_expand,
+            "args": None,
+            "kwargs": kwargs,
+            "copy_restart_files": True,
+        },
     )
 
     # New section in the documentation
@@ -192,7 +197,12 @@ def test_pre_and_post_documentation(
 
     kwargs = {"path": expanded_noise_restarts_dir, "scale": 1e-5}
     restart_run_group.add_pre_processor(
-        {"function": return_none, "args": None, "kwargs": kwargs},
+        {
+            "function": return_none,
+            "args": None,
+            "kwargs": kwargs,
+            "copy_restart_files": True,
+        },
         waiting_for=expand_node_name,
     )
 

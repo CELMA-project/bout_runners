@@ -1,6 +1,9 @@
 """Module containing file operation functions."""
 
 
+import logging
+import shutil
+from typing import Union
 from datetime import datetime
 from pathlib import Path
 
@@ -38,3 +41,32 @@ def get_modified_time(file_path: Path) -> str:
     modified_time = datetime.fromtimestamp(file_path.stat().st_mtime).isoformat()
 
     return modified_time
+
+
+def copy_restart_files(
+    copy_restart_from: Union[str, Path], copy_restart_to: Union[str, Path]
+) -> None:
+    """
+    Copy restart files.
+
+    Parameters
+    ----------
+    copy_restart_from : str or Path
+        Directory to copy restart files from
+    copy_restart_to : str or Path
+        Directory to copy restart files to
+
+    Raises
+    ------
+    FileNotFoundError
+        In case no restart files are found
+    """
+    copy_restart_from = Path(copy_restart_from)
+    copy_restart_to = Path(copy_restart_to)
+    src_list = list(copy_restart_from.glob("BOUT.restart.*"))
+    if len(src_list) == 0:
+        raise FileNotFoundError(f"No restart files found in {copy_restart_from}")
+    for src in src_list:
+        dst = copy_restart_to.joinpath(src.name)
+        shutil.copy(src, dst)
+        logging.debug("Copied %s to %s", src, dst)

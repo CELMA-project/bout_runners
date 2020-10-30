@@ -1,8 +1,11 @@
 """Contains the executor class."""
 
 
+import re
+import logging
 from typing import Optional
 from pathlib import Path
+from copy import deepcopy
 
 from bout_runners.executor.bout_paths import BoutPaths
 from bout_runners.make.make import Make
@@ -105,18 +108,83 @@ class Executor:
         restart_from : Path or None
             The path to copy the restart files from
         """
-        # Set member data
-        self.restart_from = restart_from
         # NOTE: We are not setting the default as a keyword argument
         #       as this would mess up the paths
-        self.__bout_paths = bout_paths if bout_paths is not None else BoutPaths()
+        # NOTE: We are deepcopying bout_paths as it may be altered by for
+        #       example the self.restart_from setter
+        self.__bout_paths = (
+            deepcopy(bout_paths) if bout_paths is not None else BoutPaths()
+        )
         self.__run_parameters = (
             run_parameters if run_parameters is not None else RunParameters()
         )
         self.__make = Make(self.__bout_paths.project_path)
+
         self.submitter = submitter if submitter is not None else get_submitter()
         if isinstance(self.submitter, AbstractClusterSubmitter):
             self.submitter.store_dir = self.__bout_paths.bout_inp_dst_dir
+
+        self.__restart_from = None
+        self.restart_from = restart_from
+
+    @property
+    def restart_from(self) -> Optional[Path]:
+        """
+        Set the properties of self.restart from and update bout_inp_dst_dir.
+
+        The bout_inp_dst_dir is updated to reflect that this is a restart run.
+
+        The new bout_inp_dst_dir will be the same as
+        bout_run_setup.executor.restart_from with _restart_/d* appended
+        /d* will be the next digit based on the number of other restart directories
+
+        Notes
+        -----
+        This will not copy the restart files as the restart files may not be ready.
+        Copying of files can either be done manually using
+        bout_runner.utils.file_operations.copy_restart_files or automatically by
+        using BoutRunner.__setup_restart_files which is called from
+        BoutRunner.__prepare_run
+
+        See Also
+        --------
+        BoutRunner.__setup_restart_files(node_with_restart)
+            Search for restart files, make a restart node where needed
+        """
+        return self.__restart_from
+
+    @restart_from.setter
+    def restart_from(self, restart_from: Optional[Path]) -> None:
+        self.__restart_from = restart_from
+        if restart_from is not None:
+            logging.info(
+                "Changing bout_paths.bout_inp_dst_dir as restart_from is not None"
+            )
+            restart_dir_parent = restart_from.parent
+            restart_dir_name = restart_from.name
+            restart_dirs = list(restart_dir_parent.glob(f"{restart_dir_name}*"))
+            restart_number = 0
+            restart_numbers = list()
+            pattern = r"_restart_(\d)+$"
+            for restart_dir in restart_dirs:
+                match = re.search(pattern, restart_dir.name)
+                if match is not None:
+                    # NOTE: The zeroth group is the matching string
+                    restart_numbers.append(int(match.group(1)))
+            if len(restart_numbers) != 0:
+                restart_numbers.sort()
+                restart_number = restart_numbers[-1] + 1
+            prev_inp_dst_dir = self.bout_paths.bout_inp_dst_dir
+            stripped_restart_dir_name = re.sub(pattern, "", restart_dir_name)
+            new_inp_dst_dir = restart_dir_parent.joinpath(
+                f"{stripped_restart_dir_name}_restart_{restart_number}"
+            )
+            self.bout_paths.bout_inp_dst_dir = new_inp_dst_dir
+            logging.info(
+                "bout_run_setup.bout_paths.bout_inp_dst_dir set from %s to %s",
+                prev_inp_dst_dir,
+                new_inp_dst_dir,
+            )
 
     @property
     def bout_paths(self) -> BoutPaths:

@@ -40,6 +40,7 @@ class AbstractSubmitter(ABC):
         self._status["return_code"] = None
         self._status["std_out"] = None
         self._status["std_err"] = None
+        self._logged_complete_status = False
 
     def _catch_error(self) -> None:
         """Log the error."""

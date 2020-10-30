@@ -9,6 +9,7 @@ from bout_runners.runner.bout_runner import BoutRunner
 from bout_runners.runner.bout_run_setup import BoutRunSetup
 from bout_runners.runner.run_graph import RunGraph
 from bout_runners.database.database_reader import DatabaseReader
+from bout_runners.utils.file_operations import copy_restart_files
 from tests.utils.paths import change_directory
 from tests.utils.run import (
     assert_first_run,
@@ -110,7 +111,11 @@ def test_run_bout_run(
     dump_dir_name = bout_paths.bout_inp_dst_dir.name
 
     # Check that restart makes another entry
-    if runner.run_bout_run(bout_run_setup, restart_from_bout_inp_dst=True):
+    bout_run_setup.executor.restart_from = bout_run_setup.bout_paths.bout_inp_dst_dir
+    copy_restart_files(
+        bout_run_setup.executor.restart_from, bout_run_setup.bout_paths.bout_inp_dst_dir
+    )
+    if runner.run_bout_run(bout_run_setup):
         submitter.wait_until_completed()
     assert_tables_have_expected_len(
         database_reader,
@@ -122,7 +127,11 @@ def test_run_bout_run(
     #       restart_all=True, whether this is testing restart_from_bout_inp_dst=True
     assert_dump_files_exist(dump_dir_parent.joinpath(f"{dump_dir_name}_restart_0"))
     # ...and yet another entry
-    if runner.run_bout_run(bout_run_setup, restart_from_bout_inp_dst=True):
+    bout_run_setup.executor.restart_from = bout_run_setup.bout_paths.bout_inp_dst_dir
+    copy_restart_files(
+        bout_run_setup.executor.restart_from, bout_run_setup.bout_paths.bout_inp_dst_dir
+    )
+    if runner.run_bout_run(bout_run_setup):
         submitter.wait_until_completed()
     assert_tables_have_expected_len(
         database_reader,

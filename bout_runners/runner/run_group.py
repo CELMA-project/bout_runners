@@ -238,7 +238,7 @@ class RunGroup:
     def add_pre_processor(
         self,
         function_dict: Dict[
-            str, Optional[Union[Callable, Tuple[Any, ...], Dict[str, Any]]]
+            str, Optional[Union[Callable, Tuple[Any, ...], Dict[str, Any], bool]]
         ],
         directory: Optional[Path] = None,
         submitter: Optional[AbstractSubmitter] = None,
@@ -257,7 +257,12 @@ class RunGroup:
             On the form
             >>> {'function': callable,
             ...  'args': None or tuple,
-            ...  'kwargs': None or dict}
+            ...  'kwargs': None or dict,
+            ...  'copy_restart_files': None or bool}
+            The copy_restart_files specifies whether the function will copy restart
+            files
+            Set this flag to True if any of the nodes waiting for this one
+            needs restart files copied by the specified function
         directory : None or Path
             Absolute path to directory to store the python script
             If None, the destination directory of BoutRun will be used
@@ -287,8 +292,10 @@ class RunGroup:
             logging.error(msg)
             raise ValueError(msg)
 
+        copy_restart_files = function_dict.pop("copy_restart_files", False)
+        prefix = "copy_restart_files_in_" if copy_restart_files else ""
         pre_processor_node_name = (
-            f"pre_processor_{self.__name}_{len(self.__pre_processors)}"
+            f"{prefix}pre_processor_{self.__name}_{len(self.__pre_processors)}"
         )
         path = directory.joinpath(
             f"{function_dict['function'].__name__}_{pre_processor_node_name}.py"
@@ -313,7 +320,7 @@ class RunGroup:
     def add_post_processor(
         self,
         function_dict: Dict[
-            str, Optional[Union[Callable, Tuple[Any, ...], Dict[str, Any]]]
+            str, Optional[Union[Callable, Tuple[Any, ...], Dict[str, Any], bool]]
         ],
         directory: Optional[Path] = None,
         submitter: Optional[AbstractSubmitter] = None,
@@ -332,7 +339,12 @@ class RunGroup:
             On the form
             >>> {'function': callable,
             ...  'args': None or tuple,
-            ...  'kwargs': None or dict}
+            ...  'kwargs': None or dict,
+            ...  'copy_restart_files': None or bool}
+            The copy_restart_files specifies whether the function will copy restart
+            files
+            Set this flag to True if any of the nodes waiting for this one
+            needs restart files copied by the specified function
         directory : None or Path
             Absolute path to directory to store the python script
             If None, the destination directory of BoutRun will be used
@@ -362,8 +374,10 @@ class RunGroup:
             logging.error(msg)
             raise ValueError(msg)
 
+        copy_restart_files = function_dict.pop("copy_restart_files", False)
+        prefix = "copy_restart_files_in_" if copy_restart_files else ""
         post_processor_node_name = (
-            f"post_processor_{self.__name}_{len(self.__post_processors)}"
+            f"{prefix}post_processor_{self.__name}_{len(self.__post_processors)}"
         )
         path = directory.joinpath(
             f"{function_dict['function'].__name__}_{post_processor_node_name}.py"

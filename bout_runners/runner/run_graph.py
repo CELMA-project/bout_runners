@@ -242,13 +242,14 @@ class RunGraph:
             submitter=bout_run_setup.submitter,
             status="ready",
         )
+
         self.__node_set = set(self.__graph.nodes)
 
     def add_function_node(
         self,
         name: str,
         function_dict: Optional[
-            Dict[str, Optional[Union[Callable, Tuple[Any, ...], Dict[str, Any]]]]
+            Dict[str, Optional[Union[Callable, Tuple[Any, ...], Dict[str, Any], bool]]]
         ] = None,
         path: Optional[Path] = None,
         submitter: Optional[AbstractSubmitter] = None,
