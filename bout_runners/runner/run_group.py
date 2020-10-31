@@ -118,6 +118,7 @@ class RunGroup:
         waiting_for : None or str or iterable
             Name of nodes the name_of_waiting_node will wait for
         """
+        logging.info("Start: Making a RunGroup object")
         self.__run_graph = run_graph
         self.__name = name
         self.__bout_run_setup = bout_run_setup
@@ -142,6 +143,7 @@ class RunGroup:
 
         # Add edges to the nodes
         self.__run_graph.add_waiting_for(self.bout_run_node_name, waiting_for)
+        logging.info("Done: Making a RunGroup object")
 
     def __increment_name(self) -> None:
         """Increment the name of the RunGroup."""

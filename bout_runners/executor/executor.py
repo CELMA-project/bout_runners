@@ -112,6 +112,7 @@ class Executor:
         #       as this would mess up the paths
         # NOTE: We are deepcopying bout_paths as it may be altered by for
         #       example the self.restart_from setter
+        logging.info("Start: Making an Executor object")
         self.__bout_paths = (
             deepcopy(bout_paths) if bout_paths is not None else BoutPaths()
         )
@@ -126,6 +127,7 @@ class Executor:
 
         self.__restart_from = None
         self.restart_from = restart_from
+        logging.info("Done: Making an Executor object")
 
     @property
     def restart_from(self) -> Optional[Path]:

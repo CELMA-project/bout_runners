@@ -84,6 +84,7 @@ class BoutRunSetup:
         # Set member data
         # NOTE: We are not setting the default as a keyword argument
         #       as this would mess up the paths
+        logging.info("Start: Making a BoutRunSetup object")
         self.__executor = executor if executor is not None else Executor()
         self.__final_parameters = (
             final_parameters if final_parameters is not None else FinalParameters()
@@ -102,6 +103,7 @@ class BoutRunSetup:
                 self.__metadata_recorder.db_reader.db_connector.db_path,
             )
             self.__create_schema()
+        logging.info("Done: Making a BoutRunSetup object")
 
     @property
     def executor(self) -> Executor:

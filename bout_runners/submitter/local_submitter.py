@@ -86,17 +86,13 @@ class LocalSubmitter(AbstractSubmitter):
             Object containing the processor split
             If None, default values will be used
         """
-        AbstractSubmitter.__init__(self)
+        AbstractSubmitter.__init__(self, processor_split)
         # NOTE: We are not setting the default as a keyword argument
         #       as this would mess up the paths
         self.run_path = (
             Path(run_path).absolute() if run_path is not None else get_caller_dir()
         )
         self.__process: Optional[subprocess.Popen] = None
-
-        self.processor_split = (
-            processor_split if processor_split is not None else ProcessorSplit()
-        )
 
     def _wait_for_std_out_and_std_err(self) -> None:
         """

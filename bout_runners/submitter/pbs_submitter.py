@@ -52,9 +52,9 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
             If None, default values will be used
         """
         # https://stackoverflow.com/questions/9575409/calling-parent-class-init-with-multiple-inheritance-whats-the-right-way/50465583
-        AbstractSubmitter.__init__(self)
+        AbstractSubmitter.__init__(self, processor_split)
         AbstractClusterSubmitter.__init__(
-            self, job_name, store_directory, submission_dict, processor_split
+            self, job_name, store_directory, submission_dict
         )
         if self._submission_dict["walltime"] is not None:
             self._submission_dict["walltime"] = self.structure_time_to_pbs_format(
@@ -312,7 +312,10 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
                 if self.return_code is None:
                     raise RuntimeError(
                         "Submission was never submitted. "
-                        "Were the job dependencies valid (i.e. in the queue system)?"
+                        "Did some of the dependencies finished before "
+                        "submitting the job? "
+                        "In that case the finished dependency might have "
+                        "rejected the job."
                     )
                 raise RuntimeError(
                     f"Submission errored with error code {self.return_code}"
@@ -348,8 +351,8 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         job_string = (
             "#!/bin/bash\n"
             f"#PBS -N {self._job_name}\n"
-            f"#PBS -l nodes={self._processor_split.number_of_nodes}"
-            f":ppn={self._processor_split.processors_per_node}\n"
+            f"#PBS -l nodes={self.processor_split.number_of_nodes}"
+            f":ppn={self.processor_split.processors_per_node}\n"
             # hh:mm:ss
             f"{f'#PBS -l walltime={walltime}{newline}' if walltime is not None else ''}"
             f"{f'#PBS -A {account}{newline}' if account is not None else ''}"

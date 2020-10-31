@@ -72,6 +72,7 @@ class BoutPaths:
             self.project_path)
             If None, the current time will be used
         """
+        logging.info("Start: Making a BoutPahts object")
         # Declare variables to be used in the getters and setters
         # NOTE: When the variables will be set to absolute paths in the setters.
         #       Thus, Path() can be regarded as None
@@ -88,6 +89,7 @@ class BoutPaths:
 
         # Set the bout_inp_dst_dir
         self.bout_inp_dst_dir = bout_inp_dst_dir  # type: ignore
+        logging.info("Done: Making a BoutPahts object")
 
     @property
     def project_path(self) -> Path:

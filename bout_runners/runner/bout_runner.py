@@ -179,6 +179,7 @@ class BoutRunner:
         RuntimeError
             If none of the nodes in the `run_graph` has status "ready"
         """
+        logging.info("Start: Preparing all runs")
         nodes = tuple(self.__run_graph.nodes)
 
         if force or restart_all:
@@ -220,6 +221,7 @@ class BoutRunner:
                 is not None
             ):
                 self.__setup_restart_files(node)
+        logging.info("Done: Preparing all runs")
 
     def __setup_restart_files(self, node_with_restart: str) -> None:
         """
@@ -404,6 +406,7 @@ class BoutRunner:
         RuntimeError
             If the types in the dict are unexpected
         """
+        logging.info("Start: Monitoring jobs at current order")
         node_names = list(node_name for node_name in submitter_dict.keys())
         while len(node_names) != 0:
             for node_name in node_names:
@@ -433,9 +436,7 @@ class BoutRunner:
                     self.__run_status_checker(node_name)
 
             sleep(self.wait_time)
-        logging.info(
-            "All runs of this order has completed, will continue to the next node order"
-        )
+        logging.info("Done: Monitoring jobs at current order")
 
     def __run_status_checker(self, node_name: str) -> None:
         """
@@ -648,11 +649,11 @@ class BoutRunner:
 
     def reset(self) -> None:
         """Reset the run_graph."""
-        logging.info("Resetting the graph")
+        logging.debug("Resetting the graph")
         self.__run_graph.reset()
 
     def run(
-        self, restart_all: bool = False, force: bool = False, raise_errors: bool = False
+        self, restart_all: bool = False, force: bool = False, raise_errors: bool = True
     ) -> None:
         """
         Execute all the nodes in the run_graph.
@@ -669,9 +670,11 @@ class BoutRunner:
             If False the program will continue execution, but all nodes depending on
             the errored node will be marked as errored and not submitted
         """
+        logging.info("Start: Calling .run() in BoutRunners")
         self.__prepare_run(force, restart_all)
 
         for nodes_at_current_order in self.__run_graph:
+            logging.info("Start: Processing nodes at current order")
             submitter_dict: Dict[
                 str,
                 Dict[
@@ -680,7 +683,7 @@ class BoutRunner:
                 ],
             ] = dict()
             for node_name in nodes_at_current_order.keys():
-                logging.info("Processing %s", node_name)
+                logging.info("Start: Processing %s", node_name)
                 if isinstance(
                     nodes_at_current_order[node_name]["submitter"],
                     AbstractClusterSubmitter,
@@ -709,6 +712,7 @@ class BoutRunner:
                     )
 
                 self.__run_graph[node_name]["status"] = "submitted"
+                logging.info("Done: Processing %s", node_name)
 
             # We only monitor the runs if any local_submitters are present in
             # the current or the next order
@@ -721,12 +725,16 @@ class BoutRunner:
 
             if monitor_run:
                 self.__monitor_runs(submitter_dict, raise_errors)
+            logging.info("Done: Processing nodes at current order")
+        logging.info("Done: Calling .run() in BoutRunners")
 
     def wait_until_completed(self) -> None:
         """Wait until all submitted nodes are completed."""
+        logging.info("Start: Waiting for all submitted jobs to complete")
         for node_name in self.__run_graph.nodes():
             if self.__run_graph[node_name]["status"] == "submitted":
                 self.__run_graph[node_name]["submitter"].wait_until_completed()
                 self.__run_graph[node_name]["status"] = "completed"
                 if node_name.startswith("bout_run"):
                     self.__run_status_checker(node_name)
+        logging.info("Done: Waiting for all submitted jobs to complete")

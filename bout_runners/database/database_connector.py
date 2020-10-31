@@ -53,11 +53,13 @@ class DatabaseConnector:
             If None is set, the path will be set to $HOME/BOUT_db
         """
         # Set the database path
+        logging.info("Start: Making a DatabaseConnector object")
         self.__db_path = self.create_db_path(name, db_root_path)
-        logging.info("db_path set to %s", self.db_path)
+        logging.debug("db_path set to %s", self.db_path)
 
         # Open the connection
         self.__connection = sqlite3.connect(str(self.db_path))
+        logging.info("Done: Making a DatabaseConnector object")
 
     def __del__(self) -> None:
         """Close the connection."""

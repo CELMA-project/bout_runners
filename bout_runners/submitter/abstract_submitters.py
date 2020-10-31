@@ -17,11 +17,21 @@ from bout_runners.utils.serializers import is_jsonable
 class AbstractSubmitter(ABC):
     """The abstract base class of the submitters."""
 
-    def __init__(self) -> None:
-        """Declare common variables."""
+    def __init__(self, processor_split: Optional[ProcessorSplit] = None) -> None:
+        """
+        Declare common variables.
+
+        Parameters
+        ----------
+        processor_split : ProcessorSplit or None
+            Object containing the processor split
+            If None, default values will be used
+        """
         self._logged_complete_status = False
         self._status: Dict[str, Union[Optional[int], Optional[str]]] = dict()
-        self.processor_split = ProcessorSplit()
+        self.processor_split = (
+            processor_split if processor_split is not None else ProcessorSplit()
+        )
         self._reset_submitter()
 
     def _reset_submitter(self) -> None:
@@ -266,7 +276,6 @@ class AbstractClusterSubmitter(ABC):
         job_name: Optional[str] = None,
         store_dir: Optional[Path] = None,
         submission_dict: Optional[Dict[str, Optional[str]]] = None,
-        processor_split: Optional[ProcessorSplit] = None,
     ) -> None:
         """
         Set the member data.
@@ -289,9 +298,6 @@ class AbstractClusterSubmitter(ABC):
             ...  'account': None or str}
 
             These options will not be used if the submission_dict is None
-        processor_split : ProcessorSplit or None
-            Object containing the processor split
-            If None, default values will be used
         """
         if job_name is None:
             self._job_name = datetime.now().strftime("%m-%d-%Y_%H-%M-%S-%f")
@@ -302,9 +308,6 @@ class AbstractClusterSubmitter(ABC):
             self._store_dir = get_caller_dir()
         else:
             self._store_dir = store_dir
-        self._processor_split = (
-            processor_split if processor_split is not None else ProcessorSplit()
-        )
         self._submission_dict = (
             submission_dict.copy() if submission_dict is not None else dict()
         )

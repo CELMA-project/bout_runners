@@ -55,12 +55,14 @@ class RunParameters:
         -----
         The parameters set here will override those found in the BOUT.inp file
         """
+        logging.info("Start: Making a RunParameters object")
         # Declare variables to be used in the getters and setters
         self.__run_parameters_dict = None
         self.__run_parameters_str: Optional[str] = None
 
         # Set the parameters dict (and create the parameters string)
         self.run_parameters_dict = run_parameters_dict
+        logging.info("Done: Making a RunParameters object")
 
     @property
     def run_parameters_dict(

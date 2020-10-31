@@ -72,8 +72,10 @@ class RunGraph:
 
     def __init__(self) -> None:
         """Instantiate the graph."""
+        logging.info("Start: Making a RunGraph object")
         self.__graph = nx.DiGraph()
         self.__node_set = set(self.__graph.nodes)
+        logging.info("Done: Making a RunGraph object")
 
     def __iter__(self) -> "RunGraph":
         """
