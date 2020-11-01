@@ -3,13 +3,14 @@
 
 from pathlib import Path
 from typing import Callable, Dict, Type
+import logging
 
 import pytest
 
 from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.runner.bout_runner import BoutRunner
 from bout_runners.submitter.abstract_submitters import AbstractSubmitter
-from tests.utils.local_node_functions import (
+from tests.utils.node_functions_complex_graph import (
     node_zero,
     node_one,
     node_five,
@@ -323,6 +324,7 @@ def bout_runner_from_path_tester(
     tear_down_restart_directories : function
         Function used for removal of restart directories
     """
+    logging.info("Start: First run")
     # For automatic clean-up
     _ = clean_default_db_dir
     # Make project to save time
@@ -344,11 +346,15 @@ def bout_runner_from_path_tester(
     assert_tables_have_expected_len(
         db_reader, yield_number_of_rows_for_all_tables, expected_run_number=1
     )
+    logging.info("Done: First run")
 
+    logging.info("Start: Check RuntimeError")
     # Check that all the nodes have changed status
     with pytest.raises(RuntimeError):
         runner.run()
         runner.wait_until_completed()
+    logging.info("Done: Check RuntimeError")
+    logging.info("Start: Assert that run will not be run again")
     # Check that the run will not be executed again
     runner.reset()
     runner.run()
@@ -357,13 +363,17 @@ def bout_runner_from_path_tester(
     assert_tables_have_expected_len(
         db_reader, yield_number_of_rows_for_all_tables, expected_run_number=1
     )
+    logging.info("Done: Assert that run will not be run again")
+    logging.info("Start: Run with force=True")
     # Check that force overrides the behaviour
     runner.run(force=True)
     runner.wait_until_completed()
     assert_tables_have_expected_len(
         db_reader, yield_number_of_rows_for_all_tables, expected_run_number=2
     )
+    logging.info("Done: Run with force=True")
 
+    logging.info("Start: Run with restart_all=True the first time")
     dump_dir_parent = bout_paths.bout_inp_dst_dir.parent
     dump_dir_name = bout_paths.bout_inp_dst_dir.name
     # Check that the restart functionality works
@@ -379,6 +389,8 @@ def bout_runner_from_path_tester(
     # NOTE: The test in tests.unit.bout_runners.runners.test_bout_runner is testing
     #       restart_from_bout_inp_dst=True, whether this is testing restart_all=True
     assert_dump_files_exist(dump_dir_parent.joinpath(f"{dump_dir_name}_restart_0"))
+    logging.info("Done: Run with restart_all=True the first time")
+    logging.info("Start: Run with restart_all=True the second time")
     # ...twice
     runner.run(restart_all=True)
     runner.wait_until_completed()
@@ -392,6 +404,7 @@ def bout_runner_from_path_tester(
     # NOTE: The test in tests.unit.bout_runners.runners.test_bout_runner is testing
     #       restart_from_bout_inp_dst=True, whether this is testing restart_all=True
     assert_dump_files_exist(dump_dir_parent.joinpath(f"{dump_dir_name}_restart_1"))
+    logging.info("Done: Run with restart_all=True the second time")
 
 
 def full_bout_runner_tester(

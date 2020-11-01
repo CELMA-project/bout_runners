@@ -209,11 +209,55 @@ class RunGraph:
         #       attributes
         return tuple(self.__graph.successors(node_name))
 
+    def in_degree(self, node_name: str) -> int:
+        """
+        Return the number of edges pointing to the node.
+
+        Parameters
+        ----------
+        node_name : str
+            Name of the node to get the in_degree from
+
+        Returns
+        -------
+        in_degree : int
+            Number of edges pointing to the node
+        """
+        in_degree = self.__graph.in_degree(node_name)
+        if not isinstance(in_degree, int):
+            msg = f"The returned type from .in_degree was of type {type(in_degree)}, not int"
+            logging.critical(msg)
+            raise ValueError(msg)
+        return in_degree
+
+    def bfs_nodes(
+        self, node_name: str, reverse_search: bool = False
+    ) -> Tuple[str, ...]:
+        """
+        Return the nodes of a breadth first search.
+
+        Parameters
+        ----------
+        node_name : str
+            Name of the node to search from
+        reverse_search : bool
+            Whether to search reversed in breadth first search
+
+        Returns
+        -------
+        nodes : tuple of str
+            Nodes from the bfs
+        """
+        edges = nx.bfs_edges(self.__graph, node_name, reverse=reverse_search)
+        nodes = [node_name] + [to_node for _, to_node in edges]
+        return tuple(nodes)
+
     def reset(self) -> None:
-        """Reset the nodes by setting the status to 'ready'."""
-        logging.info("Resetting status in nodes to 'ready'")
+        """Reset the nodes by setting status to 'ready' and calling node.reset()."""
+        logging.info("Resetting the nodes")
         for node_name in self.__graph:
             self.__graph.nodes[node_name]["status"] = "ready"
+            self.__graph.nodes[node_name]["submitter"].reset()
 
     def add_bout_run_node(
         self,

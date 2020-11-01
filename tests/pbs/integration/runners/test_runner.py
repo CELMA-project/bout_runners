@@ -4,6 +4,8 @@
 from pathlib import Path
 from typing import Callable, Dict
 
+import pytest
+
 from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.submitter.pbs_submitter import PBSSubmitter
 from tests.utils.integration import (
@@ -13,6 +15,7 @@ from tests.utils.integration import (
 )
 
 
+@pytest.mark.timeout(100)
 def test_bout_runners_from_directory(
     make_project: Path,
     yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],

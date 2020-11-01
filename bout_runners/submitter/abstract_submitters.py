@@ -32,11 +32,7 @@ class AbstractSubmitter(ABC):
         self.processor_split = (
             processor_split if processor_split is not None else ProcessorSplit()
         )
-        self._reset_submitter()
-
-    def _reset_submitter(self) -> None:
-        """Reset the submitter."""
-        self._reset_status()
+        self.reset()
 
     def _reset_status(self) -> None:
         """Reset the status dict."""
@@ -229,6 +225,10 @@ class AbstractSubmitter(ABC):
             python_file.write(script_str)
         logging.info("Python script written to %s", path)
 
+    def reset(self) -> None:
+        """Reset the submitter."""
+        self._reset_status()
+
     def wait_until_completed(self, raise_error: bool = True) -> None:
         """
         Wait until the process has completed.
@@ -315,6 +315,8 @@ class AbstractClusterSubmitter(ABC):
         for key in ("walltime", "mail", "queue", "account"):
             if key not in submission_dict_keys:
                 self._submission_dict[key] = None
+
+        self._released = False
 
     @abstractmethod
     def create_submission_string(self, command: str) -> str:

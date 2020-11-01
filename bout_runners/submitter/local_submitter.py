@@ -119,7 +119,7 @@ class LocalSubmitter(AbstractSubmitter):
         command : str
             The command to run
         """
-        self._reset_submitter()
+        self.reset()
         self.__process = subprocess.Popen(
             command.split(),
             stdout=subprocess.PIPE,

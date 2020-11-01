@@ -80,9 +80,10 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         trace = local_submitter.std_out if local_submitter.std_out is not None else ""
         return trace
 
-    def _reset_submitter(self) -> None:
+    def reset(self) -> None:
         """Reset the status dict."""
         self.__dequeued = False
+        self._released = False
         self._reset_status()
 
     def _wait_for_std_out_and_std_err(self) -> None:
@@ -92,6 +93,7 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         Populate return_code, std_out and std_err
         """
         if self._status["job_id"] is not None:
+            self.release()
             while self._status["return_code"] is None and not self.__dequeued:
                 trace = self.__get_trace()
                 self._status["return_code"] = self.get_return_code(trace)
@@ -132,6 +134,18 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
                 "No process started, so "
                 "return_code, std_out, std_err are not populated"
             )
+
+    @property
+    def released(self) -> bool:
+        """
+        Return whether the job has been released to the cluster.
+
+        Returns
+        -------
+        bool
+            True if the job is not held in the cluster
+        """
+        return self._released
 
     @property
     def waiting_for(self) -> Tuple[str, ...]:
@@ -248,16 +262,30 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
                         "Adding the following to the waiting_for_list: %s", waiting_id
                     )
 
+    def release(self) -> None:
+        """Release held job."""
+        if self.job_id is not None and not self._released:
+            logging.info("Releasing job_id %s", self.job_id)
+            submitter = LocalSubmitter()
+            submitter.submit_command(f"qrls {self.job_id}")
+            submitter.wait_until_completed()
+            self._released = True
+
     def submit_command(self, command: str) -> None:
         """
         Submit a command.
+
+        Notes
+        -----
+        All submitted jobs are held
+        Release with self.release
 
         Parameters
         ----------
         command : str
             Command to submit
         """
-        self._reset_submitter()
+        self.reset()
         script_path = self._store_dir.joinpath(f"{self._job_name}.sh")
         with script_path.open("w") as file:
             file.write(self.create_submission_string(command))
@@ -268,7 +296,7 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         local_submitter.wait_until_completed()
 
         # Submit the command through a local submitter
-        local_submitter.submit_command(f"qsub {script_path}")
+        local_submitter.submit_command(f"qsub -h {script_path}")
         local_submitter.wait_until_completed()
         self._status["job_id"] = local_submitter.std_out
         logging.info(
@@ -284,7 +312,7 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         bool
             Whether the job has completed
         """
-        if self._status["job_id"] is not None:
+        if self._status["job_id"] is not None and self._released:
             if self._status["return_code"] is not None:
                 return True
             trace = self.__get_trace()
