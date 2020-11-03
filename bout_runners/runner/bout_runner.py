@@ -429,6 +429,8 @@ class BoutRunner:
         """
         Return the reverse sorted list of cluster nodes which has been submitted.
 
+        # FIXME: You can make this an algorithm and filter on the isinstance later
+
         Parameters
         ----------
         node_names : iterable of str
@@ -770,6 +772,7 @@ class BoutRunner:
         """
         logging.info("Start: Calling .run() in BoutRunners")
         self.__prepare_run(force, restart_all)
+        logging.debug("Dot-graph of the run\n%s", self.__run_graph.get_dot_string())
 
         for nodes_at_current_order in self.__run_graph:
             logging.info("Start: Processing nodes at current order")

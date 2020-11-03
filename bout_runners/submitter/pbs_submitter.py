@@ -81,9 +81,10 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         return trace
 
     def reset(self) -> None:
-        """Reset the status dict."""
+        """Reset dequeued, released, waiting_for and status dict."""
         self.__dequeued = False
         self._released = False
+        self.__waiting_for = list()
         self._reset_status()
 
     def _wait_for_std_out_and_std_err(self) -> None:
@@ -115,8 +116,9 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
                     self._status["std_err"] = file.read()
 
                 logging.debug(
-                    "std_out and std_err populated for job_id %s",
+                    "std_out and std_err populated for job_id %s (%s)",
                     self._status["job_id"],
+                    self.job_name
                 )
 
             else:
@@ -130,9 +132,10 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         else:
             # No job_id
             logging.warning(
-                "Tried to wait for a process without job_id. "
+                "Tried to wait for a process without job_id %s (%s). "
                 "No process started, so "
-                "return_code, std_out, std_err are not populated"
+                "return_code, std_out, std_err are not populated",
+                self.job_id, self.job_name
             )
 
     @property
@@ -265,7 +268,7 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
     def release(self) -> None:
         """Release held job."""
         if self.job_id is not None and not self._released:
-            logging.info("Releasing job_id %s", self.job_id)
+            logging.info("Releasing job_id %s (%s)", self.job_id, self.job_name)
             submitter = LocalSubmitter()
             submitter.submit_command(f"qrls {self.job_id}")
             submitter.wait_until_completed()
@@ -279,11 +282,16 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         -----
         All submitted jobs are held
         Release with self.release
+        See [1]_ for details
 
         Parameters
         ----------
         command : str
             Command to submit
+
+        References
+        ----------
+        .. [1] https://community.openpbs.org/t/ignoring-finished-dependencies/1976
         """
         self.reset()
         script_path = self._store_dir.joinpath(f"{self._job_name}.sh")
@@ -300,7 +308,7 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         local_submitter.wait_until_completed()
         self._status["job_id"] = local_submitter.std_out
         logging.info(
-            "job_id %s given to command '%s' in %s", self.job_id, command, script_path
+            "job_id %s (%s) given to command '%s' in %s", self.job_id, self.job_name, command, script_path
         )
 
     def completed(self) -> bool:

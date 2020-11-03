@@ -7,7 +7,7 @@ http://www.webgraphviz.com
 >>> import networkx as nx
 >>> g = nx.DiGraph()
 ...
->>> for i in range(10):
+>>> for i in range(11):
 >>>     g.add_node(i, status="ready")
 ...
 >>> # The following nodes are meant as BOUT++ runs:

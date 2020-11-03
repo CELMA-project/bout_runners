@@ -25,7 +25,7 @@ def test_read_bout_makefile(get_test_data_path: Path) -> None:
 
 
 @pytest.mark.parametrize(
-    "filename,expected",
+    "filename, expected",
     [("Makefile_value", "val 123 val.cxx.foo"), ("Makefile_multiple_value", "not_val")],
 )
 def test_get_variable_value(

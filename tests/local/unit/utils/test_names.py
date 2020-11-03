@@ -9,7 +9,7 @@ from bout_runners.utils.names import get_exec_name, get_makefile_name, get_makef
 
 
 @pytest.mark.parametrize(
-    "filename,expected",
+    "filename, expected",
     [(None, "executable_bout_model"), ("Makefile_without_target", "bout_model")],
 )
 def test_get_exec_name(
