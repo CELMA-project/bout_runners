@@ -8,6 +8,7 @@ import networkx as nx
 from bout_runners.runner.bout_run_setup import BoutRunSetup
 from bout_runners.submitter.abstract_submitters import AbstractSubmitter
 from bout_runners.submitter.local_submitter import LocalSubmitter
+from bout_runners.utils.algorithms import get_node_orders
 
 
 class RunGraph:
@@ -77,6 +78,10 @@ class RunGraph:
         self.__node_set = set(self.__graph.nodes)
         logging.info("Done: Making a RunGraph object")
 
+        # Loop variables
+        self.__node_orders: Optional[Tuple[Tuple[str, ...], ...]] = None
+        self.__index = -1
+
     def __iter__(self) -> "RunGraph":
         """
         Make the class iterable.
@@ -88,7 +93,7 @@ class RunGraph:
         """
         return self
 
-    def __next__(self) -> Dict[str, Dict[str, Any]]:
+    def __next__(self) -> Tuple[str, ...]:
         """
         Return the next order nodes from graph (ordered by the breadth).
 
@@ -99,24 +104,17 @@ class RunGraph:
 
         Returns
         -------
-        nodes_at_current_order : dict of str, dict
-            Dict of the attributes of the nodes
+        order : tuple of str
+            A tuple consisting of the current order
         """
-        # NOTE: The while loop can be done more efficient with the walrus operator,
-        #       but this will break compatibility with python < 3.8
-        clone = self.__get_pruned_clone()
-        if len(clone) != 0:
-            # Find all roots of the clone
-            # In degree is number of edges pointing to the node
-            roots = tuple(node for node, degree in clone.in_degree() if degree == 0)
-
-            nodes_at_current_order = dict()
-            for root in roots:
-                nodes_at_current_order[root] = self.__graph.nodes[root]
-                self.__graph.nodes[root]["status"] = "traversed"
-            return nodes_at_current_order
-
-        raise StopIteration
+        if self.__node_orders is None:
+            self.__node_orders = self.get_node_orders()
+        self.__index += 1
+        if self.__index >= len(self.__node_orders):
+            self.__index = -1
+            self.__node_orders = None
+            raise StopIteration
+        return self.__node_orders[self.__index]
 
     def __len__(self) -> int:
         """
@@ -150,28 +148,38 @@ class RunGraph:
         # It seems like this is producing a false positive
         return self.nodes[node_name]  # type: ignore
 
-    def __get_pruned_clone(self) -> nx.DiGraph:
-        """
-        Return a clone of the "ready" nodes of self.__graph.
-
-        Returns
-        -------
-        clone : nx.Digraph
-            A clone of self.__graph where all nodes with another status than "ready"
-            has been removed
-        """
-        clone = self.__graph.copy()
-        for node_name in self.__graph:
-            if self.__graph.nodes[node_name]["status"] != "ready":
-                clone.remove_node(node_name)
-        return clone
-
     @property
     def nodes(self) -> nx.classes.reportviews.NodeView:
         """Return the nodes."""
         # NOTE: The set of nodes only contain the name of the nodes, not their
         #       attributes
         return self.__graph.nodes
+
+    def get_node_orders(self, reverse: bool = False) -> Tuple[Tuple[str, ...], ...]:
+        """
+        Return nodes sorted at order.
+
+        One order is considered as the nodes without any in edges
+        To find the next order remove the first order from the graph and
+        repeat the first step
+
+        Warnings
+        --------
+        As we are counting an order from the nodes with no in edges the
+        result of
+        >>> self.get_node_orders(reverse=True) != self.get_node_orders()[::-1]
+
+        Parameters
+        ----------
+        reverse : bool
+            Whether or not to reverse the graph before finding the orders
+
+        Returns
+        -------
+        orders : tuple of tuple of str
+            A tuple of tuple where the innermost tuple constitutes an order
+        """
+        return get_node_orders(self.__graph, reverse)
 
     def predecessors(self, node_name: str) -> Tuple[str, ...]:
         """
@@ -208,51 +216,6 @@ class RunGraph:
         # NOTE: The set of nodes only contain the name of the nodes, not their
         #       attributes
         return tuple(self.__graph.successors(node_name))
-
-    def in_degree(self, node_name: str) -> int:
-        """
-        Return the number of edges pointing to the node.
-
-        Parameters
-        ----------
-        node_name : str
-            Name of the node to get the in_degree from
-
-        Returns
-        -------
-        in_degree : int
-            Number of edges pointing to the node
-        """
-        in_degree = self.__graph.in_degree(node_name)
-        if not isinstance(in_degree, int):
-            msg = f"The returned type from .in_degree was of type {type(in_degree)}, not int"
-            logging.critical(msg)
-            raise ValueError(msg)
-        return in_degree
-
-    def bfs_nodes(
-        self, node_name: str, reverse_search: bool = False
-    ) -> Tuple[str, ...]:
-        """
-        Return the nodes of a breadth first search.
-
-        # FIXME: Make algorithm
-
-        Parameters
-        ----------
-        node_name : str
-            Name of the node to search from
-        reverse_search : bool
-            Whether to search reversed in breadth first search
-
-        Returns
-        -------
-        nodes : tuple of str
-            Nodes from the bfs
-        """
-        edges = nx.bfs_edges(self.__graph, node_name, reverse=reverse_search)
-        nodes = [node_name] + [to_node for _, to_node in edges]
-        return tuple(nodes)
 
     def reset(self) -> None:
         """Reset the nodes by setting status to 'ready' and calling node.reset()."""
@@ -297,7 +260,7 @@ class RunGraph:
         self,
         name: str,
         function_dict: Optional[
-            Dict[str, Optional[Union[Callable, Tuple[Any, ...], Dict[str, Any], bool]]]
+            Dict[str, Optional[Union[Callable, Tuple[Any, ...], Dict[str, Any]]]]
         ] = None,
         path: Optional[Path] = None,
         submitter: Optional[AbstractSubmitter] = None,
@@ -376,6 +339,25 @@ class RunGraph:
                 f"The node connection from {start_node} to {end_node} "
                 f"resulted in a cyclic graph"
             )
+
+    def remove_edge(self, start_node: str, end_node: str) -> None:
+        """
+        Remove edge between two nodes.
+
+        Parameters
+        ----------
+        start_node : str
+            Name of the start node
+        end_node : str
+            Name of the end node
+
+        Raises
+        ------
+        ValueError
+            If the graph after adding the nodes becomes cyclic
+        """
+        self.__graph.remove_edge(start_node, end_node)
+        logging.debug("Removing edge from %s to %s", start_node, end_node)
 
     def add_waiting_for(
         self,

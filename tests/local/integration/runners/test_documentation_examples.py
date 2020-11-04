@@ -119,6 +119,8 @@ def test_pre_and_post_documentation(
     """
     Test that the pre and post documentation runs without error.
 
+    FIXME: Explain how bout_runners copies restart files
+
     Parameters
     ----------
     clean_up_bout_inp_src_and_dst : function
@@ -173,7 +175,6 @@ def test_pre_and_post_documentation(
             "function": mock_expand,
             "args": None,
             "kwargs": kwargs,
-            "copy_restart_files": True,
         },
     )
 
@@ -193,7 +194,9 @@ def test_pre_and_post_documentation(
         restart_executor, db_connector, final_parameters
     )
 
-    restart_run_group = RunGroup(run_graph, restart_bout_run_setup, name=name)
+    restart_run_group = RunGroup(
+        run_graph, restart_bout_run_setup, name=name, waiting_for=expand_node_name
+    )
 
     kwargs = {"path": expanded_noise_restarts_dir, "scale": 1e-5}
     restart_run_group.add_pre_processor(
@@ -201,7 +204,6 @@ def test_pre_and_post_documentation(
             "function": return_none,
             "args": None,
             "kwargs": kwargs,
-            "copy_restart_files": True,
         },
         waiting_for=expand_node_name,
     )

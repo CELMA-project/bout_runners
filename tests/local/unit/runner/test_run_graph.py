@@ -129,6 +129,24 @@ def test_reset(make_graph) -> None:
     assert len(run_graph) == length
 
 
+@pytest.mark.timeout(30)
+def test___iter__(make_graph) -> None:
+    """
+    Test the __iter__ functionality.
+
+    Parameters
+    ----------
+    make_graph : RunGraph
+        A simple graph
+    """
+    run_graph = make_graph
+    order = (("0",), ("1", "2"), ("3",), ("4", "5"))
+    for number, nodes in enumerate(run_graph):
+        assert order[number] == nodes
+    for number, nodes in enumerate(run_graph):
+        assert order[number] == nodes
+
+
 def test___next__(make_graph) -> None:
     """
     Test the next functionality.
@@ -139,28 +157,32 @@ def test___next__(make_graph) -> None:
         A simple graph
     """
     run_graph = make_graph
-    nodes = next(run_graph)
+    first_order_nodes = next(run_graph)
+    assert first_order_nodes == ("0",)
 
-    assert nodes["0"]["function"] is None
-    assert nodes["0"]["args"] is None
-    assert nodes["0"]["kwargs"] is None
-    assert nodes["0"]["status"] == "traversed"
-    assert isinstance(nodes["0"]["submitter"], LocalSubmitter)
+    second_order_nodes = next(run_graph)
+    assert second_order_nodes == ("1", "2")
 
-    nodes = next(run_graph)
-    for number_str in ["1", "2"]:
-        assert nodes[number_str]["function"] is None
-        assert nodes[number_str]["args"] is None
-        assert nodes[number_str]["kwargs"] is None
-        assert nodes[number_str]["status"] == "traversed"
-        assert isinstance(nodes[number_str]["submitter"], LocalSubmitter)
+    third_order_nodes = next(run_graph)
+    assert third_order_nodes == ("3",)
 
-    nodes_with_ready_status = ("3", "4", "5")
-    for node_name in run_graph.nodes:
-        if node_name in nodes_with_ready_status:
-            assert run_graph[node_name]["status"] == "ready"
-        else:
-            assert run_graph[node_name]["status"] == "traversed"
+    fourth_order_nodes = next(run_graph)
+    assert fourth_order_nodes == ("4", "5")
+
+    with pytest.raises(StopIteration):
+        _ = next(run_graph)
+
+    for node_name in [
+        *first_order_nodes,
+        *second_order_nodes,
+        *third_order_nodes,
+        *fourth_order_nodes,
+    ]:
+        assert run_graph[node_name]["function"] is None
+        assert run_graph[node_name]["args"] is None
+        assert run_graph[node_name]["kwargs"] is None
+        assert run_graph[node_name]["status"] == "ready"
+        assert isinstance(run_graph[node_name]["submitter"], LocalSubmitter)
 
 
 def test___len__(make_graph) -> None:
@@ -176,7 +198,8 @@ def test___len__(make_graph) -> None:
     assert len(run_graph) == len(run_graph.nodes)
 
     # In this special case only one node is traversed
-    _ = next(run_graph)
+    node = next(run_graph)
+    run_graph[node[0]]["status"] = "submitted"
     assert len(run_graph) == len(run_graph.nodes) - 1
 
 

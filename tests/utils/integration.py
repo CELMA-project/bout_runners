@@ -65,6 +65,9 @@ class LargeGraphNodeAdder:
         """
         Set the member data and initialize the RunGraph.
 
+        # FIXME: This is not automatically deleted
+         (self.paths["pre_and_post_directory"]) etc.
+
         Parameters
         ----------
         name : str
@@ -78,7 +81,6 @@ class LargeGraphNodeAdder:
         self.__submitter_type = submitter_type
         self.paths = dict()
         self.paths["project_path"] = make_project
-        # FIXME: This is not automatically deleted
         self.paths["pre_and_post_directory"] = self.paths["project_path"].joinpath(
             f"pre_and_post_{name}"
         )
@@ -312,8 +314,8 @@ def bout_runner_from_path_tester(
     5. ...unless we set force=True
     6. Check the restart functionality twice
 
-# FIXME: Check that restart has taking place by investigating the last time
-# FIXME: suspect bug in helde_cluster_nodes
+    # FIXME: Check that restart has taking place by investigating the last time
+    # FIXME: suspect bug in helde_cluster_nodes
 
     Parameters
     ----------

@@ -145,12 +145,12 @@ class Executor:
         This will not copy the restart files as the restart files may not be ready.
         Copying of files can either be done manually using
         bout_runner.utils.file_operations.copy_restart_files or automatically by
-        using BoutRunner.__setup_restart_files which is called from
+        using BoutRunner.__inject_copy_restart_files_node which is called from
         BoutRunner.__prepare_run
 
         See Also
         --------
-        BoutRunner.__setup_restart_files(node_with_restart)
+        BoutRunner.__inject_copy_restart_files_node(node_with_restart)
             Search for restart files, make a restart node where needed
         """
         return self.__restart_from

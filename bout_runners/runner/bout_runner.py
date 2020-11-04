@@ -16,7 +16,6 @@ from bout_runners.submitter.abstract_submitters import AbstractClusterSubmitter
 from bout_runners.submitter.local_submitter import LocalSubmitter
 from bout_runners.submitter.submitter_factory import get_submitter
 from bout_runners.utils.file_operations import copy_restart_files
-from bout_runners.utils.algorithms import merge_list_at_first_common_element
 
 
 class BoutRunner:
@@ -136,9 +135,7 @@ class BoutRunner:
             ):
                 logging.warning("The provided run_graph does not contain any bout_runs")
 
-    def __add_waiting_for(
-        self, node_name: str, nodes_at_current_order: Dict[str, Dict[str, Any]]
-    ) -> None:
+    def __add_waiting_for(self, node_name: str) -> None:
         """
         Add the job_ids to wait for in the submission script.
 
@@ -146,8 +143,6 @@ class BoutRunner:
         ----------
         node_name : str
             Name of current node
-        nodes_at_current_order : dict of str, dict
-            Dict of the attributes of the nodes
         """
         predecessors = self.__run_graph.predecessors(node_name)
         waiting_for = (
@@ -159,7 +154,7 @@ class BoutRunner:
             )
             and not self.__run_graph[p_name]["submitter"].completed()
         )
-        nodes_at_current_order[node_name]["submitter"].add_waiting_for(waiting_for)
+        self.__run_graph[node_name]["submitter"].add_waiting_for(waiting_for)
 
     def __prepare_run(self, force: bool, restart_all: bool) -> None:
         """
@@ -207,7 +202,7 @@ class BoutRunner:
                 and self.__run_graph[node]["bout_run_setup"].executor.restart_from
                 is not None
             ):
-                self.__setup_restart_files(node)
+                self.__inject_copy_restart_files_node(node)
         logging.info("Done: Preparing all runs")
 
     def __updates_when_restart_all_is_true(self) -> None:
@@ -272,84 +267,35 @@ class BoutRunner:
                             )
                         break
 
-    def __setup_restart_files(self, node_with_restart: str) -> None:
+    def __inject_copy_restart_files_node(self, node_with_restart: str) -> None:
         """
-        Search for restart files, make a restart node where needed.
+        Inject a node which copy restart files.
 
         Parameters
         ----------
         node_with_restart : str
             Name of the node which will wait for a restart node
-
-        Raises
-        ------
-        FileNotFoundError
-            If no restart files are found
         """
+        logging.info("Start: Injecting node which copies restart files")
         restart_from = self.__run_graph[node_with_restart][
             "bout_run_setup"
         ].executor.restart_from
         copy_to = self.__run_graph[node_with_restart][
             "bout_run_setup"
         ].bout_paths.bout_inp_dst_dir
-        src_list = list(restart_from.glob("BOUT.restart.*"))
-        if len(src_list) > 0:
-            if (
-                f"copy_restart_files_to_{node_with_restart}"
-                not in self.__run_graph.nodes
-            ):
-                copy_node = self.__make_copy_node(
-                    node_with_restart, restart_from, copy_to
-                )
-                self.__run_graph.add_edge(copy_node, node_with_restart)
-            return
-        logging.debug(
-            "No restart files files found in %s, checking if %s "
-            "is waiting for any nodes starting with "
-            "'copy_restart_files'",
-            restart_from,
-            node_with_restart,
-        )
-        for predecessor in self.__run_graph.predecessors(node_with_restart):
-            if predecessor.startswith("copy_restart_files"):
-                logging.debug(
-                    "Found a node which copies restart files: "
-                    "%s is waiting for %s to finish",
-                    node_with_restart,
-                    predecessor,
-                )
-                return
-        logging.debug(
-            "%s is not waiting for any nodes starting with 'copy_restart_files'. "
-            "Searching for the path to restart files in other bout_run nodes",
-            node_with_restart,
-        )
-        for node in self.__run_graph.nodes:
-            if node.startswith("bout_run"):
-                if (
-                    restart_from
-                    == self.__run_graph[node][
-                        "bout_run_setup"
-                    ].bout_paths.bout_inp_dst_dir
-                ):
-                    logging.debug("Found match for restart files in node '%s'", node)
-                    copy_node = self.__make_copy_node(
-                        node_with_restart, restart_from, copy_to
-                    )
-                    self.__run_graph.add_edge(copy_node, node_with_restart)
-                    self.__run_graph.add_edge(node, copy_node)
-                    return
-        msg = (
-            f"Could not find restart files in {restart_from}, "
-            f"neither is {node_with_restart} waiting for any nodes starting "
-            f"with 'copy_restart_files', nor does any of the other "
-            f"bout_run nodes have {restart_from} as their "
-            f"'bout_inp_dst_dir'."
-        )
-        logging.critical(msg)
-        raise FileNotFoundError(msg)
 
-    def __make_copy_node(
+        copy_node = self.__make_restart_files_node(
+            node_with_restart, restart_from, copy_to
+        )
+
+        for predecessor in self.__run_graph.predecessors(node_with_restart):
+            self.__run_graph.remove_edge(predecessor, node_with_restart)
+            self.__run_graph.add_edge(predecessor, copy_node)
+
+        self.__run_graph.add_edge(copy_node, node_with_restart)
+        logging.info("Done: Injecting node which copies restart files")
+
+    def __make_restart_files_node(
         self, to_node_name: str, copy_restart_from: Path, copy_restart_to: Path
     ) -> str:
         """
@@ -369,9 +315,12 @@ class BoutRunner:
         current_node_name : str
             Name of the node which copies files
         """
-        current_node_name = f"copy_restart_files_to_{to_node_name}"
+        current_node_name = (
+            f"copy_restart_files_from_{copy_restart_from.name}_to_"
+            f"{copy_restart_to.name}_for_{to_node_name}"
+        )
         function_dict: Dict[
-            str, Optional[Union[Callable, Tuple[Any, ...], Dict[str, Any], bool]]
+            str, Optional[Union[Callable, Tuple[Any, ...], Dict[str, Any]]]
         ] = {
             "function": copy_restart_files,
             "args": (copy_restart_from, copy_restart_to),
@@ -422,57 +371,6 @@ class BoutRunner:
                     )
                     return True
         return False
-
-    def __get_reverse_sorted_cluster_nodes(
-        self, node_names: Iterable[str], reverse_search: bool = False
-    ) -> Tuple[str, ...]:
-        """
-        Return the reverse sorted list of cluster nodes which has been submitted.
-
-        # FIXME: You can make this an algorithm and filter on the isinstance later
-
-        Parameters
-        ----------
-        node_names : iterable of str
-            Attributes
-        reverse_search : bool
-            Whether to search reversed in breadth first search
-
-        Returns
-        -------
-        reverse_sorted_cluster_nodes : tuple of str
-            List of node names reverse sorted lastest to first order
-        """
-        held_cluster_nodes = dict()
-        logging.critical("node_names=%s", node_names)
-        for node_name in node_names:
-            nodes = self.__run_graph.bfs_nodes(node_name, reverse_search=reverse_search)
-            held_cluster_nodes[node_name] = [
-                node_name
-                for node_name in nodes
-                if isinstance(
-                    self.__run_graph[node_name]["submitter"], AbstractClusterSubmitter
-                )
-                and not self.__run_graph[node_name]["submitter"].released
-            ]
-
-        keys = held_cluster_nodes.keys()
-        if len(keys) == 0:
-            return tuple()
-
-        logging.critical("helde_cluster_nodes=%s", held_cluster_nodes)
-        cluster_nodes = held_cluster_nodes.pop(list(keys)[0])
-        for _, predecessors in held_cluster_nodes.items():
-            cluster_nodes = merge_list_at_first_common_element(
-                cluster_nodes, predecessors
-            )
-
-        if reverse_search:
-            reverse_sorted_cluster_nodes = cluster_nodes
-        else:
-            reverse_sorted_cluster_nodes = cluster_nodes[::-1]
-
-        return tuple(reverse_sorted_cluster_nodes)
 
     def __monitor_runs(
         self,
@@ -604,7 +502,6 @@ class BoutRunner:
     def __update_submitter_dict_after_run_bout_run(
         self,
         node_name: str,
-        nodes_at_current_order: Dict[str, Dict[str, Any]],
         submitted: bool,
         submitter_dict: Dict[
             str,
@@ -624,8 +521,6 @@ class BoutRunner:
         ----------
         node_name : str
             Name of current node
-        nodes_at_current_order : dict of str, dict
-            Dict of the attributes of the nodes
         submitted : bool
             Whether or not the run was submitted
         submitter_dict : dict
@@ -633,12 +528,12 @@ class BoutRunner:
             The new dict contains the keywords 'submitter' with value AbstractSubmitter
         """
         if submitted:
-            self.__run_graph[node_name]["db_connector"] = nodes_at_current_order[
-                node_name
-            ]["bout_run_setup"].db_connector
-            self.__run_graph[node_name]["project_path"] = nodes_at_current_order[
-                node_name
-            ]["bout_run_setup"].bout_paths.project_path
+            self.__run_graph[node_name]["db_connector"] = self.__run_graph[node_name][
+                "bout_run_setup"
+            ].db_connector
+            self.__run_graph[node_name]["project_path"] = self.__run_graph[node_name][
+                "bout_run_setup"
+            ].bout_paths.project_path
         else:
             submitter_dict.pop(node_name)
 
@@ -783,33 +678,48 @@ class BoutRunner:
                     Union[Optional[AbstractSubmitter], Union[DatabaseConnector, Path]],
                 ],
             ] = dict()
-            for node_name in nodes_at_current_order.keys():
+            for node_name in nodes_at_current_order:
+                if self.__run_graph[node_name]["status"] != "ready":
+                    logging.info(
+                        "Skipping node '%s' as it has status=%s",
+                        node_name,
+                        self.__run_graph[node_name]["status"],
+                    )
+                    continue
                 logging.info("Start: Processing %s", node_name)
                 if isinstance(
-                    nodes_at_current_order[node_name]["submitter"],
+                    self.__run_graph[node_name]["submitter"],
                     AbstractClusterSubmitter,
                 ):
-                    self.__add_waiting_for(node_name, nodes_at_current_order)
+                    self.__add_waiting_for(node_name)
 
                 submitter_dict[node_name] = dict()
-                submitter_dict[node_name]["submitter"] = nodes_at_current_order[
-                    node_name
-                ]["submitter"]
+                submitter_dict[node_name]["submitter"] = self.__run_graph[node_name][
+                    "submitter"
+                ]
                 if node_name.startswith("bout_run"):
                     submitted = self.run_bout_run(
-                        nodes_at_current_order[node_name]["bout_run_setup"],
+                        self.__run_graph[node_name]["bout_run_setup"],
                         force,
                     )
                     self.__update_submitter_dict_after_run_bout_run(
-                        node_name, nodes_at_current_order, submitted, submitter_dict
+                        node_name, submitted, submitter_dict
                     )
                 else:
+
+
+                    if node_name == "post_processor_test_large_graph_PBSSubmitter_0":
+                        logging.critical(node_name)
+                        logging.critical("waiting_for=%s", self.__run_graph[node_name]["submitter"].waiting_for)
+
+
+
                     self.run_function(
-                        nodes_at_current_order[node_name]["path"],
-                        nodes_at_current_order[node_name]["submitter"],
-                        nodes_at_current_order[node_name]["function"],
-                        nodes_at_current_order[node_name]["args"],
-                        nodes_at_current_order[node_name]["kwargs"],
+                        self.__run_graph[node_name]["path"],
+                        self.__run_graph[node_name]["submitter"],
+                        self.__run_graph[node_name]["function"],
+                        self.__run_graph[node_name]["args"],
+                        self.__run_graph[node_name]["kwargs"],
                     )
 
                 self.__run_graph[node_name]["status"] = "submitted"
@@ -827,54 +737,61 @@ class BoutRunner:
             if monitor_run:
                 if self.cluster_node_exist(self.__run_graph.nodes):
                     logging.warning(
-                        "There are mixed local and cluster nodes. "
-                        "Releasing all cluster nodes which are predecessors of this "
-                        "order. "
-                        "This may lead to dependency rejection from the cluster."
+                        "Mixed local and cluster nodes found in graph. "
+                        "Releasing the cluster nodes up until the order of the "
+                        "LocalSubmitter. This can cause a node waiting for one of "
+                        "these nodes to be submitted after those nodes have finished "
+                        "so that the cluster will reject those jobs."
                     )
-                    reverse_sorted_cluster_nodes = (
-                        self.__get_reverse_sorted_cluster_nodes(
-                            list(submitter_dict.keys()), reverse_search=True
-                        )
+                    reverse_sorted_node_orders = self.__run_graph.get_node_orders(
+                        reverse=True
                     )
-                    self.release_nodes(reverse_sorted_cluster_nodes)
+                    order_number = self.find_matching_order_number(
+                        tuple(submitter_dict.keys()), reverse_sorted_node_orders
+                    )
+                    orders_to_release = reverse_sorted_node_orders[order_number:]
+                    self.release_nodes(orders_to_release)
                 self.__monitor_runs(submitter_dict, raise_errors)
             logging.info("Done: Processing nodes at current order")
 
-        logging.critical("BEFORE CLUSTER_NODE_EXIST")
         if self.cluster_node_exist(self.__run_graph.nodes):
-            logging.critical(
-                "tuple(node for node in self.__run_graph.nodes if self.__run_graph.in_degree(node) == 0)=%s",
-                tuple(
-                    node
-                    for node in self.__run_graph.nodes
-                    if self.__run_graph.in_degree(node) == 0
-                ),
-            )
-            logging.critical("self.__run_graph.nodes=%s", self.__run_graph.nodes)
-            logging.critical(
-                "tuple(self.__run_graph.in_degree(node) for node in self.__run_graph.nodes)=%s",
-                tuple(
-                    self.__run_graph.in_degree(node) for node in self.__run_graph.nodes
-                ),
-            )
-            # FIXME: YOU ARE HERE: in_degree() is not working
-            # FIXME: wiat for all to finish should also release all....
-            reverse_sorted_cluster_nodes = self.__get_reverse_sorted_cluster_nodes(
-                tuple(
-                    node
-                    for node in self.__run_graph.nodes
-                    if self.__run_graph.in_degree(node) == 0
-                )
-            )
-            logging.critical(
-                "AFTER CLUSTER_NODE_EXIST reverse_sorted_cluster_nodes=%s",
-                reverse_sorted_cluster_nodes,
-            )
-            self.release_nodes(reverse_sorted_cluster_nodes)
+            reverse_sorted_node_orders = self.__run_graph.get_node_orders(reverse=True)
+            self.release_nodes(reverse_sorted_node_orders)
         logging.info("Done: Calling .run() in BoutRunners")
 
-    def release_nodes(self, nodes_to_release: Tuple[str, ...]) -> None:
+    @staticmethod
+    def find_matching_order_number(
+        node_names: Tuple[str, ...], node_orders: Tuple[Tuple[str, ...], ...]
+    ) -> Optional[int]:
+        """
+        Return the order matching the node names.
+
+        Parameters
+        ----------
+        node_names : tuple of str
+            Node names
+        node_orders : tuple of tuple of str
+            Ordered tuple of orders
+
+        Returns
+        -------
+        order_number : int or None
+            The first order where a match was found
+            If no match was found 0 is returned
+        """
+        order_number = 0
+        found = False
+        for order_nodes in node_orders:
+            for node_name in node_names:
+                if node_name in order_nodes:
+                    found = True
+                    break
+                order_number += 1
+        if found:
+            return order_number
+        return None
+
+    def release_nodes(self, nodes_to_release: Tuple[Tuple[str, ...], ...]) -> None:
         """
         Release the nodes to the queue.
 
@@ -885,8 +802,13 @@ class BoutRunner:
         """
         if len(nodes_to_release) != 0:
             logging.info("Start: Releasing held cluster nodes")
-            for node in nodes_to_release:
-                self.__run_graph[node]["submitter"].release()
+            logging.debug("Release order: %s", nodes_to_release)
+            for order in nodes_to_release:
+                for node in order:
+                    if isinstance(
+                        self.__run_graph[node]["submitter"], AbstractClusterSubmitter
+                    ):
+                        self.__run_graph[node]["submitter"].release()
             logging.info("Done: Releasing held cluster nodes")
 
     def cluster_node_exist(self, node_names: Iterable[str]) -> bool:

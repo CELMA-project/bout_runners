@@ -118,7 +118,7 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
                 logging.debug(
                     "std_out and std_err populated for job_id %s (%s)",
                     self._status["job_id"],
-                    self.job_name
+                    self.job_name,
                 )
 
             else:
@@ -135,7 +135,8 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
                 "Tried to wait for a process without job_id %s (%s). "
                 "No process started, so "
                 "return_code, std_out, std_err are not populated",
-                self.job_id, self.job_name
+                self.job_id,
+                self.job_name,
             )
 
     @property
@@ -256,14 +257,23 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
             if isinstance(waiting_for_id, str):
                 self.__waiting_for.append(waiting_for_id)
                 logging.debug(
-                    "Adding the following to the waiting_for_list: %s", waiting_for_id
+                    "Adding the following to the waiting_for_list for %s: %s", self.job_name, waiting_for_id
                 )
             else:
                 for waiting_id in waiting_for_id:
                     self.__waiting_for.append(waiting_id)
                     logging.debug(
-                        "Adding the following to the waiting_for_list: %s", waiting_id
+                        "Adding the following to the waiting_for_list for %s: %s", self.job_name, waiting_id
                     )
+
+
+
+        if self._job_name == "post_processor_test_large_graph_PBSSubmitter_0":
+            logging.critical(self.job_name)
+            logging.critical("waiting_for=%s", self.waiting_for)
+            logging.critical("__waiting_for=%s", self.__waiting_for)
+
+
 
     def release(self) -> None:
         """Release held job."""
@@ -293,7 +303,9 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         ----------
         .. [1] https://community.openpbs.org/t/ignoring-finished-dependencies/1976
         """
-        self.reset()
+        # FIXME: YOU ARE HERE - WAITING FOR DISAPPEARS BECAUSE WE OUTCOMMENT RESET
+        # FIXME: Why on earth are we resetting BEFORE SUBMITTING???
+        # self.reset()
         script_path = self._store_dir.joinpath(f"{self._job_name}.sh")
         with script_path.open("w") as file:
             file.write(self.create_submission_string(command))
@@ -308,7 +320,11 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         local_submitter.wait_until_completed()
         self._status["job_id"] = local_submitter.std_out
         logging.info(
-            "job_id %s (%s) given to command '%s' in %s", self.job_id, self.job_name, command, script_path
+            "job_id %s (%s) given to command '%s' in %s",
+            self.job_id,
+            self.job_name,
+            command,
+            script_path,
         )
 
     def completed(self) -> bool:
@@ -379,6 +395,16 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         mail = self._submission_dict["mail"]
         # Notice that we do not add the stem here
         self.__log_and_error_base = self._store_dir.joinpath(self._job_name)
+
+
+
+
+        if self._job_name == "post_processor_test_large_graph_PBSSubmitter_0":
+            logging.critical(self.job_name)
+            logging.critical("waiting_for=%s", self.waiting_for)
+            logging.critical("__waiting_for=%s", self.__waiting_for)
+
+
         waiting_for_str = (
             f"#PBS -W depend=afterok:{':'.join(self.waiting_for)}{newline}"
             if len(self.waiting_for) != 0

@@ -51,8 +51,8 @@ from tests.utils.integration import (
 #         clean_default_db_dir,
 #         tear_down_restart_directories,
 #     )
-#
-#
+
+
 # @pytest.mark.timeout(200)
 # def test_full_bout_runner(
 #     make_project: Path,
@@ -81,8 +81,8 @@ from tests.utils.integration import (
 #         yield_number_of_rows_for_all_tables,
 #         clean_default_db_dir,
 #     )
-
-
+#
+#
 def test_large_graph(
     make_project: Path,
     yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
