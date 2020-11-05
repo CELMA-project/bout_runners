@@ -3,11 +3,12 @@
 
 import shutil
 from pathlib import Path
-from typing import Iterator, Callable, Tuple
+from typing import Iterator, Callable, Tuple, List
 
 import pytest
 
 from bout_runners.utils.paths import get_config_path
+from tests.utils.paths import FileStateRestorer
 
 
 @pytest.fixture(scope="session")
@@ -91,10 +92,30 @@ def copy_makefile(get_test_data_path: Path) -> Iterator[Path]:
     tmp_path.rmdir()
 
 
+@pytest.fixture(scope="function", name="file_state_restorer")
+def fixture_file_state_restorer() -> Iterator[FileStateRestorer]:
+    """
+    Yield an instance of FileStateRestorer.
+
+    Yields
+    ------
+    file_state_restorer : FileStateRestorer
+        Object used to move files which may be in use during testing
+    """
+    file_state_restorer = FileStateRestorer()
+
+    yield file_state_restorer
+
+    file_state_restorer.restore_files()
+
+
 @pytest.fixture(scope="function", name="tear_down_restart_directories")
 def fixture_tear_down_restart_directories() -> Iterator[Callable[[Path], None]]:
     r"""
     Return a function for removal of restart directories.
+
+    # FIXME: Superseed by remove directories
+    # FIXME: The restart files should always be available in executor (or bout_paths)
 
     Yields
     ------
@@ -131,6 +152,8 @@ def clean_up_bout_inp_src_and_dst(
 ) -> Iterator[Callable[[str, str], Tuple[Path, Path, Path]]]:
     """
     Return a function which adds temporary BOUT.inp directories to removal.
+
+    # FIXME: Superseed by remove directories
 
     Warnings
     --------

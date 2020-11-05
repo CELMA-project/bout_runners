@@ -14,9 +14,9 @@ from tests.utils.integration import (
 
 
 def test_bout_runners_from_directory(
+    tmp_path: Path,
     make_project: Path,
     yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
-    clean_default_db_dir: Path,
     tear_down_restart_directories: Callable[[Path], None],
 ) -> None:
     """
@@ -32,28 +32,28 @@ def test_bout_runners_from_directory(
 
     Parameters
     ----------
+    tmp_path : Path
+        Temporary path (pytest fixture)
     make_project : Path
         The path to the conduction example
     yield_number_of_rows_for_all_tables : function
         Function which returns the number of rows for all tables in a schema
-    clean_default_db_dir : Path
-        Path to the default database directory
     tear_down_restart_directories : function
         Function used for removal of restart directories
     """
     bout_runner_from_path_tester(
+        tmp_path,
         LocalSubmitter,
         make_project,
         yield_number_of_rows_for_all_tables,
-        clean_default_db_dir,
         tear_down_restart_directories,
     )
 
 
 def test_full_bout_runner(
+    tmp_path: Path,
     make_project: Path,
     yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
-    clean_default_db_dir: Path,
 ) -> None:
     """
     Test that the BoutRunner can execute a run with the LocalSubmitter.
@@ -64,25 +64,22 @@ def test_full_bout_runner(
 
     Parameters
     ----------
+    tmp_path : Path
+        Temporary path (pytest fixture)
     make_project : Path
         The path to the conduction example
     yield_number_of_rows_for_all_tables : function
         Function which returns the number of rows for all tables in a schema
-    clean_default_db_dir : Path
-        Path to the default database directory
     """
     full_bout_runner_tester(
-        LocalSubmitter,
-        make_project,
-        yield_number_of_rows_for_all_tables,
-        clean_default_db_dir,
+        tmp_path, LocalSubmitter, make_project, yield_number_of_rows_for_all_tables
     )
 
 
 def test_large_graph(
+    tmp_path: Path,
     make_project: Path,
     yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
-    clean_default_db_dir: Path,
     tear_down_restart_directories: Callable[[Path], None],
 ) -> None:
     """
@@ -92,21 +89,21 @@ def test_large_graph(
 
     Parameters
     ----------
+    tmp_path : Path
+        Temporary path (pytest fixture)
     make_project : Path
         The path to the conduction example
     yield_number_of_rows_for_all_tables : function
         Function which returns the number of rows for all tables in a schema
-    clean_default_db_dir : Path
-        Path to the default database directory
     tear_down_restart_directories : function
         Function used for removal of restart directories
     """
     submitter_type = LocalSubmitter
 
     large_graph_tester(
+        tmp_path,
         make_project,
         yield_number_of_rows_for_all_tables,
-        clean_default_db_dir,
         tear_down_restart_directories,
         submitter_type,
     )

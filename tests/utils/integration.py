@@ -67,7 +67,6 @@ class LargeGraphNodeAdder:
 
         # FIXME: This is not automatically deleted
          (self.paths["pre_and_post_directory"]) etc.
-        # FIXME: Tests are populating BOUT_db
 
         Parameters
         ----------
@@ -298,10 +297,10 @@ class LargeGraphNodeAdder:
 
 
 def bout_runner_from_path_tester(
+    tmp_path: Path,
     submitter_type: Type[AbstractSubmitter],
     project_path: Path,
     yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
-    clean_default_db_dir: Path,
     tear_down_restart_directories: Callable[[Path], None],
 ) -> None:
     """
@@ -317,20 +316,20 @@ def bout_runner_from_path_tester(
 
     Parameters
     ----------
+    tmp_path : Path
+        Temporary path (pytest fixture)
     submitter_type : type
         Submitter type to check for
     project_path : Path
         The path to the conduction example
     yield_number_of_rows_for_all_tables : function
         Function which returns the number of rows for all tables in a schema
-    clean_default_db_dir : Path
-        Path to the default database directory
     tear_down_restart_directories : function
         Function used for removal of restart directories
     """
     logging.info("Start: First run")
     # For automatic clean-up
-    _ = clean_default_db_dir
+    _ = tmp_path
     # Make project to save time
     _ = project_path
     with change_directory(project_path):
@@ -416,10 +415,10 @@ def bout_runner_from_path_tester(
 
 
 def full_bout_runner_tester(
+    tmp_path: Path,
     submitter_type: Type[AbstractSubmitter],
     make_project: Path,
     yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
-    clean_default_db_dir: Path,
 ) -> None:
     """
     Test that the BoutRunner can execute a run.
@@ -430,16 +429,16 @@ def full_bout_runner_tester(
 
     Parameters
     ----------
+    tmp_path : Path
+        Temporary path (pytest fixture)
     submitter_type : type
         Submitter type to check for
     make_project : Path
         The path to the conduction example
     yield_number_of_rows_for_all_tables : function
         Function which returns the number of rows for all tables in a schema
-    clean_default_db_dir : Path
-        Path to the default database directory
     """
-    _ = clean_default_db_dir
+    _ = tmp_path
     name = "test_bout_runner_integration"
     run_group = make_run_group(name, make_project)
     # Run the project
@@ -464,9 +463,9 @@ def full_bout_runner_tester(
 
 
 def large_graph_tester(
+    tmp_path: Path,
     make_project: Path,
     yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
-    clean_default_db_dir: Path,
     tear_down_restart_directories: Callable[[Path], None],
     submitter_type: Type[AbstractSubmitter],
 ) -> None:
@@ -477,12 +476,12 @@ def large_graph_tester(
 
     Parameters
     ----------
+    tmp_path : Path
+        Temporary path (pytest fixture)
     make_project : Path
         The path to the conduction example
     yield_number_of_rows_for_all_tables : function
         Function which returns the number of rows for all tables in a schema
-    clean_default_db_dir : Path
-        Path to the default database directory
     tear_down_restart_directories : function
         Function used for removal of restart directories
     submitter_type : type
@@ -490,7 +489,7 @@ def large_graph_tester(
     """
     name = f"test_large_graph_{submitter_type.__name__}"
 
-    _ = clean_default_db_dir
+    _ = tmp_path
     node_adder = LargeGraphNodeAdder(name, make_project, submitter_type)
     # RunGroup belonging to node 2
     node_adder.add_and_assert_node_group_2()

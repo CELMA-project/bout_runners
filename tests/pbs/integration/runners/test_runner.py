@@ -17,9 +17,9 @@ from tests.utils.integration import (
 
 @pytest.mark.timeout(200)
 def test_bout_runners_from_directory(
+    tmp_path: Path,
     make_project: Path,
     yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
-    clean_default_db_dir: Path,
     tear_down_restart_directories: Callable[[Path], None],
 ) -> None:
     """
@@ -35,82 +35,78 @@ def test_bout_runners_from_directory(
 
     Parameters
     ----------
+    tmp_path : Path
+        Temporary path (pytest fixture)
     make_project : Path
         The path to the conduction example
     yield_number_of_rows_for_all_tables : function
         Function which returns the number of rows for all tables in a schema
-    clean_default_db_dir : Path
-        Path to the default database directory
     tear_down_restart_directories : function
         Function used for removal of restart directories
     """
     bout_runner_from_path_tester(
+        tmp_path,
         PBSSubmitter,
         make_project,
         yield_number_of_rows_for_all_tables,
-        clean_default_db_dir,
         tear_down_restart_directories,
     )
 
-# FIXME
-#
-# @pytest.mark.timeout(200)
-# def test_full_bout_runner(
-#     make_project: Path,
-#     yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
-#     clean_default_db_dir: Path,
-# ) -> None:
-#     """
-#     Test that the BoutRunner can execute a run with the PBSSubmitter.
-#
-#     This test will test that:
-#     1. We can execute a run
-#     2. The metadata is properly stored
-#
-#     Parameters
-#     ----------
-#     make_project : Path
-#         The path to the conduction example
-#     yield_number_of_rows_for_all_tables : function
-#         Function which returns the number of rows for all tables in a schema
-#     clean_default_db_dir : Path
-#         Path to the default database directory
-#     """
-#     full_bout_runner_tester(
-#         PBSSubmitter,
-#         make_project,
-#         yield_number_of_rows_for_all_tables,
-#         clean_default_db_dir,
-#     )
-#
-#
-# @pytest.mark.timeout(600)
-# def test_large_graph(
-#     make_project: Path,
-#     yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
-#     clean_default_db_dir: Path,
-#     tear_down_restart_directories: Callable[[Path], None],
-# ) -> None:
-#     """
-#     Test that the graph with 10 nodes work as expected with the PBSSubmitter.
-#
-#     The node setup can be found in node_functions.py
-#
-#     Parameters
-#     ----------
-#     make_project : Path
-#         The path to the conduction example
-#     yield_number_of_rows_for_all_tables : function
-#         Function which returns the number of rows for all tables in a schema
-#     clean_default_db_dir : Path
-#         Path to the default database directory
-#     tear_down_restart_directories : function
-#         Function used for removal of restart directories
-#     """
-#     large_graph_tester(
-#         make_project,
-#         yield_number_of_rows_for_all_tables,
-#         clean_default_db_dir,
-#         tear_down_restart_directories,
-#         PBSSubmitter,
-#     )
+
+@pytest.mark.timeout(200)
+def test_full_bout_runner(
+    tmp_path: Path,
+    make_project: Path,
+    yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
+) -> None:
+    """
+    Test that the BoutRunner can execute a run with the PBSSubmitter.
+
+    This test will test that:
+    1. We can execute a run
+    2. The metadata is properly stored
+
+    Parameters
+    ----------
+    tmp_path : Path
+        Temporary path (pytest fixture)
+    make_project : Path
+        The path to the conduction example
+    yield_number_of_rows_for_all_tables : function
+        Function which returns the number of rows for all tables in a schema
+    """
+    full_bout_runner_tester(
+        tmp_path, PBSSubmitter, make_project, yield_number_of_rows_for_all_tables
+    )
+
+
+@pytest.mark.timeout(600)
+def test_large_graph(
+    tmp_path: Path,
+    make_project: Path,
+    yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
+    tear_down_restart_directories: Callable[[Path], None],
+) -> None:
+    """
+    Test that the graph with 10 nodes work as expected with the PBSSubmitter.
+
+    The node setup can be found in node_functions.py
+
+    Parameters
+    ----------
+    tmp_path : Path
+        Temporary path (pytest fixture)
+    make_project : Path
+        The path to the conduction example
+    yield_number_of_rows_for_all_tables : function
+        Function which returns the number of rows for all tables in a schema
+    tear_down_restart_directories : function
+        Function used for removal of restart directories
+    """
+    large_graph_tester(
+        tmp_path,
+        make_project,
+        yield_number_of_rows_for_all_tables,
+        tear_down_restart_directories,
+        PBSSubmitter,
+    )

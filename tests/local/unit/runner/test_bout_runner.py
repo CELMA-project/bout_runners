@@ -48,8 +48,8 @@ def test_constructor(yield_conduction_path) -> None:
 
 
 def test_run_bout_run(
+    tmp_path: Path,
     make_project: Path,
-    clean_default_db_dir: Path,
     get_bout_run_setup: Callable[[str], BoutRunSetup],
     yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
     tear_down_restart_directories: Callable[[Path], None],
@@ -59,10 +59,10 @@ def test_run_bout_run(
 
     Parameters
     ----------
+    tmp_path : Path
+        Temporary path (pytest fixture)
     make_project : Path
         The path to the conduction example
-    clean_default_db_dir : Path
-        Path to the default database dir
     get_bout_run_setup : function
         Function which returns the BoutRunSetup object based on the conduction directory
     yield_number_of_rows_for_all_tables : function
@@ -71,7 +71,7 @@ def test_run_bout_run(
         Function used for removal of restart directories
     """
     # For automatic clean-up
-    _ = clean_default_db_dir
+    _ = tmp_path
     # Make project to save time
     _ = make_project
 
@@ -151,7 +151,7 @@ def test_function_run(tmp_path: Path) -> None:
     Parameters
     ----------
     tmp_path : Path
-        Temporary path
+        Temporary path (pytest fixture)
     """
     run_graph = RunGraph()
     runner = BoutRunner(run_graph)

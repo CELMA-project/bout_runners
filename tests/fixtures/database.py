@@ -14,34 +14,17 @@ from bout_runners.parameters.default_parameters import DefaultParameters
 from bout_runners.parameters.final_parameters import FinalParameters
 
 
-@pytest.fixture(scope="session", name="get_tmp_db_dir")
-def fixture_get_tmp_db_dir() -> Iterator[Path]:
-    """
-    Return the directory for the temporary databases.
-
-    Yields
-    ------
-    tmp_db_dir : Path
-        Path to the temporary database directory
-    """
-    tmp_db_dir = Path(__file__).absolute().parent.joinpath("delme")
-    tmp_db_dir.mkdir(exist_ok=True, parents=True)
-    yield tmp_db_dir
-
-    shutil.rmtree(tmp_db_dir)
-
-
-@pytest.fixture(scope="session", name="make_test_database")
+@pytest.fixture(scope="function", name="make_test_database")
 def fixture_make_test_database(
-    get_tmp_db_dir: Path,
-) -> Callable[[Optional[str]], DatabaseConnector]:
+    tmp_path: Path,
+) -> Callable[[str], DatabaseConnector]:
     """
     Return the wrapped function for the database connection.
 
     Parameters
     ----------
-    get_tmp_db_dir: Path
-        The directory for the temporary databases
+    tmp_path: Path
+        Temporary path (pytest fixture)
 
     Returns
     -------
@@ -49,7 +32,7 @@ def fixture_make_test_database(
         Function making an empty database
     """
 
-    def _make_db(db_name: Optional[str] = None) -> DatabaseConnector:
+    def _make_db(db_name: str) -> DatabaseConnector:
         """
         Make a database.
 
@@ -58,7 +41,7 @@ def fixture_make_test_database(
 
         Parameters
         ----------
-        db_name : None or str
+        db_name : str
             Name of the database
 
         Returns
@@ -66,12 +49,12 @@ def fixture_make_test_database(
         DatabaseConnector
             The database connection object
         """
-        return DatabaseConnector(name=db_name, db_root_path=get_tmp_db_dir)
+        return DatabaseConnector(name=db_name, db_root_path=tmp_path)
 
     return _make_db
 
 
-@pytest.fixture(scope="session", name="make_test_schema")
+@pytest.fixture(scope="function", name="make_test_schema")
 def fixture_make_test_schema(
     get_default_parameters: DefaultParameters,
     make_test_database: Callable[[Optional[str]], DatabaseConnector],
@@ -130,7 +113,7 @@ def fixture_make_test_schema(
     yield _make_schema
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function")
 def write_to_split(
     make_test_schema: Callable[
         [Optional[str]], Tuple[DatabaseConnector, Dict[str, Dict[str, str]]]
@@ -181,7 +164,7 @@ def write_to_split(
 
 @pytest.fixture(scope="function")
 def get_test_db_copy(
-    get_tmp_db_dir: Path,
+    tmp_path: Path,
     get_test_data_path: Path,
     make_test_database: Callable[[Optional[str]], DatabaseConnector],
 ) -> Callable[[str], DatabaseConnector]:
@@ -190,8 +173,8 @@ def get_test_db_copy(
 
     Parameters
     ----------
-    get_tmp_db_dir : Path
-        Path to directory of temporary databases
+    tmp_path : Path
+        Temporary path (pytest fixture)
     get_test_data_path : Path
         Path to test files
     make_test_database : DatabaseConnector
@@ -219,31 +202,9 @@ def get_test_db_copy(
         db_connector : DatabaseConnector
             DatabaseConnector to the copy of the test database
         """
-        destination = get_tmp_db_dir.joinpath(f"{name}.db")
+        destination = tmp_path.joinpath(f"{name}.db")
         shutil.copy(source, destination)
         db_connector = make_test_database(name)
         return db_connector
 
     return _get_test_db_copy
-
-
-@pytest.fixture(scope="session")
-def clean_default_db_dir(get_test_data_path: Path) -> Iterator[Path]:
-    """
-    Yield the default database dir, and clean it during the teardown.
-
-    Parameters
-    ----------
-    get_test_data_path : Path
-        Path to the test data
-
-    Yields
-    ------
-    default_dir : Path
-        Path to the default database directory
-    """
-    test_data_path = get_test_data_path
-    default_dir = test_data_path.joinpath("BOUT_db")
-    default_dir.mkdir(parents=True, exist_ok=True)
-    yield default_dir
-    shutil.rmtree(default_dir)

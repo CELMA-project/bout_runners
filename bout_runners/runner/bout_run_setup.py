@@ -90,7 +90,12 @@ class BoutRunSetup:
             final_parameters if final_parameters is not None else FinalParameters()
         )
         self.__db_connector = (
-            db_connector if db_connector is not None else DatabaseConnector(name=self.__executor.exec_name, db_root_path=self.__executor.bout_paths.project_path)
+            db_connector
+            if db_connector is not None
+            else DatabaseConnector(
+                name=self.__executor.exec_name,
+                db_root_path=self.__executor.bout_paths.project_path,
+            )
         )
         self.__db_creator = DatabaseCreator(self.db_connector)
         self.__metadata_recorder = MetadataRecorder(

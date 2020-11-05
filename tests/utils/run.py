@@ -17,7 +17,12 @@ from bout_runners.runner.run_group import RunGroup
 from bout_runners.submitter.abstract_submitters import AbstractSubmitter
 from bout_runners.submitter.local_submitter import LocalSubmitter
 from bout_runners.submitter.submitter_factory import get_submitter
-from tests.utils.waiting_for_test_functions import node_zero, node_one, node_two, node_three
+from tests.utils.waiting_for_test_functions import (
+    node_zero,
+    node_one,
+    node_two,
+    node_three,
+)
 
 
 def assert_first_run(

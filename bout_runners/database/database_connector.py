@@ -6,8 +6,6 @@ import sqlite3
 from pathlib import Path
 from typing import Optional
 
-from bout_runners.utils.file_operations import get_caller_dir
-
 
 class DatabaseConnector:
     """
@@ -37,9 +35,7 @@ class DatabaseConnector:
     >>> database.execute_statement('CREATE TABLE my_table (col INT)')
     """
 
-    def __init__(
-        self, name: str, db_root_path: Path
-    ) -> None:
+    def __init__(self, name: str, db_root_path: Path) -> None:
         """
         Set the path to the data base.
 
