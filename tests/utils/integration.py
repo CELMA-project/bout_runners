@@ -10,6 +10,7 @@ import pytest
 from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.runner.bout_runner import BoutRunner
 from bout_runners.submitter.abstract_submitters import AbstractSubmitter
+from tests.utils.paths import FileStateRestorer
 from tests.utils.node_functions_complex_graph import (
     node_zero,
     node_one,
@@ -297,11 +298,10 @@ class LargeGraphNodeAdder:
 
 
 def bout_runner_from_path_tester(
-    tmp_path: Path,
     submitter_type: Type[AbstractSubmitter],
     project_path: Path,
     yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
-    tear_down_restart_directories: Callable[[Path], None],
+    file_state_restorer: FileStateRestorer,
 ) -> None:
     """
     Test that the minimal BoutRunners setup works.
@@ -316,36 +316,30 @@ def bout_runner_from_path_tester(
 
     Parameters
     ----------
-    tmp_path : Path
-        Temporary path (pytest fixture)
     submitter_type : type
         Submitter type to check for
     project_path : Path
         The path to the conduction example
     yield_number_of_rows_for_all_tables : function
         Function which returns the number of rows for all tables in a schema
-    tear_down_restart_directories : function
-        Function used for removal of restart directories
+    file_state_restorer : FileStateRestorer
+        Object for restoring files to original state
     """
     logging.info("Start: First run")
-    # For automatic clean-up
-    _ = tmp_path
     # Make project to save time
     _ = project_path
+    file_state_restorer.add(project_path.joinpath("conduction.db"))
+    file_state_restorer.add(project_path.joinpath("settings_run"))
     with change_directory(project_path):
-        # FIXME: This will create the following files which needs to be cleaned
-        # FIXME: conduction.db - may already exist - move
-        # FIXME: settings_run - may already exist - move
-        # FIXME: datestamped directory with run
         runner = BoutRunner()
         bout_run_setup = runner.run_graph["bout_run_0"]["bout_run_setup"]
+        file_state_restorer.add(bout_run_setup.bout_paths.bout_inp_dst_dir, force_mark_removal=True)
     runner.run()
     runner.wait_until_completed()
 
     assert isinstance(bout_run_setup.executor.submitter, submitter_type)
 
     bout_paths = bout_run_setup.bout_paths
-    tear_down_restart_directories(bout_run_setup.bout_paths.bout_inp_dst_dir)
     db_connector = bout_run_setup.db_connector
     # Assert that the run went well
     db_reader = assert_first_run(bout_paths, db_connector)
@@ -383,6 +377,8 @@ def bout_runner_from_path_tester(
     logging.info("Start: Run with restart_all=True the first time")
     dump_dir_parent = bout_paths.bout_inp_dst_dir.parent
     dump_dir_name = bout_paths.bout_inp_dst_dir.name
+    file_state_restorer.add(dump_dir_parent.joinpath(f"{dump_dir_name}_restart_0"))
+
     # Check that the restart functionality works
     runner.run(restart_all=True)
     runner.wait_until_completed()
@@ -399,6 +395,7 @@ def bout_runner_from_path_tester(
     logging.info("Done: Run with restart_all=True the first time")
     logging.info("Start: Run with restart_all=True the second time")
     # ...twice
+    file_state_restorer.add(dump_dir_parent.joinpath(f"{dump_dir_name}_restart_1"))
     runner.run(restart_all=True)
     runner.wait_until_completed()
     expected_run_number = 4
@@ -422,6 +419,8 @@ def full_bout_runner_tester(
 ) -> None:
     """
     Test that the BoutRunner can execute a run.
+
+    # FIXME: YOU ARE HERE: Improve clean-up
 
     This test will test that:
     1. We can execute a run

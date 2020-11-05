@@ -53,7 +53,7 @@ class FileStateRestorer:
         """Initialize member data."""
         self.__files_to_restore: Dict[Path, Path] = dict()
 
-    def add(self, original_path: Path) -> None:
+    def add(self, original_path: Path, force_mark_removal: bool=False) -> None:
         """
         Add file to files to restart in order to restore to original state.
 
@@ -65,8 +65,11 @@ class FileStateRestorer:
         ----------
         original_path : Path
             Path to store as _tmp
+        force_mark_removal : bool
+            Will mark the original path for removal, even if the path already exists
+            Use with care
         """
-        if original_path.is_dir() or original_path.is_file():
+        if not force_mark_removal and (original_path.is_dir() or original_path.is_file()):
             original_dir = original_path.parent
             original_name = original_path.name
             saved_path = original_dir.joinpath(f"{original_name}_tmp")
