@@ -706,14 +706,6 @@ class BoutRunner:
                         node_name, submitted, submitter_dict
                     )
                 else:
-
-
-                    if node_name == "post_processor_test_large_graph_PBSSubmitter_0":
-                        logging.critical(node_name)
-                        logging.critical("waiting_for=%s", self.__run_graph[node_name]["submitter"].waiting_for)
-
-
-
                     self.run_function(
                         self.__run_graph[node_name]["path"],
                         self.__run_graph[node_name]["submitter"],

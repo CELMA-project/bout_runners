@@ -319,7 +319,9 @@ class AbstractClusterSubmitter(ABC):
         self._released = False
 
     @abstractmethod
-    def create_submission_string(self, command: str) -> str:
+    def create_submission_string(
+        self, command: str, waiting_for: Tuple[str, ...]
+    ) -> str:
         """
         Create the submission string.
 
@@ -327,6 +329,8 @@ class AbstractClusterSubmitter(ABC):
         ----------
         command : str
             The command to submit
+        waiting_for : tuple of str
+            Tuple of ids that this job will wait for
         """
 
     @staticmethod

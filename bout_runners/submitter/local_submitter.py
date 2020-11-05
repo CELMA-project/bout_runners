@@ -119,8 +119,9 @@ class LocalSubmitter(AbstractSubmitter):
         command : str
             The command to run
         """
-        # FIXME: Why on earth are we resetting BEFORE SUBMITTING???
-        # self.reset()
+        # This starts the job anew, so we restart the instance to clear it from any
+        # spurious member data
+        self.reset()
         self.__process = subprocess.Popen(
             command.split(),
             stdout=subprocess.PIPE,

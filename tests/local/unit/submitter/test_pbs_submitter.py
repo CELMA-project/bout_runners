@@ -40,7 +40,7 @@ def test_create_submission_string() -> None:
     """Test that the format of the submission string is correct."""
     job_name = "test_create_submission_string_small"
     submitter = PBSSubmitter(job_name, Path())
-    result = submitter.create_submission_string("ls")
+    result = submitter.create_submission_string("ls", waiting_for=tuple())
     expected = (
         "#!/bin/bash\n"
         f"#PBS -N {job_name}\n"
@@ -64,7 +64,7 @@ def test_create_submission_string() -> None:
             "account": "common",
         },
     )
-    result = submitter.create_submission_string("ls")
+    result = submitter.create_submission_string("ls", waiting_for=tuple())
     expected = (
         "#!/bin/bash\n"
         f"#PBS -N {job_name}\n"

@@ -257,23 +257,18 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
             if isinstance(waiting_for_id, str):
                 self.__waiting_for.append(waiting_for_id)
                 logging.debug(
-                    "Adding the following to the waiting_for_list for %s: %s", self.job_name, waiting_for_id
+                    "Adding the following to the waiting_for_list for %s: %s",
+                    self.job_name,
+                    waiting_for_id,
                 )
             else:
                 for waiting_id in waiting_for_id:
                     self.__waiting_for.append(waiting_id)
                     logging.debug(
-                        "Adding the following to the waiting_for_list for %s: %s", self.job_name, waiting_id
+                        "Adding the following to the waiting_for_list for %s: %s",
+                        self.job_name,
+                        waiting_id,
                     )
-
-
-
-        if self._job_name == "post_processor_test_large_graph_PBSSubmitter_0":
-            logging.critical(self.job_name)
-            logging.critical("waiting_for=%s", self.waiting_for)
-            logging.critical("__waiting_for=%s", self.__waiting_for)
-
-
 
     def release(self) -> None:
         """Release held job."""
@@ -303,12 +298,13 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         ----------
         .. [1] https://community.openpbs.org/t/ignoring-finished-dependencies/1976
         """
-        # FIXME: YOU ARE HERE - WAITING FOR DISAPPEARS BECAUSE WE OUTCOMMENT RESET
-        # FIXME: Why on earth are we resetting BEFORE SUBMITTING???
-        # self.reset()
+        # This starts the job anew, so we restart the instance to clear it from any
+        # spurious member data, before doing so, we must capture the waiting for tuple
+        waiting_for = self.waiting_for
+        self.reset()
         script_path = self._store_dir.joinpath(f"{self._job_name}.sh")
         with script_path.open("w") as file:
-            file.write(self.create_submission_string(command))
+            file.write(self.create_submission_string(command, waiting_for=waiting_for))
 
         # Make the script executable
         local_submitter = LocalSubmitter(run_path=self._store_dir)
@@ -373,7 +369,9 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
                     f"Submission errored with error code {self.return_code}"
                 )
 
-    def create_submission_string(self, command: str) -> str:
+    def create_submission_string(
+        self, command: str, waiting_for: Tuple[str, ...]
+    ) -> str:
         """
         Create the core of a PBS script as a string.
 
@@ -381,6 +379,8 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         ----------
         command : str
             The command to submit
+        waiting_for : tuple of str
+            Tuple of ids that this job will wait for
 
         Returns
         -------
@@ -396,18 +396,9 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         # Notice that we do not add the stem here
         self.__log_and_error_base = self._store_dir.joinpath(self._job_name)
 
-
-
-
-        if self._job_name == "post_processor_test_large_graph_PBSSubmitter_0":
-            logging.critical(self.job_name)
-            logging.critical("waiting_for=%s", self.waiting_for)
-            logging.critical("__waiting_for=%s", self.__waiting_for)
-
-
         waiting_for_str = (
-            f"#PBS -W depend=afterok:{':'.join(self.waiting_for)}{newline}"
-            if len(self.waiting_for) != 0
+            f"#PBS -W depend=afterok:{':'.join(waiting_for)}{newline}"
+            if len(waiting_for) != 0
             else ""
         )
         job_string = (
