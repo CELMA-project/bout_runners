@@ -67,7 +67,7 @@ class MetadataRecorder:
 
     Create the metadata recorder object
 
-    >>> db_connector = DatabaseConnector('name')
+    >>> db_connector = DatabaseConnector('name', project_path)
     >>> metadata_recorder = MetadataRecorder(db_connector,
     ...                                      bout_paths,
     ...                                      final_parameters)

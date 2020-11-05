@@ -328,11 +328,15 @@ class BoutRunner:
         }
 
         path = copy_restart_to.joinpath(f"{current_node_name}.py")
+        submitter = get_submitter()
+        if isinstance(submitter, AbstractClusterSubmitter):
+            submitter.store_dir = copy_restart_to
+            submitter.job_name = current_node_name
         self.__run_graph.add_function_node(
             name=current_node_name,
             function_dict=function_dict,
             path=path,
-            submitter=get_submitter(),
+            submitter=submitter,
         )
         return current_node_name
 

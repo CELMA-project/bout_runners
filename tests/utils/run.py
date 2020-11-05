@@ -17,7 +17,7 @@ from bout_runners.runner.run_group import RunGroup
 from bout_runners.submitter.abstract_submitters import AbstractSubmitter
 from bout_runners.submitter.local_submitter import LocalSubmitter
 from bout_runners.submitter.submitter_factory import get_submitter
-from tests.utils.cluster_node_functions import node_zero, node_one, node_two, node_three
+from tests.utils.waiting_for_test_functions import node_zero, node_one, node_two, node_three
 
 
 def assert_first_run(
@@ -118,7 +118,6 @@ def make_run_group(
 
     Parameters
     ----------
-    run_graph
     name : str
         Name of RunGroup and DatabaseConnector
     make_project : Path
@@ -156,7 +155,7 @@ def make_run_group(
         run_parameters=run_parameters,
         restart_from=restart_from,
     )
-    db_connector = DatabaseConnector(name)
+    db_connector = DatabaseConnector(name=name, db_root_path=project_path)
     bout_run_setup = BoutRunSetup(executor, db_connector, final_parameters)
     # Create the `run_group`
     run_graph = run_graph if run_graph is not None else RunGraph()

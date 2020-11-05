@@ -122,8 +122,9 @@ class MetadataReader:
 
     Examples
     --------
+    >>> from pathlib import Path
     >>> from bout_runners.database.database_connector import DatabaseConnector
-    >>> db_connector = DatabaseConnector('test')
+    >>> db_connector = DatabaseConnector('test', Path())
     >>> metadata_reader = MetadataReader(db_connector)
     >>> metadata_reader.get_parameters_metadata()
        bar.id  bar.foo  ... parameters.baz_id  parameters.foo_id
@@ -170,7 +171,7 @@ class MetadataReader:
 
     def __init__(
         self,
-        db_connector: Optional[DatabaseConnector] = None,
+        db_connector: DatabaseConnector,
         drop_id: Optional[str] = "keep_run_id",
     ) -> None:
         """
@@ -178,9 +179,8 @@ class MetadataReader:
 
         Parameters
         ----------
-        db_connector : DatabaseConnector or None
+        db_connector : DatabaseConnector
             The connection to the database
-            If None: Default database connector will be used
         drop_id : None or str
             Specifies what id columns should be dropped when obtaining the metadata
             - None : No columns will be dropped
@@ -192,7 +192,6 @@ class MetadataReader:
         """
         self.drop_id = drop_id
 
-        db_connector = db_connector if db_connector is not None else DatabaseConnector()
         self.__db_reader = DatabaseReader(db_connector)
 
         self.__table_names = self.__get_all_table_names()

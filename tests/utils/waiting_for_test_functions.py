@@ -1,5 +1,5 @@
 """
-Functions to test a complex network.
+Functions used to test the waiting_for functionality in a simple graph.
 
 To visualize the network, run the following code, and paste the content to
 http://www.webgraphviz.com

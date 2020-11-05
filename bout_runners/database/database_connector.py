@@ -38,19 +38,17 @@ class DatabaseConnector:
     """
 
     def __init__(
-        self, name: Optional[str] = None, db_root_path: Optional[Path] = None
+        self, name: str, db_root_path: Path
     ) -> None:
         """
         Set the path to the data base.
 
         Parameters
         ----------
-        name : str or None
+        name : str
             Name of the database (excluding .db)
-            If set to None, the name of the caller directory will be used
         db_root_path : Path or str or None
             Path to database
-            If None is set, the path will be set to $HOME/BOUT_db
         """
         # Set the database path
         logging.info("Start: Making a DatabaseConnector object")
@@ -100,30 +98,22 @@ class DatabaseConnector:
         return self.__connection
 
     @staticmethod
-    def create_db_path(name: Optional[str], db_root_path: Optional[Path]) -> Path:
+    def create_db_path(name: Optional[str], db_root_path: Path) -> Path:
         """
         Create the database path.
 
         Parameters
         ----------
-        name : str or None
+        name : str
             Name of the database (excluding .db)
-            If set to None, the name of the caller directory will be used
-        db_root_path : Path or str or None
+        db_root_path : Path
             Path to database
-            If None is set, the path will be set to $HOME/BOUT_db
 
         Returns
         -------
         db_path : Path
             Path to the database
         """
-        if name is None:
-            name = get_caller_dir().name
-
-        if db_root_path is None:
-            db_root_path = Path().home().joinpath("BOUT_db")
-
         db_root_path = Path(db_root_path)
 
         db_root_path.mkdir(exist_ok=True, parents=True)

@@ -126,7 +126,7 @@ def get_log_file_directory() -> Path:
     config = get_bout_runners_configuration()
     path_str = config["log"]["directory"]
     if path_str.lower() == "none":
-        log_file_dir = get_bout_runners_package_path().joinpath("logs")
+        log_file_dir = get_bout_runners_package_path().parent.joinpath("logs")
     else:
         log_file_dir = Path(path_str)
 

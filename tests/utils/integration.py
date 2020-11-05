@@ -67,6 +67,7 @@ class LargeGraphNodeAdder:
 
         # FIXME: This is not automatically deleted
          (self.paths["pre_and_post_directory"]) etc.
+        # FIXME: Tests are populating BOUT_db
 
         Parameters
         ----------
@@ -314,9 +315,6 @@ def bout_runner_from_path_tester(
     5. ...unless we set force=True
     6. Check the restart functionality twice
 
-    # FIXME: Check that restart has taking place by investigating the last time
-    # FIXME: suspect bug in helde_cluster_nodes
-
     Parameters
     ----------
     submitter_type : type
@@ -336,6 +334,10 @@ def bout_runner_from_path_tester(
     # Make project to save time
     _ = project_path
     with change_directory(project_path):
+        # FIXME: This will create the following files which needs to be cleaned
+        # FIXME: conduction.db - may already exist - move
+        # FIXME: settings_run - may already exist - move
+        # FIXME: datestamped directory with run
         runner = BoutRunner()
         bout_run_setup = runner.run_graph["bout_run_0"]["bout_run_setup"]
     runner.run()

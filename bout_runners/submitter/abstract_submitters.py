@@ -401,8 +401,9 @@ class AbstractClusterSubmitter(ABC):
 
     @job_name.setter
     def job_name(self, job_name: str) -> None:
+        old_name = self._job_name
         self._job_name = job_name
-        logging.info("job_name changed to %s", job_name)
+        logging.info("job_name changed from %s to %s", old_name, self._job_name)
 
     @property
     def store_dir(self) -> Path:

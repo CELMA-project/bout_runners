@@ -47,7 +47,8 @@ class StatusChecker:
     >>> from pathlib import Path
     >>> from bout_runners.database.database_connector import \
     ...     DatabaseConnector
-    >>> db_connector = DatabaseConnector('name_of_db')
+    >>> db_connector = DatabaseConnector('name_of_db',
+    ...     Path().joinpath('path', 'to', 'db'))
     >>> project_path = Path('path').joinpath('to', 'project')
     >>> status_checker = StatusChecker(db_connector, project_path)
     >>> status_checker.check_and_update_status()
@@ -61,7 +62,7 @@ class StatusChecker:
 
     def __init__(
         self,
-        db_connector: Optional[DatabaseConnector] = None,
+        db_connector: DatabaseConnector,
         project_path: Optional[Union[Path, str]] = None,
     ) -> None:
         """
@@ -80,9 +81,7 @@ class StatusChecker:
             Path to the project (the root directory with which usually contains the
             makefile and the executable)
         """
-        self.__db_connector = (
-            db_connector if db_connector is not None else DatabaseConnector()
-        )
+        self.__db_connector = db_connector
         self.__db_reader = DatabaseReader(self.__db_connector)
         self.__project_path = Path(project_path) if project_path is not None else Path()
 

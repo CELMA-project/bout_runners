@@ -8,7 +8,6 @@ import networkx as nx
 from bout_runners.runner.bout_run_setup import BoutRunSetup
 from bout_runners.submitter.abstract_submitters import AbstractSubmitter
 from bout_runners.submitter.local_submitter import LocalSubmitter
-from bout_runners.utils.algorithms import get_node_orders
 
 
 class RunGraph:
@@ -179,7 +178,26 @@ class RunGraph:
         orders : tuple of tuple of str
             A tuple of tuple where the innermost tuple constitutes an order
         """
-        return get_node_orders(self.__graph, reverse)
+        graph_copy = self.__graph.copy()
+        if reverse:
+            # NOTE: Not possible to make a deepcopy as some of the attributes
+            #       of the nodes are not pickable (example sqlite3.connection)
+            #       Thus we set copy=False
+            # https://networkx.org/documentation/stable/reference/classes/generated/networkx.DiGraph.reverse.html
+            graph_copy = graph_copy.reverse(copy=False)
+            # NOTE: As copy=False, the resulting graph is frozen
+            #       To unfreeze we make a new object
+            # https://networkx.org/documentation/stable/reference/generated/networkx.classes.function.freeze.html
+            graph_copy = nx.DiGraph(graph_copy)
+        orders = list()
+        while len(graph_copy.nodes) != 0:
+            current_roots = tuple(
+                node for node, degree in graph_copy.in_degree() if degree == 0
+            )
+            orders.append(tuple(current_roots))
+            graph_copy.remove_nodes_from(current_roots)
+
+        return tuple(orders)
 
     def predecessors(self, node_name: str) -> Tuple[str, ...]:
         """

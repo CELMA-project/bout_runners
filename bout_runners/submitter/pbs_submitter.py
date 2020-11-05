@@ -74,7 +74,7 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
             Trace obtained from the `tracejob`
         """
         # Submit the command through a local submitter
-        local_submitter = LocalSubmitter(run_path=self._store_dir)
+        local_submitter = LocalSubmitter(run_path=self.store_dir)
         local_submitter.submit_command(f"tracejob -n 365 {self._status['job_id']}")
         local_submitter.wait_until_completed()
         trace = local_submitter.std_out if local_submitter.std_out is not None else ""
@@ -302,12 +302,12 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         # spurious member data, before doing so, we must capture the waiting for tuple
         waiting_for = self.waiting_for
         self.reset()
-        script_path = self._store_dir.joinpath(f"{self._job_name}.sh")
+        script_path = self.store_dir.joinpath(f"{self._job_name}.sh")
         with script_path.open("w") as file:
             file.write(self.create_submission_string(command, waiting_for=waiting_for))
 
         # Make the script executable
-        local_submitter = LocalSubmitter(run_path=self._store_dir)
+        local_submitter = LocalSubmitter(run_path=self.store_dir)
         local_submitter.submit_command(f"chmod +x {script_path}")
         local_submitter.wait_until_completed()
 
@@ -394,7 +394,7 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         queue = self._submission_dict["queue"]
         mail = self._submission_dict["mail"]
         # Notice that we do not add the stem here
-        self.__log_and_error_base = self._store_dir.joinpath(self._job_name)
+        self.__log_and_error_base = self.store_dir.joinpath(self._job_name)
 
         waiting_for_str = (
             f"#PBS -W depend=afterok:{':'.join(waiting_for)}{newline}"

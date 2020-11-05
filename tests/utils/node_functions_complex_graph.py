@@ -1,5 +1,5 @@
 """
-Functions to test a complex network.
+Functions to test the complex network graph.
 
 To visualize the network, run the following code, and paste the content to
 http://www.webgraphviz.com

@@ -119,7 +119,7 @@ def test_pre_and_post_documentation(
     """
     Test that the pre and post documentation runs without error.
 
-    FIXME: Explain how bout_runners copies restart files
+    FIXME: Explain documentation how bout_runners copies restart files
 
     Parameters
     ----------

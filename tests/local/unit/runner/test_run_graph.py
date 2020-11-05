@@ -1,9 +1,14 @@
 """Contains unittests for the run graph."""
 
+
+from typing import Tuple
+
+import networkx as nx
 import pytest
 from bout_runners.runner.run_graph import RunGraph
 from bout_runners.runner.bout_run_setup import BoutRunSetup
 from bout_runners.submitter.local_submitter import LocalSubmitter
+from tests.utils.graphs import simple_graph, complex_graph, another_complex_graph
 
 
 def test_add_bout_run_node(get_bout_run_setup) -> None:
@@ -216,3 +221,33 @@ def test_get_dot_string() -> None:
         ">];\n}\n"
     )
     assert expected == run_graph.get_dot_string()
+
+
+@pytest.mark.parametrize(
+    "graph, reverse, expected",
+    [
+        (simple_graph(), False, (("0",), ("1", "2"), ("3", "4"))),
+        (complex_graph(), False, (('0', '1', '12'), ('2', '11'), ('3', '5', '6', '7', '4'), ('9', '8'), ('10',))),
+        (another_complex_graph(), False, (("0", "1"), ("2", "3", "4", "5", "6"), ("7", '8', '9'), ('10',))),
+        (simple_graph(), True, (("2", "3", "4"), ("1",), ("0",))),
+        (complex_graph(), True, (('3', '5', '10'), ('9', '8'), ('6', '7', '4'), ('2', '11'), ('0', '1', '12'))),
+        (another_complex_graph(), True, (("2", "6", "7", "10"), ("8", "9"), ("3", "4", "5"), ("0", "1"))),
+    ],
+)
+def test_get_nodes_orders(
+    graph: RunGraph, reverse: bool, expected: Tuple[Tuple[int, ...], ...]
+) -> None:
+    """
+    Test that get_node_orders works as expected.
+
+    Parameters
+    ----------
+    graph : nx.DiGraph
+        The graph to search
+    reverse : bool
+        Whether or not to reverse search
+    expected : tuple of int
+        The expected result
+    """
+    result = graph.get_node_orders(reverse)
+    assert result == expected

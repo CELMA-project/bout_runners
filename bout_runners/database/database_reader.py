@@ -59,7 +59,7 @@ class DatabaseReader:
 
     Create the database
 
-    >>> db_connector = DatabaseConnector('name')
+    >>> db_connector = DatabaseConnector('name', project_path)
     >>> db_creator = DatabaseCreator(db_connector)
     >>> db_creator.create_all_schema_tables(final_parameters_as_sql_types)
 
