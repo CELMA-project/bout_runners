@@ -3,7 +3,7 @@
 
 import shutil
 from pathlib import Path
-from typing import Iterator, Callable, Tuple, List
+from typing import Iterator, Callable
 
 import pytest
 
@@ -107,114 +107,6 @@ def fixture_file_state_restorer() -> Iterator[FileStateRestorer]:
     yield file_state_restorer
 
     file_state_restorer.restore_files()
-
-
-@pytest.fixture(scope="function", name="tear_down_restart_directories")
-def fixture_tear_down_restart_directories() -> Iterator[Callable[[Path], None]]:
-    r"""
-    Return a function for removal of restart directories.
-
-    # FIXME: Superseed by remove directories
-    # FIXME: The restart files should always be available in executor (or bout_paths)
-
-    Yields
-    ------
-    _tear_down_restart_directories : function
-        Function used for removal of restart directories
-    """
-    run_directory = list()
-
-    def _tear_down_restart_directories(directory_group: Path) -> None:
-        r"""
-        Add the directory which the restart directories are based on.
-
-        Parameters
-        ----------
-        directory_group : Path
-            The directory which the restart directories are based on
-        """
-        run_directory.append(directory_group)
-
-    yield _tear_down_restart_directories
-    run_directory_parent = run_directory[0].parent
-    run_directory_name = run_directory[0].name
-    run_directories_list = list(
-        run_directory_parent.glob(f"{run_directory_name}_restart_*")
-    )
-    for run_dir in run_directories_list:
-        if run_dir.is_dir():
-            shutil.rmtree(run_dir)
-
-
-@pytest.fixture(scope="function")
-def clean_up_bout_inp_src_and_dst(
-    make_project: Path, tear_down_restart_directories: Callable[[Path], None]
-) -> Iterator[Callable[[str, str], Tuple[Path, Path, Path]]]:
-    """
-    Return a function which adds temporary BOUT.inp directories to removal.
-
-    # FIXME: Superseed by remove directories
-
-    Warnings
-    --------
-    Will not clean any databases
-
-    Parameters
-    ----------
-    make_project : Path
-        Path to the project directory
-    tear_down_restart_directories : function
-        Function which add restart directories for removal
-
-    Yields
-    ------
-    _clean_up_bout_inp_src_and_dst : function
-        Function which adds temporary BOUT.inp directories to removal
-    """
-    dirs_to_delete = list()
-
-    def _clean_up_bout_inp_src_and_dst(
-        bout_inp_src_name: str, bout_inp_dst_name: str
-    ) -> Tuple[Path, Path, Path]:
-        """
-        Add temporary BOUT.inp directories to removal.
-
-        Parameters
-        ----------
-        bout_inp_src_name : str
-            Name of the directory where the BOUT.inp source file resides
-        bout_inp_dst_name : str
-            Name of the source of the BOUT.inp destination directory
-
-        Returns
-        -------
-        project_path : Path
-            Path to the conduction example
-        bout_inp_src_dir : Path
-            Path to the BOUT.inp source dir
-        bout_inp_dst_dir : Path
-            Path to the BOUT.inp destination dir
-        """
-        project_path = make_project
-        project_bout_inp = project_path.joinpath("data")
-        bout_inp_src_dir = project_path.joinpath(bout_inp_src_name)
-        bout_inp_dst_dir = project_path.joinpath(bout_inp_dst_name)
-
-        tear_down_restart_directories(bout_inp_dst_dir)
-
-        dirs_to_delete.append(bout_inp_src_dir)
-        dirs_to_delete.append(bout_inp_dst_dir)
-
-        bout_inp_src_dir.mkdir(exist_ok=True)
-        shutil.copy(project_bout_inp.joinpath("BOUT.inp"), bout_inp_src_dir)
-
-        return project_path, bout_inp_src_dir, bout_inp_dst_dir
-
-    yield _clean_up_bout_inp_src_and_dst
-
-    for dir_to_delete in dirs_to_delete:
-        if dir_to_delete.is_dir():
-            shutil.rmtree(dir_to_delete)
 
 
 @pytest.fixture(scope="session")

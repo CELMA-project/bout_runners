@@ -1,7 +1,7 @@
 """Contains the test for the documentation."""
 
 
-from typing import Callable, Tuple
+from typing import Callable
 
 from pathlib import Path
 from bout_runners.executor.bout_paths import BoutPaths
@@ -16,25 +16,36 @@ from bout_runners.runner.run_graph import RunGraph
 from bout_runners.runner.run_group import RunGroup
 from bout_runners.runner.bout_runner import BoutRunner
 
+from tests.utils.paths import FileStateRestorer
 from tests.utils.dummy_functions import return_none, mock_expand
 
 
 def test_restart_documentation(
-    clean_up_bout_inp_src_and_dst: Callable[[str, str], Tuple[Path, Path, Path]]
+    make_project: Path,
+    copy_bout_inp: Callable[[Path, str], Path],
+    file_state_restorer: FileStateRestorer,
 ) -> None:
     """
     Test that the restart documentation runs without error.
 
     Parameters
     ----------
-    clean_up_bout_inp_src_and_dst : function
-        Function which adds temporary BOUT.inp directories to removal.
+    make_project : Path
+        The path to the conduction example
+    copy_bout_inp : function
+        Function which copies BOUT.inp and returns the path to the temporary
+        directory
+    file_state_restorer : FileStateRestorer
+        Object for restoring files to original state
     """
     # NOTE: We are aware of the number of locals, and are here only testing the docs
     # pylint: disable=too-many-locals
-    project_path, bout_inp_src_dir, bout_inp_dst_dir = clean_up_bout_inp_src_and_dst(
-        "test_restart_documentation_src", "test_restart_documentation_dst"
-    )
+    project_path = make_project
+    bout_inp_src_dir = copy_bout_inp(project_path, "test_restart_documentation_src")
+    bout_inp_dst_dir = project_path.joinpath("test_restart_documentation_dst")
+    # NOTE: bout_inp_src_dir removed by copy_bout_inp teardown
+    file_state_restorer.add(bout_inp_dst_dir, force_mark_removal=True)
+
     bout_paths = BoutPaths(
         project_path=project_path,
         bout_inp_src_dir=bout_inp_src_dir,
@@ -53,6 +64,7 @@ def test_restart_documentation(
 
     # NOTE: We set the database to bout_inp_dst_dir as this will be removed later
     db_connector = DatabaseConnector("name_of_database", db_root_path=bout_inp_dst_dir)
+    file_state_restorer.add(db_connector.db_path, force_mark_removal=True)
 
     basic_bout_run_setup = BoutRunSetup(basic_executor, db_connector, final_parameters)
 
@@ -67,6 +79,9 @@ def test_restart_documentation(
         submitter=LocalSubmitter(bout_paths.project_path),
         run_parameters=run_parameters,
         restart_from=bout_paths.bout_inp_dst_dir,
+    )
+    file_state_restorer.add(
+        restart_executor.bout_paths.bout_inp_dst_dir, force_mark_removal=True
     )
 
     restart_bout_run_setup = BoutRunSetup(
@@ -91,6 +106,10 @@ def test_restart_documentation(
         run_parameters=new_run_parameters,
         restart_from=bout_paths.bout_inp_dst_dir,
     )
+    file_state_restorer.add(
+        restart_with_changing_parameters_executor.bout_paths.bout_inp_dst_dir,
+        force_mark_removal=True,
+    )
 
     BoutRunSetup(
         restart_with_changing_parameters_executor, db_connector, new_final_parameters
@@ -114,23 +133,33 @@ def test_restart_documentation(
 
 
 def test_pre_and_post_documentation(
-    clean_up_bout_inp_src_and_dst: Callable[[str, str], Tuple[Path, Path, Path]]
+    make_project: Path,
+    copy_bout_inp: Callable[[Path, str], Path],
+    file_state_restorer: FileStateRestorer,
 ) -> None:
     """
     Test that the pre and post documentation runs without error.
 
     FIXME: Explain documentation how bout_runners copies restart files
+    FIXME: Double check that this matches the actual documentation
 
     Parameters
     ----------
-    clean_up_bout_inp_src_and_dst : function
-        Function which adds temporary BOUT.inp directories to removal.
+    make_project : Path
+        The path to the conduction example
+    copy_bout_inp : function
+        Function which copies BOUT.inp and returns the path to the temporary
+        directory
+    file_state_restorer : FileStateRestorer
+        Object for restoring files to original state
     """
     # NOTE: We are aware of the number of locals, and are here only testing the docs
     # pylint: disable=too-many-locals
-    project_path, bout_inp_src_dir, bout_inp_dst_dir = clean_up_bout_inp_src_and_dst(
-        "test_pre_post_documentation_src", "test_pre_post_documentation_dst"
-    )
+    project_path = make_project
+    bout_inp_src_dir = copy_bout_inp(project_path, "test_pre_post_documentation_src")
+    bout_inp_dst_dir = project_path.joinpath("test_pre_post_documentation_dst")
+    # NOTE: bout_inp_src_dir removed by copy_bout_inp teardown
+    file_state_restorer.add(bout_inp_dst_dir, force_mark_removal=True)
 
     bout_paths = BoutPaths(
         project_path=project_path,
@@ -150,6 +179,7 @@ def test_pre_and_post_documentation(
 
     # NOTE: We set the database to bout_inp_dst_dir as this will be removed later
     db_connector = DatabaseConnector("name_of_database", db_root_path=bout_inp_dst_dir)
+    file_state_restorer.add(db_connector.db_path, force_mark_removal=True)
 
     basic_bout_run_setup = BoutRunSetup(basic_executor, db_connector, final_parameters)
 
@@ -165,6 +195,7 @@ def test_pre_and_post_documentation(
     expanded_noise_restarts_dir = bout_paths.bout_inp_dst_dir.parent.joinpath(
         "expanded_noise_restarts"
     )
+    file_state_restorer.add(expanded_noise_restarts_dir, force_mark_removal=True)
     kwargs = {
         "newNz": 16,
         "path": bout_paths.bout_inp_dst_dir,
@@ -179,8 +210,6 @@ def test_pre_and_post_documentation(
     )
 
     # New section in the documentation
-    # NOTE: Add these for removal
-    clean_up_bout_inp_src_and_dst("expanded_noise_restarts", "expanded_noise_restarts")
 
     # Create the RunGroup
     restart_executor = Executor(
@@ -188,6 +217,9 @@ def test_pre_and_post_documentation(
         submitter=LocalSubmitter(bout_paths.project_path),
         run_parameters=run_parameters,
         restart_from=expanded_noise_restarts_dir,
+    )
+    file_state_restorer.add(
+        restart_executor.bout_paths.bout_inp_dst_dir, force_mark_removal=True
     )
 
     restart_bout_run_setup = BoutRunSetup(

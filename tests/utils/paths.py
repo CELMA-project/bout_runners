@@ -47,13 +47,17 @@ class FileStateRestorer:
 
     Methods
     -------
+    add(original_path, force_mark_removal)
+        Add file to files to restart in order to restore to original state
+    restore_files()
+        Loop through the files to save dict and restore files to original state
     """
 
     def __init__(self) -> None:
         """Initialize member data."""
         self.__files_to_restore: Dict[Path, Path] = dict()
 
-    def add(self, original_path: Path, force_mark_removal: bool=False) -> None:
+    def add(self, original_path: Path, force_mark_removal: bool = False) -> None:
         """
         Add file to files to restart in order to restore to original state.
 
@@ -69,16 +73,19 @@ class FileStateRestorer:
             Will mark the original path for removal, even if the path already exists
             Use with care
         """
-        if not force_mark_removal and (original_path.is_dir() or original_path.is_file()):
-            original_dir = original_path.parent
-            original_name = original_path.name
-            saved_path = original_dir.joinpath(f"{original_name}_tmp")
-            shutil.move(src=str(original_path), dst=str(saved_path))
-            logging.debug("Temporary moved %s to %s", original_path, saved_path)
-            self.__files_to_restore[original_path] = saved_path
-        else:
-            logging.debug("Marked %s for removal", original_path)
-            self.__files_to_restore[original_path] = original_path
+        if original_path not in self.__files_to_restore.keys():
+            if not force_mark_removal and (
+                original_path.is_dir() or original_path.is_file()
+            ):
+                original_dir = original_path.parent
+                original_name = original_path.name
+                saved_path = original_dir.joinpath(f"{original_name}_tmp")
+                shutil.move(src=str(original_path), dst=str(saved_path))
+                logging.debug("Temporary moved %s to %s", original_path, saved_path)
+                self.__files_to_restore[original_path] = saved_path
+            else:
+                logging.debug("Marked %s for removal", original_path)
+                self.__files_to_restore[original_path] = original_path
 
     def restore_files(self) -> None:
         """Loop through the files to save dict and restore files to original state."""

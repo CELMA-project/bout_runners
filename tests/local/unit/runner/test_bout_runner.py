@@ -10,7 +10,7 @@ from bout_runners.runner.bout_run_setup import BoutRunSetup
 from bout_runners.runner.run_graph import RunGraph
 from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.utils.file_operations import copy_restart_files
-from tests.utils.paths import change_directory
+from tests.utils.paths import FileStateRestorer, change_directory
 from tests.utils.run import (
     assert_first_run,
     assert_dump_files_exist,
@@ -48,30 +48,25 @@ def test_constructor(yield_conduction_path) -> None:
 
 
 def test_run_bout_run(
-    tmp_path: Path,
     make_project: Path,
     get_bout_run_setup: Callable[[str], BoutRunSetup],
     yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
-    tear_down_restart_directories: Callable[[Path], None],
+    file_state_restorer: FileStateRestorer,
 ) -> None:
     """
     Test the BOUT++ run method.
 
     Parameters
     ----------
-    tmp_path : Path
-        Temporary path (pytest fixture)
     make_project : Path
         The path to the conduction example
     get_bout_run_setup : function
         Function which returns the BoutRunSetup object based on the conduction directory
     yield_number_of_rows_for_all_tables : function
         Function which returns the number of rows for all tables in a schema
-    tear_down_restart_directories : function
-        Function used for removal of restart directories
+    file_state_restorer : FileStateRestorer
+        Object for restoring files to original state
     """
-    # For automatic clean-up
-    _ = tmp_path
     # Make project to save time
     _ = make_project
 
@@ -79,9 +74,14 @@ def test_run_bout_run(
     runner = BoutRunner(run_graph)
 
     bout_run_setup = get_bout_run_setup("test_run_bout_run")
-    tear_down_restart_directories(bout_run_setup.bout_paths.bout_inp_dst_dir)
     bout_paths = bout_run_setup.bout_paths
     db_connector = bout_run_setup.db_connector
+    # NOTE: bout_run_setup.bout_paths.bout_inp_dst_dir will be removed in the
+    #       yield_bout_path_conduction fixture (through the get_bout_run_setup
+    #       fixture)
+    #       Hence we do not need to add bout_run_setup.bout_paths.bout_inp_dst_dir
+    #       to the file_state_restorer
+    file_state_restorer.add(db_connector.db_path, force_mark_removal=True)
 
     # Run once
     submitter = bout_run_setup.submitter
@@ -126,6 +126,9 @@ def test_run_bout_run(
     # NOTE: The test in tests.unit.bout_runners.runner.test_bout_runner is testing
     #       restart_all=True, whether this is testing restart_from_bout_inp_dst=True
     assert_dump_files_exist(dump_dir_parent.joinpath(f"{dump_dir_name}_restart_0"))
+    file_state_restorer.add(
+        dump_dir_parent.joinpath(f"{dump_dir_name}_restart_0"), force_mark_removal=True
+    )
     # ...and yet another entry
     bout_run_setup.executor.restart_from = bout_run_setup.bout_paths.bout_inp_dst_dir
     copy_restart_files(
@@ -142,6 +145,9 @@ def test_run_bout_run(
     # NOTE: The test in tests.unit.bout_runners.runner.test_bout_runner is testing
     #       restart_all=True, whether this is testing restart_from_bout_inp_dst=True
     assert_dump_files_exist(dump_dir_parent.joinpath(f"{dump_dir_name}_restart_1"))
+    file_state_restorer.add(
+        dump_dir_parent.joinpath(f"{dump_dir_name}_restart_1"), force_mark_removal=True
+    )
 
 
 def test_function_run(tmp_path: Path) -> None:

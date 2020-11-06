@@ -61,13 +61,14 @@ class LargeGraphNodeAdder:
     """
 
     def __init__(
-        self, name: str, make_project: Path, submitter_type: Type[AbstractSubmitter]
+        self,
+        name: str,
+        make_project: Path,
+        submitter_type: Type[AbstractSubmitter],
+        file_state_restorer: FileStateRestorer,
     ) -> None:
         """
         Set the member data and initialize the RunGraph.
-
-        # FIXME: This is not automatically deleted
-         (self.paths["pre_and_post_directory"]) etc.
 
         Parameters
         ----------
@@ -77,20 +78,26 @@ class LargeGraphNodeAdder:
             The path to the conduction example
         submitter_type : type
             Used to assert that the correct submitter is used
+        file_state_restorer : FileStateRestorer
+            Object for restoring files to original state
         """
         self.__name = name
         self.__submitter_type = submitter_type
+        self.__file_state_restorer = file_state_restorer
         self.paths = dict()
         self.paths["project_path"] = make_project
         self.paths["pre_and_post_directory"] = self.paths["project_path"].joinpath(
             f"pre_and_post_{name}"
         )
         self.paths["pre_and_post_directory"].mkdir()
+        self.__file_state_restorer.add(
+            self.paths["pre_and_post_directory"], force_mark_removal=True
+        )
         self.run_groups = dict()
 
         # Initialize the run graph
         self.run_groups["run_group_2"] = make_run_group(
-            self.__name, self.paths["project_path"]
+            self.__name, self.paths["project_path"], self.__file_state_restorer
         )
         self.run_graph = self.run_groups["run_group_2"].run_graph
 
@@ -162,6 +169,7 @@ class LargeGraphNodeAdder:
         self.run_groups["run_group_3"] = make_run_group(
             self.__name,
             self.paths["project_path"],
+            self.__file_state_restorer,
             self.run_graph,
             restart_from=self.run_groups["run_group_2"].bout_paths.bout_inp_dst_dir,
             waiting_for=self.run_groups["run_group_2"].bout_run_node_name,
@@ -176,7 +184,10 @@ class LargeGraphNodeAdder:
         #       If this happens, node_zero or node_one may fail
         #       (as they are looking for .settings files)
         self.run_groups["run_group_4"] = make_run_group(
-            f"a_different_{self.__name}", self.paths["project_path"], self.run_graph
+            f"a_different_{self.__name}",
+            self.paths["project_path"],
+            self.__file_state_restorer,
+            self.run_graph,
         )
         self.paths["bout_run_directory_node_4"] = self.run_groups[
             "run_group_4"
@@ -198,6 +209,7 @@ class LargeGraphNodeAdder:
         self.run_groups["run_group_6"] = make_run_group(
             self.__name,
             self.paths["project_path"],
+            self.__file_state_restorer,
             self.run_graph,
             restart_from=self.run_groups["run_group_2"].bout_paths.bout_inp_dst_dir,
             waiting_for=self.run_groups["run_group_2"].bout_run_node_name,
@@ -264,6 +276,7 @@ class LargeGraphNodeAdder:
         self.run_groups["run_group_9"] = make_run_group(
             self.__name,
             self.paths["project_path"],
+            self.__file_state_restorer,
             self.run_graph,
             restart_from=self.run_groups["run_group_6"].bout_paths.bout_inp_dst_dir,
             waiting_for=(
@@ -333,7 +346,9 @@ def bout_runner_from_path_tester(
     with change_directory(project_path):
         runner = BoutRunner()
         bout_run_setup = runner.run_graph["bout_run_0"]["bout_run_setup"]
-        file_state_restorer.add(bout_run_setup.bout_paths.bout_inp_dst_dir, force_mark_removal=True)
+        file_state_restorer.add(
+            bout_run_setup.bout_paths.bout_inp_dst_dir, force_mark_removal=True
+        )
     runner.run()
     runner.wait_until_completed()
 
@@ -382,11 +397,10 @@ def bout_runner_from_path_tester(
     # Check that the restart functionality works
     runner.run(restart_all=True)
     runner.wait_until_completed()
-    expected_run_number = 3
     assert_tables_have_expected_len(
         db_reader,
         yield_number_of_rows_for_all_tables,
-        expected_run_number=expected_run_number,
+        expected_run_number=3,
         restarted=True,
     )
     # NOTE: The test in tests.unit.bout_runners.runners.test_bout_runner is testing
@@ -398,11 +412,10 @@ def bout_runner_from_path_tester(
     file_state_restorer.add(dump_dir_parent.joinpath(f"{dump_dir_name}_restart_1"))
     runner.run(restart_all=True)
     runner.wait_until_completed()
-    expected_run_number = 4
     assert_tables_have_expected_len(
         db_reader,
         yield_number_of_rows_for_all_tables,
-        expected_run_number=expected_run_number,
+        expected_run_number=4,
         restarted=True,
     )
     # NOTE: The test in tests.unit.bout_runners.runners.test_bout_runner is testing
@@ -412,15 +425,13 @@ def bout_runner_from_path_tester(
 
 
 def full_bout_runner_tester(
-    tmp_path: Path,
     submitter_type: Type[AbstractSubmitter],
     make_project: Path,
     yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
+    file_state_restorer: FileStateRestorer,
 ) -> None:
     """
     Test that the BoutRunner can execute a run.
-
-    # FIXME: YOU ARE HERE: Improve clean-up
 
     This test will test that:
     1. We can execute a run
@@ -428,18 +439,17 @@ def full_bout_runner_tester(
 
     Parameters
     ----------
-    tmp_path : Path
-        Temporary path (pytest fixture)
     submitter_type : type
         Submitter type to check for
     make_project : Path
         The path to the conduction example
     yield_number_of_rows_for_all_tables : function
         Function which returns the number of rows for all tables in a schema
+    file_state_restorer : FileStateRestorer
+        Object for restoring files to original state
     """
-    _ = tmp_path
     name = "test_bout_runner_integration"
-    run_group = make_run_group(name, make_project)
+    run_group = make_run_group(name, make_project, file_state_restorer)
     # Run the project
     runner = BoutRunner(run_group.run_graph)
     runner.run()
@@ -462,11 +472,10 @@ def full_bout_runner_tester(
 
 
 def large_graph_tester(
-    tmp_path: Path,
+    submitter_type: Type[AbstractSubmitter],
     make_project: Path,
     yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
-    tear_down_restart_directories: Callable[[Path], None],
-    submitter_type: Type[AbstractSubmitter],
+    file_state_restorer: FileStateRestorer,
 ) -> None:
     """
     Test that the graph with 10 nodes work as expected.
@@ -475,29 +484,24 @@ def large_graph_tester(
 
     Parameters
     ----------
-    tmp_path : Path
-        Temporary path (pytest fixture)
+    submitter_type : type
+        Used to assert that the correct submitter is used
     make_project : Path
         The path to the conduction example
     yield_number_of_rows_for_all_tables : function
         Function which returns the number of rows for all tables in a schema
-    tear_down_restart_directories : function
-        Function used for removal of restart directories
-    submitter_type : type
-        Used to assert that the correct submitter is used
+    file_state_restorer : FileStateRestorer
+        Object for restoring files to original state
     """
     name = f"test_large_graph_{submitter_type.__name__}"
 
-    _ = tmp_path
-    node_adder = LargeGraphNodeAdder(name, make_project, submitter_type)
+    node_adder = LargeGraphNodeAdder(
+        name, make_project, submitter_type, file_state_restorer
+    )
     # RunGroup belonging to node 2
     node_adder.add_and_assert_node_group_2()
-    tear_down_restart_directories(node_adder.paths["bout_run_directory_node_2"])
     # RunGroup belonging to node 3 and 4
     node_adder.add_and_assert_node_group_3_and_4()
-    # Remember to remove run_group_4 as well since we are operating with a different
-    # name
-    tear_down_restart_directories(node_adder.paths["bout_run_directory_node_4"])
     # RunGroup belonging to node 6
     node_8 = node_adder.add_and_assert_node_group_6()
     # RunGroup belonging to node 9

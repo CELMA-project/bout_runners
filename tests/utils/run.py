@@ -17,6 +17,7 @@ from bout_runners.runner.run_group import RunGroup
 from bout_runners.submitter.abstract_submitters import AbstractSubmitter
 from bout_runners.submitter.local_submitter import LocalSubmitter
 from bout_runners.submitter.submitter_factory import get_submitter
+from tests.utils.paths import FileStateRestorer
 from tests.utils.waiting_for_test_functions import (
     node_zero,
     node_one,
@@ -114,6 +115,7 @@ def assert_tables_have_expected_len(
 def make_run_group(
     name: str,
     make_project: Path,
+    file_state_restorer: FileStateRestorer,
     run_graph: Optional[RunGraph] = None,
     restart_from: Optional[Path] = None,
     waiting_for: Optional[Union[str, Iterable[str]]] = None,
@@ -121,12 +123,17 @@ def make_run_group(
     """
     Return a basic RunGroup.
 
+    # FIXME: You are here
+    # FIXME: Too many args, can combine run_group args and name, make_project
+
     Parameters
     ----------
     name : str
         Name of RunGroup and DatabaseConnector
     make_project : Path
         The path to the conduction example
+    file_state_restorer : FileStateRestorer
+        Object for restoring files to original state
     run_graph : RunGraph
         The RunGraph object
     restart_from : Path or None
@@ -163,8 +170,17 @@ def make_run_group(
     db_connector = DatabaseConnector(name=name, db_root_path=project_path)
     bout_run_setup = BoutRunSetup(executor, db_connector, final_parameters)
     # Create the `run_group`
-    run_graph = run_graph if run_graph is not None else RunGraph()
-    run_group = RunGroup(run_graph, bout_run_setup, name=name, waiting_for=waiting_for)
+    run_group = RunGroup(
+        run_graph if run_graph is not None else RunGraph(),
+        bout_run_setup,
+        name=name,
+        waiting_for=waiting_for,
+    )
+
+    file_state_restorer.add(
+        executor.bout_paths.bout_inp_dst_dir, force_mark_removal=True
+    )
+    file_state_restorer.add(db_connector.db_path, force_mark_removal=True)
     return run_group
 
 

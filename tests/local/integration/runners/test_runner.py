@@ -20,7 +20,7 @@ def test_bout_runners_from_directory(
     file_state_restorer: FileStateRestorer,
 ) -> None:
     """
-    Run bout_runner_from_path_tester.
+    Run bout_runner_from_path_tester with LocalSubmitter.
 
     Parameters
     ----------
@@ -40,9 +40,9 @@ def test_bout_runners_from_directory(
 
 
 def test_full_bout_runner(
-    tmp_path: Path,
     make_project: Path,
     yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
+    file_state_restorer: FileStateRestorer,
 ) -> None:
     """
     Test that the BoutRunner can execute a run with the LocalSubmitter.
@@ -53,23 +53,25 @@ def test_full_bout_runner(
 
     Parameters
     ----------
-    tmp_path : Path
-        Temporary path (pytest fixture)
     make_project : Path
         The path to the conduction example
     yield_number_of_rows_for_all_tables : function
         Function which returns the number of rows for all tables in a schema
+    file_state_restorer : FileStateRestorer
+        Object for restoring files to original state
     """
     full_bout_runner_tester(
-        tmp_path, LocalSubmitter, make_project, yield_number_of_rows_for_all_tables
+        LocalSubmitter,
+        make_project,
+        yield_number_of_rows_for_all_tables,
+        file_state_restorer,
     )
 
 
 def test_large_graph(
-    tmp_path: Path,
     make_project: Path,
     yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
-    tear_down_restart_directories: Callable[[Path], None],
+    file_state_restorer: FileStateRestorer,
 ) -> None:
     """
     Test that the graph with 10 nodes work as expected with the LocalSubmitter.
@@ -78,21 +80,18 @@ def test_large_graph(
 
     Parameters
     ----------
-    tmp_path : Path
-        Temporary path (pytest fixture)
     make_project : Path
         The path to the conduction example
     yield_number_of_rows_for_all_tables : function
         Function which returns the number of rows for all tables in a schema
-    tear_down_restart_directories : function
-        Function used for removal of restart directories
+    file_state_restorer : FileStateRestorer
+        Object for restoring files to original state
     """
     submitter_type = LocalSubmitter
 
     large_graph_tester(
-        tmp_path,
+        submitter_type,
         make_project,
         yield_number_of_rows_for_all_tables,
-        tear_down_restart_directories,
-        submitter_type,
+        file_state_restorer,
     )
