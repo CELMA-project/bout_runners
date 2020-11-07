@@ -747,6 +747,9 @@ class BoutRunner:
                     )
                     orders_to_release = reverse_sorted_node_orders[order_number:]
                     self.release_nodes(orders_to_release)
+                    # We also need to release the current order in case
+                    # the graph is not connected
+                    self.release_nodes((tuple(submitter_dict.keys()),))
                 self.__monitor_runs(submitter_dict, raise_errors)
             logging.info("Done: Processing nodes at current order")
 
@@ -775,7 +778,7 @@ class BoutRunner:
             The first order where a match was found
             If no match was found 0 is returned
         """
-        order_number = 0
+        order_number = -1
         found = False
         for order_nodes in node_orders:
             for node_name in node_names:

@@ -270,6 +270,15 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
                         waiting_id,
                     )
 
+    def kill(self) -> None:
+        """Kill a job."""
+        if self.job_id is not None and not self.completed():
+            logging.info("Killing job_id %s (%s)", self.job_id, self.job_name)
+            submitter = LocalSubmitter()
+            submitter.submit_command(f"qdel {self.job_id}")
+            submitter.wait_until_completed()
+            self._released = True
+
     def release(self) -> None:
         """Release held job."""
         if self.job_id is not None and not self._released:

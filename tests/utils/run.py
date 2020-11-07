@@ -113,46 +113,76 @@ def assert_tables_have_expected_len(
 
 
 def make_run_group(
-    name: str,
+    run_group_parameters: Dict[
+        str, Union[str, Optional[RunGraph], Optional[Union[str, Iterable[str]]]]
+    ],
     make_project: Path,
     file_state_restorer: FileStateRestorer,
-    run_graph: Optional[RunGraph] = None,
     restart_from: Optional[Path] = None,
-    waiting_for: Optional[Union[str, Iterable[str]]] = None,
 ) -> RunGroup:
     """
     Return a basic RunGroup.
 
-    # FIXME: You are here
-    # FIXME: Too many args, can combine run_group args and name, make_project
-
     Parameters
     ----------
-    name : str
-        Name of RunGroup and DatabaseConnector
+    run_group_parameters : dict
+        Parameters to the run_group containing the keys
+        - name : str
+            Name of the run_group
+            Note that the name will also be used for the destination dir and
+            the name of the database
+        - run_graph: None or RunGraph
+            The run_graph to use
+        - waiting_for : None or str or iterable of str
+            Name of nodes this node will wait for to finish before executing
     make_project : Path
         The path to the conduction example
     file_state_restorer : FileStateRestorer
         Object for restoring files to original state
-    run_graph : RunGraph
-        The RunGraph object
     restart_from : Path or None
         The path to copy the restart files from
-    waiting_for : None or str or iterable
-        Name of nodes this node will wait for to finish before executing
 
     Returns
     -------
     run_group : RunGroup
         A basic run group
+
+    Raises
+    ------
+    ValueError
+        If the shape or types of the run_group_parameters are wrong
     """
+    # NOTE: The following is a mypy guard which could be solved with TypedDict
+    #       However, TypedDict is new from 3.8
+    if "name" not in run_group_parameters.keys() or not isinstance(
+        run_group_parameters["name"], str
+    ):
+        raise ValueError("'name' must be of string type in run_group_parameters")
+    if "run_graph" not in run_group_parameters.keys() or not (
+        isinstance(run_group_parameters["run_graph"], RunGraph)
+        or run_group_parameters["run_graph"] is None
+    ):
+        raise ValueError(
+            "'run_graph' must be of RunGroup type or None in run_group_parameters"
+        )
+    if (
+        "waiting_for" not in run_group_parameters.keys()
+        or not (
+            hasattr(run_group_parameters["waiting_for"], "__iter__")
+            or run_group_parameters["waiting_for"] is None
+        )
+        or isinstance(run_group_parameters["waiting_for"], RunGraph)
+    ):
+        raise ValueError(
+            "'waiting_for' must be of RunGroup type or None in run_group_parameters"
+        )
     # Make project to save time
     project_path = make_project
     # Create the `bout_paths` object
     bout_paths = BoutPaths(
         project_path=project_path,
         bout_inp_src_dir=project_path.joinpath("data"),
-        bout_inp_dst_dir=project_path.joinpath(name),
+        bout_inp_dst_dir=project_path.joinpath(run_group_parameters["name"]),
     )
     # Create the input objects
     run_parameters = RunParameters({"global": {"nout": 0}})
@@ -167,20 +197,28 @@ def make_run_group(
         run_parameters=run_parameters,
         restart_from=restart_from,
     )
-    db_connector = DatabaseConnector(name=name, db_root_path=project_path)
+    db_connector = DatabaseConnector(
+        name=run_group_parameters["name"], db_root_path=project_path
+    )
     bout_run_setup = BoutRunSetup(executor, db_connector, final_parameters)
     # Create the `run_group`
     run_group = RunGroup(
-        run_graph if run_graph is not None else RunGraph(),
+        run_group_parameters["run_graph"]
+        if run_group_parameters["run_graph"] is not None
+        else RunGraph(),
         bout_run_setup,
-        name=name,
-        waiting_for=waiting_for,
+        name=run_group_parameters["name"],
+        waiting_for=run_group_parameters["waiting_for"],
     )
 
     file_state_restorer.add(
         executor.bout_paths.bout_inp_dst_dir, force_mark_removal=True
     )
     file_state_restorer.add(db_connector.db_path, force_mark_removal=True)
+    file_state_restorer.add(
+        executor.bout_paths.project_path.joinpath("settings_run"),
+        force_mark_removal=True,
+    )
     return run_group
 
 

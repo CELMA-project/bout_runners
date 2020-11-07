@@ -117,10 +117,11 @@ def test_run_bout_run(
     )
     if runner.run_bout_run(bout_run_setup):
         submitter.wait_until_completed()
+    expected_run_number = 3
     assert_tables_have_expected_len(
         database_reader,
         yield_number_of_rows_for_all_tables,
-        expected_run_number=3,
+        expected_run_number=expected_run_number,
         restarted=True,
     )
     # NOTE: The test in tests.unit.bout_runners.runner.test_bout_runner is testing
@@ -139,7 +140,7 @@ def test_run_bout_run(
     assert_tables_have_expected_len(
         database_reader,
         yield_number_of_rows_for_all_tables,
-        expected_run_number=4,
+        expected_run_number=expected_run_number + 1,
         restarted=True,
     )
     # NOTE: The test in tests.unit.bout_runners.runner.test_bout_runner is testing

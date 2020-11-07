@@ -97,7 +97,9 @@ class LargeGraphNodeAdder:
 
         # Initialize the run graph
         self.run_groups["run_group_2"] = make_run_group(
-            self.__name, self.paths["project_path"], self.__file_state_restorer
+            {"name": self.__name, "run_graph": None, "waiting_for": None},
+            self.paths["project_path"],
+            self.__file_state_restorer,
         )
         self.run_graph = self.run_groups["run_group_2"].run_graph
 
@@ -167,12 +169,14 @@ class LargeGraphNodeAdder:
         """Create run_group_3 and 4 and assert submitter_type."""
         # RunGroup belonging to node 3
         self.run_groups["run_group_3"] = make_run_group(
-            self.__name,
+            {
+                "name": self.__name,
+                "run_graph": self.run_graph,
+                "waiting_for": self.run_groups["run_group_2"].bout_run_node_name,
+            },
             self.paths["project_path"],
             self.__file_state_restorer,
-            self.run_graph,
             restart_from=self.run_groups["run_group_2"].bout_paths.bout_inp_dst_dir,
-            waiting_for=self.run_groups["run_group_2"].bout_run_node_name,
         )
         assert isinstance(
             self.run_graph[f"bout_run_{self.__name}_1"]["submitter"],
@@ -184,10 +188,13 @@ class LargeGraphNodeAdder:
         #       If this happens, node_zero or node_one may fail
         #       (as they are looking for .settings files)
         self.run_groups["run_group_4"] = make_run_group(
-            f"a_different_{self.__name}",
+            {
+                "name": f"a_different_{self.__name}",
+                "run_graph": self.run_graph,
+                "waiting_for": None,
+            },
             self.paths["project_path"],
             self.__file_state_restorer,
-            self.run_graph,
         )
         self.paths["bout_run_directory_node_4"] = self.run_groups[
             "run_group_4"
@@ -207,12 +214,14 @@ class LargeGraphNodeAdder:
             Name of node belonging to node_8
         """
         self.run_groups["run_group_6"] = make_run_group(
-            self.__name,
+            {
+                "name": self.__name,
+                "run_graph": self.run_graph,
+                "waiting_for": self.run_groups["run_group_2"].bout_run_node_name,
+            },
             self.paths["project_path"],
             self.__file_state_restorer,
-            self.run_graph,
             restart_from=self.run_groups["run_group_2"].bout_paths.bout_inp_dst_dir,
-            waiting_for=self.run_groups["run_group_2"].bout_run_node_name,
         )
         self.paths["bout_run_directory_node_6"] = self.run_groups[
             "run_group_6"
@@ -274,16 +283,18 @@ class LargeGraphNodeAdder:
             }
         )
         self.run_groups["run_group_9"] = make_run_group(
-            self.__name,
+            {
+                "name": self.__name,
+                "run_graph": self.run_graph,
+                "waiting_for": (
+                    self.run_groups["run_group_4"].bout_run_node_name,
+                    self.run_groups["run_group_6"].bout_run_node_name,
+                    node_7_name,
+                ),
+            },
             self.paths["project_path"],
             self.__file_state_restorer,
-            self.run_graph,
             restart_from=self.run_groups["run_group_6"].bout_paths.bout_inp_dst_dir,
-            waiting_for=(
-                self.run_groups["run_group_4"].bout_run_node_name,
-                self.run_groups["run_group_6"].bout_run_node_name,
-                node_7_name,
-            ),
         )
         self.run_groups["run_group_9"].add_post_processor(
             {
@@ -449,7 +460,11 @@ def full_bout_runner_tester(
         Object for restoring files to original state
     """
     name = "test_bout_runner_integration"
-    run_group = make_run_group(name, make_project, file_state_restorer)
+    run_group = make_run_group(
+        {"name": name, "run_graph": None, "waiting_for": None},
+        make_project,
+        file_state_restorer,
+    )
     # Run the project
     runner = BoutRunner(run_group.run_graph)
     runner.run()

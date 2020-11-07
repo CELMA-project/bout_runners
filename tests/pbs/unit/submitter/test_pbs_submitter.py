@@ -3,7 +3,6 @@
 import pytest
 from pathlib import Path
 from bout_runners.submitter.pbs_submitter import PBSSubmitter
-from bout_runners.submitter.local_submitter import LocalSubmitter
 
 
 @pytest.mark.timeout(60)
@@ -59,10 +58,7 @@ def test_completed(tmp_path: Path) -> None:
     submitter.submit_command("/bin/sleep 1000")
     assert not submitter.completed()
 
-    job_id = submitter.job_id
-    local_submitter = LocalSubmitter()
-    local_submitter.submit_command(f"qdel {job_id}")
-    local_submitter.wait_until_completed(raise_error=True)
+    submitter.kill()
     # Give system time to shut down process
     submitter.wait_until_completed(raise_error=False)
     assert submitter.completed()
