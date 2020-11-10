@@ -16,44 +16,24 @@ from bout_runners.utils.file_operations import get_caller_dir
 
 
 class LocalSubmitter(AbstractSubmitter):
-    r"""
+    """
     Submits a command.
 
     Attributes
     ----------
-    _status : dict of str
-        Status of the submission
-    run_path : Path or str
-        Directory to run the command from
     __process : None or Popen
         The Popen process if it has been created
-    _logged_complete_status : bool
-        Whether the complete status has been logged
-    processor_split : ProcessorSplit
-        Object containing the processor split
-    job_id : None or int
-        The processor id if the process has started
-    return_code : None or int
-        The return code if the process has finished
-    std_out : None or str
-        The standard output if the process has finished
-    std_err : None or str
-        The standard error if the process has finished
+    run_path : Path or str
+        Directory to run the command from
 
     Methods
     -------
     _wait_for_std_out_and_std_err()
         Wait until the process completes, populate return_code, std_out and std_err
-    __catch_error()
-        Log the error
     submit_command(command)
-        Run a subprocess
-    write_python_script(path, function, args, kwargs)
-        Write python function to file
+        Submit a subprocess
     completed()
         Return the completed status
-    errored(raise_error)
-        Return True if the process errored
     raise_error(self)
         Raise and error from the subprocess in a clean way
 
@@ -132,7 +112,7 @@ class LocalSubmitter(AbstractSubmitter):
             shell=False,  # nosec
         )
         self._status["job_id"] = str(self.__process.pid)
-        logging.info(
+        logging.debug(
             "job_id %s given to command '%s' in %s", self.job_id, command, self.run_path
         )
 

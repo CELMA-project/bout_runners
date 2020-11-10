@@ -28,20 +28,46 @@ class BoutRunner:
         Getter variable for executor the run graph
     run_graph : Graph
         The run graph to be executed
+    wait_time : int
+        Time to wait before checking if a job has completed
 
     Methods
     -------
-    __reset_bout_inp_dst_dir(bout_run_setup)
-        Reset the bout_inp_dst_dir (inplace) to reflect that this is a restart run
-    copy_restart_files(bout_run_setup)
-        Copy the restart files (if any)
+    __add_waiting_for(node_name)
+        Add the job_ids to wait for in the submission script
+    __prepare_run(force, restart_all)
+        Prepare the run sequence
+    __updates_when_restart_all_is_true()
+        Update paths and nodes when restart_all is True
+    __inject_copy_restart_files_node(node_with_restart)
+        Inject a node which copy restart files
+    __make_restart_files_node(to_node_name, copy_restart_from, copy_restart_to)
+        Make nodes which copies restart files
+    __next_order_has_local(submitter_dict)
+        Check if the current order of nodes has any local submitters
+    __monitor_runs(submitter_dict, raise_errors)
+        Monitor the runs belonging to the same order
+    __run_status_checker(node_name)
+        Run the StatusChecker
+    __this_order_has_local(submitter_dict)
+        Check if the current order of nodes has any local submitters
+    __update_submitter_dict_after_run_bout_run(node_name, submitted, submitter_dict)
+        Update the submitter dict after calling run_bout_run
+    find_matching_order_number(node_names, node_orders)
+        Return the order matching the node names
     run_bout_run(bout_run_setup, restart_from_bout_inp_dst, force)
         Perform the BOUT++ run and capture the related metadata
     run_function(path, function, args, kwargs, submitter)
         Submit a function for execution
     reset()
-        Reset the RunGraph
-    run(restart_all, force)
+        Reset the run_graph
+    release_nodes(nodes_to_release)
+        Release nodes to a submission queue if applicable
+    cluster_node_exist(node_names)
+        Check if any of the nodes have a submitter of type AbstractClusterSubmitter
+    wait_until_completed(self)
+        Wait until all submitted nodes are completed
+    run(restart_all, force, raise_errors)
         Execute the run
 
     Examples
@@ -193,7 +219,7 @@ class BoutRunner:
                     "None of the nodes in 'run_graph' has the status 'ready'. "
                     "Reset the 'run_graph' if you'd like to run the original graph"
                 )
-            logging.error(msg)
+            logging.critical(msg)
             raise RuntimeError(msg)
 
         for node in tuple(self.__run_graph.nodes):
@@ -202,6 +228,11 @@ class BoutRunner:
                 and self.__run_graph[node]["bout_run_setup"].executor.restart_from
                 is not None
             ):
+                logging.info(
+                    "Found restart_from in node %s, "
+                    "will inject node which copies restart files",
+                    node,
+                )
                 self.__inject_copy_restart_files_node(node)
         logging.info("Done: Preparing all runs")
 
@@ -414,11 +445,13 @@ class BoutRunner:
             for node_name in node_names:
                 submitter = submitter_dict[node_name]["submitter"]
                 if not isinstance(submitter, AbstractSubmitter):
-                    raise RuntimeError(
+                    msg = (
                         f"The submitter of the '{node_name}' node was expected to be "
                         f"of type 'AbstractSubmitter', but got '{type(submitter)}' "
                         f"instead"
                     )
+                    logging.critical(msg)
+                    raise RuntimeError(msg)
 
                 if submitter.completed():
                     if submitter.errored():
@@ -442,7 +475,7 @@ class BoutRunner:
 
     def __run_status_checker(self, node_name: str) -> None:
         """
-        Run the status checker.
+        Run the StatusChecker.
 
         Parameters
         ----------
@@ -496,7 +529,7 @@ class BoutRunner:
         """
         for node_name in submitter_dict.keys():
             if isinstance(submitter_dict[node_name]["submitter"], LocalSubmitter):
-                logging.info(
+                logging.debug(
                     "%s is of local submitter type, will monitor this node order",
                     node_name,
                 )
@@ -554,6 +587,38 @@ class BoutRunner:
         return self.__run_graph
 
     @staticmethod
+    def find_matching_order_number(
+        node_names: Tuple[str, ...], node_orders: Tuple[Tuple[str, ...], ...]
+    ) -> Optional[int]:
+        """
+        Return the order matching the node names.
+
+        Parameters
+        ----------
+        node_names : tuple of str
+            Node names
+        node_orders : tuple of tuple of str
+            Ordered tuple of orders
+
+        Returns
+        -------
+        order_number : int or None
+            The first order where a match was found
+            If no match was found 0 is returned
+        """
+        order_number = -1
+        found = False
+        for order_nodes in node_orders:
+            for node_name in node_names:
+                if node_name in order_nodes:
+                    found = True
+                    break
+                order_number += 1
+        if found:
+            return order_number
+        return None
+
+    @staticmethod
     def run_bout_run(
         bout_run_setup: BoutRunSetup,
         force: bool = False,
@@ -591,16 +656,17 @@ class BoutRunner:
             else:
                 logging.info("Executing the run from restart files")
             bout_run_setup.executor.execute(restart)
-        elif force:
-            logging.info("Executing the run as force==True")
-            bout_run_setup.executor.execute()
         else:
             logging.warning(
                 "Run with the same configuration has been executed before, "
                 "see run with run_id %d",
                 run_id,
             )
-            return False
+            if force:
+                logging.info("Executing the run as force==True")
+                bout_run_setup.executor.execute()
+            else:
+                return False
 
         return True
 
@@ -650,6 +716,58 @@ class BoutRunner:
         """Reset the run_graph."""
         logging.debug("Resetting the graph")
         self.__run_graph.reset()
+
+    def release_nodes(self, nodes_to_release: Tuple[Tuple[str, ...], ...]) -> None:
+        """
+        Release nodes to a submission queue if applicable.
+
+        Parameters
+        ----------
+        nodes_to_release : iterable
+            Name of nodes to release
+        """
+        if len(nodes_to_release) != 0:
+            logging.info("Start: Releasing held cluster nodes")
+            logging.debug("Release order: %s", nodes_to_release)
+            for order in nodes_to_release:
+                for node in order:
+                    if isinstance(
+                        self.__run_graph[node]["submitter"], AbstractClusterSubmitter
+                    ):
+                        self.__run_graph[node]["submitter"].release()
+            logging.info("Done: Releasing held cluster nodes")
+
+    def cluster_node_exist(self, node_names: Iterable[str]) -> bool:
+        """
+        Check if any of the nodes have a submitter of type AbstractClusterSubmitter.
+
+        Parameters
+        ----------
+        node_names : iterable of str
+            Iterable containing node names
+
+        Returns
+        -------
+        bool
+            Whether the iterable contains any cluster nodes
+        """
+        for node in node_names:
+            if isinstance(
+                self.__run_graph[node]["submitter"], AbstractClusterSubmitter
+            ):
+                return True
+        return False
+
+    def wait_until_completed(self) -> None:
+        """Wait until all submitted nodes are completed."""
+        logging.info("Start: Waiting for all submitted jobs to complete")
+        for node_name in self.__run_graph.nodes:
+            if self.__run_graph[node_name]["status"] == "submitted":
+                self.__run_graph[node_name]["submitter"].wait_until_completed()
+                self.__run_graph[node_name]["status"] = "completed"
+                if node_name.startswith("bout_run"):
+                    self.__run_status_checker(node_name)
+        logging.info("Done: Waiting for all submitted jobs to complete")
 
     def run(
         self, restart_all: bool = False, force: bool = False, raise_errors: bool = True
@@ -757,92 +875,3 @@ class BoutRunner:
             reverse_sorted_node_orders = self.__run_graph.get_node_orders(reverse=True)
             self.release_nodes(reverse_sorted_node_orders)
         logging.info("Done: Calling .run() in BoutRunners")
-
-    @staticmethod
-    def find_matching_order_number(
-        node_names: Tuple[str, ...], node_orders: Tuple[Tuple[str, ...], ...]
-    ) -> Optional[int]:
-        """
-        Return the order matching the node names.
-
-        Parameters
-        ----------
-        node_names : tuple of str
-            Node names
-        node_orders : tuple of tuple of str
-            Ordered tuple of orders
-
-        Returns
-        -------
-        order_number : int or None
-            The first order where a match was found
-            If no match was found 0 is returned
-        """
-        order_number = -1
-        found = False
-        for order_nodes in node_orders:
-            for node_name in node_names:
-                if node_name in order_nodes:
-                    found = True
-                    break
-                order_number += 1
-        if found:
-            return order_number
-        return None
-
-    def release_nodes(self, nodes_to_release: Tuple[Tuple[str, ...], ...]) -> None:
-        """
-        Release the nodes to the queue.
-
-        Parameters
-        ----------
-        nodes_to_release : iterable
-            Name of nodes to release
-        """
-        if len(nodes_to_release) != 0:
-            logging.info("Start: Releasing held cluster nodes")
-            logging.debug("Release order: %s", nodes_to_release)
-            for order in nodes_to_release:
-                for node in order:
-                    if isinstance(
-                        self.__run_graph[node]["submitter"], AbstractClusterSubmitter
-                    ):
-                        self.__run_graph[node]["submitter"].release()
-            logging.info("Done: Releasing held cluster nodes")
-
-    def cluster_node_exist(self, node_names: Iterable[str]) -> bool:
-        """
-        Check if any of the nodes have a submitter of type AbstractClusterSubmitter.
-
-        Parameters
-        ----------
-        node_names : iterable of str
-            Iterable containing node names
-
-        Returns
-        -------
-        bool
-            Whether the iterable contains any cluster nodes
-        """
-        for node in node_names:
-            if isinstance(
-                self.__run_graph[node]["submitter"], AbstractClusterSubmitter
-            ):
-                return True
-        return False
-
-    def wait_until_completed(self) -> None:
-        """Wait until all submitted nodes are completed."""
-        logging.info("Start: Waiting for all submitted jobs to complete")
-        for node_name in self.__run_graph.nodes:
-            logging.critical(
-                "node_name %s, status %s",
-                node_name,
-                self.__run_graph[node_name]["status"],
-            )
-            if self.__run_graph[node_name]["status"] == "submitted":
-                self.__run_graph[node_name]["submitter"].wait_until_completed()
-                self.__run_graph[node_name]["status"] = "completed"
-                if node_name.startswith("bout_run"):
-                    self.__run_status_checker(node_name)
-        logging.info("Done: Waiting for all submitted jobs to complete")

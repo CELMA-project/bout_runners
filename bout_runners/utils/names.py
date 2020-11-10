@@ -1,5 +1,7 @@
 """Module containing functions to extract names."""
 
+
+import logging
 from pathlib import Path
 from typing import Optional
 
@@ -27,8 +29,10 @@ def get_exec_name(makefile_path: Path) -> str:
         Name of the executable
     """
     try:
+        logging.info("Trying to read TARGET from makefile")
         exec_name = BoutMakefileVariableReader(makefile_path, "TARGET").value
     except MakefileReaderError:
+        logging.info("Could not read TARGET from makefile, will infer from SOURCEC")
         exec_name = BoutMakefileVariableReader(makefile_path, "SOURCEC").value
         # Strip the name from the last .c*
         split_by = ".c"
@@ -98,6 +102,7 @@ def get_makefile_name(makefile_root_path: Path) -> str:
             f"Could not find a valid Makefile name in {makefile_root_path}. "
             f"Valid Makefile names are {' ,'.join(possible_names)}"
         )
+        logging.critical(msg)
         raise FileNotFoundError(msg)
 
     return makefile_name

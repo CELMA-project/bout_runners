@@ -1,5 +1,6 @@
 """Contains the RunGroup class."""
 
+
 import re
 import logging
 from pathlib import Path
@@ -178,18 +179,6 @@ class RunGroup:
         return self.__bout_run_node_name
 
     @property
-    def run_graph(self) -> RunGraph:
-        """
-        Return the run graph.
-
-        Returns
-        -------
-        RunGraph
-            The run graph
-        """
-        return self.__run_graph
-
-    @property
     def bout_paths(self) -> BoutPaths:
         """
         Return the BoutPaths.
@@ -212,6 +201,18 @@ class RunGroup:
             The DatabaseConnector
         """
         return self.__bout_run_setup.db_connector
+
+    @property
+    def run_graph(self) -> RunGraph:
+        """
+        Return the run graph.
+
+        Returns
+        -------
+        RunGraph
+            The run graph
+        """
+        return self.__run_graph
 
     @property
     def pre_processors(self) -> Tuple[str, ...]:

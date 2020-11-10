@@ -1,5 +1,6 @@
 """Contains the abstract submitter classes."""
 
+
 import sys
 import re
 import logging
@@ -15,7 +16,49 @@ from bout_runners.utils.serializers import is_jsonable
 
 
 class AbstractSubmitter(ABC):
-    """The abstract base class of the submitters."""
+    """
+    The abstract base class of the submitters.
+
+    Attributes
+    ----------
+    _logged_complete_status : bool
+        Whether the complete status has been logged
+    _status : dict of str
+        Status of the submission
+    processor_split : ProcessorSplit
+        Object containing the processor split
+    job_id : None or str
+        The processor id if the process has started
+    return_code : None or int
+        The return code if the process has finished
+    std_out : None or str
+        The standard output if the process has finished
+    std_err : None or str
+        The standard error if the process has finished
+
+    Methods
+    -------
+    _reset_status()
+        Reset the status dict
+    _catch_error
+        Log the error
+    _wait_for_std_out_and_std_err
+       Wait until the process completes if a process has been started
+    submit_command(command)
+        Submit a command
+    completed()
+        Return the completed status
+    raise_error()
+        Raise and error from the subprocess in a clean way
+    write_python_script(path, function, args, kwargs)
+        Write python function to file
+    reset()
+        Reset the submitter
+    wait_until_completed(raise_error)
+        Wait until the process has completed
+    errored(raise_error)
+        Return True if the process errored
+    """
 
     def __init__(self, processor_split: Optional[ProcessorSplit] = None) -> None:
         """
@@ -263,13 +306,37 @@ class AbstractSubmitter(ABC):
                     self.raise_error()
                 return True
             if not self._logged_complete_status:
-                logging.info("job_id %s completed successfully", self.job_id)
+                logging.debug("job_id %s completed successfully", self.job_id)
                 self._logged_complete_status = True
         return False
 
 
 class AbstractClusterSubmitter(ABC):
-    """The abstract cluster class of the submitters."""
+    """
+    The abstract cluster class of the submitters.
+
+    Attributes
+    ----------
+    _job_name : str
+        Getter and setter variable for job_name
+    _store_dir : Path
+        DGetter and setter variable for store_dir
+    _submission_dict : dict
+        Dict containing walltime, mail, queue and account info
+    _released : bool
+        Whether or not the job has been released to the queue
+    job_name : str
+        Name of the job
+    store_dir : Path
+        Directory to store the script
+
+    Methods
+    -------
+    create_submission_string(command, waiting_for)
+        Create the submission string
+    get_days_hours_minutes_seconds_from_str(time_str)
+        Return days, hours, minutes, seconds from the string
+    """
 
     def __init__(
         self,
@@ -403,7 +470,7 @@ class AbstractClusterSubmitter(ABC):
     def job_name(self, job_name: str) -> None:
         old_name = self._job_name
         self._job_name = job_name
-        logging.info("job_name changed from %s to %s", old_name, self._job_name)
+        logging.debug("job_name changed from %s to %s", old_name, self._job_name)
 
     @property
     def store_dir(self) -> Path:
@@ -420,4 +487,4 @@ class AbstractClusterSubmitter(ABC):
     @store_dir.setter
     def store_dir(self, store_dir: Union[str, Path]) -> None:
         self._store_dir = Path(store_dir).absolute()
-        logging.info("store_dir changed to %s", store_dir)
+        logging.debug("store_dir changed to %s", store_dir)

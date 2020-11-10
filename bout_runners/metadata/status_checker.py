@@ -101,6 +101,7 @@ class StatusChecker:
                 self.__db_reader.db_connector.db_path,
             )
             message = "Can not check the status of schemas that does not exist"
+            logging.critical(message)
             raise RuntimeError(message)
 
         # Create place holder metadata_updater
@@ -180,10 +181,12 @@ class StatusChecker:
                     start_time = log_reader.start_time
                     # Assert to prevent "Incompatible types in assignment" with Optional
                     if start_time is None:
-                        raise RuntimeError(
+                        msg = (
                             "log_reader.start_time is None although "
                             "log_reader.started is True"
                         )
+                        logging.critical(msg)
+                        raise RuntimeError(msg)
                     metadata_updater.update_start_time(start_time)
                     latest_status = self.__check_if_stopped(
                         log_reader, metadata_updater
@@ -250,9 +253,9 @@ class StatusChecker:
             end_time = log_reader.end_time
             # Assert to prevent "Incompatible types in assignment" with Optional
             if end_time is None:
-                raise RuntimeError(
-                    "log_reader.end_time is None although " "log_reader.ended() is True"
-                )
+                msg = "log_reader.end_time is None although log_reader.ended() is True"
+                logging.critical(msg)
+                raise RuntimeError(msg)
             metadata_updater.update_stop_time(end_time)
             latest_status = "complete"
         else:

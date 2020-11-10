@@ -33,24 +33,28 @@ class RunGraph:
         Return the number of nodes with status ready
     __getitem__(nodename)
         Return the content of a node
-    __get_pruned_clone()
-        Return a clone of the "ready" nodes of self.__graph
+    get_node_orders(reverse)
+        Return nodes sorted after order
+    predecessors(node_name)
+        Return the predecessors of the node
+    successors(node_name)
+        Return the successors of the node
+    reset()
+        Reset the nodes by setting the status to 'ready'
     add_bout_run_node(name, bout_run_setup)
         Add a node where the setup of a BOUT++ run is attached
     add_function_node(name, function_dict=None, path=None, submitter=None)
         Add a node with an optionally attached callable to the graph
     add_edge(start_node, end_node)
         Connect two nodes through an directed edge
+    remove_edge(start_node, end_node)
+        Remove edge between two nodes
     add_waiting_for(nodes_to_wait_for, name_of_waiting_node)
         Make a node wait for the completion of one or more nodes
-    change_status_node_and_dependencies(start_node_name, status="errored")
-        Remove node and all nodes waiting for the specified node
     get_waiting_for_tuple(start_node_name)
         Return the list of nodes waiting for a given node
-    pick_root()
-        Picks and removes the root nodes from graph
-    reset()
-        Reset the nodes by setting the status to 'ready'
+    change_status_node_and_dependencies(start_node_name, status="errored")
+        Remove node and all nodes waiting for the specified node
     get_dot_string()
         Return the graph as a string i the dot format
 
@@ -156,7 +160,7 @@ class RunGraph:
 
     def get_node_orders(self, reverse: bool = False) -> Tuple[Tuple[str, ...], ...]:
         """
-        Return nodes sorted at order.
+        Return nodes sorted after order.
 
         One order is considered as the nodes without any in edges
         To find the next order remove the first order from the graph and
@@ -237,7 +241,7 @@ class RunGraph:
 
     def reset(self) -> None:
         """Reset the nodes by setting status to 'ready' and calling node.reset()."""
-        logging.info("Resetting the nodes")
+        logging.debug("Resetting the nodes")
         for node_name in self.__graph:
             self.__graph.nodes[node_name]["status"] = "ready"
             self.__graph.nodes[node_name]["submitter"].reset()

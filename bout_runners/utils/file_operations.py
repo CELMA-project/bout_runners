@@ -65,7 +65,9 @@ def copy_restart_files(
     copy_restart_to = Path(copy_restart_to)
     src_list = list(copy_restart_from.glob("BOUT.restart.*"))
     if len(src_list) == 0:
-        raise FileNotFoundError(f"No restart files found in {copy_restart_from}")
+        msg = f"No restart files found in {copy_restart_from}"
+        logging.critical(msg)
+        raise FileNotFoundError(msg)
     for src in src_list:
         dst = copy_restart_to.joinpath(src.name)
         shutil.copy(src, dst)

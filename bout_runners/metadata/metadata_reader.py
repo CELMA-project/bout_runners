@@ -1,6 +1,7 @@
 """Module containing the MetadataReader class."""
 
 
+import logging
 import re
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
@@ -465,7 +466,9 @@ class MetadataReader:
                 if "_id" in column:
                     match = pattern.match(column)
                     if match is None:
-                        raise RuntimeError("match is None")
+                        msg = f"match is None for '(.*)_id' for input '{column}'"
+                        logging.critical(msg)
+                        raise RuntimeError(msg)
                     ids.append(match[1])
             if len(ids) > 0:
                 table_connection_dict[table] = tuple(ids)

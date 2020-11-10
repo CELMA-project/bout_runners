@@ -209,7 +209,9 @@ class DatabaseCreator:
 
         match = re.match(pattern, table_str)
         if match is None:
-            raise ValueError(f'table_str "{table_str}" not understood')
+            msg = f'table_str "{table_str}" not understood'
+            logging.critical(msg)
+            raise ValueError(msg)
 
         table_name = match.group(1)
 

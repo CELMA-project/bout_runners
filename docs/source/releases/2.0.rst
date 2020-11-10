@@ -1,0 +1,38 @@
+What's New In BOUT Runners 2.0
+==============================
+
+FIXME
+
+:Release: 2.0.0
+:Date: 2020-07-07
+
+
+Summary -- Release highlights
+-----------------------------
+
+* Foo
+
+New features
+------------
+
+* Foo
+
+Bug fixes
+---------
+
+* Foo
+
+Other changes
+-------------
+
+* Foo
+
+Deprecated features
+-------------------
+
+* Foo
+
+Removed features
+----------------
+
+* None

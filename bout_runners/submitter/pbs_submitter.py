@@ -17,7 +17,51 @@ from bout_runners.submitter.abstract_submitters import (
 
 
 class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
-    """The PBS submitter class."""
+    """
+    The PBS submitter class.
+
+    Attributes
+    ----------
+    __waiting_for : tuple of str
+        Getter variable for waiting_for
+    __log_and_error_base : Path
+        Base for the path for the .log and .err files
+    __dequeued : bool
+        Whether or not the job has been dequeued from the queue
+    released : bool
+        Whether or not the job has been released to the queue
+    waiting_for : tuple of str
+        Tuple of job names which this job is waiting for
+
+    Methods
+    -------
+    __get_trace()
+        Return the trace from ``tracejob``
+    _wait_for_std_out_and_std_err()
+        Wait until the process completes if a process has been started
+    get_return_code(trace)
+        Return the exit code if any
+    has_dequeue(trace)
+        Return whether or not the job has been removed from the queue
+    structure_time_to_pbs_format(time_str)
+        Structure the time string to a PBS time string
+    add_waiting_for(waiting_for_id)
+        Add a waiting for id to the waiting for list
+    kill()
+        Kill a job
+    release()
+        Release job if held
+    reset()
+        Reset dequeued, released, waiting_for and status dict
+    submit_command(command)
+        Submit a command
+    completed()
+        Return the completed status
+    raise_error()
+        Raise and error from the subprocess in a clean way
+    create_submission_string(command, waiting_for)
+        Return the PBS script as a string
+    """
 
     def __init__(
         self,
@@ -66,7 +110,7 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
 
     def __get_trace(self) -> str:
         """
-        Return the trace from `tracejob`.
+        Return the trace from ``tracejob``.
 
         Returns
         -------
@@ -79,13 +123,6 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         local_submitter.wait_until_completed()
         trace = local_submitter.std_out if local_submitter.std_out is not None else ""
         return trace
-
-    def reset(self) -> None:
-        """Reset dequeued, released, waiting_for and status dict."""
-        self.__dequeued = False
-        self._released = False
-        self.__waiting_for = list()
-        self._reset_status()
 
     def _wait_for_std_out_and_std_err(self) -> None:
         """
@@ -280,13 +317,20 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
             self._released = True
 
     def release(self) -> None:
-        """Release held job."""
+        """Release job if held."""
         if self.job_id is not None and not self._released:
-            logging.info("Releasing job_id %s (%s)", self.job_id, self.job_name)
+            logging.debug("Releasing job_id %s (%s)", self.job_id, self.job_name)
             submitter = LocalSubmitter()
             submitter.submit_command(f"qrls {self.job_id}")
             submitter.wait_until_completed()
             self._released = True
+
+    def reset(self) -> None:
+        """Reset dequeued, released, waiting_for and status dict."""
+        self.__dequeued = False
+        self._released = False
+        self.__waiting_for = list()
+        self._reset_status()
 
     def submit_command(self, command: str) -> None:
         """
@@ -367,22 +411,24 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         if self.completed():
             if self.return_code != 0:
                 if self.return_code is None:
-                    raise RuntimeError(
+                    msg = (
                         "Submission was never submitted. "
                         "Did some of the dependencies finished before "
                         "submitting the job? "
                         "In that case the finished dependency might have "
                         "rejected the job."
                     )
-                raise RuntimeError(
-                    f"Submission errored with error code {self.return_code}"
-                )
+                    logging.critical(msg)
+                    raise RuntimeError(msg)
+                msg = f"Submission errored with error code {self.return_code}"
+                logging.critical(msg)
+                raise RuntimeError(msg)
 
     def create_submission_string(
         self, command: str, waiting_for: Tuple[str, ...]
     ) -> str:
         """
-        Create the core of a PBS script as a string.
+        Return the PBS script as a string.
 
         Parameters
         ----------

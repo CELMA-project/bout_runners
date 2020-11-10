@@ -100,6 +100,7 @@ def get_submitter(
         )
 
     msg = f"{name} is not a valid submitter class, choose " f"from {implemented}"
+    logging.critical(msg)
     raise NotImplementedError(msg)
 
 

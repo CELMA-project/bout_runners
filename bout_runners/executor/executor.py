@@ -23,20 +23,20 @@ class Executor:
     ----------
     __bout_paths : BoutPaths
         Getter variable for project_path
-    __run_parameters : RunParameters
-        Object containing the run parameters
     __make : Make
         Object for making the project
-    restart_from : None or Path
-        Path to copy restart files from prior to the execution
-    submitter : AbstractSubmitter
-        Object containing the submitter
-    exec_name : str
-        Name of the executable
+    __run_parameters : RunParameters
+        Object containing the run parameters
     bout_paths : BoutPaths
         Object containing the paths
+    exec_name : str
+        Name of the executable
+    restart_from : None or Path
+        Path to copy restart files from prior to the execution
     run_parameters : RunParameters
         Object containing the run parameters
+    submitter : AbstractSubmitter
+        Object containing the submitter
 
     Methods
     -------
@@ -159,7 +159,7 @@ class Executor:
     def restart_from(self, restart_from: Optional[Path]) -> None:
         self.__restart_from = restart_from
         if restart_from is not None:
-            logging.info(
+            logging.debug(
                 "Changing bout_paths.bout_inp_dst_dir as restart_from is not None"
             )
             restart_dir_parent = restart_from.parent
@@ -182,7 +182,7 @@ class Executor:
                 f"{stripped_restart_dir_name}_restart_{restart_number}"
             )
             self.bout_paths.bout_inp_dst_dir = new_inp_dst_dir
-            logging.info(
+            logging.debug(
                 "bout_run_setup.bout_paths.bout_inp_dst_dir set from %s to %s",
                 prev_inp_dst_dir,
                 new_inp_dst_dir,

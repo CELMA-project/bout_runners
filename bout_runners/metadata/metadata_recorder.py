@@ -1,6 +1,7 @@
 """Module containing the MetadataRecorder class."""
 
 
+import logging
 from datetime import datetime
 from typing import Dict, Mapping, Optional, Union
 
@@ -247,7 +248,9 @@ class MetadataRecorder:
         self.__db_writer.create_entry(table_name, entries_dict)
         entry_id = self.__db_reader.get_entry_id(table_name, entries_dict)
         if entry_id is None:
-            raise RuntimeError("Could not fetch the newly created id")
+            msg = "Could not fetch the newly created id"
+            logging.critical(msg)
+            raise RuntimeError(msg)
         return entry_id
 
     def _create_parameter_tables_entry(

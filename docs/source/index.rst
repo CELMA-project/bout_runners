@@ -25,6 +25,12 @@ Contents
 
 .. toctree::
    :maxdepth: 2
+   :caption: What's new
+
+   releases/index
+
+.. toctree::
+   :maxdepth: 2
    :caption: API documentation
 
    apidoc

@@ -104,7 +104,9 @@ class RunParameters:
 
         # Assert to prevent "Incompatible types in assignment" with Optional
         if self.run_parameters_dict is None:
-            raise RuntimeError("self.run_parameters_dict is None")
+            msg = "self.run_parameters_dict is None"
+            logging.critical(msg)
+            raise RuntimeError(msg)
 
         # Generate the string
         sections = list(self.run_parameters_dict.keys())
@@ -144,5 +146,7 @@ class RunParameters:
         """
         # Assert to prevent "Incompatible return type" with Optional
         if self.__run_parameters_str is None:
-            raise RuntimeError("self.__run_parameters_str is None")
+            msg = "self.__run_parameters_str is None"
+            logging.critical(msg)
+            raise RuntimeError(msg)
         return self.__run_parameters_str

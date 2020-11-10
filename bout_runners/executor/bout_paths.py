@@ -147,9 +147,9 @@ class BoutPaths:
         self.__bout_inp_src_dir = self.project_path.joinpath(bout_inp_src_dir)
 
         if not self.__bout_inp_src_dir.joinpath("BOUT.inp").is_file():
-            raise FileNotFoundError(
-                f"No BOUT.inp file found in " f"{self.__bout_inp_src_dir}"
-            )
+            msg = f"No BOUT.inp file found in " f"{self.__bout_inp_src_dir}"
+            logging.critical(msg)
+            raise FileNotFoundError(msg)
 
         logging.debug("self.bout_inp_src_dir set to %s", self.__bout_inp_src_dir)
 
