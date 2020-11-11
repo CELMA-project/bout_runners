@@ -1,6 +1,6 @@
 """Module containing the classes to read the makefile."""
 
-
+import logging
 import re
 from pathlib import Path
 
@@ -20,6 +20,7 @@ class MakefileReaderError(Exception):
             Path searched at
         """
         message = f"Could not find {variable} in {path}"
+        logging.error(message)
         super().__init__(message)
 
 

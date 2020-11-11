@@ -30,10 +30,14 @@
    bout_runners.parameters.final_parameters
    bout_runners.parameters.run_parameters
    bout_runners.runner
+   bout_runners.runner.bout_run_setup
    bout_runners.runner.bout_runner
+   bout_runners.runner.run_graph
+   bout_runners.runner.run_group
    bout_runners.submitter
-   bout_runners.submitter.abstract_submitter
+   bout_runners.submitter.abstract_submitters
    bout_runners.submitter.local_submitter
+   bout_runners.submitter.pbs_submitter
    bout_runners.submitter.processor_split
    bout_runners.submitter.submitter_factory
    bout_runners.utils
@@ -41,3 +45,4 @@
    bout_runners.utils.logs
    bout_runners.utils.names
    bout_runners.utils.paths
+   bout_runners.utils.serializers

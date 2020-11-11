@@ -5,10 +5,11 @@ from typing import Optional
 
 from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_creator import DatabaseCreator
-from bout_runners.executor.executor import Executor
 from bout_runners.executor.bout_paths import BoutPaths
+from bout_runners.executor.executor import Executor
 from bout_runners.metadata.metadata_recorder import MetadataRecorder
 from bout_runners.parameters.final_parameters import FinalParameters
+from bout_runners.submitter.abstract_submitters import AbstractSubmitter
 
 
 class BoutRunSetup:
@@ -40,6 +41,8 @@ class BoutRunSetup:
         Object containing the parameters to use
     metadata_recorder : MetadataRecorder
         Object containing the metadata recorder
+    submitter : AbstractSubmitter
+        The submitter obtained through the get property
 
     Methods
     -------
@@ -81,12 +84,18 @@ class BoutRunSetup:
         # Set member data
         # NOTE: We are not setting the default as a keyword argument
         #       as this would mess up the paths
+        logging.info("Start: Making a BoutRunSetup object")
         self.__executor = executor if executor is not None else Executor()
         self.__final_parameters = (
             final_parameters if final_parameters is not None else FinalParameters()
         )
         self.__db_connector = (
-            db_connector if db_connector is not None else DatabaseConnector()
+            db_connector
+            if db_connector is not None
+            else DatabaseConnector(
+                name=self.__executor.exec_name,
+                db_root_path=self.__executor.bout_paths.project_path,
+            )
         )
         self.__db_creator = DatabaseCreator(self.db_connector)
         self.__metadata_recorder = MetadataRecorder(
@@ -99,6 +108,7 @@ class BoutRunSetup:
                 self.__metadata_recorder.db_reader.db_connector.db_path,
             )
             self.__create_schema()
+        logging.info("Done: Making a BoutRunSetup object")
 
     @property
     def executor(self) -> Executor:
@@ -159,6 +169,18 @@ class BoutRunSetup:
             The object holding the metadata recorder
         """
         return self.__metadata_recorder
+
+    @property
+    def submitter(self) -> AbstractSubmitter:
+        """
+        Return the AbstractSubmitter.
+
+        Returns
+        -------
+        AbstractSubmitter
+            The submitter which will be used for submitting the job
+        """
+        return self.executor.submitter
 
     def __create_schema(self) -> None:
         """Create the schema."""

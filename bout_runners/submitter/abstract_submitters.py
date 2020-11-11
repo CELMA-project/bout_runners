@@ -1,19 +1,119 @@
 """Contains the abstract submitter classes."""
 
-import sys
-import re
-import logging
+
 import json
+import logging
+import re
+import sys
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Optional, Tuple, Dict
+from datetime import datetime
 from pathlib import Path
+from typing import Any, Callable, Dict, Optional, Tuple, Union
 
 from bout_runners.submitter.processor_split import ProcessorSplit
+from bout_runners.utils.file_operations import get_caller_dir
 from bout_runners.utils.serializers import is_jsonable
 
 
 class AbstractSubmitter(ABC):
-    """The abstract base class of the submitters."""
+    """
+    The abstract base class of the submitters.
+
+    Attributes
+    ----------
+    _logged_complete_status : bool
+        Whether the complete status has been logged
+    _status : dict of str
+        Status of the submission
+    processor_split : ProcessorSplit
+        Object containing the processor split
+    job_id : None or str
+        The processor id if the process has started
+    return_code : None or int
+        The return code if the process has finished
+    std_out : None or str
+        The standard output if the process has finished
+    std_err : None or str
+        The standard error if the process has finished
+
+    Methods
+    -------
+    _reset_status()
+        Reset the status dict
+    _catch_error
+        Log the error
+    _wait_for_std_out_and_std_err
+       Wait until the process completes if a process has been started
+    submit_command(command)
+        Submit a command
+    completed()
+        Return the completed status
+    raise_error()
+        Raise and error from the subprocess in a clean way
+    write_python_script(path, function, args, kwargs)
+        Write python function to file
+    reset()
+        Reset the submitter
+    wait_until_completed(raise_error)
+        Wait until the process has completed
+    errored(raise_error)
+        Return True if the process errored
+    """
+
+    def __init__(self, processor_split: Optional[ProcessorSplit] = None) -> None:
+        """
+        Declare common variables.
+
+        Parameters
+        ----------
+        processor_split : ProcessorSplit or None
+            Object containing the processor split
+            If None, default values will be used
+        """
+        self._logged_complete_status = False
+        self._status: Dict[str, Union[Optional[int], Optional[str]]] = dict()
+        self.processor_split = (
+            processor_split if processor_split is not None else ProcessorSplit()
+        )
+        self._reset_status()
+
+    def _reset_status(self) -> None:
+        """Reset the status dict."""
+        if "job_id" in self._status.keys() and self._status["job_id"] is not None:
+            logging.debug(
+                "Resetting job_id, return_code, std_out and std_err. "
+                "Previous job_id=%s",
+                self._status["job_id"],
+            )
+        self._status["job_id"] = None
+        self._status["return_code"] = None
+        self._status["std_out"] = None
+        self._status["std_err"] = None
+        self._logged_complete_status = False
+
+    def _catch_error(self) -> None:
+        """Log the error."""
+        if self.completed() and self.return_code != 0:
+
+            if not self._logged_complete_status:
+                logging.error(
+                    "job_id %s failed with return code %s",
+                    self.job_id,
+                    self.return_code,
+                )
+                logging.error("stdout:")
+                logging.error(self.std_out)
+                logging.error("stderr:")
+                logging.error(self.std_err)
+                self._logged_complete_status = True
+
+    @abstractmethod
+    def _wait_for_std_out_and_std_err(self) -> None:
+        """
+        Wait until the process completes if a process has been started.
+
+        Populate return_code, std_out and std_err
+        """
 
     @abstractmethod
     def submit_command(self, command: str) -> Any:
@@ -26,25 +126,74 @@ class AbstractSubmitter(ABC):
             Command to submit
         """
 
-    @property
     @abstractmethod
-    def pid(self) -> Optional[int]:
-        """Return the process id."""
+    def completed(self) -> bool:
+        """Return the completed status."""
+
+    @abstractmethod
+    def raise_error(self) -> None:
+        """Raise and error from the subprocess in a clean way."""
 
     @property
-    @abstractmethod
+    def job_id(self) -> Optional[str]:
+        """
+        Return the process id.
+
+        Returns
+        -------
+        self._status["job_id"] : int or None
+            The process id if a process has been called, else None
+        """
+        # Added mypy guard as type of key cannot be set separately
+        return (
+            self._status["job_id"] if isinstance(self._status["job_id"], str) else None
+        )
+
+    @property
     def return_code(self) -> Optional[int]:
         """Return the return code."""
+        # Added mypy guard as type of key cannot be set separately
+        return (
+            self._status["return_code"]
+            if isinstance(self._status["return_code"], int)
+            else None
+        )
 
     @property
-    @abstractmethod
     def std_out(self) -> Optional[str]:
-        """Return the standard output."""
+        """
+        Return the standard output.
+
+        Returns
+        -------
+        self._status["std_out"] : str or None
+            The standard output
+            None if the process has not completed
+        """
+        # Added mypy guard as type of key cannot be set separately
+        return (
+            self._status["std_out"]
+            if isinstance(self._status["std_out"], str)
+            else None
+        )
 
     @property
-    @abstractmethod
     def std_err(self) -> Optional[str]:
-        """Return the standard error."""
+        """
+        Return the standard error.
+
+        Returns
+        -------
+        self._status["std_err"] : str or None
+            The standard error
+            None if the process has not completed
+        """
+        # Added mypy guard as type of key cannot be set separately
+        return (
+            self._status["std_err"]
+            if isinstance(self._status["std_err"], str)
+            else None
+        )
 
     @staticmethod
     def write_python_script(
@@ -119,7 +268,10 @@ class AbstractSubmitter(ABC):
             python_file.write(script_str)
         logging.info("Python script written to %s", path)
 
-    @abstractmethod
+    def reset(self) -> None:
+        """Reset the submitter."""
+        self._reset_status()
+
     def wait_until_completed(self, raise_error: bool = True) -> None:
         """
         Wait until the process has completed.
@@ -129,12 +281,10 @@ class AbstractSubmitter(ABC):
         raise_error : bool
             Whether or not to raise errors
         """
+        if self.job_id is not None and self.return_code is None:
+            self._wait_for_std_out_and_std_err()
+            self.errored(raise_error)
 
-    @abstractmethod
-    def completed(self) -> bool:
-        """Return the completed status."""
-
-    @abstractmethod
     def errored(self, raise_error: bool = False) -> bool:
         """
         Return True if the process errored.
@@ -143,32 +293,68 @@ class AbstractSubmitter(ABC):
         ----------
         raise_error : bool
             Whether or not to raise errors
-        """
 
-    @abstractmethod
-    def raise_error(self) -> None:
-        """Raise and error from the subprocess in a clean way."""
+        Returns
+        -------
+        bool
+            True if the process returned a non-zero code
+        """
+        if self.completed():
+            if self.return_code != 0:
+                self._catch_error()
+                if raise_error:
+                    self.raise_error()
+                return True
+            if not self._logged_complete_status:
+                logging.debug("job_id %s completed successfully", self.job_id)
+                self._logged_complete_status = True
+        return False
 
 
 class AbstractClusterSubmitter(ABC):
-    """The abstract cluster class of the submitters."""
+    """
+    The abstract cluster class of the submitters.
+
+    Attributes
+    ----------
+    _job_name : str
+        Getter and setter variable for job_name
+    _store_dir : Path
+        DGetter and setter variable for store_dir
+    _submission_dict : dict
+        Dict containing walltime, mail, queue and account info
+    _released : bool
+        Whether or not the job has been released to the queue
+    job_name : str
+        Name of the job
+    store_dir : Path
+        Directory to store the script
+
+    Methods
+    -------
+    create_submission_string(command, waiting_for)
+        Create the submission string
+    get_days_hours_minutes_seconds_from_str(time_str)
+        Return days, hours, minutes, seconds from the string
+    """
 
     def __init__(
         self,
-        job_name: str,
-        store_path: Path,
+        job_name: Optional[str] = None,
+        store_dir: Optional[Path] = None,
         submission_dict: Optional[Dict[str, Optional[str]]] = None,
-        processor_split: Optional[ProcessorSplit] = None,
     ) -> None:
         """
         Set the member data.
 
         Parameters
         ----------
-        job_name : str
+        job_name : str or None
             Name of the job
-        store_path : path
-            Path to store the script
+            If None, a timestamp will be given as job_name
+        store_dir : Path or None
+            Directory to store the script
+            If None, the caller directory will be used as the store directory
         submission_dict : None or dict of str of None or str
             Dict containing optional submission options
             One the form
@@ -179,25 +365,30 @@ class AbstractClusterSubmitter(ABC):
             ...  'account': None or str}
 
             These options will not be used if the submission_dict is None
-        processor_split : ProcessorSplit or None
-            Object containing the processor split
-            If None, default values will be used
         """
-        self.__job_name = job_name
-        self.__store_path = store_path
-        self.__processor_split = (
-            processor_split if processor_split is not None else ProcessorSplit()
-        )
-        self.__submission_dict = (
+        if job_name is None:
+            self._job_name = datetime.now().strftime("%m-%d-%Y_%H-%M-%S-%f")
+        else:
+            self._job_name = job_name
+
+        if store_dir is None:
+            self._store_dir = get_caller_dir()
+        else:
+            self._store_dir = store_dir
+        self._submission_dict = (
             submission_dict.copy() if submission_dict is not None else dict()
         )
-        submission_dict_keys = self.__submission_dict.keys()
+        submission_dict_keys = self._submission_dict.keys()
         for key in ("walltime", "mail", "queue", "account"):
             if key not in submission_dict_keys:
-                self.__submission_dict[key] = None
+                self._submission_dict[key] = None
+
+        self._released = False
 
     @abstractmethod
-    def create_submission_string(self, command: str) -> str:
+    def create_submission_string(
+        self, command: str, waiting_for: Tuple[str, ...]
+    ) -> str:
         """
         Create the submission string.
 
@@ -205,6 +396,8 @@ class AbstractClusterSubmitter(ABC):
         ----------
         command : str
             The command to submit
+        waiting_for : tuple of str
+            Tuple of ids that this job will wait for
         """
 
     @staticmethod
@@ -260,3 +453,38 @@ class AbstractClusterSubmitter(ABC):
             logging.error(msg)
             raise ValueError(msg)
         return days, hours, minutes, seconds
+
+    @property
+    def job_name(self) -> str:
+        """
+        Set the properties of self.job_name.
+
+        Returns
+        -------
+        str
+            The job name
+        """
+        return self._job_name
+
+    @job_name.setter
+    def job_name(self, job_name: str) -> None:
+        old_name = self._job_name
+        self._job_name = job_name
+        logging.debug("job_name changed from %s to %s", old_name, self._job_name)
+
+    @property
+    def store_dir(self) -> Path:
+        """
+        Set the properties of self.store_dir.
+
+        Returns
+        -------
+        Path
+            Path to the store directory
+        """
+        return self._store_dir
+
+    @store_dir.setter
+    def store_dir(self, store_dir: Union[str, Path]) -> None:
+        self._store_dir = Path(store_dir).absolute()
+        logging.debug("store_dir changed to %s", store_dir)

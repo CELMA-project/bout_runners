@@ -8,3 +8,12 @@ exclude_lines =
 omit =
     */tests/*
     */docs/*
+
+# This is needed for github action in order to properly run coverage combine
+# Without this the following error code is thrown
+# No source for code: '/__w/bout_runners/bout_runners/bout_runners/__init__.py'
+[paths]
+source =
+    ./
+    /__w/bout_runners/bout_runners
+    /opt/bout_runners

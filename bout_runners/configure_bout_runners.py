@@ -1,18 +1,22 @@
 """Module for configuring bout_runners."""
 
 
+import configparser
 import logging
+import shutil
 from pathlib import Path
 from typing import Optional
 
 import yaml
+
 from bout_runners.utils.logs import get_log_config, set_up_logger
 from bout_runners.utils.paths import (
     get_bout_directory,
-    get_bout_log_config_path,
     get_bout_runners_config_path,
     get_bout_runners_configuration,
+    get_default_submitters_config_path,
     get_log_file_directory,
+    get_logger_config_path,
 )
 
 
@@ -72,7 +76,7 @@ def set_log_level(level: Optional[str] = None) -> None:
     config["handlers"]["console_handler"]["level"] = level
     config["root"]["level"] = level
 
-    with get_bout_log_config_path().open("w") as log_file:
+    with get_logger_config_path().open("w") as log_file:
         log_file.write(yaml.dump(config))
 
     set_up_logger(config)
@@ -94,7 +98,7 @@ def set_log_file_directory(log_dir: Optional[Path] = None) -> None:
     if log_dir is None:
         current_dir = get_log_file_directory()
         question = (
-            f"Please entering the directory for log files:\n"
+            f"Please enter the directory for log files:\n"
             f"Empty input will reuse the current directory "
             f"{current_dir}\n"
         )
@@ -136,7 +140,7 @@ def set_bout_directory(bout_dir: Optional[Path] = None) -> None:
     if bout_dir is None:
         suggested_dir = get_bout_directory()
         question = (
-            f"Please entering the directory for the root of BOUT++:\n"
+            f"Please enter the directory for the root of BOUT++:\n"
             f"Empty input use the directory "
             f"{suggested_dir}\n"
         )
@@ -163,12 +167,94 @@ def set_bout_directory(bout_dir: Optional[Path] = None) -> None:
     print("")
 
 
-def main() -> None:
-    """Call all configuration functions."""
-    set_log_level()
-    set_log_file_directory()
-    set_bout_directory()
+def set_submitter_config_path(submitter_config_path: Optional[Path] = None) -> None:
+    """
+    Set the path to the submitter configuration.
+
+    Parameters
+    ----------
+    submitter_config_path : None or Path
+        The path to the submitter config file
+        If None, the caller will be prompted
+    """
+    config = get_bout_runners_configuration()
+    default_path = get_default_submitters_config_path()
+    if submitter_config_path is None:
+        question = (
+            f"Please enter the path to the submitter configuration file:\n"
+            f"Empty input use the path "
+            f"{default_path}\n"
+        )
+        answer = input(question)
+        print(f"Your answered: '{answer}'")
+        if answer != "":
+            config["submitter_config"]["path"] = answer
+        else:
+            config["submitter_config"]["path"] = str(default_path)
+    else:
+        config["submitter_config"]["path"] = str(submitter_config_path)
+
+    set_up_logger()
+
+    submitter_config_path = Path(config["submitter_config"]["path"])
+    check_submitter_config(submitter_config_path, default_path)
+
+    with get_bout_runners_config_path().open("w") as configfile:
+        config.write(configfile)
+
+    print(f"Setting submitter configuration file to {submitter_config_path}")
+
+    logging.debug("submitter configuration file set to %s", submitter_config_path)
+    print("")
+
+
+def check_submitter_config(submitter_config_path: Path, default_path: Path) -> None:
+    """
+    Check that the submitter configuration file is properly formatted.
+
+    Parameters
+    ----------
+    submitter_config_path : Path
+        Path to the specified submitter configuration path
+    default_path : Path
+        Path to the default submitter configuration
+
+    Raises
+    ------
+    ValueError
+        If either sections or options are missing from the submitter_config_path
+    """
+    if not submitter_config_path.is_file():
+        logging.warning(
+            "Did not find any files in %s, will copy from %s",
+            submitter_config_path,
+            default_path,
+        )
+        submitter_config_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy(default_path, submitter_config_path)
+        return
+
+    default_config = configparser.ConfigParser()
+    default_config.read(default_path)
+
+    new_config = configparser.ConfigParser()
+    new_config.read(submitter_config_path)
+
+    for section in default_config:
+        if section not in new_config:
+            raise ValueError(
+                f"Could not find section {section} in {submitter_config_path}"
+            )
+        for option in default_config[section]:
+            if option not in new_config[section]:
+                raise ValueError(
+                    f"Could not find option {option} under section {section} "
+                    f"in {submitter_config_path}"
+                )
 
 
 if __name__ == "__main__":
-    main()
+    set_log_level()
+    set_log_file_directory()
+    set_bout_directory()
+    set_submitter_config_path()

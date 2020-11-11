@@ -11,15 +11,18 @@ on:
     - cron: "0 0 1 * *"
 
 jobs:
-  build:
+  linting:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [3.6, 3.7, 3.8]
 
     steps:
       # Use the v2 tag of: https://github.com/actions/checkout
-      - uses: actions/checkout@v2
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Set up Python 3.x
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
 
       - name: Set up Python ${{ matrix.python-version }}
         # Use the v2 tag of: https://github.com/actions/setup-python

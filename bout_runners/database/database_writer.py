@@ -56,7 +56,7 @@ class DatabaseWriter:
 
     Create the database
 
-    >>> db_connector = DatabaseConnector('name')
+    >>> db_connector = DatabaseConnector('name', project_path)
     >>> db_creator = DatabaseCreator(db_connector)
     >>> db_creator.create_all_schema_tables(
     ...     final_parameters_as_sql_types)
@@ -168,13 +168,15 @@ class DatabaseWriter:
         pattern = r"INSERT INTO (\w*)"
         match = re.match(pattern, insert_str)
         if match is None:
-            raise ValueError(f'insert_str "{insert_str}" not understood')
+            msg = f'insert_str "{insert_str}" not understood'
+            logging.critical(msg)
+            raise ValueError(msg)
 
         table_name = match.group(1)
 
         self.db_connector.execute_statement(insert_str, *values)
 
-        logging.info("Made insertion to %s", table_name)
+        logging.debug("Made insertion to %s", table_name)
 
     def update(
         self,
@@ -201,19 +203,23 @@ class DatabaseWriter:
         match = re.match(pattern, update_str)
 
         if match is None:
-            raise ValueError(f'update_str "{update_str}" not understood')
+            msg = f'update_str "{update_str}" not understood'
+            logging.critical(msg)
+            raise ValueError(msg)
         table_name = match.group(1)
 
         pattern = r"WHERE (.*)"
         match = re.search(pattern, update_str)
 
         if match is None:
-            raise ValueError(f'update_str "{update_str}" not understood')
+            msg = f'update_str "{update_str}" not understood'
+            logging.critical(msg)
+            raise ValueError(msg)
         condition = match.group(1)
 
         self.db_connector.execute_statement(update_str, *values)
 
-        logging.info("Updated table %s, where %s", table_name, condition)
+        logging.debug("Updated table %s, where %s", table_name, condition)
 
     def create_entry(
         self, table_name: str, entries_dict: Mapping[str, Union[int, str, float, None]]
