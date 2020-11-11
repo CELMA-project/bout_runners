@@ -2,17 +2,19 @@
 
 
 import logging
-from time import sleep
 from pathlib import Path
-from typing import Optional, Dict, Callable, Tuple, Any, Union, Iterable
+from time import sleep
+from typing import Any, Callable, Dict, Iterable, Optional, Tuple, Union
 
 from bout_runners.database.database_connector import DatabaseConnector
-from bout_runners.runner.run_graph import RunGraph
-from bout_runners.runner.bout_run_setup import BoutRunSetup
-from bout_runners.runner.run_group import RunGroup
 from bout_runners.metadata.status_checker import StatusChecker
-from bout_runners.submitter.abstract_submitters import AbstractSubmitter
-from bout_runners.submitter.abstract_submitters import AbstractClusterSubmitter
+from bout_runners.runner.bout_run_setup import BoutRunSetup
+from bout_runners.runner.run_graph import RunGraph
+from bout_runners.runner.run_group import RunGroup
+from bout_runners.submitter.abstract_submitters import (
+    AbstractClusterSubmitter,
+    AbstractSubmitter,
+)
 from bout_runners.submitter.local_submitter import LocalSubmitter
 from bout_runners.submitter.submitter_factory import get_submitter
 from bout_runners.utils.file_operations import copy_restart_files

@@ -1,23 +1,22 @@
 """Contains the test for the documentation."""
 
 
+from pathlib import Path
 from typing import Callable
 
-from pathlib import Path
+from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.executor.bout_paths import BoutPaths
 from bout_runners.executor.executor import Executor
-from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.parameters.default_parameters import DefaultParameters
-from bout_runners.parameters.run_parameters import RunParameters
 from bout_runners.parameters.final_parameters import FinalParameters
-from bout_runners.submitter.local_submitter import LocalSubmitter
+from bout_runners.parameters.run_parameters import RunParameters
 from bout_runners.runner.bout_run_setup import BoutRunSetup
+from bout_runners.runner.bout_runner import BoutRunner
 from bout_runners.runner.run_graph import RunGraph
 from bout_runners.runner.run_group import RunGroup
-from bout_runners.runner.bout_runner import BoutRunner
-
+from bout_runners.submitter.local_submitter import LocalSubmitter
+from tests.utils.dummy_functions import mock_expand, return_none
 from tests.utils.paths import FileStateRestorer
-from tests.utils.dummy_functions import return_none, mock_expand
 
 
 def test_restart_documentation(

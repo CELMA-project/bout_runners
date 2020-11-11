@@ -7,7 +7,6 @@ import logging
 # https://github.com/PyCQA/bandit/issues/280
 import subprocess  # nosec
 from pathlib import Path
-
 from typing import Optional
 
 from bout_runners.submitter.abstract_submitters import AbstractSubmitter

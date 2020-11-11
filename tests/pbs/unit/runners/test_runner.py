@@ -2,7 +2,9 @@
 
 
 from pathlib import Path
+
 import pytest
+
 from bout_runners.submitter.local_submitter import LocalSubmitter
 from bout_runners.submitter.pbs_submitter import PBSSubmitter
 from tests.utils.run import assert_waiting_for_graph

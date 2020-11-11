@@ -3,8 +3,9 @@
 
 from typing import Dict, List
 
-from bout_runners.metadata.metadata_reader import MetadataReader
 from pandas import DataFrame
+
+from bout_runners.metadata.metadata_reader import MetadataReader
 
 
 def test_get_table_column_dict(

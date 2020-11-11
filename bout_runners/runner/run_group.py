@@ -1,17 +1,19 @@
 """Contains the RunGroup class."""
 
 
-import re
 import logging
+import re
 from pathlib import Path
-from typing import Optional, Union, Iterable, List, Callable, Tuple, Any, Dict
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 from bout_runners.database.database_connector import DatabaseConnector
-from bout_runners.runner.bout_run_setup import BoutRunSetup
 from bout_runners.executor.bout_paths import BoutPaths
+from bout_runners.runner.bout_run_setup import BoutRunSetup
 from bout_runners.runner.run_graph import RunGraph
-from bout_runners.submitter.abstract_submitters import AbstractSubmitter
-from bout_runners.submitter.abstract_submitters import AbstractClusterSubmitter
+from bout_runners.submitter.abstract_submitters import (
+    AbstractClusterSubmitter,
+    AbstractSubmitter,
+)
 from bout_runners.submitter.submitter_factory import get_submitter
 
 

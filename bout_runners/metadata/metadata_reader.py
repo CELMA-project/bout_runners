@@ -5,9 +5,10 @@ import logging
 import re
 from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
+from pandas import DataFrame
+
 from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_reader import DatabaseReader
-from pandas import DataFrame
 
 
 def drop_ids(func: Callable) -> Callable:

@@ -1,7 +1,7 @@
 """Contains functions for checking runs."""
 
 from pathlib import Path
-from typing import Callable, Dict, Optional, Union, Iterable
+from typing import Callable, Dict, Iterable, Optional, Union
 
 from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_reader import DatabaseReader
@@ -19,10 +19,10 @@ from bout_runners.submitter.local_submitter import LocalSubmitter
 from bout_runners.submitter.submitter_factory import get_submitter
 from tests.utils.paths import FileStateRestorer
 from tests.utils.waiting_for_test_functions import (
-    node_zero,
     node_one,
-    node_two,
     node_three,
+    node_two,
+    node_zero,
 )
 
 

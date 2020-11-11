@@ -2,10 +2,10 @@
 
 
 import sqlite3
+from pathlib import Path
 from typing import Callable
 
 import pytest
-from pathlib import Path
 
 from bout_runners.database.database_connector import DatabaseConnector
 

@@ -1,15 +1,14 @@
 """Contains the submitter factory."""
 
 
-import logging
 import configparser
-from typing import Optional, Tuple, Any, Dict
+import logging
+from typing import Any, Dict, Optional, Tuple
 
-from bout_runners.submitter.local_submitter import AbstractSubmitter
-from bout_runners.submitter.local_submitter import LocalSubmitter
+from bout_runners.submitter.local_submitter import AbstractSubmitter, LocalSubmitter
 from bout_runners.submitter.pbs_submitter import PBSSubmitter
-from bout_runners.utils.paths import get_submitters_configuration
 from bout_runners.submitter.processor_split import ProcessorSplit
+from bout_runners.utils.paths import get_submitters_configuration
 
 
 def get_submitter(

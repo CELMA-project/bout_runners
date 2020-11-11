@@ -6,15 +6,15 @@ from typing import Callable, Dict
 
 from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.submitter.local_submitter import LocalSubmitter
-from tests.utils.paths import FileStateRestorer
 from tests.utils.integration import (
     bout_runner_from_path_tester,
     full_bout_runner_tester,
     large_graph_tester,
 )
+from tests.utils.paths import FileStateRestorer
 
 
-def test_bout_runners_from_directory(
+def test_local_bout_runners_from_directory(
     make_project: Path,
     yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
     file_state_restorer: FileStateRestorer,
@@ -31,15 +31,17 @@ def test_bout_runners_from_directory(
     file_state_restorer : FileStateRestorer
         Object for restoring files to original state
     """
+    submitter_type = LocalSubmitter
+
     bout_runner_from_path_tester(
-        LocalSubmitter,
+        submitter_type,
         make_project,
         yield_number_of_rows_for_all_tables,
         file_state_restorer,
     )
 
 
-def test_full_bout_runner(
+def test_local_full_bout_runner(
     make_project: Path,
     yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
     file_state_restorer: FileStateRestorer,
@@ -60,15 +62,17 @@ def test_full_bout_runner(
     file_state_restorer : FileStateRestorer
         Object for restoring files to original state
     """
+    submitter_type = LocalSubmitter
+
     full_bout_runner_tester(
-        LocalSubmitter,
+        submitter_type,
         make_project,
         yield_number_of_rows_for_all_tables,
         file_state_restorer,
     )
 
 
-def test_large_graph(
+def test_local_large_graph(
     make_project: Path,
     yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
     file_state_restorer: FileStateRestorer,

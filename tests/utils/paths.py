@@ -5,7 +5,7 @@ import logging
 import os
 import shutil
 from pathlib import Path
-from typing import Iterator, Dict
+from typing import Dict, Iterator
 
 
 @contextlib.contextmanager

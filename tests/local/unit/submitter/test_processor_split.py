@@ -2,6 +2,7 @@
 
 
 import pytest
+
 from bout_runners.submitter.processor_split import ProcessorSplit
 
 

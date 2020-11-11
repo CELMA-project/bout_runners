@@ -1,21 +1,22 @@
 """Module for configuring bout_runners."""
 
 
-import logging
 import configparser
+import logging
 import shutil
 from pathlib import Path
 from typing import Optional
 
 import yaml
+
 from bout_runners.utils.logs import get_log_config, set_up_logger
 from bout_runners.utils.paths import (
     get_bout_directory,
-    get_logger_config_path,
     get_bout_runners_config_path,
     get_bout_runners_configuration,
-    get_log_file_directory,
     get_default_submitters_config_path,
+    get_log_file_directory,
+    get_logger_config_path,
 )
 
 
@@ -166,7 +167,7 @@ def set_bout_directory(bout_dir: Optional[Path] = None) -> None:
     print("")
 
 
-def set_submitter_config(submitter_config_path: Optional[Path] = None) -> None:
+def set_submitter_config_path(submitter_config_path: Optional[Path] = None) -> None:
     """
     Set the path to the submitter configuration.
 
@@ -191,7 +192,7 @@ def set_submitter_config(submitter_config_path: Optional[Path] = None) -> None:
         else:
             config["submitter_config"]["path"] = str(default_path)
     else:
-        config["submitter_config"]["path"] = str(default_path)
+        config["submitter_config"]["path"] = str(submitter_config_path)
 
     set_up_logger()
 
@@ -221,7 +222,7 @@ def check_submitter_config(submitter_config_path: Path, default_path: Path) -> N
     Raises
     ------
     ValueError
-        If either sections or parameters are missing from the submitter_config_path
+        If either sections or options are missing from the submitter_config_path
     """
     if not submitter_config_path.is_file():
         logging.warning(
@@ -229,6 +230,7 @@ def check_submitter_config(submitter_config_path: Path, default_path: Path) -> N
             submitter_config_path,
             default_path,
         )
+        submitter_config_path.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy(default_path, submitter_config_path)
         return
 
@@ -236,28 +238,23 @@ def check_submitter_config(submitter_config_path: Path, default_path: Path) -> N
     default_config.read(default_path)
 
     new_config = configparser.ConfigParser()
-    new_config.read(default_path)
+    new_config.read(submitter_config_path)
 
     for section in default_config:
         if section not in new_config:
             raise ValueError(
                 f"Could not find section {section} in {submitter_config_path}"
             )
-        for parameter in default_config[section]:
-            if parameter not in new_config[section]:
+        for option in default_config[section]:
+            if option not in new_config[section]:
                 raise ValueError(
-                    f"Could not find parameter {parameter} under section {section} "
+                    f"Could not find option {option} under section {section} "
                     f"in {submitter_config_path}"
                 )
 
 
-def main() -> None:
-    """Call all configuration functions."""
+if __name__ == "__main__":
     set_log_level()
     set_log_file_directory()
     set_bout_directory()
-    set_submitter_config()
-
-
-if __name__ == "__main__":
-    main()
+    set_submitter_config_path()

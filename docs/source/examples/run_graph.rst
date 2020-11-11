@@ -12,7 +12,7 @@ The core of the ``RunGroup`` is therefore the bout run, and zero or more pre- an
 The ``RunGraph`` is the directed acyclic graph that ``BoutRunners`` will execute.
 It's nodes contains instructions to be executed, whereas the edges describes it's dependencies.
 The execution of a node will not start until it's dependencies (i.e. nodes with edges directed towards the node under consideration) has successfully completed.
-For more details see :ref:`submitters<submitters>`
+For more details see :ref:`submitters<submittersTag>`
 
 ``RunGraph`` is at a lower abstraction level than ``RunGroup``.
 Thus everything you can do through ``RunGroup`` you could do through the ``RunGraph``.

@@ -8,16 +8,16 @@ import pytest
 
 from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.submitter.pbs_submitter import PBSSubmitter
-from tests.utils.paths import FileStateRestorer
 from tests.utils.integration import (
     bout_runner_from_path_tester,
     full_bout_runner_tester,
     large_graph_tester,
 )
+from tests.utils.paths import FileStateRestorer
 
 
 @pytest.mark.timeout(200)
-def test_bout_runners_from_directory(
+def test_pbs_bout_runners_from_directory(
     make_project: Path,
     yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
     file_state_restorer: FileStateRestorer,
@@ -43,7 +43,7 @@ def test_bout_runners_from_directory(
 
 
 @pytest.mark.timeout(200)
-def test_full_bout_runner(
+def test_pbs_full_bout_runner(
     make_project: Path,
     yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
     file_state_restorer: FileStateRestorer,
@@ -73,7 +73,7 @@ def test_full_bout_runner(
 
 
 @pytest.mark.timeout(600)
-def test_large_graph(
+def test_pbs_large_graph(
     make_project: Path,
     yield_number_of_rows_for_all_tables: Callable[[DatabaseReader], Dict[str, int]],
     file_state_restorer: FileStateRestorer,
@@ -92,10 +92,8 @@ def test_large_graph(
     file_state_restorer : FileStateRestorer
         Object for restoring files to original state
     """
-    submitter_type = PBSSubmitter
-
     large_graph_tester(
-        submitter_type,
+        PBSSubmitter,
         make_project,
         yield_number_of_rows_for_all_tables,
         file_state_restorer,

@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Optional
 
 import pytest
+
 from bout_runners.utils.names import get_exec_name, get_makefile_name, get_makefile_path
 
 

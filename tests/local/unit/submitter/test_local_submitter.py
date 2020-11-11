@@ -6,6 +6,7 @@
 from subprocess import CalledProcessError  # nosec
 
 import pytest
+
 from bout_runners.submitter.local_submitter import LocalSubmitter
 
 

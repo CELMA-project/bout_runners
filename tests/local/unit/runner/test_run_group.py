@@ -1,9 +1,10 @@
 """Contains unittests for the run group."""
 
 from typing import Callable
+
+from bout_runners.runner.bout_run_setup import BoutRunSetup
 from bout_runners.runner.run_graph import RunGraph
 from bout_runners.runner.run_group import RunGroup
-from bout_runners.runner.bout_run_setup import BoutRunSetup
 
 
 def test_constructor(get_bout_run_setup: Callable[[str], BoutRunSetup]) -> None:

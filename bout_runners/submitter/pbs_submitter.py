@@ -1,19 +1,18 @@
 """Contains the PBS submitter class."""
 
 
-import re
 import logging
-
+import re
 from pathlib import Path
-from typing import Optional, Dict, List, Tuple, Iterable, Union
 from time import sleep
+from typing import Dict, Iterable, List, Optional, Tuple, Union
 
-from bout_runners.submitter.processor_split import ProcessorSplit
-from bout_runners.submitter.local_submitter import LocalSubmitter
 from bout_runners.submitter.abstract_submitters import (
-    AbstractSubmitter,
     AbstractClusterSubmitter,
+    AbstractSubmitter,
 )
+from bout_runners.submitter.local_submitter import LocalSubmitter
+from bout_runners.submitter.processor_split import ProcessorSplit
 
 
 class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):

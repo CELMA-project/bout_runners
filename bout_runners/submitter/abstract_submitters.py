@@ -1,17 +1,17 @@
 """Contains the abstract submitter classes."""
 
 
-import sys
-import re
-import logging
 import json
+import logging
+import re
+import sys
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, Callable, Optional, Tuple, Dict, Union
 from pathlib import Path
+from typing import Any, Callable, Dict, Optional, Tuple, Union
 
-from bout_runners.utils.file_operations import get_caller_dir
 from bout_runners.submitter.processor_split import ProcessorSplit
+from bout_runners.utils.file_operations import get_caller_dir
 from bout_runners.utils.serializers import is_jsonable
 
 
@@ -75,7 +75,7 @@ class AbstractSubmitter(ABC):
         self.processor_split = (
             processor_split if processor_split is not None else ProcessorSplit()
         )
-        self.reset()
+        self._reset_status()
 
     def _reset_status(self) -> None:
         """Reset the status dict."""

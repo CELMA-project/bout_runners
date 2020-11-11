@@ -2,6 +2,7 @@
 
 
 import pytest
+
 from bout_runners.submitter.abstract_submitters import AbstractClusterSubmitter
 
 

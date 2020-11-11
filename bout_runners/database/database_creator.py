@@ -3,7 +3,7 @@
 
 import logging
 import re
-from typing import Dict, Optional, Tuple, List
+from typing import Dict, List, Optional, Tuple
 
 from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_utils import get_system_info_as_sql_type

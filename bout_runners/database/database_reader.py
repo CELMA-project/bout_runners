@@ -4,8 +4,9 @@
 from typing import Iterable, Mapping, Optional, Union
 
 import pandas as pd
-from bout_runners.database.database_connector import DatabaseConnector
 from numpy import int64
+
+from bout_runners.database.database_connector import DatabaseConnector
 
 
 class DatabaseReader:

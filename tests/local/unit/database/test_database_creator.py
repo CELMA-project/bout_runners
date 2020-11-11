@@ -2,9 +2,10 @@
 
 
 import sqlite3
-from typing import Callable, Tuple, Dict
+from typing import Callable, Dict, Tuple
 
 import pytest
+
 from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_creator import DatabaseCreator
 from bout_runners.database.database_reader import DatabaseReader

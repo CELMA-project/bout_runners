@@ -4,6 +4,7 @@
 from pathlib import Path
 
 import pytest
+
 from bout_runners.make.read_makefile import (
     BoutMakefileReader,
     BoutMakefileVariableReader,

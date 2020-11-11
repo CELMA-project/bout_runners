@@ -1,4 +1,4 @@
-.. _submitters:
+.. _submittersTag:
 
 Submitters
 **********

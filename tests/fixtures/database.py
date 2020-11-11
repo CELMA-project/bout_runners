@@ -3,7 +3,7 @@
 
 import shutil
 from pathlib import Path
-from typing import Iterator, Callable, Optional, Tuple, Dict
+from typing import Callable, Dict, Iterator, Optional, Tuple
 
 import pytest
 

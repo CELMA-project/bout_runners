@@ -1,10 +1,10 @@
 """Dummy functions used for testing."""
 
 
-from typing import Optional, Tuple
 import logging
 import shutil
 from pathlib import Path
+from typing import Optional, Tuple
 
 
 def return_none(*args: Optional[Tuple], **kwargs: Optional[dict]) -> None:

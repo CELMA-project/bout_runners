@@ -2,10 +2,11 @@
 
 
 from typing import Callable
+
 from bout_runners.database.database_connector import DatabaseConnector
-from bout_runners.runner.bout_run_setup import BoutRunSetup
 from bout_runners.executor.executor import Executor
 from bout_runners.parameters.final_parameters import FinalParameters
+from bout_runners.runner.bout_run_setup import BoutRunSetup
 
 
 def test_bout_run_setup(get_bout_run_setup: Callable[[str], BoutRunSetup]) -> None:

@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Callable, Optional
 
 import pytest
+
 from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.metadata.status_checker import StatusChecker

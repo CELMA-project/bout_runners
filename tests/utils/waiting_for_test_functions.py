@@ -17,8 +17,8 @@ http://www.webgraphviz.com
 >>> print(nx.nx_pydot.to_pydot(g))
 """
 
-from typing import Union
 from pathlib import Path
+from typing import Union
 
 
 def node_zero(

@@ -3,9 +3,9 @@
 
 import logging
 import shutil
-from typing import Union
 from datetime import datetime
 from pathlib import Path
+from typing import Union
 
 
 def get_caller_dir() -> Path:

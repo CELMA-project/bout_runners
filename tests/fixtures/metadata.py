@@ -2,7 +2,7 @@
 
 
 from pathlib import Path
-from typing import Iterator, Callable, Dict, Tuple
+from typing import Callable, Dict, Iterator, Tuple
 
 import pandas as pd
 import pytest

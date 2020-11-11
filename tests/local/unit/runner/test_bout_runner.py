@@ -4,22 +4,22 @@
 from pathlib import Path
 from typing import Callable, Dict
 
-from bout_runners.submitter.local_submitter import LocalSubmitter
-from bout_runners.runner.bout_runner import BoutRunner
-from bout_runners.runner.bout_run_setup import BoutRunSetup
-from bout_runners.runner.run_graph import RunGraph
 from bout_runners.database.database_reader import DatabaseReader
+from bout_runners.runner.bout_run_setup import BoutRunSetup
+from bout_runners.runner.bout_runner import BoutRunner
+from bout_runners.runner.run_graph import RunGraph
+from bout_runners.submitter.local_submitter import LocalSubmitter
 from bout_runners.utils.file_operations import copy_restart_files
-from tests.utils.paths import FileStateRestorer, change_directory
-from tests.utils.run import (
-    assert_first_run,
-    assert_dump_files_exist,
-    assert_tables_have_expected_len,
-)
 from tests.utils.dummy_functions import (
     return_none,
-    return_sum_of_two,
     return_sum_of_three,
+    return_sum_of_two,
+)
+from tests.utils.paths import FileStateRestorer, change_directory
+from tests.utils.run import (
+    assert_dump_files_exist,
+    assert_first_run,
+    assert_tables_have_expected_len,
 )
 
 

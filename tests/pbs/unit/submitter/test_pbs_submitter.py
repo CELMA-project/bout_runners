@@ -1,7 +1,9 @@
 """Contains unittests for the PBS part of the PBS submitter."""
 
-import pytest
 from pathlib import Path
+
+import pytest
+
 from bout_runners.submitter.pbs_submitter import PBSSubmitter
 
 

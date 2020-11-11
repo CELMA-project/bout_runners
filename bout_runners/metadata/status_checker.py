@@ -3,15 +3,16 @@
 
 import logging
 import time
-from typing import Optional, Union
 from pathlib import Path
+from typing import Optional, Union
 
 import psutil
+from pandas import DataFrame
+
 from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.log.log_reader import LogReader
 from bout_runners.metadata.metadata_updater import MetadataUpdater
-from pandas import DataFrame
 
 
 class StatusChecker:

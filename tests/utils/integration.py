@@ -1,29 +1,28 @@
 """Contains class and methods for integration tests."""
 
 
+import logging
 from pathlib import Path
 from typing import Callable, Dict, Type
-import logging
 
 import pytest
 
 from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.runner.bout_runner import BoutRunner
 from bout_runners.submitter.abstract_submitters import AbstractSubmitter
-from tests.utils.paths import FileStateRestorer
 from tests.utils.node_functions_complex_graph import (
-    node_zero,
-    node_one,
-    node_five,
     node_eight,
+    node_five,
+    node_one,
     node_seven,
     node_ten,
+    node_zero,
 )
-from tests.utils.paths import change_directory
+from tests.utils.paths import FileStateRestorer, change_directory
 from tests.utils.run import (
+    assert_dump_files_exist,
     assert_first_run,
     assert_tables_have_expected_len,
-    assert_dump_files_exist,
     make_run_group,
 )
 

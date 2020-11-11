@@ -3,8 +3,7 @@
 
 from typing import Callable
 
-from bout_runners.database.database_reader import DatabaseConnector
-from bout_runners.database.database_reader import DatabaseReader
+from bout_runners.database.database_reader import DatabaseConnector, DatabaseReader
 
 
 def test_db_reader(

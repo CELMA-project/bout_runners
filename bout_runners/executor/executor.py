@@ -1,17 +1,19 @@
 """Contains the executor class."""
 
 
-import re
 import logging
-from typing import Optional
-from pathlib import Path
+import re
 from copy import deepcopy
+from pathlib import Path
+from typing import Optional
 
 from bout_runners.executor.bout_paths import BoutPaths
 from bout_runners.make.make import Make
 from bout_runners.parameters.run_parameters import RunParameters
-from bout_runners.submitter.abstract_submitters import AbstractSubmitter
-from bout_runners.submitter.abstract_submitters import AbstractClusterSubmitter
+from bout_runners.submitter.abstract_submitters import (
+    AbstractClusterSubmitter,
+    AbstractSubmitter,
+)
 from bout_runners.submitter.submitter_factory import get_submitter
 
 
@@ -150,7 +152,7 @@ class Executor:
 
         See Also
         --------
-        BoutRunner.__inject_copy_restart_files_node(node_with_restart)
+        bout_runners.runner.bout_runner.BoutRunner.__inject_copy_restart_files_node
             Search for restart files, make a restart node where needed
         """
         return self.__restart_from
