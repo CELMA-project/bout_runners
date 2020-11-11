@@ -99,10 +99,11 @@ class Make:
                 else f"make -f {self.makefile_name}"
             )
 
-            logging.info("Making the program")
+            logging.info("Start: Making the program")
             command = f"{make_str}"
             self.submitter.submit_command(command)
             self.submitter.wait_until_completed()
+            logging.info("Done: Making the program")
 
     def run_clean(self) -> None:
         """Run make clean."""
@@ -110,7 +111,8 @@ class Make:
             "make" if self.makefile_name is None else f"make -f {self.makefile_name}"
         )
 
-        logging.info("Running make clean")
+        logging.info("Start: Running make clean")
         command = f"{make_str} clean"
         self.submitter.submit_command(command)
         self.submitter.wait_until_completed()
+        logging.info("Done: Running make clean")

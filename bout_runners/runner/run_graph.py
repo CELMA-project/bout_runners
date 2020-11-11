@@ -3,8 +3,10 @@
 
 import logging
 from pathlib import Path
-from typing import Optional, Callable, Tuple, Any, Dict, Iterable, Union
+from typing import Any, Callable, Dict, Iterable, Optional, Tuple, Union
+
 import networkx as nx
+
 from bout_runners.runner.bout_run_setup import BoutRunSetup
 from bout_runners.submitter.abstract_submitters import AbstractSubmitter
 from bout_runners.submitter.local_submitter import LocalSubmitter
@@ -33,24 +35,28 @@ class RunGraph:
         Return the number of nodes with status ready
     __getitem__(nodename)
         Return the content of a node
-    __get_pruned_clone()
-        Return a clone of the "ready" nodes of self.__graph
+    get_node_orders(reverse)
+        Return nodes sorted after order
+    predecessors(node_name)
+        Return the predecessors of the node
+    successors(node_name)
+        Return the successors of the node
+    reset()
+        Reset the nodes by setting the status to 'ready'
     add_bout_run_node(name, bout_run_setup)
         Add a node where the setup of a BOUT++ run is attached
     add_function_node(name, function_dict=None, path=None, submitter=None)
         Add a node with an optionally attached callable to the graph
     add_edge(start_node, end_node)
         Connect two nodes through an directed edge
+    remove_edge(start_node, end_node)
+        Remove edge between two nodes
     add_waiting_for(nodes_to_wait_for, name_of_waiting_node)
         Make a node wait for the completion of one or more nodes
-    change_status_node_and_dependencies(start_node_name, status="errored")
-        Remove node and all nodes waiting for the specified node
     get_waiting_for_tuple(start_node_name)
         Return the list of nodes waiting for a given node
-    pick_root()
-        Picks and removes the root nodes from graph
-    reset()
-        Reset the nodes by setting the status to 'ready'
+    change_status_node_and_dependencies(start_node_name, status="errored")
+        Remove node and all nodes waiting for the specified node
     get_dot_string()
         Return the graph as a string i the dot format
 
@@ -72,8 +78,14 @@ class RunGraph:
 
     def __init__(self) -> None:
         """Instantiate the graph."""
+        logging.info("Start: Making a RunGraph object")
         self.__graph = nx.DiGraph()
         self.__node_set = set(self.__graph.nodes)
+        logging.info("Done: Making a RunGraph object")
+
+        # Loop variables
+        self.__node_orders: Optional[Tuple[Tuple[str, ...], ...]] = None
+        self.__index = -1
 
     def __iter__(self) -> "RunGraph":
         """
@@ -86,7 +98,7 @@ class RunGraph:
         """
         return self
 
-    def __next__(self) -> Dict[str, Dict[str, Any]]:
+    def __next__(self) -> Tuple[str, ...]:
         """
         Return the next order nodes from graph (ordered by the breadth).
 
@@ -97,24 +109,17 @@ class RunGraph:
 
         Returns
         -------
-        nodes_at_current_order : dict of str, dict
-            Dict of the attributes of the nodes
+        order : tuple of str
+            A tuple consisting of the current order
         """
-        # NOTE: The while loop can be done more efficient with the walrus operator,
-        #       but this will break compatibility with python < 3.8
-        clone = self.__get_pruned_clone()
-        if len(clone) != 0:
-            # Find all roots of the clone
-            # In degree is number of edges pointing to the node
-            roots = tuple(node for node, degree in clone.in_degree() if degree == 0)
-
-            nodes_at_current_order = dict()
-            for root in roots:
-                nodes_at_current_order[root] = self.__graph.nodes[root]
-                self.__graph.nodes[root]["status"] = "traversed"
-            return nodes_at_current_order
-
-        raise StopIteration
+        if self.__node_orders is None:
+            self.__node_orders = self.get_node_orders()
+        self.__index += 1
+        if self.__index >= len(self.__node_orders):
+            self.__index = -1
+            self.__node_orders = None
+            raise StopIteration
+        return self.__node_orders[self.__index]
 
     def __len__(self) -> int:
         """
@@ -148,22 +153,6 @@ class RunGraph:
         # It seems like this is producing a false positive
         return self.nodes[node_name]  # type: ignore
 
-    def __get_pruned_clone(self) -> nx.DiGraph:
-        """
-        Return a clone of the "ready" nodes of self.__graph.
-
-        Returns
-        -------
-        clone : nx.Digraph
-            A clone of self.__graph where all nodes with another status than "ready"
-            has been removed
-        """
-        clone = self.__graph.copy()
-        for node_name in self.__graph:
-            if self.__graph.nodes[node_name]["status"] != "ready":
-                clone.remove_node(node_name)
-        return clone
-
     @property
     def nodes(self) -> nx.classes.reportviews.NodeView:
         """Return the nodes."""
@@ -171,11 +160,93 @@ class RunGraph:
         #       attributes
         return self.__graph.nodes
 
+    def get_node_orders(self, reverse: bool = False) -> Tuple[Tuple[str, ...], ...]:
+        """
+        Return nodes sorted after order.
+
+        One order is considered as the nodes without any in edges
+        To find the next order remove the first order from the graph and
+        repeat the first step
+
+        Warnings
+        --------
+        As we are counting an order from the nodes with no in edges the
+        result of
+        >>> self.get_node_orders(reverse=True) != self.get_node_orders()[::-1]
+
+        Parameters
+        ----------
+        reverse : bool
+            Whether or not to reverse the graph before finding the orders
+
+        Returns
+        -------
+        orders : tuple of tuple of str
+            A tuple of tuple where the innermost tuple constitutes an order
+        """
+        graph_copy = self.__graph.copy()
+        if reverse:
+            # NOTE: Not possible to make a deepcopy as some of the attributes
+            #       of the nodes are not pickable (example sqlite3.connection)
+            #       Thus we set copy=False
+            # https://networkx.org/documentation/stable/reference/classes/generated/networkx.DiGraph.reverse.html
+            graph_copy = graph_copy.reverse(copy=False)
+            # NOTE: As copy=False, the resulting graph is frozen
+            #       To unfreeze we make a new object
+            # https://networkx.org/documentation/stable/reference/generated/networkx.classes.function.freeze.html
+            graph_copy = nx.DiGraph(graph_copy)
+        orders = list()
+        while len(graph_copy.nodes) != 0:
+            current_roots = tuple(
+                node for node, degree in graph_copy.in_degree() if degree == 0
+            )
+            orders.append(tuple(current_roots))
+            graph_copy.remove_nodes_from(current_roots)
+
+        return tuple(orders)
+
+    def predecessors(self, node_name: str) -> Tuple[str, ...]:
+        """
+        Return the predecessors of the node.
+
+        Parameters
+        ----------
+        node_name : str
+            Name of the node to get the predecessors from
+
+        Returns
+        -------
+        predecessor_names : tuple of str
+            Names of predecessors
+        """
+        # NOTE: The set of nodes only contain the name of the nodes, not their
+        #       attributes
+        return tuple(self.__graph.predecessors(node_name))
+
+    def successors(self, node_name: str) -> Tuple[str, ...]:
+        """
+        Return the successors of the node.
+
+        Parameters
+        ----------
+        node_name : str
+            Name of the node to get the predecessors from
+
+        Returns
+        -------
+        successors_names : tuple of str
+            Names of predecessors
+        """
+        # NOTE: The set of nodes only contain the name of the nodes, not their
+        #       attributes
+        return tuple(self.__graph.successors(node_name))
+
     def reset(self) -> None:
-        """Reset the nodes by setting the status to 'ready'."""
-        logging.info("Resetting status in nodes to 'ready'")
+        """Reset the nodes by setting status to 'ready' and calling node.reset()."""
+        logging.debug("Resetting the nodes")
         for node_name in self.__graph:
             self.__graph.nodes[node_name]["status"] = "ready"
+            self.__graph.nodes[node_name]["submitter"].reset()
 
     def add_bout_run_node(
         self,
@@ -200,7 +271,13 @@ class RunGraph:
         if name in self.__node_set:
             raise ValueError(f"'{name}' is already present in the graph")
 
-        self.__graph.add_node(name, bout_run_setup=bout_run_setup, status="ready")
+        self.__graph.add_node(
+            name,
+            bout_run_setup=bout_run_setup,
+            submitter=bout_run_setup.submitter,
+            status="ready",
+        )
+
         self.__node_set = set(self.__graph.nodes)
 
     def add_function_node(
@@ -286,6 +363,25 @@ class RunGraph:
                 f"The node connection from {start_node} to {end_node} "
                 f"resulted in a cyclic graph"
             )
+
+    def remove_edge(self, start_node: str, end_node: str) -> None:
+        """
+        Remove edge between two nodes.
+
+        Parameters
+        ----------
+        start_node : str
+            Name of the start node
+        end_node : str
+            Name of the end node
+
+        Raises
+        ------
+        ValueError
+            If the graph after adding the nodes becomes cyclic
+        """
+        self.__graph.remove_edge(start_node, end_node)
+        logging.debug("Removing edge from %s to %s", start_node, end_node)
 
     def add_waiting_for(
         self,

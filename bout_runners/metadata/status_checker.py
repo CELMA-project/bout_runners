@@ -3,15 +3,16 @@
 
 import logging
 import time
-from typing import Optional, Union
 from pathlib import Path
+from typing import Optional, Union
 
 import psutil
+from pandas import DataFrame
+
 from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.log.log_reader import LogReader
 from bout_runners.metadata.metadata_updater import MetadataUpdater
-from pandas import DataFrame
 
 
 class StatusChecker:
@@ -47,7 +48,8 @@ class StatusChecker:
     >>> from pathlib import Path
     >>> from bout_runners.database.database_connector import \
     ...     DatabaseConnector
-    >>> db_connector = DatabaseConnector('name_of_db')
+    >>> db_connector = DatabaseConnector('name_of_db',
+    ...     Path().joinpath('path', 'to', 'db'))
     >>> project_path = Path('path').joinpath('to', 'project')
     >>> status_checker = StatusChecker(db_connector, project_path)
     >>> status_checker.check_and_update_status()
@@ -61,7 +63,7 @@ class StatusChecker:
 
     def __init__(
         self,
-        db_connector: Optional[DatabaseConnector] = None,
+        db_connector: DatabaseConnector,
         project_path: Optional[Union[Path, str]] = None,
     ) -> None:
         """
@@ -80,9 +82,7 @@ class StatusChecker:
             Path to the project (the root directory with which usually contains the
             makefile and the executable)
         """
-        self.__db_connector = (
-            db_connector if db_connector is not None else DatabaseConnector()
-        )
+        self.__db_connector = db_connector
         self.__db_reader = DatabaseReader(self.__db_connector)
         self.__project_path = Path(project_path) if project_path is not None else Path()
 
@@ -102,6 +102,7 @@ class StatusChecker:
                 self.__db_reader.db_connector.db_path,
             )
             message = "Can not check the status of schemas that does not exist"
+            logging.critical(message)
             raise RuntimeError(message)
 
         # Create place holder metadata_updater
@@ -181,10 +182,12 @@ class StatusChecker:
                     start_time = log_reader.start_time
                     # Assert to prevent "Incompatible types in assignment" with Optional
                     if start_time is None:
-                        raise RuntimeError(
+                        msg = (
                             "log_reader.start_time is None although "
                             "log_reader.started is True"
                         )
+                        logging.critical(msg)
+                        raise RuntimeError(msg)
                     metadata_updater.update_start_time(start_time)
                     latest_status = self.__check_if_stopped(
                         log_reader, metadata_updater
@@ -251,9 +254,9 @@ class StatusChecker:
             end_time = log_reader.end_time
             # Assert to prevent "Incompatible types in assignment" with Optional
             if end_time is None:
-                raise RuntimeError(
-                    "log_reader.end_time is None although " "log_reader.ended() is True"
-                )
+                msg = "log_reader.end_time is None although log_reader.ended() is True"
+                logging.critical(msg)
+                raise RuntimeError(msg)
             metadata_updater.update_stop_time(end_time)
             latest_status = "complete"
         else:

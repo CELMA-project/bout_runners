@@ -97,6 +97,7 @@ class DefaultParameters:
             Path to the up-to-date `settings_path`
             Will invoke `run_parameters_run` if set to None
         """
+        logging.info("Start: Making a DefaultParameters object")
         self.__bout_paths = bout_paths
         self.__settings_path = Path() if settings_path is None else Path(settings_path)
 
@@ -105,6 +106,7 @@ class DefaultParameters:
                 "Running parameter run as the parameters of the project are unknown"
             )
             self.run_parameters_run(self.__bout_paths)
+        logging.info("Done: Making a DefaultParameters object")
 
     def run_parameters_run(self, bout_paths: Optional[BoutPaths]) -> None:
         """

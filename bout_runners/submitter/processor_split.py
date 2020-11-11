@@ -62,15 +62,13 @@ class ProcessorSplit:
         self.__number_of_processors = number_of_processors
         self.__number_of_nodes = number_of_nodes
         self.__processors_per_node = processors_per_node
-
-        # Set the number of processors
-        self.number_of_processors = number_of_processors
-
-        # Set the number of nodes
-        self.number_of_nodes = number_of_nodes
-
-        # Set the processors per node
-        self.processors_per_node = processors_per_node
+        self.__enough_nodes_check()
+        logging.debug(
+            "(number_of_processors, number_of_nodes, processors_per_node)=(%s, %s, %s)",
+            self.number_of_processors,
+            self.number_of_nodes,
+            self.processors_per_node,
+        )
 
     @property
     def number_of_processors(self) -> int:
@@ -90,7 +88,7 @@ class ProcessorSplit:
         if self.number_of_nodes is not None and self.processors_per_node is not None:
             self.__enough_nodes_check()
 
-        logging.debug("number_of_processors set to %s", number_of_processors)
+        logging.debug("Updated number_of_processors set to %s", number_of_processors)
 
     @property
     def number_of_nodes(self) -> int:
@@ -112,7 +110,7 @@ class ProcessorSplit:
             and self.processors_per_node is not None
         ):
             self.__enough_nodes_check()
-        logging.debug("number_of_nodes set to %s", number_of_nodes)
+        logging.debug("Updated number_of_nodes set to %s", number_of_nodes)
 
     @property
     def processors_per_node(self) -> int:
@@ -131,7 +129,7 @@ class ProcessorSplit:
         self.__processors_per_node = processors_per_node
         if self.number_of_processors is not None and self.number_of_nodes is not None:
             self.__enough_nodes_check()
-        logging.debug("processors_per_node set to %s", processors_per_node)
+        logging.debug("Updated processors_per_node set to %s", processors_per_node)
 
     def __enough_nodes_check(self) -> None:
         """

@@ -110,6 +110,8 @@ dist/
 *delme*
 *.bak
 *.bak.*
+*.log.*
+*.err
 
 # Mac stuff
 *.DS_Store

@@ -21,7 +21,14 @@ Contents
    structure
    examples/runner
    examples/run_graph
+   examples/submitters
    examples/metadata
+
+.. toctree::
+   :maxdepth: 2
+   :caption: What's new
+
+   releases/index
 
 .. toctree::
    :maxdepth: 2

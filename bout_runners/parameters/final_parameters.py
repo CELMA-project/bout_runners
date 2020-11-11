@@ -2,6 +2,7 @@
 
 
 import ast
+import logging
 from typing import Dict, Optional, Union
 
 from bout_runners.parameters.default_parameters import DefaultParameters
@@ -89,6 +90,7 @@ class FinalParameters:
             which has precedence over BOUT.inp)
             If None, default parameters will be used
         """
+        logging.info("Start: Making a FinalParameters object")
         self.__default_parameters = (
             default_parameters
             if default_parameters is not None
@@ -97,6 +99,7 @@ class FinalParameters:
         self.__run_parameters = (
             run_parameters if run_parameters is not None else RunParameters()
         )
+        logging.info("Done: Making a FinalParameters object")
 
     def get_final_parameters(
         self,
@@ -122,7 +125,9 @@ class FinalParameters:
         run_parameters_dict = self.__run_parameters.run_parameters_dict
         # Assert to prevent "Incompatible types in assignment" with Optional
         if run_parameters_dict is None:
-            raise RuntimeError("run_parameters_dict is None")
+            msg = "run_parameters_dict is None"
+            logging.critical(msg)
+            raise RuntimeError(msg)
         run_parameter_sections = run_parameters_dict.keys()
         for section in run_parameter_sections:
             final_parameters_dict[section].update(run_parameters_dict[section])

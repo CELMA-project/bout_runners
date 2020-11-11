@@ -193,8 +193,14 @@ class LogReader:
         # https://stackoverflow.com/a/32134461/2786884
         match = re.search(pattern, self.file_str, flags=re.MULTILINE)
         if match is None:
-            raise ValueError(f"No matches in {self.file_str} with pattern {pattern}")
+            msg = f"No matches in {self.file_str} with pattern {pattern}"
+            logging.critical(msg)
+            raise ValueError(msg)
 
         time_str = match.group(1)
-        time = datetime.strptime(time_str, "%c")
+        try:
+            time = datetime.strptime(time_str, "%c")
+        except ValueError:
+            # Observed on CentOS
+            time = datetime.strptime(time_str, "%a %d %b %Y %H:%M:%S %p %Z")
         return time

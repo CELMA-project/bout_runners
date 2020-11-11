@@ -1,9 +1,10 @@
 """Dummy functions used for testing."""
 
-from typing import Optional, Tuple
+
 import logging
 import shutil
 from pathlib import Path
+from typing import Optional, Tuple
 
 
 def return_none(*args: Optional[Tuple], **kwargs: Optional[dict]) -> None:
@@ -35,10 +36,12 @@ def mock_expand(*args: Optional[Tuple], **kwargs: Optional[dict]) -> None:
     # NOTE: We are ignoring the types as this is a dummy mock function
     in_dir = Path(kwargs["path"])  # type: ignore
     out_dir = Path(kwargs["output"])  # type: ignore
+    out_dir.mkdir()
     src_restart_files = list(in_dir.glob("*.restart.*"))
-    for file in src_restart_files:
-        logging.debug("Copied from %s to %s", file, out_dir)
-        shutil.copy(file, out_dir)
+    for src in src_restart_files:
+        dst = out_dir.joinpath(src.name)
+        logging.debug("Copied from %s to %s", src, dst)
+        shutil.copy(src, dst)
 
 
 def return_sum_of_two(number_1: int, number_2: int) -> int:

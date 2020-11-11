@@ -72,6 +72,7 @@ class BoutPaths:
             self.project_path)
             If None, the current time will be used
         """
+        logging.info("Start: Making a BoutPahts object")
         # Declare variables to be used in the getters and setters
         # NOTE: When the variables will be set to absolute paths in the setters.
         #       Thus, Path() can be regarded as None
@@ -88,6 +89,7 @@ class BoutPaths:
 
         # Set the bout_inp_dst_dir
         self.bout_inp_dst_dir = bout_inp_dst_dir  # type: ignore
+        logging.info("Done: Making a BoutPahts object")
 
     @property
     def project_path(self) -> Path:
@@ -145,9 +147,9 @@ class BoutPaths:
         self.__bout_inp_src_dir = self.project_path.joinpath(bout_inp_src_dir)
 
         if not self.__bout_inp_src_dir.joinpath("BOUT.inp").is_file():
-            raise FileNotFoundError(
-                f"No BOUT.inp file found in " f"{self.__bout_inp_src_dir}"
-            )
+            msg = f"No BOUT.inp file found in " f"{self.__bout_inp_src_dir}"
+            logging.critical(msg)
+            raise FileNotFoundError(msg)
 
         logging.debug("self.bout_inp_src_dir set to %s", self.__bout_inp_src_dir)
 

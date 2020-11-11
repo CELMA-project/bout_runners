@@ -1,16 +1,20 @@
 """Contains the RunGroup class."""
 
-import re
+
 import logging
+import re
 from pathlib import Path
-from typing import Optional, Union, Iterable, List, Callable, Tuple, Any, Dict
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
 from bout_runners.database.database_connector import DatabaseConnector
-from bout_runners.runner.bout_run_setup import BoutRunSetup
 from bout_runners.executor.bout_paths import BoutPaths
+from bout_runners.runner.bout_run_setup import BoutRunSetup
 from bout_runners.runner.run_graph import RunGraph
-from bout_runners.submitter.abstract_submitters import AbstractSubmitter
-from bout_runners.submitter.local_submitter import LocalSubmitter
+from bout_runners.submitter.abstract_submitters import (
+    AbstractClusterSubmitter,
+    AbstractSubmitter,
+)
+from bout_runners.submitter.submitter_factory import get_submitter
 
 
 class RunGroup:
@@ -117,6 +121,7 @@ class RunGroup:
         waiting_for : None or str or iterable
             Name of nodes the name_of_waiting_node will wait for
         """
+        logging.info("Start: Making a RunGroup object")
         self.__run_graph = run_graph
         self.__name = name
         self.__bout_run_setup = bout_run_setup
@@ -133,12 +138,15 @@ class RunGroup:
 
         # Assign a node to bout_run_setup
         self.__bout_run_node_name = f"bout_run_{self.__name}"
+        if isinstance(self.__bout_run_setup.submitter, AbstractClusterSubmitter):
+            self.__bout_run_setup.submitter.job_name = self.__bout_run_node_name
         self.__run_graph.add_bout_run_node(
             self.bout_run_node_name, self.__bout_run_setup
         )
 
         # Add edges to the nodes
         self.__run_graph.add_waiting_for(self.bout_run_node_name, waiting_for)
+        logging.info("Done: Making a RunGroup object")
 
     def __increment_name(self) -> None:
         """Increment the name of the RunGroup."""
@@ -173,18 +181,6 @@ class RunGroup:
         return self.__bout_run_node_name
 
     @property
-    def run_graph(self) -> RunGraph:
-        """
-        Return the run graph.
-
-        Returns
-        -------
-        RunGraph
-            The run graph
-        """
-        return self.__run_graph
-
-    @property
     def bout_paths(self) -> BoutPaths:
         """
         Return the BoutPaths.
@@ -207,6 +203,18 @@ class RunGroup:
             The DatabaseConnector
         """
         return self.__bout_run_setup.db_connector
+
+    @property
+    def run_graph(self) -> RunGraph:
+        """
+        Return the run graph.
+
+        Returns
+        -------
+        RunGraph
+            The run graph
+        """
+        return self.__run_graph
 
     @property
     def pre_processors(self) -> Tuple[str, ...]:
@@ -290,7 +298,12 @@ class RunGroup:
         path = directory.joinpath(
             f"{function_dict['function'].__name__}_{pre_processor_node_name}.py"
         )
-        submitter = submitter if submitter is not None else LocalSubmitter()
+        if submitter is None:
+            submitter = get_submitter()
+            if isinstance(submitter, AbstractClusterSubmitter):
+                submitter.job_name = pre_processor_node_name
+                submitter.store_dir = self.__bout_run_setup.bout_paths.bout_inp_dst_dir
+
         self.__run_graph.add_function_node(
             pre_processor_node_name,
             function_dict=function_dict,
@@ -360,7 +373,12 @@ class RunGroup:
         path = directory.joinpath(
             f"{function_dict['function'].__name__}_{post_processor_node_name}.py"
         )
-        submitter = submitter if submitter is not None else LocalSubmitter()
+        if submitter is None:
+            submitter = get_submitter()
+            if isinstance(submitter, AbstractClusterSubmitter):
+                submitter.job_name = post_processor_node_name
+                submitter.store_dir = self.__bout_run_setup.bout_paths.bout_inp_dst_dir
+
         self.__run_graph.add_function_node(
             post_processor_node_name,
             function_dict=function_dict,

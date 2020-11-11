@@ -11,7 +11,9 @@ on:
     - cron: "0 0 1 * *"
 
 jobs:
-  build:
+  # As we are running on different environments, we are splitting the jobs
+  # https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions#jobs
+  local:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: true
@@ -20,7 +22,8 @@ jobs:
         os: [ubuntu-latest]
 
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout repo
+        uses: actions/checkout@v2
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
@@ -37,7 +40,7 @@ jobs:
           sudo apt install libnetcdf-cxx-legacy-dev
           sudo apt install g++
 
-      - name: Setting up BOUT-dev next
+      - name: Setup BOUT-dev next
         run: |
           git clone git://github.com/boutproject/BOUT-dev.git ${HOME}/BOUT-dev
           cd ${HOME}/BOUT-dev
@@ -49,11 +52,97 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -e ".[test]"
-          pip install pytest-cov
 
-      - name: Generate coverage report
-        # Install and run the coverage report
-        run: pytest --cov=./ --cov-report=xml
+      - name: Test local run
+        run: |
+          coverage run --source=. -p -m pytest tests/local/
+
+      - name: Upload Artifact
+        # https://docs.github.com/en/free-pro-team@latest/actions/guides/storing-workflow-data-as-artifacts
+        uses: actions/upload-artifact@v2
+        # Notice that we add ${{ matrix.python-version }} in order not to corrupt files
+        # https://github.com/actions/upload-artifact#uploading-to-the-same-artifact
+        with:
+          name: local-coverage-${{ matrix.python-version }}
+          path: .coverage*
+
+  pbs:
+    runs-on: ubuntu-latest
+    container:
+      image: loeiten/pbspro-test:latest
+      env:
+        PBS_START_MOM: 1
+      # We mount the checked out repo to opt/bout_runners as the checkout action for repos are mounted in a strange
+      # place (/__w/bout_runners/bout_runners/)
+      options:
+        --hostname pbs --user root -v ${{ github.workspace }}:/opt/bout_runners/:rw
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Setup BOUT-dev next
+        # NOTE: We must source the .bashrc as the paths are not available at login
+        # Update the submodule due to
+        # https://github.com/boutproject/BOUT-dev/issues/2110
+        run: |
+          source /root/.bashrc
+          git clone git://github.com/boutproject/BOUT-dev.git /opt/BOUT-dev
+          cd /opt/BOUT-dev
+          git submodule update --init --recursive
+          git checkout next
+          ./configure
+          make
+
+      - name: Set permissions
+        run: |
+          chmod -R 777 /opt/bout_runners
+          chmod -R 777 /opt/BOUT-dev
+
+      - name: Set BOUT-dev path
+        run: |
+          sed -i "s/\${HOME}\/BOUT-dev/\/opt\/BOUT-dev/" /opt/bout_runners/bout_runners/config/bout_runners.ini
+
+      - name: Test PBS run
+        # Note that the sleep period in the start seems to be essential in order for the submissions not to be stuck
+        # forever in the queue
+        run: |
+          bash /entrypoint.sh \
+          "sleep 10 \
+          && cd /opt/bout_runners \
+          && coverage run --source=. -p -m pytest tests/pbs"
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: pbs-coverage
+          path: .coverage*
+
+  upload-to-codecov:
+    needs: [local, pbs]
+    runs-on: ubuntu-latest
+
+    steps:
+      # We need the repo in order for codecov to count lines
+      - uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+
+      - name: Download all artifacts
+        # https://github.com/actions/download-artifact
+        uses: actions/download-artifact@v2
+
+      - name: Install coverage
+        run: |
+          pip install coverage
+
+      - name: Combine
+        run: |
+          cp -rf local-coverage*/.coverage.* .
+          cp -rf pbs-coverage/.coverage* .
+          coverage combine
+          coverage xml
 
       - name: Upload coverage to Codecov
         # Use the v1 tag of: https://github.com/codecov/codecov-action

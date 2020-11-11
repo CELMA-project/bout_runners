@@ -1,0 +1,21 @@
+10/08/2020 12:41:06  L    Considering job to run
+10/08/2020 12:41:06  S    Job Queued at request of pbsuser@pbs, owner = pbsuser@pbs, job name = job1, queue = workq
+10/08/2020 12:41:06  S    Job Run at request of Scheduler@pbs on exec_vnode (pbs:ncpus=2)
+10/08/2020 12:41:06  S    Obit received momhop:1 serverhop:1 state:4 substate:42
+10/08/2020 12:41:06  S    Exit_status=0 resources_used.cpupercent=0 resources_used.cput=00:00:00 resources_used.mem=0kb resources_used.ncpus=2 resources_used.vmem=0kb resources_used.walltime=00:00:00
+10/08/2020 12:41:06  L    Job run
+10/08/2020 12:41:06  M    Started, pid = 1814
+10/08/2020 12:41:06  M    task 00000001 terminated
+10/08/2020 12:41:06  M    Terminated
+10/08/2020 12:41:06  M    task 00000001 cput= 0:00:00
+10/08/2020 12:41:06  M    pbs cput= 0:00:00 mem=0kb
+10/08/2020 12:41:06  M    no active tasks
+10/08/2020 12:41:06  M    Obit sent
+10/08/2020 12:41:06  M    copy file request received
+10/08/2020 12:41:06  M    staged 2 items out over 0:00:00
+10/08/2020 12:41:06  M    no active tasks
+10/08/2020 12:41:06  M    delete job request received
+10/08/2020 12:41:06  S    enqueuing into workq, state 1 hop 1
+10/08/2020 12:41:06  S    dequeuing from workq, state 5
+10/08/2020 12:41:06  M    kill_job
+10/08/2020 12:41:06  M    kill_job

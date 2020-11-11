@@ -3,7 +3,7 @@
 
 import logging
 import re
-from typing import Dict, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_utils import get_system_info_as_sql_type
@@ -67,7 +67,7 @@ class DatabaseCreator:
 
     Create the database
 
-    >>> db_connector = DatabaseConnector('name')
+    >>> db_connector = DatabaseConnector('name', project_path)
     >>> db_creator = DatabaseCreator(db_connector)
     >>> db_creator.create_all_schema_tables(final_parameters_as_sql_types)
     """
@@ -104,16 +104,17 @@ class DatabaseCreator:
         .. [1] https://www.databasestar.com/database-normalization/
         .. [2] http://www.bkent.net/Doc/simple5.htm
         """
-        logging.info("Creating tables in %s", self.db_connector.db_path)
-
         # Check if tables are created
-        self._create_system_info_table()
-        self._create_split_table()
-        self._create_file_modification_table()
-        self._create_parameter_tables(parameters_as_sql_types)
-        self._create_run_table()
+        tables = list()
+        tables.append(self._create_system_info_table())
+        tables.append(self._create_split_table())
+        tables.append(self._create_file_modification_table())
+        tables.extend(self._create_parameter_tables(parameters_as_sql_types))
+        tables.append(self._create_run_table())
 
-        logging.info("Tables created in %s", self.db_connector.db_path)
+        logging.info(
+            "Created the following tables in %s: %s", self.db_connector.db_path, tables
+        )
 
     @staticmethod
     def get_create_table_statement(
@@ -184,7 +185,7 @@ class DatabaseCreator:
 
         return create_statement
 
-    def _create_single_table(self, table_str: str) -> None:
+    def _create_single_table(self, table_str: str) -> str:
         """
         Create a table in the database.
 
@@ -192,6 +193,11 @@ class DatabaseCreator:
         ----------
         table_str : str
             The query to execute
+
+        Returns
+        -------
+        table_name : str
+            Name of the table
 
         Raises
         ------
@@ -203,24 +209,40 @@ class DatabaseCreator:
 
         match = re.match(pattern, table_str)
         if match is None:
-            raise ValueError(f'table_str "{table_str}" not understood')
+            msg = f'table_str "{table_str}" not understood'
+            logging.critical(msg)
+            raise ValueError(msg)
 
         table_name = match.group(1)
 
         self.db_connector.execute_statement(table_str)
 
-        logging.info("Created table %s", table_name)
+        return table_name
 
-    def _create_system_info_table(self) -> None:
-        """Create a table for the system info."""
+    def _create_system_info_table(self) -> str:
+        """
+        Create a table for the system info.
+
+        Returns
+        -------
+        str
+            Name of the table
+        """
         sys_info_dict = get_system_info_as_sql_type()
         sys_info_statement = self.get_create_table_statement(
             table_name="system_info", columns=sys_info_dict
         )
-        self._create_single_table(sys_info_statement)
+        return self._create_single_table(sys_info_statement)
 
-    def _create_split_table(self) -> None:
-        """Create a table which stores the grid split."""
+    def _create_split_table(self) -> str:
+        """
+        Create a table which stores the grid split.
+
+        Returns
+        -------
+        str
+            Name of the table
+        """
         split_statement = self.get_create_table_statement(
             table_name="split",
             columns={
@@ -229,10 +251,17 @@ class DatabaseCreator:
                 "processors_per_node": "INTEGER",
             },
         )
-        self._create_single_table(split_statement)
+        return self._create_single_table(split_statement)
 
-    def _create_file_modification_table(self) -> None:
-        """Create a table for file modifications."""
+    def _create_file_modification_table(self) -> str:
+        """
+        Create a table for file modifications.
+
+        Returns
+        -------
+        str
+            Name of the table
+        """
         file_modification_statement = self.get_create_table_statement(
             table_name="file_modification",
             columns={
@@ -243,11 +272,11 @@ class DatabaseCreator:
                 "bout_git_sha": "TEXT",
             },
         )
-        self._create_single_table(file_modification_statement)
+        return self._create_single_table(file_modification_statement)
 
     def _create_parameter_tables(
         self, parameters_as_sql_types: Dict[str, Dict[str, str]]
-    ) -> None:
+    ) -> List[str]:
         """
         Create a table for each BOUT.settings section and a join table.
 
@@ -258,11 +287,17 @@ class DatabaseCreator:
 
             >>> {'section': {'parameter': 'value_type'}}
 
+        Returns
+        -------
+        tables : list of str
+            Tuple of table names
+
         Notes
         -----
         All `:` will be replaced by `_` in the section names
         """
         parameters_foreign_keys = dict()
+        tables = list()
         for section in parameters_as_sql_types.keys():
             # Replace bad characters for SQL
             section_name = section.replace(":", "_")
@@ -278,16 +313,24 @@ class DatabaseCreator:
             section_statement = self.get_create_table_statement(
                 table_name=section_name, columns=columns
             )
-            self._create_single_table(section_statement)
+            tables.append(self._create_single_table(section_statement))
 
         # Create the join table
         parameters_statement = self.get_create_table_statement(
             table_name="parameters", foreign_keys=parameters_foreign_keys
         )
-        self._create_single_table(parameters_statement)
+        tables.append(self._create_single_table(parameters_statement))
+        return tables
 
-    def _create_run_table(self) -> None:
-        """Create a table for the metadata of a run."""
+    def _create_run_table(self) -> str:
+        """
+        Create a table for the metadata of a run.
+
+        Returns
+        -------
+        str
+            Name of the table
+        """
         run_statement = self.get_create_table_statement(
             table_name="run",
             columns={
@@ -304,4 +347,4 @@ class DatabaseCreator:
                 "system_info_id": ("system_info", "id"),
             },
         )
-        self._create_single_table(run_statement)
+        return self._create_single_table(run_statement)
