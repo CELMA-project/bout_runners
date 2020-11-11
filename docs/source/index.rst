@@ -21,6 +21,7 @@ Contents
    structure
    examples/runner
    examples/run_graph
+   examples/submitters
    examples/metadata
 
 .. toctree::

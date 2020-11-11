@@ -77,7 +77,7 @@ def get_submitters_config_path() -> Path:
         Path to the submitters configuration
     """
     config = get_bout_runners_configuration()
-    path_str = config["submitter_config"]["directory"]
+    path_str = config["submitter_config"]["path"]
     if path_str.lower() == "none":
         submitters_config_path = get_default_submitters_config_path()
     else:

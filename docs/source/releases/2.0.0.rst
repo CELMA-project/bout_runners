@@ -1,5 +1,5 @@
-What's New In BOUT Runners 2.0
-==============================
+What's New In BOUT Runners 2.0.0
+********************************
 
 FIXME
 
@@ -8,31 +8,31 @@ FIXME
 
 
 Summary -- Release highlights
------------------------------
+=============================
 
 * Foo
 
 New features
-------------
+============
 
 * Foo
 
 Bug fixes
----------
+=========
 
 * Foo
 
 Other changes
--------------
+=============
 
 * Foo
 
 Deprecated features
--------------------
+===================
 
 * Foo
 
 Removed features
-----------------
+================
 
 * None

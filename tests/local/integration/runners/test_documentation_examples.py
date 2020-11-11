@@ -140,9 +140,6 @@ def test_pre_and_post_documentation(
     """
     Test that the pre and post documentation runs without error.
 
-    FIXME: Explain documentation how bout_runners copies restart files
-    FIXME: Double check that this matches the actual documentation
-
     Parameters
     ----------
     make_project : Path
@@ -226,9 +223,7 @@ def test_pre_and_post_documentation(
         restart_executor, db_connector, final_parameters
     )
 
-    restart_run_group = RunGroup(
-        run_graph, restart_bout_run_setup, name=name, waiting_for=expand_node_name
-    )
+    restart_run_group = RunGroup(run_graph, restart_bout_run_setup, name=name)
 
     kwargs = {"path": expanded_noise_restarts_dir, "scale": 1e-5}
     restart_run_group.add_pre_processor(

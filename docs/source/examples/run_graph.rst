@@ -11,7 +11,12 @@ The core of the ``RunGroup`` is therefore the bout run, and zero or more pre- an
 
 The ``RunGraph`` is the directed acyclic graph that ``BoutRunners`` will execute.
 It's nodes contains instructions to be executed, whereas the edges describes it's dependencies.
-The execution of all nodes pointing to a specific node must successfully complete before the instructions of the specific node is to be be submitted.
+The execution of a node will not start until it's dependencies (i.e. nodes with edges directed towards the node under consideration) has successfully completed.
+For more details see :ref:`submitters<submitters>`
+
+``RunGraph`` is at a lower abstraction level than ``RunGroup``.
+Thus everything you can do through ``RunGroup`` you could do through the ``RunGraph``.
+However, the ``RunGroup`` automates the naming, the adding of nodes (with the appropriate ``submitter``) and the adding of edges.
 
 .. _ChainRestarts:
 
@@ -82,19 +87,28 @@ Next we add the restart run without changing any parameters
         run_parameters=run_parameters,
         restart_from=bout_paths.bout_inp_dst_dir,
     )
+    file_state_restorer.add(
+        restart_executor.bout_paths.bout_inp_dst_dir, force_mark_removal=True
+    )
 
-    restart_bout_run_setup = BoutRunSetup(restart_executor, db_connector, final_parameters)
+    restart_bout_run_setup = BoutRunSetup(
+        restart_executor, db_connector, final_parameters
+    )
 
-    RunGroup(run_graph, restart_bout_run_setup, name=name, waiting_for=basic_run_group.bout_run_node_name)
+    RunGroup(
+        run_graph,
+        restart_bout_run_setup,
+        name=name,
+        waiting_for=basic_run_group.bout_run_node_name,
+    )
 
 and the restart where we are changing the parameters are changing
 
 
 .. code:: python
 
-    new_run_parameters = RunParameters({'solver': {'adams_moulton': True}})
-    new_final_parameters = FinalParameters(default_parameters,
-                                           run_parameters)
+    new_run_parameters = RunParameters({"solver": {"adams_moulton": True}})
+    new_final_parameters = FinalParameters(default_parameters, run_parameters)
 
     restart_with_changing_parameters_executor = Executor(
         bout_paths=bout_paths,
@@ -102,10 +116,21 @@ and the restart where we are changing the parameters are changing
         run_parameters=new_run_parameters,
         restart_from=bout_paths.bout_inp_dst_dir,
     )
+    file_state_restorer.add(
+        restart_with_changing_parameters_executor.bout_paths.bout_inp_dst_dir,
+        force_mark_removal=True,
+    )
 
-    BoutRunSetup(restart_with_changing_parameters_executor, db_connector, new_final_parameters)
+    BoutRunSetup(
+        restart_with_changing_parameters_executor, db_connector, new_final_parameters
+    )
 
-    RunGroup(run_graph, restart_bout_run_setup, name=name, waiting_for=basic_run_group.bout_run_node_name)
+    RunGroup(
+        run_graph,
+        restart_bout_run_setup,
+        name=name,
+        waiting_for=basic_run_group.bout_run_node_name,
+    )
 
 The dot graph (which can be viewed at for example http://www.webgraphviz.com) can be obtained by
 
@@ -126,11 +151,22 @@ Finally we execute the runs
 
 .. note::
 
-    The code above will not overwrite any files.
-    The new dump files can be found in the directory ``<name_of_BOUT_inp_directory>_restart_<restart_number>``.
+    Behind the scenes the ``BoutRunner`` object will do two things
+
+    1. Change ``bout_paths.bout_inp_dst_dir`` to ``<name_of_BOUT_inp_directory>_restart_<restart_number>``
+    2. Create new nodes which copies the the restart files from the ``restart_from`` directory to the new ``bout_paths.bout_inp_dst_dir``
+
+    This ensures that restarting from previous runs will never overwrite any files.
+
+With the alteration of the graph from ``BoutRunner``, the resulting graph will look as follows
+
+|restart_graph_full|
 
 .. |restart_graph| image:: https://raw.githubusercontent.com/CELMA-project/bout_runners/master/docs/source/_static/restart_graph.png
     :alt: Graph of chained restarts
+
+.. |restart_graph_full| image:: https://raw.githubusercontent.com/CELMA-project/bout_runners/master/docs/source/_static/restart_graph_full.png
+    :alt: Graph of chained restarts with alterations from BoutRunners
 
 Pre- and post-processors
 ========================
@@ -145,22 +181,22 @@ We will therefore expand the dimensions and add noise to the restart files befor
 
 We start by building the ``basic_bout_run_setup`` as we did in :ref:`Making the basic BoutRunSetup<basicBoutRunSetup>`.
 Then, we add two post-processors: One post-processors which makes a plot, and another which expands the dimension.
-Note that copying of restart files is handled through function nodes.
-As we will have runs depending on the restart files in the following node we must specify ``copy_restart_files=True``
+Note that copying of restart files is handled in the ``BoutRunner`` object.
 
 .. code:: python
 
     from boutdata.restart import resizeZ
 
     basic_run_group.add_post_processor({'function': my_plotting_function, 'args': None, 'kwargs':None})
-    expanded_noise_restarts_dir = bout_paths.bout_inp_dst_dir.parent.joinpath('expanded_noise_restarts')
+    expanded_noise_restarts_dir = bout_paths.bout_inp_dst_dir.parent.joinpath(
+        "expanded_noise_restarts"
+    )
     kwargs = {'newNz': 16,
               'path': bout_paths.bout_inp_dst_dir,
               'output': expanded_noise_restarts_dir}
     expand_node_name = basic_run_group.add_post_processor({'function': resizeZ,
                                                            'args': None,
-                                                           'kwargs':kwargs,
-                                                           'copy_restart_files'=True})
+                                                           'kwargs':kwargs})
 
 Next, we make a run group for the restart run, and add noise to the restart files as a pre-processing step
 
@@ -177,15 +213,23 @@ Next, we make a run group for the restart run, and add noise to the restart file
         restart_from=expanded_noise_restarts_dir,
     )
 
-    restart_bout_run_setup = BoutRunSetup(restart_executor, db_connector, final_parameters)
+    restart_bout_run_setup = BoutRunSetup(
+        restart_executor, db_connector, final_parameters
+    )
 
-    restart_run_group = RunGroup(run_graph, restart_bout_run_setup, name=name)
+    restart_run_group = RunGroup(
+        run_graph, restart_bout_run_setup, name=name
+    )
 
-    kwargs = {'path': expanded_noise_restarts_dir,
-              'scale': 1e-5}
+    kwargs = {'path': expanded_noise_restarts_dir, 'scale': 1e-5}
     restart_run_group.add_pre_processor(
-        {'function': addnoise, 'args': None, 'kwargs':kwargs, 'copy_restart_files'=True},
-        waiting_for=expand_node_name)
+        {
+            "function": return_none,
+            "args": None,
+            "kwargs": kwargs,
+        },
+        waiting_for=expand_node_name,
+    )
 
 The dot graph (which can be viewed at for example http://www.webgraphviz.com) can be obtained by
 
@@ -204,5 +248,12 @@ Finally we execute the runs
     runner = BoutRunner(run_graph)
     runner.run()
 
+With the alteration of the graph from ``BoutRunner``, the resulting graph will look as follows
+
+|expand_graph_full|
+
 .. |expand_graph| image:: https://raw.githubusercontent.com/CELMA-project/bout_runners/master/docs/source/_static/expand_graph.png
     :alt: Graph of expanding restarts
+
+.. |expand_graph_full| image:: https://raw.githubusercontent.com/CELMA-project/bout_runners/master/docs/source/_static/expand_graph_full.png
+    :alt: Expand graph of chained restarts with alterations from BoutRunners
