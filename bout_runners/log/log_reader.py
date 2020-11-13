@@ -34,8 +34,8 @@ class LogReader:
         Whether or not the pid can be found
     __is_str_in_file(pattern)
         Check whether regex-pattern exists in file
-    __find_locale_time(pattern)
-        Return the locale time of a regex capture
+    __find_local_time(pattern)
+        Return the local time of a regex capture
 
     Examples
     --------
@@ -109,7 +109,7 @@ class LogReader:
             The start time on date time format
         """
         if self.started():
-            return self.__find_locale_time(r"^Run started at  : (.*)")
+            return self.__find_local_time(r"^Run started at  : (.*)")
         return None
 
     @property
@@ -123,7 +123,7 @@ class LogReader:
             The end time on date time format
         """
         if self.ended():
-            return self.__find_locale_time(r"^Run finished at  : (.*)")
+            return self.__find_local_time(r"^Run finished at  : (.*)")
         return None
 
     @property
@@ -169,9 +169,9 @@ class LogReader:
             return False
         return True
 
-    def __find_locale_time(self, pattern: str) -> datetime:
+    def __find_local_time(self, pattern: str) -> datetime:
         """
-        Return the locale time of a regex capture.
+        Return the local time of a regex capture.
 
         Parameters
         ----------
@@ -181,7 +181,7 @@ class LogReader:
         Returns
         -------
         time : datetime
-            The locale datetime
+            The local datetime
 
         Raises
         ------
