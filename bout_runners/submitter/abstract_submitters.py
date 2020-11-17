@@ -8,8 +8,9 @@ import sys
 from abc import ABC, abstractmethod
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Union
 
+from bout_runners.submitter.local_submitter import LocalSubmitter
 from bout_runners.submitter.processor_split import ProcessorSplit
 from bout_runners.utils.file_operations import get_caller_dir
 from bout_runners.utils.serializers import is_jsonable
@@ -383,7 +384,14 @@ class AbstractClusterSubmitter(ABC):
             if key not in submission_dict_keys:
                 self._submission_dict[key] = None
 
+        self.__log_and_error_base: Path = Path()
+        self._waiting_for: List[str] = list()
         self._released = False
+
+        # The following will be set by the implementations
+        self._cancel_str = ""
+        self._release_str = ""
+        self._submit_str = ""
 
     @abstractmethod
     def create_submission_string(
@@ -473,6 +481,18 @@ class AbstractClusterSubmitter(ABC):
         logging.debug("job_name changed from %s to %s", old_name, self._job_name)
 
     @property
+    def released(self) -> bool:
+        """
+        Return whether the job has been released to the cluster.
+
+        Returns
+        -------
+        bool
+            True if the job is not held in the cluster
+        """
+        return self._released
+
+    @property
     def store_dir(self) -> Path:
         """
         Set the properties of self.store_dir.
@@ -488,3 +508,161 @@ class AbstractClusterSubmitter(ABC):
     def store_dir(self, store_dir: Union[str, Path]) -> None:
         self._store_dir = Path(store_dir).absolute()
         logging.debug("store_dir changed to %s", store_dir)
+
+    @property
+    def waiting_for(self) -> Tuple[str, ...]:
+        """
+        Return the waiting for list as a tuple.
+
+        Returns
+        -------
+        tuple of str
+            The waiting for list as a tuple
+        """
+        return tuple(self._waiting_for)
+
+    def _get_std_out_and_std_err(self) -> Tuple[str, str]:
+        """
+        Return std_out and std_err.
+
+        Returns
+        -------
+        std_out : str
+            The standard output
+        std_err : str
+            The standard error
+        """
+        # FIXME: This was previously part of
+        #  https://github.com/CELMA-project/bout_runners/blob/master/bout_runners/submitter/pbs_submitter.py#L126,
+        #  and logged that std_out and std_err was populated
+        log_path = self.__log_and_error_base.parent.joinpath(
+            f"{self.__log_and_error_base.stem}.log"
+        )
+        with log_path.open("r") as file:
+            std_out = file.read()
+        err_path = self.__log_and_error_base.parent.joinpath(
+            f"{self.__log_and_error_base.stem}.err"
+        )
+        with err_path.open("r") as file:
+            std_err = file.read()
+
+        return std_out, std_err
+
+    def add_waiting_for(
+        self, waiting_for_id: Union[Optional[str], Iterable[str]]
+    ) -> None:
+        """
+        Add a waiting for id to the waiting for list.
+
+        This will waiting for list will be written to the submission string
+        upon creation
+
+        Parameters
+        ----------
+        waiting_for_id : None or list of str
+            Id to the job waiting for
+        """
+        if waiting_for_id is not None:
+            if isinstance(waiting_for_id, str):
+                self._waiting_for.append(waiting_for_id)
+                logging.debug(
+                    "Adding the following to the waiting_for_list for %s: %s",
+                    self.job_name,
+                    waiting_for_id,
+                )
+            else:
+                for waiting_id in waiting_for_id:
+                    self._waiting_for.append(waiting_id)
+                    logging.debug(
+                        "Adding the following to the waiting_for_list for %s: %s",
+                        self.job_name,
+                        waiting_id,
+                    )
+
+    def kill(self) -> None:
+        """Kill a job."""
+        if self.job_id is not None and not self.completed():
+            logging.info("Killing job_id %s (%s)", self.job_id, self.job_name)
+            submitter = LocalSubmitter()
+            submitter.submit_command(f"{self._cancel_str} {self.job_id}")
+            submitter.wait_until_completed()
+            self._released = True
+
+    def release(self) -> None:
+        """Release job if held."""
+        if self.job_id is not None and not self._released:
+            logging.debug("Releasing job_id %s (%s)", self.job_id, self.job_name)
+            submitter = LocalSubmitter()
+            submitter.submit_command(f"{self._release_str} {self.job_id}")
+            submitter.wait_until_completed()
+            self._released = True
+
+    def submit_command(self, command: str) -> None:
+        """
+        Submit a command.
+
+        Notes
+        -----
+        All submitted jobs are held
+        Release with self.release
+        See [1]_ for details
+
+        Parameters
+        ----------
+        command : str
+            Command to submit
+
+        References
+        ----------
+        .. [1] https://community.openpbs.org/t/ignoring-finished-dependencies/1976
+        """
+        # FIXME: Issues with _status and reset...split function in abstract AND impl?
+        # This starts the job anew, so we restart the instance to clear it from any
+        # spurious member data, before doing so, we must capture the waiting for tuple
+        waiting_for = self.waiting_for
+        self.reset()
+        script_path = self.store_dir.joinpath(f"{self._job_name}.sh")
+        with script_path.open("w") as file:
+            file.write(self.create_submission_string(command, waiting_for=waiting_for))
+
+        # Make the script executable
+        local_submitter = LocalSubmitter(run_path=self.store_dir)
+        local_submitter.submit_command(f"chmod +x {script_path}")
+        local_submitter.wait_until_completed()
+
+        # Submit the command through a local submitter
+        local_submitter.submit_command(f"{self._submit_str} {script_path}")
+        local_submitter.wait_until_completed()
+        self._status["job_id"] = local_submitter.std_out
+        logging.info(
+            "job_id %s (%s) given to command '%s' in %s",
+            self.job_id,
+            self.job_name,
+            command,
+            script_path,
+        )
+
+    def raise_error(self) -> None:
+        """
+        Raise and error from the subprocess in a clean way.
+
+        Raises
+        ------
+        RuntimeError
+            If an error was caught
+        """
+        if self.completed():
+            if self.return_code != 0:
+                if self.return_code is None:
+                    msg = (
+                        "Submission was never submitted. "
+                        "Did some of the dependencies finished before "
+                        "submitting the job? "
+                        "In that case the finished dependency might have "
+                        "rejected the job."
+                    )
+                    logging.critical(msg)
+                    raise RuntimeError(msg)
+                msg = f"Submission errored with error code {self.return_code}"
+                logging.critical(msg)
+                raise RuntimeError(msg)

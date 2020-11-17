@@ -5,7 +5,7 @@ import logging
 import re
 from pathlib import Path
 from time import sleep
-from typing import Dict, Iterable, List, Optional, Tuple, Union
+from typing import Dict, Optional, Tuple
 
 from bout_runners.submitter.abstract_submitters import (
     AbstractClusterSubmitter,
@@ -21,7 +21,7 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
 
     Attributes
     ----------
-    __waiting_for : tuple of str
+    _waiting_for : tuple of str
         Getter variable for waiting_for
     __log_and_error_base : Path
         Base for the path for the .log and .err files
@@ -34,7 +34,7 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
 
     Methods
     -------
-    __get_trace()
+    get_trace()
         Return the trace from ``tracejob``
     _wait_for_std_out_and_std_err()
         Wait until the process completes if a process has been started
@@ -103,25 +103,10 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
             self._submission_dict["walltime"] = self.structure_time_to_pbs_format(
                 self._submission_dict["walltime"]
             )
-        self.__waiting_for: List[str] = list()
-        self.__log_and_error_base: Path = Path()
         self.__dequeued = False
-
-    def __get_trace(self) -> str:
-        """
-        Return the trace from ``tracejob``.
-
-        Returns
-        -------
-        trace : str
-            Trace obtained from the `tracejob`
-        """
-        # Submit the command through a local submitter
-        local_submitter = LocalSubmitter(run_path=self.store_dir)
-        local_submitter.submit_command(f"tracejob -n 365 {self._status['job_id']}")
-        local_submitter.wait_until_completed()
-        trace = local_submitter.std_out if local_submitter.std_out is not None else ""
-        return trace
+        self._cancel_str = "qdel"
+        self._release_str = "qrls"
+        self._submit_str = "qsub -h"
 
     def _wait_for_std_out_and_std_err(self) -> None:
         """
@@ -132,31 +117,17 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         if self._status["job_id"] is not None:
             self.release()
             while self._status["return_code"] is None and not self.__dequeued:
-                trace = self.__get_trace()
+                trace = self.get_trace()
                 self._status["return_code"] = self.get_return_code(trace)
                 self.__dequeued = self.has_dequeue(trace)
                 sleep(5)
                 logging.debug("Trace is reading:\n%s", trace)
 
             if self._status["return_code"] is not None:
-                log_path = self.__log_and_error_base.parent.joinpath(
-                    f"{self.__log_and_error_base.stem}.log"
-                )
-                with log_path.open("r") as file:
-                    self._status["std_out"] = file.read()
-
-                err_path = self.__log_and_error_base.parent.joinpath(
-                    f"{self.__log_and_error_base.stem}.err"
-                )
-                with err_path.open("r") as file:
-                    self._status["std_err"] = file.read()
-
-                logging.debug(
-                    "std_out and std_err populated for job_id %s (%s)",
-                    self._status["job_id"],
-                    self.job_name,
-                )
-
+                (
+                    self._status["std_out"],
+                    self._status["std_err"],
+                ) = self._get_std_out_and_std_err()
             else:
                 # If the return code is empty it must be because the while loop
                 # exited because the job was dequeued
@@ -174,30 +145,6 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
                 self.job_id,
                 self.job_name,
             )
-
-    @property
-    def released(self) -> bool:
-        """
-        Return whether the job has been released to the cluster.
-
-        Returns
-        -------
-        bool
-            True if the job is not held in the cluster
-        """
-        return self._released
-
-    @property
-    def waiting_for(self) -> Tuple[str, ...]:
-        """
-        Return the waiting for list as a tuple.
-
-        Returns
-        -------
-        tuple of str
-            The waiting for list as a tuple
-        """
-        return tuple(self.__waiting_for)
 
     @staticmethod
     def get_return_code(trace: str) -> Optional[int]:
@@ -275,106 +222,6 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         hours += days * 24
         return f"{hours}:{minutes}:{seconds}"
 
-    def add_waiting_for(
-        self, waiting_for_id: Union[Optional[str], Iterable[str]]
-    ) -> None:
-        """
-        Add a waiting for id to the waiting for list.
-
-        This will waiting for list will be written to the submission string
-        upon creation
-
-        Parameters
-        ----------
-        waiting_for_id : None or list of str
-            Id to the job waiting for
-        """
-        if waiting_for_id is not None:
-            if isinstance(waiting_for_id, str):
-                self.__waiting_for.append(waiting_for_id)
-                logging.debug(
-                    "Adding the following to the waiting_for_list for %s: %s",
-                    self.job_name,
-                    waiting_for_id,
-                )
-            else:
-                for waiting_id in waiting_for_id:
-                    self.__waiting_for.append(waiting_id)
-                    logging.debug(
-                        "Adding the following to the waiting_for_list for %s: %s",
-                        self.job_name,
-                        waiting_id,
-                    )
-
-    def kill(self) -> None:
-        """Kill a job."""
-        if self.job_id is not None and not self.completed():
-            logging.info("Killing job_id %s (%s)", self.job_id, self.job_name)
-            submitter = LocalSubmitter()
-            submitter.submit_command(f"qdel {self.job_id}")
-            submitter.wait_until_completed()
-            self._released = True
-
-    def release(self) -> None:
-        """Release job if held."""
-        if self.job_id is not None and not self._released:
-            logging.debug("Releasing job_id %s (%s)", self.job_id, self.job_name)
-            submitter = LocalSubmitter()
-            submitter.submit_command(f"qrls {self.job_id}")
-            submitter.wait_until_completed()
-            self._released = True
-
-    def reset(self) -> None:
-        """Reset dequeued, released, waiting_for and status dict."""
-        self.__dequeued = False
-        self._released = False
-        self.__waiting_for = list()
-        self._reset_status()
-
-    def submit_command(self, command: str) -> None:
-        """
-        Submit a command.
-
-        Notes
-        -----
-        All submitted jobs are held
-        Release with self.release
-        See [1]_ for details
-
-        Parameters
-        ----------
-        command : str
-            Command to submit
-
-        References
-        ----------
-        .. [1] https://community.openpbs.org/t/ignoring-finished-dependencies/1976
-        """
-        # This starts the job anew, so we restart the instance to clear it from any
-        # spurious member data, before doing so, we must capture the waiting for tuple
-        waiting_for = self.waiting_for
-        self.reset()
-        script_path = self.store_dir.joinpath(f"{self._job_name}.sh")
-        with script_path.open("w") as file:
-            file.write(self.create_submission_string(command, waiting_for=waiting_for))
-
-        # Make the script executable
-        local_submitter = LocalSubmitter(run_path=self.store_dir)
-        local_submitter.submit_command(f"chmod +x {script_path}")
-        local_submitter.wait_until_completed()
-
-        # Submit the command through a local submitter
-        local_submitter.submit_command(f"qsub -h {script_path}")
-        local_submitter.wait_until_completed()
-        self._status["job_id"] = local_submitter.std_out
-        logging.info(
-            "job_id %s (%s) given to command '%s' in %s",
-            self.job_id,
-            self.job_name,
-            command,
-            script_path,
-        )
-
     def completed(self) -> bool:
         """
         Return the completed status.
@@ -387,7 +234,7 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         if self._status["job_id"] is not None and self._released:
             if self._status["return_code"] is not None:
                 return True
-            trace = self.__get_trace()
+            trace = self.get_trace()
             return_code = self.get_return_code(trace)
             if return_code is not None:
                 self._status["return_code"] = return_code
@@ -397,31 +244,6 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
             if self.__dequeued:
                 return True
         return False
-
-    def raise_error(self) -> None:
-        """
-        Raise and error from the subprocess in a clean way.
-
-        Raises
-        ------
-        RuntimeError
-            If an error was caught
-        """
-        if self.completed():
-            if self.return_code != 0:
-                if self.return_code is None:
-                    msg = (
-                        "Submission was never submitted. "
-                        "Did some of the dependencies finished before "
-                        "submitting the job? "
-                        "In that case the finished dependency might have "
-                        "rejected the job."
-                    )
-                    logging.critical(msg)
-                    raise RuntimeError(msg)
-                msg = f"Submission errored with error code {self.return_code}"
-                logging.critical(msg)
-                raise RuntimeError(msg)
 
     def create_submission_string(
         self, command: str, waiting_for: Tuple[str, ...]
@@ -476,3 +298,31 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
             f"{command}"
         )
         return job_string
+
+    def get_trace(self) -> str:
+        """
+        Return the trace from ``tracejob``.
+
+        Returns
+        -------
+        trace : str
+            Trace obtained from the ``tracejob``
+            An empty string is will be returned if no job_id exist
+        """
+        if self._status["job_id"] is not None:
+            # Submit the command through a local submitter
+            local_submitter = LocalSubmitter(run_path=self.store_dir)
+            local_submitter.submit_command(f"tracejob -n 365 {self._status['job_id']}")
+            local_submitter.wait_until_completed()
+            trace = (
+                local_submitter.std_out if local_submitter.std_out is not None else ""
+            )
+            return trace
+        return ""
+
+    def reset(self) -> None:
+        """Reset dequeued, released, waiting_for and status dict."""
+        self._released = False
+        self.__dequeued = False
+        self._waiting_for = list()
+        self._reset_status()
