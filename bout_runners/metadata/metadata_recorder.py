@@ -9,8 +9,8 @@ from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.database.database_utils import get_file_modification, get_system_info
 from bout_runners.database.database_writer import DatabaseWriter
-from bout_runners.executor.bout_paths import BoutPaths
 from bout_runners.make.make import Make
+from bout_runners.parameters.bout_paths import BoutPaths
 from bout_runners.parameters.final_parameters import FinalParameters
 from bout_runners.submitter.processor_split import ProcessorSplit
 

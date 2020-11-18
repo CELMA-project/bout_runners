@@ -8,19 +8,48 @@ from pathlib import Path
 from time import sleep
 from typing import Dict, Optional, Tuple
 
-from bout_runners.submitter.abstract_submitters import (
-    AbstractClusterSubmitter,
-    AbstractSubmitter,
-)
+from bout_runners.submitter.abstract_cluster_submitter import AbstractClusterSubmitter
 from bout_runners.submitter.local_submitter import LocalSubmitter
 from bout_runners.submitter.processor_split import ProcessorSplit
 
 
-class SLURMSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
+class SLURMSubmitter(AbstractClusterSubmitter):
     """
     The SLURM submitter class.
 
-    FIXME: Attributes, methods, examples
+    Attributes
+    ----------
+    __sacct_starttime : str
+        Time to search from in sacct
+
+    Methods
+    -------
+    _wait_for_std_out_and_std_err()
+        Wait until the process completes if a process has been started
+    extract_job_id(std_out)
+        Return the job_id
+    get_return_code(sacct_str)
+        Return the exit code if any
+    get_state(sacct_str)
+        Return the state from sacct
+    structure_time_to_slurm_format(time_str)
+        Structure the time string to a SLURM time string
+    completed()
+        Return the completed status
+    create_submission_string(command, waiting_for)
+        Return the PBS script as a string
+    get_sacct()
+        Return the trace from ``sacct``
+    reset()
+        Reset released, waiting_for and status dict
+
+    Examples
+    --------
+    >>> submitter = SLURMSubmitter(job_name, store_path)
+    >>> submitter.submit_command("echo 'Hello'")
+    >>> submitter.wait_until_completed()
+    >>> submitter.std_out
+    Hello
     """
 
     def __init__(
@@ -55,22 +84,20 @@ class SLURMSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
             Object containing the processor split
             If None, default values will be used
         """
-        # https://stackoverflow.com/questions/9575409/calling-parent-class-init-with-multiple-inheritance-whats-the-right-way/50465583
-        AbstractSubmitter.__init__(self, processor_split)
-        AbstractClusterSubmitter.__init__(
-            self, job_name, store_directory, submission_dict
+        super().__init__(job_name, store_directory, submission_dict, processor_split)
+
+        self.__sacct_starttime = (datetime.now() - timedelta(days=365)).strftime(
+            r"%Y-%m-%d"
         )
+
         if self._submission_dict["walltime"] is not None:
             self._submission_dict["walltime"] = self.structure_time_to_slurm_format(
                 self._submission_dict["walltime"]
             )
-        self.__log_and_error_base: Path = Path()
-        self.__sacct_starttime = (datetime.now() - timedelta(days=365)).strftime(
-            r"%Y-%d-%m"
-        )
-        self._cancel_str = "qdel"
-        self._release_str = "qrls"
-        self._submit_str = "qsub -h"
+
+        self._cluster_specific["cancel_str"] = "scancel"
+        self._cluster_specific["release_str"] = "scontrol release"
+        self._cluster_specific["submit_str"] = "sbatch --hold"
 
     def _wait_for_std_out_and_std_err(self) -> None:
         """
@@ -87,10 +114,7 @@ class SLURMSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
                 logging.debug("sacct is reading:\n%s", sacct_str)
 
             if self._status["return_code"] is not None:
-                (
-                    self._status["std_out"],
-                    self._status["std_err"],
-                ) = self._get_std_out_and_std_err()
+                self._populate_std_out_and_std_err()
 
         else:
             # No job_id
@@ -101,6 +125,41 @@ class SLURMSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
                 self.job_id,
                 self.job_name,
             )
+
+    @staticmethod
+    def extract_job_id(std_out: Optional[str]) -> str:
+        """
+        Return the job_id.
+
+        Parameters
+        ----------
+        std_out : str or None
+            The standard output from the local submitter which submits the job
+
+        Returns
+        -------
+        job_id : str
+            The job id
+
+        Raises
+        ------
+        RuntimeError
+            If the job_id cannot be found
+        """
+        if std_out is None:
+            msg = "Got std_out=None as input when trying to extract job_id"
+            logging.critical(msg)
+            raise RuntimeError(msg)
+        pattern = "Submitted batch job (.+)"
+        # Using search as match will only search the beginning of
+        # the string
+        # https://stackoverflow.com/a/32134461/2786884
+        match = re.search(pattern, std_out)
+        if match is None:
+            msg = f"Could not extract job_id from the string {std_out}"
+            logging.critical(msg)
+            raise RuntimeError(msg)
+        return match.group(1)
 
     @staticmethod
     def get_return_code(sacct_str: str) -> Optional[int]:
@@ -119,15 +178,16 @@ class SLURMSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
 
         Notes
         -----
-        Assumes the job line is the third line of sacct_str (
-        the two others being headers)
+        Assumes the job line is the third line of sacct_str
+        (the two others being headers), and that the "ExitCode" is the last
+        column in ``sacct``
         """
         job_lines = sacct_str.split("\n")
-        if len(job_lines) >= 2:
+        if len(job_lines) <= 2:
             return None
 
         job_line = job_lines[2]
-        pattern = r"(-?\d+):-?\d+$"
+        pattern = r"(-?\d+):-?\d+\s?$"
         # Using search as match will only search the beginning of
         # the string
         # https://stackoverflow.com/a/32134461/2786884
@@ -135,6 +195,41 @@ class SLURMSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         if match is None:
             return None
         return int(match.group(1))
+
+    @staticmethod
+    def get_state(sacct_str: str) -> Optional[str]:
+        """
+        Return the state from sacct.
+
+        Parameters
+        ----------
+        sacct_str : str
+            Trace obtained from the ``sacct`` command
+
+        Returns
+        -------
+        status : None or str
+            Status code obtained from the cluster
+
+        Notes
+        -----
+        Assumes the job line is the third line of sacct_str
+        (the two others being headers), and that the "State" is the second last
+        column before "ExitCode" in ``sacct``
+        """
+        job_lines = sacct_str.split("\n")
+        if len(job_lines) <= 2:
+            return None
+
+        job_line = job_lines[2]
+        pattern = r"([A-Z]+\+?)\s+-?\d+:-?\d+\s?$"
+        # Using search as match will only search the beginning of
+        # the string
+        # https://stackoverflow.com/a/32134461/2786884
+        match = re.search(pattern, job_line, flags=re.MULTILINE)
+        if match is None:
+            return None
+        return match.group(1)
 
     @staticmethod
     def structure_time_to_slurm_format(time_str: str) -> str:
@@ -161,6 +256,8 @@ class SLURMSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
             minutes,
             seconds,
         ) = AbstractClusterSubmitter.get_days_hours_minutes_seconds_from_str(time_str)
+        days += hours // 24
+        hours = hours % 24
         return f"{days}-{hours}:{minutes}:{seconds}"
 
     def completed(self) -> bool:
@@ -176,6 +273,8 @@ class SLURMSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
             if self._status["return_code"] is not None:
                 return True
             sacct_str = self.get_sacct()
+            if self.get_state(sacct_str) in ("RUNNING", None):
+                return False
             return_code = self.get_return_code(sacct_str)
             if return_code is not None:
                 self._status["return_code"] = return_code
@@ -208,11 +307,11 @@ class SLURMSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         queue = self._submission_dict["queue"]
         mail = self._submission_dict["mail"]
         # Notice that we do not add the stem here
-        self.__log_and_error_base = self.store_dir.joinpath(self._job_name)
+        self._log_and_error_base = self.store_dir.joinpath(self._job_name)
 
         waiting_for_str = (
-            f"#SBATCH --dependency=afterok:{':'.join(self.waiting_for)}{newline}"
-            if len(self.waiting_for) != 0
+            f"#SBATCH --dependency=afterok:{':'.join(waiting_for)}{newline}"
+            if len(waiting_for) != 0
             else ""
         )
         job_string = (
@@ -224,8 +323,8 @@ class SLURMSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
             f"{f'#SBATCH --time={walltime}{newline}' if walltime is not None else ''}"
             f"{f'#SBATCH --account={account}{newline}' if account is not None else ''}"
             f"{f'#SBATCH -p {queue}{newline}' if queue is not None else ''}"
-            f"#SBATCH -o {self.__log_and_error_base}.log\n"
-            f"#SBATCH -e {self.__log_and_error_base}.err\n"
+            f"#SBATCH -o {self._log_and_error_base}.log\n"
+            f"#SBATCH -e {self._log_and_error_base}.err\n"
             f"{f'#SBATCH --mail-type=ALL{newline}' if mail is not None else ''}"
             f"{f'#SBATCH --mail-user={mail}{newline}' if mail is not None else ''}"
             f"{waiting_for_str}"

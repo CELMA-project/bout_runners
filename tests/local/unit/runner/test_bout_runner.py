@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Callable, Dict
 
 from bout_runners.database.database_reader import DatabaseReader
-from bout_runners.runner.bout_run_setup import BoutRunSetup
+from bout_runners.parameters.bout_run_setup import BoutRunSetup
 from bout_runners.runner.bout_runner import BoutRunner
 from bout_runners.runner.run_graph import RunGraph
 from bout_runners.submitter.local_submitter import LocalSubmitter

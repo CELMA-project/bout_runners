@@ -8,13 +8,11 @@ from typing import Any, Callable, Dict, Iterable, Optional, Tuple, Union
 
 from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.metadata.status_checker import StatusChecker
-from bout_runners.runner.bout_run_setup import BoutRunSetup
+from bout_runners.parameters.bout_run_setup import BoutRunSetup
 from bout_runners.runner.run_graph import RunGraph
 from bout_runners.runner.run_group import RunGroup
-from bout_runners.submitter.abstract_submitters import (
-    AbstractClusterSubmitter,
-    AbstractSubmitter,
-)
+from bout_runners.submitter.abstract_cluster_submitter import AbstractClusterSubmitter
+from bout_runners.submitter.abstract_submitter import AbstractSubmitter
 from bout_runners.submitter.local_submitter import LocalSubmitter
 from bout_runners.submitter.submitter_factory import get_submitter
 from bout_runners.utils.file_operations import copy_restart_files
@@ -88,7 +86,7 @@ class BoutRunner:
 
     >>> from pathlib import Path
     >>> from bout_runners.executor.bout_paths import BoutPaths
-    >>> from bout_runners.executor.executor import Executor
+    >>> from bout_runners.executor.executor import BoutRunExecutor
     >>> from bout_runners.database.database_connector import DatabaseConnector
     >>> from bout_runners.parameters.default_parameters import DefaultParameters
     >>> from bout_runners.parameters.run_parameters import RunParameters
@@ -113,7 +111,7 @@ class BoutRunner:
     >>> run_parameters = RunParameters({'global': {'nout': 0}})
     >>> final_parameters = FinalParameters(default_parameters,
     ...                                    run_parameters)
-    >>> executor = Executor(
+    >>> executor = BoutRunExecutor(
     ...     bout_paths=bout_paths,
     ...     submitter=LocalSubmitter(bout_paths.project_path),
     ...     run_parameters=run_parameters)

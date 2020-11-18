@@ -8,6 +8,7 @@ from typing import Any, Dict, Optional, Tuple
 from bout_runners.submitter.local_submitter import AbstractSubmitter, LocalSubmitter
 from bout_runners.submitter.pbs_submitter import PBSSubmitter
 from bout_runners.submitter.processor_split import ProcessorSplit
+from bout_runners.submitter.slurm_submitter import SLURMSubmitter
 from bout_runners.utils.paths import get_submitters_configuration
 
 
@@ -70,7 +71,7 @@ def get_submitter(
     NotImplementedError
         If the name is not a supported submitter class
     """
-    implemented = ("local", "pbs")
+    implemented = ("local", "pbs", "slurm")
 
     if name is None or argument_dict is None:
         name, argument_dict = infer_submitter()
@@ -92,6 +93,13 @@ def get_submitter(
                 argument_dict[argument] = None
     if name == "pbs":
         return PBSSubmitter(
+            job_name=argument_dict["job_name"],
+            store_directory=argument_dict["store_directory"],
+            submission_dict=argument_dict["submission_dict"],
+            processor_split=argument_dict["processor_split"],
+        )
+    if name == "slurm":
+        return SLURMSubmitter(
             job_name=argument_dict["job_name"],
             store_directory=argument_dict["store_directory"],
             submission_dict=argument_dict["submission_dict"],

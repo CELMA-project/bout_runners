@@ -6,7 +6,7 @@ from typing import Callable
 
 import pytest
 
-from bout_runners.executor.bout_paths import BoutPaths
+from bout_runners.parameters.bout_paths import BoutPaths
 
 
 def test_bout_path(

@@ -8,9 +8,9 @@ import re
 from pathlib import Path
 from typing import Dict, Optional, Union
 
-from bout_runners.executor.bout_paths import BoutPaths
-from bout_runners.executor.executor import Executor
+from bout_runners.parameters.bout_paths import BoutPaths
 from bout_runners.parameters.run_parameters import RunParameters
+from bout_runners.runner.bout_run_executor import BoutRunExecutor
 from bout_runners.submitter.local_submitter import LocalSubmitter
 
 
@@ -140,7 +140,7 @@ class DefaultParameters:
         self.__settings_path = bout_paths.bout_inp_dst_dir.joinpath("BOUT.settings")
 
     @staticmethod
-    def get_test_executor(bout_paths: BoutPaths) -> Executor:
+    def get_test_executor(bout_paths: BoutPaths) -> BoutRunExecutor:
         """
         Return the executor used for test (i.e. where nout=0).
 
@@ -151,11 +151,11 @@ class DefaultParameters:
 
         Returns
         -------
-        executor : Executor
+        executor : BoutRunExecutor
             Executor instantiated with the test set up
         """
         run_parameters = RunParameters({"global": {"nout": 0}})
-        executor = Executor(
+        executor = BoutRunExecutor(
             bout_paths=bout_paths,
             submitter=LocalSubmitter(bout_paths.project_path),
             run_parameters=run_parameters,

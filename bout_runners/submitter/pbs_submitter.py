@@ -7,59 +7,48 @@ from pathlib import Path
 from time import sleep
 from typing import Dict, Optional, Tuple
 
-from bout_runners.submitter.abstract_submitters import (
-    AbstractClusterSubmitter,
-    AbstractSubmitter,
-)
+from bout_runners.submitter.abstract_cluster_submitter import AbstractClusterSubmitter
 from bout_runners.submitter.local_submitter import LocalSubmitter
 from bout_runners.submitter.processor_split import ProcessorSplit
 
 
-class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
+class PBSSubmitter(AbstractClusterSubmitter):
     """
     The PBS submitter class.
 
     Attributes
     ----------
-    _waiting_for : tuple of str
-        Getter variable for waiting_for
-    __log_and_error_base : Path
-        Base for the path for the .log and .err files
     __dequeued : bool
         Whether or not the job has been dequeued from the queue
-    released : bool
-        Whether or not the job has been released to the queue
-    waiting_for : tuple of str
-        Tuple of job names which this job is waiting for
 
     Methods
     -------
-    get_trace()
-        Return the trace from ``tracejob``
     _wait_for_std_out_and_std_err()
         Wait until the process completes if a process has been started
+    get_return_code(sacct_str)
+        Return the exit code if any
     get_return_code(trace)
         Return the exit code if any
     has_dequeue(trace)
         Return whether or not the job has been removed from the queue
     structure_time_to_pbs_format(time_str)
         Structure the time string to a PBS time string
-    add_waiting_for(waiting_for_id)
-        Add a waiting for id to the waiting for list
-    kill()
-        Kill a job
-    release()
-        Release job if held
-    reset()
-        Reset dequeued, released, waiting_for and status dict
-    submit_command(command)
-        Submit a command
     completed()
         Return the completed status
-    raise_error()
-        Raise and error from the subprocess in a clean way
     create_submission_string(command, waiting_for)
         Return the PBS script as a string
+    get_trace()
+        Return the trace from ``tracejob``
+    reset()
+        Reset dequeued, released, waiting_for and status dict
+
+    Examples
+    --------
+    >>> submitter = PBSSubmitter(job_name, store_path)
+    >>> submitter.submit_command("echo 'Hello'")
+    >>> submitter.wait_until_completed()
+    >>> submitter.std_out
+    Hello
     """
 
     def __init__(
@@ -94,19 +83,41 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
             Object containing the processor split
             If None, default values will be used
         """
-        # https://stackoverflow.com/questions/9575409/calling-parent-class-init-with-multiple-inheritance-whats-the-right-way/50465583
-        AbstractSubmitter.__init__(self, processor_split)
-        AbstractClusterSubmitter.__init__(
-            self, job_name, store_directory, submission_dict
-        )
+        super().__init__(job_name, store_directory, submission_dict, processor_split)
         if self._submission_dict["walltime"] is not None:
             self._submission_dict["walltime"] = self.structure_time_to_pbs_format(
                 self._submission_dict["walltime"]
             )
         self.__dequeued = False
-        self._cancel_str = "qdel"
-        self._release_str = "qrls"
-        self._submit_str = "qsub -h"
+        self._cluster_specific["cancel_str"] = "qdel"
+        self._cluster_specific["release_str"] = "qrls"
+        self._cluster_specific["submit_str"] = "qsub -h"
+
+    @staticmethod
+    def extract_job_id(std_out: Optional[str]) -> str:
+        """
+        Return the job_id.
+
+        Parameters
+        ----------
+        std_out : str or None
+            The standard output from the local submitter which submits the job
+
+        Returns
+        -------
+        job_id : str
+            The job id
+
+        Raises
+        ------
+        RuntimeError
+            If the job_id cannot be found
+        """
+        if std_out is None:
+            msg = "Got std_out=None as input when trying to extract job_id"
+            logging.critical(msg)
+            raise RuntimeError(msg)
+        return std_out
 
     def _wait_for_std_out_and_std_err(self) -> None:
         """
@@ -124,10 +135,7 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
                 logging.debug("Trace is reading:\n%s", trace)
 
             if self._status["return_code"] is not None:
-                (
-                    self._status["std_out"],
-                    self._status["std_err"],
-                ) = self._get_std_out_and_std_err()
+                self._populate_std_out_and_std_err()
             else:
                 # If the return code is empty it must be because the while loop
                 # exited because the job was dequeued
@@ -270,7 +278,7 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
         queue = self._submission_dict["queue"]
         mail = self._submission_dict["mail"]
         # Notice that we do not add the stem here
-        self.__log_and_error_base = self.store_dir.joinpath(self._job_name)
+        self._log_and_error_base = self.store_dir.joinpath(self._job_name)
 
         waiting_for_str = (
             f"#PBS -W depend=afterok:{':'.join(waiting_for)}{newline}"
@@ -286,8 +294,8 @@ class PBSSubmitter(AbstractSubmitter, AbstractClusterSubmitter):
             f"{f'#PBS -l walltime={walltime}{newline}' if walltime is not None else ''}"
             f"{f'#PBS -A {account}{newline}' if account is not None else ''}"
             f"{f'#PBS -q {queue}{newline}' if queue is not None else ''}"
-            f"#PBS -o {self.__log_and_error_base}.log\n"
-            f"#PBS -e {self.__log_and_error_base}.err\n"
+            f"#PBS -o {self._log_and_error_base}.log\n"
+            f"#PBS -e {self._log_and_error_base}.err\n"
             # a=abort b=begin e=end
             f"{f'#PBS -m abe{newline}' if mail is not None else ''}"
             f"{f'#PBS -M {mail}{newline}' if mail is not None else ''}"

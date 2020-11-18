@@ -5,16 +5,16 @@ from typing import Callable, Dict, Iterable, Optional, Union
 
 from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_reader import DatabaseReader
-from bout_runners.executor.bout_paths import BoutPaths
-from bout_runners.executor.executor import Executor
+from bout_runners.parameters.bout_paths import BoutPaths
+from bout_runners.parameters.bout_run_setup import BoutRunSetup
 from bout_runners.parameters.default_parameters import DefaultParameters
 from bout_runners.parameters.final_parameters import FinalParameters
 from bout_runners.parameters.run_parameters import RunParameters
-from bout_runners.runner.bout_run_setup import BoutRunSetup
+from bout_runners.runner.bout_run_executor import BoutRunExecutor
 from bout_runners.runner.bout_runner import BoutRunner
 from bout_runners.runner.run_graph import RunGraph
 from bout_runners.runner.run_group import RunGroup
-from bout_runners.submitter.abstract_submitters import AbstractSubmitter
+from bout_runners.submitter.abstract_submitter import AbstractSubmitter
 from bout_runners.submitter.local_submitter import LocalSubmitter
 from bout_runners.submitter.submitter_factory import get_submitter
 from tests.utils.paths import FileStateRestorer
@@ -191,7 +191,7 @@ def make_run_group(
     submitter = get_submitter()
     if isinstance(submitter, LocalSubmitter):
         submitter.run_path = bout_paths.project_path
-    executor = Executor(
+    executor = BoutRunExecutor(
         bout_paths=bout_paths,
         submitter=submitter,
         run_parameters=run_parameters,

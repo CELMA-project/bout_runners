@@ -4,7 +4,7 @@
 from pathlib import Path
 from typing import Callable
 
-from bout_runners.executor.bout_paths import BoutPaths
+from bout_runners.parameters.bout_paths import BoutPaths
 from bout_runners.parameters.default_parameters import DefaultParameters
 
 

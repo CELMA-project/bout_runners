@@ -9,7 +9,7 @@ import subprocess  # nosec
 from pathlib import Path
 from typing import Optional
 
-from bout_runners.submitter.abstract_submitters import AbstractSubmitter
+from bout_runners.submitter.abstract_submitter import AbstractSubmitter
 from bout_runners.submitter.processor_split import ProcessorSplit
 from bout_runners.utils.file_operations import get_caller_dir
 

@@ -1,1 +1,1 @@
-"""Package containing the parameter modules."""
+"""Package containing modules for setting parameters."""

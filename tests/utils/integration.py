@@ -9,7 +9,7 @@ import pytest
 
 from bout_runners.database.database_reader import DatabaseReader
 from bout_runners.runner.bout_runner import BoutRunner
-from bout_runners.submitter.abstract_submitters import AbstractSubmitter
+from bout_runners.submitter.abstract_submitter import AbstractSubmitter
 from tests.utils.node_functions_complex_graph import (
     node_eight,
     node_five,

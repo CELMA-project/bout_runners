@@ -118,8 +118,58 @@ jobs:
           name: pbs-coverage
           path: .coverage*
 
+  slurm:
+    runs-on: ubuntu-latest
+    container:
+      image: loeiten/slurm-test:latest
+      # We mount the checked out repo to opt/bout_runners as the checkout action for repos are mounted in a strange
+      # place (/__w/bout_runners/bout_runners/)
+      options:
+        --hostname ernie --user root -v ${{ github.workspace }}:/opt/bout_runners/:rw
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v2
+
+      - name: Setup BOUT-dev next
+        # NOTE: We must source the .bashrc as the paths are not available at login
+        # Update the submodule due to
+        # https://github.com/boutproject/BOUT-dev/issues/2110
+        run: |
+          source /root/.bashrc
+          git clone git://github.com/boutproject/BOUT-dev.git /opt/BOUT-dev
+          cd /opt/BOUT-dev
+          git submodule update --init --recursive
+          git checkout next
+          ./configure
+          make
+
+      - name: Set permissions
+        run: |
+          chmod -R 777 /opt/bout_runners
+          chmod -R 777 /opt/BOUT-dev
+
+      - name: Set BOUT-dev path
+        run: |
+          sed -i "s/\${HOME}\/BOUT-dev/\/opt\/BOUT-dev/" /opt/bout_runners/bout_runners/config/bout_runners.ini
+
+      - name: Test SLURM run
+        # Note that the sleep period in the start seems to be essential in order for the submissions not to be stuck
+        # forever in the queue
+        run: |
+          bash /entrypoint.sh \
+          "sleep 10 \
+          && cd /opt/bout_runners \
+          && coverage run --source=. -p -m pytest tests/slurm"
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: slurm-coverage
+          path: .coverage*
+
   upload-to-codecov:
-    needs: [local, pbs]
+    needs: [local, pbs, slurm]
     runs-on: ubuntu-latest
 
     steps:
