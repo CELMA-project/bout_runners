@@ -6,7 +6,7 @@ High level descriptions of the most important changes between ``BOUT Runners`` v
 .. toctree::
    :maxdepth: 1
 
-   2.0.0.rst
+   2.0.0b0.rst
 
 The changelog contains *all* nontrivial changes to ``BOUT Runners`` for the current version.
 
