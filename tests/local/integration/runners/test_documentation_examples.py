@@ -5,12 +5,12 @@ from pathlib import Path
 from typing import Callable
 
 from bout_runners.database.database_connector import DatabaseConnector
-from bout_runners.executor.bout_paths import BoutPaths
-from bout_runners.executor.executor import Executor
+from bout_runners.parameters.bout_paths import BoutPaths
+from bout_runners.parameters.bout_run_setup import BoutRunSetup
 from bout_runners.parameters.default_parameters import DefaultParameters
 from bout_runners.parameters.final_parameters import FinalParameters
 from bout_runners.parameters.run_parameters import RunParameters
-from bout_runners.runner.bout_run_setup import BoutRunSetup
+from bout_runners.runner.bout_run_executor import BoutRunExecutor
 from bout_runners.runner.bout_runner import BoutRunner
 from bout_runners.runner.run_graph import RunGraph
 from bout_runners.runner.run_group import RunGroup
@@ -55,7 +55,7 @@ def test_restart_documentation(
     run_parameters = RunParameters({"global": {"nout": 0}})
     final_parameters = FinalParameters(default_parameters, run_parameters)
 
-    basic_executor = Executor(
+    basic_executor = BoutRunExecutor(
         bout_paths=bout_paths,
         submitter=LocalSubmitter(bout_paths.project_path),
         run_parameters=run_parameters,
@@ -73,7 +73,7 @@ def test_restart_documentation(
 
     # New section in the documentation
 
-    restart_executor = Executor(
+    restart_executor = BoutRunExecutor(
         bout_paths=bout_paths,
         submitter=LocalSubmitter(bout_paths.project_path),
         run_parameters=run_parameters,
@@ -99,7 +99,7 @@ def test_restart_documentation(
     new_run_parameters = RunParameters({"solver": {"adams_moulton": True}})
     new_final_parameters = FinalParameters(default_parameters, run_parameters)
 
-    restart_with_changing_parameters_executor = Executor(
+    restart_with_changing_parameters_executor = BoutRunExecutor(
         bout_paths=bout_paths,
         submitter=LocalSubmitter(bout_paths.project_path),
         run_parameters=new_run_parameters,
@@ -167,7 +167,7 @@ def test_pre_and_post_documentation(
     run_parameters = RunParameters({"global": {"nout": 0}})
     final_parameters = FinalParameters(default_parameters, run_parameters)
 
-    basic_executor = Executor(
+    basic_executor = BoutRunExecutor(
         bout_paths=bout_paths,
         submitter=LocalSubmitter(bout_paths.project_path),
         run_parameters=run_parameters,
@@ -208,7 +208,7 @@ def test_pre_and_post_documentation(
     # New section in the documentation
 
     # Create the RunGroup
-    restart_executor = Executor(
+    restart_executor = BoutRunExecutor(
         bout_paths=bout_paths,
         submitter=LocalSubmitter(bout_paths.project_path),
         run_parameters=run_parameters,

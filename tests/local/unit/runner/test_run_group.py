@@ -2,7 +2,7 @@
 
 from typing import Callable
 
-from bout_runners.runner.bout_run_setup import BoutRunSetup
+from bout_runners.parameters.bout_run_setup import BoutRunSetup
 from bout_runners.runner.run_graph import RunGraph
 from bout_runners.runner.run_group import RunGroup
 

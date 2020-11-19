@@ -4,10 +4,12 @@
 from pathlib import Path
 from typing import Callable
 
-from bout_runners.executor.executor import Executor
+from bout_runners.runner.bout_run_executor import BoutRunExecutor
 
 
-def test_executor(make_project: Path, get_executor: Callable[[str], Executor]) -> None:
+def test_bout_run_executor(
+    make_project: Path, get_executor: Callable[[str], BoutRunExecutor]
+) -> None:
     """
     Test that we are able to execute the conduction example.
 
@@ -16,7 +18,7 @@ def test_executor(make_project: Path, get_executor: Callable[[str], Executor]) -
     make_project : Path
         The path to the conduction example
     get_executor : function
-        Function which returns an Executor based on the conduction directory
+        Function which returns an BoutRunExecutor based on the conduction directory
     """
     # Use the make fixture in order to automate clean up after done
     _ = make_project

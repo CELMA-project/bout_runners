@@ -1,17 +1,14 @@
-"""Contains the abstract submitter classes."""
+"""Contains the abstract submitter class."""
 
 
 import json
 import logging
-import re
 import sys
 from abc import ABC, abstractmethod
-from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional, Tuple, Union
 
 from bout_runners.submitter.processor_split import ProcessorSplit
-from bout_runners.utils.file_operations import get_caller_dir
 from bout_runners.utils.serializers import is_jsonable
 
 
@@ -282,8 +279,10 @@ class AbstractSubmitter(ABC):
             Whether or not to raise errors
         """
         if self.job_id is not None and self.return_code is None:
+            logging.info("Start: Waiting for jobs to complete")
             self._wait_for_std_out_and_std_err()
             self.errored(raise_error)
+            logging.info("Done: Waiting for jobs to complete")
 
     def errored(self, raise_error: bool = False) -> bool:
         """
@@ -309,182 +308,3 @@ class AbstractSubmitter(ABC):
                 logging.debug("job_id %s completed successfully", self.job_id)
                 self._logged_complete_status = True
         return False
-
-
-class AbstractClusterSubmitter(ABC):
-    """
-    The abstract cluster class of the submitters.
-
-    Attributes
-    ----------
-    _job_name : str
-        Getter and setter variable for job_name
-    _store_dir : Path
-        DGetter and setter variable for store_dir
-    _submission_dict : dict
-        Dict containing walltime, mail, queue and account info
-    _released : bool
-        Whether or not the job has been released to the queue
-    job_name : str
-        Name of the job
-    store_dir : Path
-        Directory to store the script
-
-    Methods
-    -------
-    create_submission_string(command, waiting_for)
-        Create the submission string
-    get_days_hours_minutes_seconds_from_str(time_str)
-        Return days, hours, minutes, seconds from the string
-    """
-
-    def __init__(
-        self,
-        job_name: Optional[str] = None,
-        store_dir: Optional[Path] = None,
-        submission_dict: Optional[Dict[str, Optional[str]]] = None,
-    ) -> None:
-        """
-        Set the member data.
-
-        Parameters
-        ----------
-        job_name : str or None
-            Name of the job
-            If None, a timestamp will be given as job_name
-        store_dir : Path or None
-            Directory to store the script
-            If None, the caller directory will be used as the store directory
-        submission_dict : None or dict of str of None or str
-            Dict containing optional submission options
-            One the form
-
-            >>> {'walltime': None or str,
-            ...  'mail': None or str,
-            ...  'queue': None or str,
-            ...  'account': None or str}
-
-            These options will not be used if the submission_dict is None
-        """
-        if job_name is None:
-            self._job_name = datetime.now().strftime("%m-%d-%Y_%H-%M-%S-%f")
-        else:
-            self._job_name = job_name
-
-        if store_dir is None:
-            self._store_dir = get_caller_dir()
-        else:
-            self._store_dir = store_dir
-        self._submission_dict = (
-            submission_dict.copy() if submission_dict is not None else dict()
-        )
-        submission_dict_keys = self._submission_dict.keys()
-        for key in ("walltime", "mail", "queue", "account"):
-            if key not in submission_dict_keys:
-                self._submission_dict[key] = None
-
-        self._released = False
-
-    @abstractmethod
-    def create_submission_string(
-        self, command: str, waiting_for: Tuple[str, ...]
-    ) -> str:
-        """
-        Create the submission string.
-
-        Parameters
-        ----------
-        command : str
-            The command to submit
-        waiting_for : tuple of str
-            Tuple of ids that this job will wait for
-        """
-
-    @staticmethod
-    def get_days_hours_minutes_seconds_from_str(
-        time_str: str,
-    ) -> Tuple[int, int, int, int]:
-        """
-        Return days, hours, minutes, seconds from the string.
-
-        Parameters
-        ----------
-        time_str : str
-            Must be on the format
-
-            >>> 'hh:mm:ss'
-
-            or
-
-            >>> 'd-hh:mm:ss'
-
-        Returns
-        -------
-        days : int
-            Number of days in the time string
-        hours : int
-            Number of hours in the time string
-        minutes : int
-            Number of minutes in the time string
-        seconds : int
-            Number of seconds in the time string
-
-        Raises
-        ------
-        ValueError
-            If the string is malformatted
-        """
-        slurm_pattern = r"(\d)-(\d{2}):(\d{2}):(\d{2})"
-        pbs_pattern = r"(\d{2}):(\d{2}):(\d{2})"
-        slurm_search = re.search(slurm_pattern, time_str)
-        pbs_search = re.search(pbs_pattern, time_str)
-        if slurm_search is not None:
-            days = int(slurm_search.group(1))
-            hours = int(slurm_search.group(2))
-            minutes = int(slurm_search.group(3))
-            seconds = int(slurm_search.group(4))
-        elif pbs_search is not None:
-            days = 0
-            hours = int(pbs_search.group(1))
-            minutes = int(pbs_search.group(2))
-            seconds = int(pbs_search.group(3))
-        else:
-            msg = f"Could not extract time from {time_str}"
-            logging.error(msg)
-            raise ValueError(msg)
-        return days, hours, minutes, seconds
-
-    @property
-    def job_name(self) -> str:
-        """
-        Set the properties of self.job_name.
-
-        Returns
-        -------
-        str
-            The job name
-        """
-        return self._job_name
-
-    @job_name.setter
-    def job_name(self, job_name: str) -> None:
-        old_name = self._job_name
-        self._job_name = job_name
-        logging.debug("job_name changed from %s to %s", old_name, self._job_name)
-
-    @property
-    def store_dir(self) -> Path:
-        """
-        Set the properties of self.store_dir.
-
-        Returns
-        -------
-        Path
-            Path to the store directory
-        """
-        return self._store_dir
-
-    @store_dir.setter
-    def store_dir(self, store_dir: Union[str, Path]) -> None:
-        self._store_dir = Path(store_dir).absolute()
-        logging.debug("store_dir changed to %s", store_dir)

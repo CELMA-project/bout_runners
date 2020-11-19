@@ -1,0 +1,10 @@
+       JobID      State ExitCode
+------------ ---------- --------
+1             COMPLETED      0:0
+1.batch       COMPLETED      0:0
+2                FAILED      2:0
+2.batch          FAILED      2:0
+3            CANCELLED+      0:0
+3.batch       CANCELLED     0:15
+4               RUNNING      0:0
+4.batch         RUNNING      0:0

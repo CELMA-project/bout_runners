@@ -13,11 +13,10 @@ The following aims to explain the project structure
    ├── bout_runners            # The project directory
    │         ├── config              # Configuration files for paths and logging
    │         ├── database            # Package responsible for connect, read, write and create databases
-   │         ├── executor            # Package responsible for executing the project
    │         ├── log                 # Package responsible for reading BOUT++ logs
    │         ├── make                # Package responsible for reading and calling Makefiles
    │         ├── metadata            # Package responsible for reading, writing and updating metadata about the runs
-   │         ├── parameters          # Package responsible for reading and setting the run parameters
+   │         ├── parameters          # Package responsible for reading and setting parameters
    │         ├── runner              # Package responsible for orchestrating executions and metadata
    │         ├── submitter           # Package responsible for submitting commands
    │         └── utils               # Package containing utilities
@@ -30,16 +29,6 @@ The following aims to explain the project structure
    │             ├── api             # API documentation
    │             └── examples        # Example usage documentation
    └── tests                   # Test suite directory
-
-
-       ├── local               # Package containing the tests for local runs
-       ├── integration         # Integration tests package
-       │         └── bout_runners    # Integration test for bout_runners
-       │             └── runners     # Integration for the runner package
-       ├── unit                # Unit test package
-       │    └── bout_runners       # Unit tests for bout_runners
-
-
        ├── data                # Static test data
        ├── fixtures            # Fixtures for the tests
        ├── local               # Package containing the tests for local runs
@@ -47,7 +36,6 @@ The following aims to explain the project structure
        │       │     └── runners     # Local integration for the runner package
        │       └── unit           # Local unit tests package
        │             ├── database    # Local unit tests for the database package
-       │             ├── executor    # Local unit tests for the executor package
        │             ├── log         # Local unit tests for the log package
        │             ├── make        # Local unit tests for the make package
        │             ├── metadata    # Local unit tests for the metadata package

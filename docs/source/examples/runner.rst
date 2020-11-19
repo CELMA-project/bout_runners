@@ -67,7 +67,7 @@ First we import the necessary dependencies
 
     from pathlib import Path
     from bout_runners.executor.bout_paths import BoutPaths
-    from bout_runners.executor.executor import Executor
+    from bout_runners.executor.executor import BoutRunExecutor
     from bout_runners.database.database_connector import DatabaseConnector
     from bout_runners.parameters.default_parameters import DefaultParameters
     from bout_runners.parameters.run_parameters import RunParameters
@@ -111,14 +111,14 @@ The ``FinalParameters`` will contain the parameters which will be used when exec
     final_parameters = FinalParameters(default_parameters,
                                        run_parameters)
 
-Next, we create an ``Executor`` instance.
+Next, we create an ``BoutRunExecutor`` instance.
 This is responsible for submitting the command to the system which will carry out the run.
 The ``submitter`` parameter accepts any submitters which inherits from  ``AbstractSubmitter`` which includes ``LocalSubmitter``, ``PBSSubmitter`` and ``SlurmSubmitter``.
 
 .. code:: python
 
     submitter = LocalSubmitter(bout_paths.project_path)
-    executor = Executor(
+    executor = BoutRunExecutor(
         bout_paths=bout_paths,
         submitter=submitter,
         run_parameters=run_parameters)

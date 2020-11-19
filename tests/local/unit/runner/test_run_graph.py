@@ -5,7 +5,7 @@ from typing import Tuple
 
 import pytest
 
-from bout_runners.runner.bout_run_setup import BoutRunSetup
+from bout_runners.parameters.bout_run_setup import BoutRunSetup
 from bout_runners.runner.run_graph import RunGraph
 from bout_runners.submitter.local_submitter import LocalSubmitter
 from tests.utils.graphs import another_complex_graph, complex_graph, simple_graph

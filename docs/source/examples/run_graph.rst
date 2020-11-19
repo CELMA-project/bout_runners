@@ -37,7 +37,7 @@ First we make the ``BoutRunSetup`` as we did in :ref:`constructing the BoutRunne
 
     from pathlib import Path
     from bout_runners.executor.bout_paths import BoutPaths
-    from bout_runners.executor.executor import Executor
+    from bout_runners.executor.executor import BoutRunExecutor
     from bout_runners.database.database_connector import DatabaseConnector
     from bout_runners.parameters.default_parameters import DefaultParameters
     from bout_runners.parameters.run_parameters import RunParameters
@@ -60,7 +60,7 @@ First we make the ``BoutRunSetup`` as we did in :ref:`constructing the BoutRunne
     final_parameters = FinalParameters(default_parameters,
                                        run_parameters)
 
-    basic_executor = Executor(
+    basic_executor = BoutRunExecutor(
         bout_paths=bout_paths,
         submitter=LocalSubmitter(bout_paths.project_path),
         run_parameters=run_parameters)
@@ -81,7 +81,7 @@ Next we add the restart run without changing any parameters
 
 .. code:: python
 
-    restart_executor = Executor(
+    restart_executor = BoutRunExecutor(
         bout_paths=bout_paths,
         submitter=LocalSubmitter(bout_paths.project_path),
         run_parameters=run_parameters,
@@ -110,7 +110,7 @@ and the restart where we are changing the parameters are changing
     new_run_parameters = RunParameters({"solver": {"adams_moulton": True}})
     new_final_parameters = FinalParameters(default_parameters, run_parameters)
 
-    restart_with_changing_parameters_executor = Executor(
+    restart_with_changing_parameters_executor = BoutRunExecutor(
         bout_paths=bout_paths,
         submitter=LocalSubmitter(bout_paths.project_path),
         run_parameters=new_run_parameters,
@@ -206,7 +206,7 @@ Next, we make a run group for the restart run, and add noise to the restart file
     from boutdata.restart import addnoise
 
     # Create the RunGroup
-    restart_executor = Executor(
+    restart_executor = BoutRunExecutor(
         bout_paths=bout_paths,
         submitter=LocalSubmitter(bout_paths.project_path),
         run_parameters=run_parameters,

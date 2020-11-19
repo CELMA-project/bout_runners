@@ -1,11 +1,11 @@
-"""Contains unittests for the PBS part of the PBS submitter."""
+"""Contains unittests for the SLURM part of the SLURM submitter."""
 
 
 from pathlib import Path
 
 import pytest
 
-from bout_runners.submitter.pbs_submitter import PBSSubmitter
+from bout_runners.submitter.slurm_submitter import SLURMSubmitter
 from tests.utils.submitters import (
     add_waiting_for_tester,
     completed_tester,
@@ -23,8 +23,8 @@ def test_submit_command(tmp_path: Path) -> None:
     tmp_path : Path
         Temporary path (pytest fixture)
     """
-    job_name = "PBS_submit_test"
-    submitter_class = PBSSubmitter
+    job_name = "SLURM_submit_test"
+    submitter_class = SLURMSubmitter
     submit_command_tester(tmp_path, job_name, submitter_class)
 
 
@@ -41,8 +41,8 @@ def test_completed(tmp_path: Path) -> None:
     tmp_path : Path
         Temporary path (pytest fixture)
     """
-    job_name = "PBS_test_completed"
-    submitter_class = PBSSubmitter
+    job_name = "SLURM_test_completed"
+    submitter_class = SLURMSubmitter
     completed_tester(tmp_path, job_name, submitter_class)
 
 
@@ -57,6 +57,6 @@ def test_add_waiting_for(tmp_path: Path) -> None:
         Temporary path (pytest fixture)
     """
     # Create first submitter
-    job_name = "PBS_test_first_submitter"
-    submitter_class = PBSSubmitter
+    job_name = "SLURM_test_first_submitter"
+    submitter_class = SLURMSubmitter
     add_waiting_for_tester(tmp_path, job_name, submitter_class)

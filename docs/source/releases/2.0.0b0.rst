@@ -1,0 +1,42 @@
+What's New In BOUT Runners 2.0.0b0
+**********************************
+
+:Release: 2.0.0
+:Date: 2020-11-19
+
+
+Summary -- Release highlights
+=============================
+
+* Complete code refactor
+* Added database which for storing of parameters and state
+* Possibility to chain runs through directed acyclic graphs
+* Added SLURM support
+* Enforcing readable code through linters
+* Extensive testing
+* Logging
+
+New features
+============
+
+* See summary
+
+Bug fixes
+=========
+
+* N/A
+
+Other changes
+=============
+
+* See summary
+
+Deprecated features
+===================
+
+* None
+
+Removed features
+================
+
+* All pre- and post-processing not related to running the code

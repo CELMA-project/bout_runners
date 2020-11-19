@@ -3,10 +3,10 @@
 
 import pytest
 
-from bout_runners.submitter.abstract_submitters import AbstractClusterSubmitter
+from bout_runners.submitter.abstract_cluster_submitter import AbstractClusterSubmitter
 
 
-def test_local_submitter() -> None:
+def test_abstract_cluster_submitter() -> None:
     """Test that AbstractClusterSubmitter obtain time from string."""
     pbs_time = "65:43:21"
     (

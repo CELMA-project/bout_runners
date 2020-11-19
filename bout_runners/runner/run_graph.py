@@ -7,8 +7,8 @@ from typing import Any, Callable, Dict, Iterable, Optional, Tuple, Union
 
 import networkx as nx
 
-from bout_runners.runner.bout_run_setup import BoutRunSetup
-from bout_runners.submitter.abstract_submitters import AbstractSubmitter
+from bout_runners.parameters.bout_run_setup import BoutRunSetup
+from bout_runners.submitter.abstract_submitter import AbstractSubmitter
 from bout_runners.submitter.local_submitter import LocalSubmitter
 
 

@@ -128,3 +128,23 @@ def test_pid(yield_logs: Dict[str, Path]) -> None:
 
     unfinished_no_pid_log_reader = LogReader(log_paths["unfinished_no_pid_log"])
     assert unfinished_no_pid_log_reader.pid is None
+
+
+def test_get_simulation_steps(yield_logs: Dict[str, Path]) -> None:
+    """
+    Test self.get_simulation_steps.
+
+    Parameters
+    ----------
+    yield_logs : dict of Path
+        A dictionary containing the log paths used for testing
+    """
+    log_paths = yield_logs
+    success_log_reader = LogReader(log_paths["success_log"])
+    assert success_log_reader.get_simulation_steps().shape == (101, 8)
+
+    failed_log_reader = LogReader(log_paths["fail_log"])
+    assert failed_log_reader.get_simulation_steps().shape == (1, 8)
+
+    unfinished_no_pid_log_reader = LogReader(log_paths["unfinished_no_pid_log"])
+    assert unfinished_no_pid_log_reader.get_simulation_steps().empty

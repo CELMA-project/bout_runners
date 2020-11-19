@@ -7,19 +7,17 @@ from copy import deepcopy
 from pathlib import Path
 from typing import Optional
 
-from bout_runners.executor.bout_paths import BoutPaths
 from bout_runners.make.make import Make
+from bout_runners.parameters.bout_paths import BoutPaths
 from bout_runners.parameters.run_parameters import RunParameters
-from bout_runners.submitter.abstract_submitters import (
-    AbstractClusterSubmitter,
-    AbstractSubmitter,
-)
+from bout_runners.submitter.abstract_cluster_submitter import AbstractClusterSubmitter
+from bout_runners.submitter.abstract_submitter import AbstractSubmitter
 from bout_runners.submitter.submitter_factory import get_submitter
 
 
-class Executor:
+class BoutRunExecutor:
     r"""
-    Executes the command for submitting a run.
+    Executes the command for submitting a bout run.
 
     Attributes
     ----------
@@ -53,7 +51,7 @@ class Executor:
     the project (i.e. where the `Makefile` and `data` directory are normally
     situated. The script can simply call
 
-    >>> Executor().execute()
+    >>> BoutRunExecutor().execute()
 
     and `Executor` takes care of the rest.
 
@@ -77,7 +75,7 @@ class Executor:
     Create the executor object
 
     >>> run_parameters = RunParameters({'global': {'nout': 0}})
-    >>> executor = Executor(
+    >>> executor = BoutRunExecutor(
     ...     bout_paths=bout_paths,
     ...     submitter=LocalSubmitter(bout_paths.project_path),
     ...     run_parameters=run_parameters)
@@ -114,7 +112,7 @@ class Executor:
         #       as this would mess up the paths
         # NOTE: We are deepcopying bout_paths as it may be altered by for
         #       example the self.restart_from setter
-        logging.info("Start: Making an Executor object")
+        logging.info("Start: Making an BoutRunExecutor object")
         self.__bout_paths = (
             deepcopy(bout_paths) if bout_paths is not None else BoutPaths()
         )
@@ -129,7 +127,7 @@ class Executor:
 
         self.__restart_from = None
         self.restart_from = restart_from
-        logging.info("Done: Making an Executor object")
+        logging.info("Done: Making an BoutRunExecutor object")
 
     @property
     def restart_from(self) -> Optional[Path]:

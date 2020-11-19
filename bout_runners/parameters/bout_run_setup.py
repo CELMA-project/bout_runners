@@ -5,11 +5,11 @@ from typing import Optional
 
 from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_creator import DatabaseCreator
-from bout_runners.executor.bout_paths import BoutPaths
-from bout_runners.executor.executor import Executor
 from bout_runners.metadata.metadata_recorder import MetadataRecorder
+from bout_runners.parameters.bout_paths import BoutPaths
 from bout_runners.parameters.final_parameters import FinalParameters
-from bout_runners.submitter.abstract_submitters import AbstractSubmitter
+from bout_runners.runner.bout_run_executor import BoutRunExecutor
+from bout_runners.submitter.abstract_submitter import AbstractSubmitter
 
 
 class BoutRunSetup:
@@ -21,7 +21,7 @@ class BoutRunSetup:
 
     Attributes
     ----------
-    __executor : Executor
+    __executor : BoutRunExecutor
         Getter variable for executor
     __db_connector : DatabaseConnector
         Getter variable for db_connector
@@ -31,7 +31,7 @@ class BoutRunSetup:
         Object used to create the database
     __metadata_recorder : MetadataRecorder
         Object used to record the metadata about a run
-    executor : Executor
+    executor : BoutRunExecutor
         Object used to execute the run
     bout_paths : BoutPaths
         The BoutPaths obtained through the get property
@@ -60,7 +60,7 @@ class BoutRunSetup:
 
     def __init__(
         self,
-        executor: Optional[Executor] = None,
+        executor: Optional[BoutRunExecutor] = None,
         db_connector: Optional[DatabaseConnector] = None,
         final_parameters: Optional[FinalParameters] = None,
     ) -> None:
@@ -71,7 +71,7 @@ class BoutRunSetup:
 
         Parameters
         ----------
-        executor : Executor or None
+        executor : BoutRunExecutor or None
             Object executing the run
             If None, default parameters will be used
         db_connector : DatabaseConnector or None
@@ -85,7 +85,7 @@ class BoutRunSetup:
         # NOTE: We are not setting the default as a keyword argument
         #       as this would mess up the paths
         logging.info("Start: Making a BoutRunSetup object")
-        self.__executor = executor if executor is not None else Executor()
+        self.__executor = executor if executor is not None else BoutRunExecutor()
         self.__final_parameters = (
             final_parameters if final_parameters is not None else FinalParameters()
         )
@@ -111,13 +111,13 @@ class BoutRunSetup:
         logging.info("Done: Making a BoutRunSetup object")
 
     @property
-    def executor(self) -> Executor:
+    def executor(self) -> BoutRunExecutor:
         """
         Get the properties of self.executor.
 
         Returns
         -------
-        self.__executor : Executor
+        self.__executor : BoutRunExecutor
             The executor object
         """
         return self.__executor

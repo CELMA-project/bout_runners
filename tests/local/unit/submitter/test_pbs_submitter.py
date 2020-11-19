@@ -3,11 +3,9 @@
 
 from pathlib import Path
 
-from bout_runners.submitter.pbs_submitter import (
-    AbstractClusterSubmitter,
-    AbstractSubmitter,
-    PBSSubmitter,
-)
+from bout_runners.submitter.abstract_cluster_submitter import AbstractClusterSubmitter
+from bout_runners.submitter.abstract_submitter import AbstractSubmitter
+from bout_runners.submitter.pbs_submitter import PBSSubmitter
 
 
 def test___init__() -> None:

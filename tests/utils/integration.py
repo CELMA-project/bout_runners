@@ -5,11 +5,13 @@ import logging
 from pathlib import Path
 from typing import Callable, Dict, Type
 
+import numpy as np
 import pytest
 
 from bout_runners.database.database_reader import DatabaseReader
+from bout_runners.log.log_reader import LogReader
 from bout_runners.runner.bout_runner import BoutRunner
-from bout_runners.submitter.abstract_submitters import AbstractSubmitter
+from bout_runners.submitter.abstract_submitter import AbstractSubmitter
 from tests.utils.node_functions_complex_graph import (
     node_eight,
     node_five,
@@ -348,6 +350,8 @@ def bout_runner_from_path_tester(
     file_state_restorer : FileStateRestorer
         Object for restoring files to original state
     """
+    # NOTE: This triggers too-many-statements (51/50)
+    # pylint: disable=too-many-statements
     logging.info("Start: First run")
     # Make project to save time
     _ = project_path
@@ -431,6 +435,12 @@ def bout_runner_from_path_tester(
     # NOTE: The test in tests.unit.bout_runners.runners.test_bout_runner is testing
     #       restart_from_bout_inp_dst=True, whether this is testing restart_all=True
     assert_dump_files_exist(dump_dir_parent.joinpath(f"{dump_dir_name}_restart_1"))
+    simulation_steps = LogReader(
+        dump_dir_parent.joinpath(f"{dump_dir_name}_restart_1", "BOUT.log.0")
+    ).get_simulation_steps()
+    assert np.isclose(
+        simulation_steps.loc[simulation_steps.index[-1], "Sim_time"], 30.0
+    )
     logging.info("Done: Run with restart_all=True the second time")
 
 
@@ -538,12 +548,10 @@ def large_graph_tester(
     for restart_str in ("", "_restart_0", "_restart_1", "_restart_2"):
         assert (
             node_adder.paths["project_path"]
-            .joinpath(f"{name}{restart_str}")
-            .joinpath("BOUT.dmp.0.nc")
+            .joinpath(f"{name}{restart_str}", "BOUT.dmp.0.nc")
             .is_file()
             or node_adder.paths["project_path"]
-            .joinpath(f"{name}{restart_str}")
-            .joinpath("BOUT.dmp.0.h5")
+            .joinpath(f"{name}{restart_str}", "BOUT.dmp.0.h5")
             .is_file()
         )
     # NOTE: We will only have 4 runs as node 4 is a duplicate of node 2 and will
@@ -555,3 +563,8 @@ def large_graph_tester(
         expected_run_number=number_of_runs,
         restarted=True,
     )
+    simulation_steps = LogReader(
+        node_adder.paths["project_path"].joinpath(f"{name}_restart_2", "BOUT.log.0")
+    ).get_simulation_steps()
+    # NOTE: nout=0 set in the function tests.utils.run.make_run_group
+    assert np.isclose(simulation_steps.loc[simulation_steps.index[-1], "Sim_time"], 0.0)

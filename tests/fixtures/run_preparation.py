@@ -6,11 +6,11 @@ from typing import Callable, Optional
 import pytest
 
 from bout_runners.database.database_connector import DatabaseConnector
-from bout_runners.executor.bout_paths import BoutPaths
-from bout_runners.executor.executor import Executor
+from bout_runners.parameters.bout_paths import BoutPaths
+from bout_runners.parameters.bout_run_setup import BoutRunSetup
 from bout_runners.parameters.default_parameters import DefaultParameters
 from bout_runners.parameters.final_parameters import FinalParameters
-from bout_runners.runner.bout_run_setup import BoutRunSetup
+from bout_runners.runner.bout_run_executor import BoutRunExecutor
 from bout_runners.runner.run_graph import RunGraph
 
 
@@ -39,9 +39,9 @@ def make_graph() -> RunGraph:
 @pytest.fixture(scope="function", name="get_executor")
 def fixture_get_executor(
     yield_bout_path_conduction: Callable[[str], BoutPaths]
-) -> Callable[[str], Executor]:
+) -> Callable[[str], BoutRunExecutor]:
     """
-    Return a function which returns an Executor object.
+    Return a function which returns an BoutRunExecutor object.
 
     Parameters
     ----------
@@ -51,10 +51,10 @@ def fixture_get_executor(
     Returns
     -------
     _get_executor : function
-        Function which returns an Executor based on the conduction directory
+        Function which returns an BoutRunExecutor based on the conduction directory
     """
 
-    def _get_executor(tmp_path_name: str) -> Executor:
+    def _get_executor(tmp_path_name: str) -> BoutRunExecutor:
         """
         Create Executor based on the conduction directory.
 
@@ -65,7 +65,7 @@ def fixture_get_executor(
 
         Returns
         -------
-        executor : Executor
+        executor : BoutRunExecutor
             The Executor object
         """
         bout_paths = yield_bout_path_conduction(tmp_path_name)
@@ -78,7 +78,7 @@ def fixture_get_executor(
 
 @pytest.fixture(scope="function")
 def get_bout_run_setup(
-    get_executor: Callable[[str], Executor],
+    get_executor: Callable[[str], BoutRunExecutor],
     make_test_database: Callable[[Optional[str]], DatabaseConnector],
     get_default_parameters: DefaultParameters,
 ) -> Callable[[str], BoutRunSetup]:
@@ -88,7 +88,7 @@ def get_bout_run_setup(
     Parameters
     ----------
     get_executor : function
-        Function which returns an Executor based on the conduction directory
+        Function which returns an BoutRunExecutor based on the conduction directory
     make_test_database : function
         Function making an empty database
     get_default_parameters : DefaultParameters

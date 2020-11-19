@@ -11,11 +11,14 @@ https://github.com/CELMA-project/bout_runners/blob/master/.github/CONTRIBUTING.r
 - [ ] Add an issue to the PR if none exists
 - [ ] Add yourself to `CONTRIBUTORS.rst` if you are a new contributor
 - [ ] Add a `CHANGELOG.rst` entry describing what your PR does
-- [ ] If it's a new feature or an important bug fix, add a What's New entry in
+- [ ] If it's a new feature or an important bug fix, add a `What's New` entry in
       `docs/releases/<current release.rst>`
-- [ ] Update documentation - [ ] Docstrings - [ ] Related documentation in `docs/` - [ ]
-      `docs/source/api/bout_runners.rst` (if module names were added or deleted or
-      changed name) - [ ] `docs/structure.rst` (if file structure has changed)
+- [ ] Update documentation
+  - [ ] Docstrings
+  - [ ] Related documentation in `docs/`
+  - [ ] `docs/source/api/bout_runners.rst` (if module names were added or deleted or
+        changed name)
+  - [ ] `docs/structure.rst` (if file structure has changed)
 - [ ] Write a summary of what the PR does
 
 # Summary

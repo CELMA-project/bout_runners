@@ -5,7 +5,7 @@ from typing import Callable, Iterator
 
 import pytest
 
-from bout_runners.executor.bout_paths import BoutPaths
+from bout_runners.parameters.bout_paths import BoutPaths
 from bout_runners.utils.paths import get_bout_directory
 
 

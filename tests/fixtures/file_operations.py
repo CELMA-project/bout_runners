@@ -3,7 +3,7 @@
 
 import shutil
 from pathlib import Path
-from typing import Callable, Iterator
+from typing import Callable, Dict, Iterator, Optional
 
 import pytest
 
@@ -125,3 +125,32 @@ def create_mock_config_path():
     shutil.copytree(config_path, mock_config_path)
     yield mock_config_path
     shutil.rmtree(mock_config_path)
+
+
+@pytest.fixture(scope="session")
+def get_sacct_dict(get_test_data_path: Path) -> Iterator[Dict[Optional[str], str]]:
+    """
+    Yield the sacct dict.
+
+    Parameters
+    ----------
+    get_test_data_path : Path
+        Path to the test data
+
+    Yields
+    ------
+    sacct_dict : dict
+        Dict where the keys are states and values are sacct_lines
+    """
+    sacct_path = get_test_data_path.joinpath("test_sacct")
+
+    with sacct_path.open("r") as file:
+        sacct_lines = file.readlines()
+
+    sacct_dict: Dict[Optional[str], str] = dict()
+    sacct_dict[None] = "".join(sacct_lines[:2])
+    sacct_dict["COMPLETED"] = "".join(sacct_lines[:4])
+    sacct_dict["FAILED"] = "".join(sacct_lines[:2] + sacct_lines[4:6])
+    sacct_dict["CANCELLED+"] = "".join(sacct_lines[:2] + sacct_lines[6:8])
+    sacct_dict["RUNNING"] = "".join(sacct_lines[:2] + sacct_lines[8:10])
+    yield sacct_dict

@@ -6,9 +6,9 @@ from typing import Callable, Dict, Tuple
 
 from bout_runners.database.database_connector import DatabaseConnector
 from bout_runners.database.database_reader import DatabaseReader
-from bout_runners.executor.bout_paths import BoutPaths
 from bout_runners.metadata.metadata_reader import MetadataReader
 from bout_runners.metadata.metadata_recorder import MetadataRecorder
+from bout_runners.parameters.bout_paths import BoutPaths
 from bout_runners.parameters.default_parameters import DefaultParameters
 from bout_runners.parameters.final_parameters import FinalParameters
 from bout_runners.submitter.processor_split import ProcessorSplit

@@ -68,6 +68,5 @@ RUN echo "export PATH=/opt/anaconda/bin:$PATH" > /etc/profile.d/bout-specific.sh
 RUN sed -i "s/exec \"\$@\"//" entrypoint.sh
 # NOTE: The "-" in "su -" is equivalent to a normal login, so that the paths etc. are updated
 RUN sed -i "s/$SU_PART/\n$CREATE_PBS_NODE\n$SET_QUEUE\n$RUN_CMD_AS_PBSUSER/" entrypoint.sh
-RUN cat entrypoint.sh
 
 ENTRYPOINT ["bash", "/entrypoint.sh"]
