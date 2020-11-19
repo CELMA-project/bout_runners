@@ -34,11 +34,13 @@ def test_slurm_bout_runners_from_directory(
     file_state_restorer : FileStateRestorer
         Object for restoring files to original state
     """
+    submitter = SLURMSubmitter
+    file_restorer = file_state_restorer
     bout_runner_from_path_tester(
-        SLURMSubmitter,
+        submitter,
         make_project,
         yield_number_of_rows_for_all_tables,
-        file_state_restorer,
+        file_restorer,
     )
 
 
@@ -64,11 +66,13 @@ def test_slurm_full_bout_runner(
     file_state_restorer : FileStateRestorer
         Object for restoring files to original state
     """
+    submitter = SLURMSubmitter
+    file_restorer = file_state_restorer
     full_bout_runner_tester(
-        SLURMSubmitter,
+        submitter,
         make_project,
         yield_number_of_rows_for_all_tables,
-        file_state_restorer,
+        file_restorer,
     )
 
 
@@ -92,8 +96,9 @@ def test_slurm_large_graph(
     file_state_restorer : FileStateRestorer
         Object for restoring files to original state
     """
+    submitter = SLURMSubmitter
     large_graph_tester(
-        SLURMSubmitter,
+        submitter,
         make_project,
         yield_number_of_rows_for_all_tables,
         file_state_restorer,

@@ -4,8 +4,11 @@
 import logging
 import re
 from datetime import datetime
+from io import StringIO
 from pathlib import Path
 from typing import Optional
+
+import pandas as pd
 
 
 class LogReader:
@@ -14,6 +17,8 @@ class LogReader:
 
     Attributes
     ----------
+    __log_path : Path
+        Path to the log file
     file_str : str
         The log file as a string
     start_time : None or str
@@ -32,6 +37,8 @@ class LogReader:
         Whether or not the execution has ended
     pid_exist()
         Whether or not the pid can be found
+    get_simulation_steps()
+        Return the simulation steps as a dataframe
     __is_str_in_file(pattern)
         Check whether regex-pattern exists in file
     __find_local_time(pattern)
@@ -61,6 +68,7 @@ class LogReader:
         log_path : str or Path
             Absolute path to log file
         """
+        self.__log_path = log_path
         with Path(log_path).open("r") as log_file:
             self.file_str = log_file.read()
             logging.debug("Opened log_file %s", log_path)
@@ -97,6 +105,46 @@ class LogReader:
             True if the pid is found
         """
         return self.__is_str_in_file(r"^pid\s*:\s*")
+
+    def get_simulation_steps(self) -> pd.DataFrame:
+        """
+        Return the simulation steps as a dataframe.
+
+        Returns
+        -------
+        simulation_steps : DataFrame
+            Data frame containing details of the simulation steps
+        """
+        file_str_list = self.file_str.split("\n")
+        found_line_nr = -1
+        for line_nr, line in enumerate(file_str_list):
+            if line.startswith("Sim Time  |"):
+                found_line_nr = line_nr
+                break
+        if found_line_nr != -1:
+            file_str_list = file_str_list[found_line_nr:]
+            file_str_list[0] = file_str_list[0].replace("|", "")
+            file_str_list[0] = file_str_list[0].replace("Sim Time", "Sim_time")
+            file_str_list[0] = file_str_list[0].replace("RHS evals", "RHS_evals")
+            file_str_list[0] = file_str_list[0].replace("Wall Time", "Wall_time")
+            # Remove blank line
+            file_str_list.pop(1)
+            # Get all the lines which starts with a number
+            pattern = r"^\d\.\d{3}e[+-]\d{2}"
+            # Two header lines
+            found_line_nr = 0
+            for line_nr, line in enumerate(file_str_list[2:]):
+                if re.search(pattern, line) is None:
+                    found_line_nr = line_nr
+                    break
+            # Add two as we enumerate from [2:]
+            file_str_list = file_str_list[: found_line_nr + 2]
+        else:
+            logging.warning("Could not find steps in %s", self.__log_path)
+            return pd.DataFrame()
+        file_str = re.sub(" +", ",", "\n".join(file_str_list))
+        simulation_steps = pd.read_csv(StringIO(file_str))
+        return simulation_steps
 
     @property
     def start_time(self) -> Optional[datetime]:

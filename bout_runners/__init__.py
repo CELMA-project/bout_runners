@@ -3,6 +3,6 @@
 
 from bout_runners.utils.logs import set_up_logger
 
-__version__ = "2.0.0a3"
+__version__ = "2.0.0b0"
 
 set_up_logger()
