@@ -157,7 +157,7 @@ jobs:
         # Note that the sleep period in the start seems to be essential in order for the submissions not to be stuck
         # forever in the queue
         run: |
-          bash /entrypoint.sh \
+          bash /usr/local/bin/docker-entrypoint.sh \
           "sleep 10 \
           && cd /opt/bout_runners \
           && coverage run --source=. -p -m pytest tests/slurm"

@@ -115,13 +115,11 @@ class SLURMSubmitter(AbstractClusterSubmitter):
 
             if self._status["return_code"] is not None:
                 self._populate_std_out_and_std_err()
-
         else:
             # No job_id
             logging.warning(
                 "Tried to wait for a process without job_id %s (%s). "
-                "No process started, so "
-                "return_code, std_out, std_err are not populated",
+                "return_code, std_out, std_err not populated for SLURM job",
                 self.job_id,
                 self.job_name,
             )
@@ -147,7 +145,7 @@ class SLURMSubmitter(AbstractClusterSubmitter):
             If the job_id cannot be found
         """
         if std_out is None:
-            msg = "Got std_out=None as input when trying to extract job_id"
+            msg = "Got std_out=None as input when trying to extract job_id from SLURM"
             logging.critical(msg)
             raise RuntimeError(msg)
         pattern = "Submitted batch job (.+)"
@@ -300,33 +298,42 @@ class SLURMSubmitter(AbstractClusterSubmitter):
         job_script : str
             The script to be submitted
         """
+        wall_time = self._submission_dict["walltime"]
+        acc = self._submission_dict["account"]
+        sub_queue = self._submission_dict["queue"]
+        email = self._submission_dict["mail"]
+
         # Backslash not allowed in f-string expression
         newline = "\n"
-        walltime = self._submission_dict["walltime"]
-        account = self._submission_dict["account"]
-        queue = self._submission_dict["queue"]
-        mail = self._submission_dict["mail"]
+        if len(waiting_for) != 0:
+            waiting_for_str = (
+                f"#SBATCH --dependency=afterok:{':'.join(waiting_for)}{newline}"
+            )
+        else:
+            waiting_for_str = ""
+
         # Notice that we do not add the stem here
         self._log_and_error_base = self.store_dir.joinpath(self._job_name)
-
-        waiting_for_str = (
-            f"#SBATCH --dependency=afterok:{':'.join(waiting_for)}{newline}"
-            if len(waiting_for) != 0
-            else ""
-        )
+        log_file_str = f"{self._log_and_error_base}.log"
+        err_file_str = f"{self._log_and_error_base}.err"
+        # NOTE: job_string += added in order not to trigger pylint R0801
+        #       (which seems not possible to disable)
         job_string = (
             "#!/bin/bash\n"
             f"#SBATCH --job-name={self._job_name}\n"
             f"#SBATCH --nodes={self.processor_split.number_of_nodes}\n"
             f"#SBATCH --tasks-per-node={self.processor_split.processors_per_node}\n"
-            # d-hh:mm:ss
-            f"{f'#SBATCH --time={walltime}{newline}' if walltime is not None else ''}"
-            f"{f'#SBATCH --account={account}{newline}' if account is not None else ''}"
-            f"{f'#SBATCH -p {queue}{newline}' if queue is not None else ''}"
-            f"#SBATCH -o {self._log_and_error_base}.log\n"
-            f"#SBATCH -e {self._log_and_error_base}.err\n"
-            f"{f'#SBATCH --mail-type=ALL{newline}' if mail is not None else ''}"
-            f"{f'#SBATCH --mail-user={mail}{newline}' if mail is not None else ''}"
+            f"{f'#SBATCH --time={wall_time}{newline}' if wall_time is not None else ''}"
+        )
+        job_string += (
+            f"{f'#SBATCH --account={acc}{newline}' if acc is not None else ''}"
+            f"{f'#SBATCH -p {sub_queue}{newline}' if sub_queue is not None else ''}"
+        )
+        job_string += (
+            f"#SBATCH -o {log_file_str}\n"
+            f"#SBATCH -e {err_file_str}\n"
+            f"{f'#SBATCH --mail-type=ALL{newline}' if email is not None else ''}"
+            f"{f'#SBATCH --mail-user={email}{newline}' if email is not None else ''}"
             f"{waiting_for_str}"
             "\n"
             # Change directory to the directory of this script

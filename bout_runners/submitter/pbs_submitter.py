@@ -114,7 +114,7 @@ class PBSSubmitter(AbstractClusterSubmitter):
             If the job_id cannot be found
         """
         if std_out is None:
-            msg = "Got std_out=None as input when trying to extract job_id"
+            msg = "Got std_out=None as input when trying to extract job_id from PBS"
             logging.critical(msg)
             raise RuntimeError(msg)
         return std_out
@@ -148,8 +148,7 @@ class PBSSubmitter(AbstractClusterSubmitter):
             # No job_id
             logging.warning(
                 "Tried to wait for a process without job_id %s (%s). "
-                "No process started, so "
-                "return_code, std_out, std_err are not populated",
+                "return_code, std_out, std_err not populated for PBS job",
                 self.job_id,
                 self.job_name,
             )
@@ -224,11 +223,11 @@ class PBSSubmitter(AbstractClusterSubmitter):
         (
             days,
             hours,
-            minutes,
-            seconds,
+            mins,
+            secs,
         ) = AbstractClusterSubmitter.get_days_hours_minutes_seconds_from_str(time_str)
         hours += days * 24
-        return f"{hours}:{minutes}:{seconds}"
+        return f"{hours}:{mins}:{secs}"
 
     def completed(self) -> bool:
         """
@@ -249,8 +248,7 @@ class PBSSubmitter(AbstractClusterSubmitter):
                 self._wait_for_std_out_and_std_err()
                 return True
             self.__dequeued = self.has_dequeue(trace)
-            if self.__dequeued:
-                return True
+            return self.__dequeued
         return False
 
     def create_submission_string(
